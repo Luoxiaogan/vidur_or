@@ -196,6 +196,24 @@ class BaseRequestGeneratorConfig(BasePolyConfig):
         metadata={"help": "Seed for the random number generator."},
     )
 
+@dataclass
+class CustomRequestGeneratorConfig(BaseRequestGeneratorConfig):
+    max_tokens: int = field(
+        default=4096,
+        metadata={"help": "Maximum tokens for custom request generator."},
+    )
+    num_requests: Optional[int] = field(
+        default=128,
+        metadata={"help": "Number of requests for Custom Request Generator."},
+    )
+    duration: Optional[float] = field(
+        default=None,
+        metadata={"help": "Duration for Custom Request Generator."},
+    )
+    
+    @staticmethod
+    def get_type():
+        return RequestGeneratorType.CUSTOM
 
 @dataclass
 class SyntheticRequestGeneratorConfig(BaseRequestGeneratorConfig):
@@ -641,8 +659,12 @@ class SimulationConfig(ABC):
         default_factory=ClusterConfig,
         metadata={"help": "Cluster config."},
     )
+    # request_generator_config: BaseRequestGeneratorConfig = field(
+    #     default_factory=SyntheticRequestGeneratorConfig,
+    #     metadata={"help": "Request generator config."},
+    # )
     request_generator_config: BaseRequestGeneratorConfig = field(
-        default_factory=SyntheticRequestGeneratorConfig,
+        default_factory=CustomRequestGeneratorConfig,
         metadata={"help": "Request generator config."},
     )
     execution_time_predictor_config: BaseExecutionTimePredictorConfig = field(
@@ -675,3 +697,54 @@ class SimulationConfig(ABC):
         config_dict = dataclass_to_dict(self)
         with open(f"{self.metrics_config.output_dir}/config.json", "w") as f:
             json.dump(config_dict, f, indent=4)
+
+@dataclass
+class BookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
+    total_limit: int = field(
+        default=64,
+        metadata={"help": "Total booking limit for all prompt types."},
+    )
+    total_num_requests: int = field(
+        default=500,
+        metadata={"help": "Total number of requests allowed."},
+    )
+    force_clear: bool = field(
+        default=False,
+        metadata={"help": "Force clear the requests still in the scheduler when all requests arrived."},
+    )
+
+    @staticmethod
+    def get_type():
+        return ReplicaSchedulerType.BOOKING_LIMIT
+    
+@dataclass
+class NestedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
+    # 如果需要其他字段，可在此处添加
+    # 例如：
+    # some_parameter: int = field(default=123, metadata={"help": "Custom param"})
+
+    @staticmethod
+    def get_type():
+        return ReplicaSchedulerType.NESTED_BOOKING_LIMIT
+    
+@dataclass
+class GeneralNestedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
+    # 如果需要其他字段，可在此处添加
+    # 例如：
+    # some_parameter: int = field(default=123, metadata={"help": "Custom param"})
+    total_limit: int = field(
+        default=64,
+        metadata={"help": "Total booking limit for all prompt types."},
+    )
+    total_num_requests: int = field(
+        default=500,
+        metadata={"help": "Total number of requests allowed."},
+    )
+    force_clear: bool = field(
+        default=False,
+        metadata={"help": "Force clear the requests still in the scheduler when all requests arrived."},
+    )
+
+    @staticmethod
+    def get_type():
+        return ReplicaSchedulerType.GENERAL_NESTED_BOOKING_LIMIT

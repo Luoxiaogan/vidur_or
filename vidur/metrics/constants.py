@@ -51,6 +51,7 @@ class RequestMetricsTimeDistributions(enum.Enum):
     DECODE_TIME_EXECUTION_PLUS_PREEMPTION_NORMALIZED = (
         "decode_time_execution_plus_preemption_normalized"
     )
+    THROUGHPUT = "throughput" # 新增的throughput记录
 
 
 class TokenMetricsTimeDistribution(enum.Enum):

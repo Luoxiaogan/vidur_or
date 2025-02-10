@@ -13,6 +13,12 @@ from vidur.scheduler.replica_scheduler.sarathi_replica_scheduler import (
 from vidur.scheduler.replica_scheduler.vllm_replica_scheduler import (
     VLLMReplicaScheduler,
 )
+from vidur.scheduler.replica_scheduler.booking_limit_replica_scheduler import BookingLimitReplicaScheduler
+from vidur.scheduler.replica_scheduler.nested_booking_limit_replica_scheduler import NestedBookingLimitReplicaScheduler
+from vidur.scheduler.replica_scheduler.general_nested_booking_limit_replica_scheduler import GeneralizedNestedBookingLimitReplicaScheduler
+
+
+from vidur.types.replica_scheduler_type import ReplicaSchedulerType
 from vidur.types import ReplicaSchedulerType
 from vidur.utils.base_registry import BaseRegistry
 
@@ -29,4 +35,14 @@ ReplicaSchedulerRegistry.register(ReplicaSchedulerType.SARATHI, SarathiReplicaSc
 ReplicaSchedulerRegistry.register(ReplicaSchedulerType.VLLM, VLLMReplicaScheduler)
 ReplicaSchedulerRegistry.register(
     ReplicaSchedulerType.LIGHTLLM, LightLLMReplicaScheduler
+)
+ReplicaSchedulerRegistry.register(
+    ReplicaSchedulerType.BOOKING_LIMIT, BookingLimitReplicaScheduler
+)
+ReplicaSchedulerRegistry.register(
+    ReplicaSchedulerType.NESTED_BOOKING_LIMIT, NestedBookingLimitReplicaScheduler
+)
+ReplicaSchedulerRegistry.register(
+    ReplicaSchedulerType.GENERAL_NESTED_BOOKING_LIMIT,
+    GeneralizedNestedBookingLimitReplicaScheduler,
 )

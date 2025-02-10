@@ -26,6 +26,15 @@ class BatchEndEvent(BaseEvent):
         replica_scheduler = scheduler.get_replica_scheduler(self._replica_id)
         replica_scheduler.on_batch_end(self._batch)
 
+        # 计算 batch 内所有 requests 数量
+        num_requests_in_batch = len(self._batch.requests)
+        # **累计 throughput**
+        last_throughput = metrics_store._throughput_metric._peek_y()  
+        # 获取上一次 throughput 值
+        new_throughput = last_throughput + num_requests_in_batch
+        # 更新 throughput
+        metrics_store._throughput_metric.put(self.time, new_throughput)
+
         memory_usage_percent = replica_scheduler.memory_usage_percent
         metrics_store.on_batch_end(
             self.time, self._batch, self._replica_id, memory_usage_percent

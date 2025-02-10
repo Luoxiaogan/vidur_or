@@ -32,6 +32,7 @@ class Request(BaseEntity):
         num_prefill_tokens: int,
         num_decode_tokens: int,
         num_processed_tokens: int = 0,
+        prompt_type: str = "default"  # 新增 prompt_type 参数，默认为 "default"
     ):
         self._id = Request.generate_id()
         self._arrived_at = arrived_at
@@ -39,6 +40,11 @@ class Request(BaseEntity):
         self._num_decode_tokens = num_decode_tokens
         self._num_processed_tokens = num_processed_tokens
 
+        # 新增属性：用于区分请求类型和阶段
+        self.prompt_type = prompt_type
+        self.current_stage = 0  # 初始化阶段为 0，即 prefilling 阶段
+
+        # 原有的其他属性初始化...
         self._scheduled_at = 0
         self._execution_time = 0
         self._model_execution_time = 0
@@ -307,3 +313,12 @@ class Request(BaseEntity):
         self._is_prefill_complete = False
 
         self._num_restarts += 1
+
+        
+    def advance_stage(self):
+        """将请求推进到下一个阶段。"""
+        self.current_stage += 1
+
+    def reset_stage(self):
+        """将请求阶段重置为 0。"""
+        self.current_stage = 0

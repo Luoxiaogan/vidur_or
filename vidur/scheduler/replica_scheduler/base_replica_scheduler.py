@@ -64,6 +64,8 @@ class BaseReplicaScheduler(ABC):
             for stage_id in range(num_stages)
         }
 
+        self.num_arrival_requests = 0 # 记录到达的请求数
+
     @property
     def num_pending_requests(self) -> int:
         return len(self._request_queue)
@@ -100,6 +102,7 @@ class BaseReplicaScheduler(ABC):
 
     def add_request(self, request: Request) -> None:
         self._request_queue.append(request)
+        self.num_arrival_requests += 1
 
     def get_replica_stage_scheduler(self, stage_id: int):
         return self._replica_stage_schedulers[stage_id]

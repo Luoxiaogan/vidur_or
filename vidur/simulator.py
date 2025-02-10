@@ -75,6 +75,16 @@ class Simulator:
                 if chrome_trace:
                     self._event_chrome_trace.append(chrome_trace)
 
+        print("Event queue empty or termination triggered, checking pending requests...")
+        print("self._event_queue: ", self._event_queue)
+        print("self._terminate: ", self._terminate)
+        print("self._scheduler.is_empty(): ", self._scheduler.is_empty())
+
+        for replica_id, replica_scheduler in self._scheduler._replica_schedulers.items():
+            logger.warning(f"Replica {replica_id} still has pending requests.")
+            logger.info(f"Replica {replica_id} pending requests: {replica_scheduler.num_pending_requests}")
+            logger.info(f"Replica {replica_id} allocated blocks: {len(replica_scheduler._allocation_map)}")
+
         assert self._scheduler.is_empty() or self._terminate
 
         logger.info(f"Simulation ended at: {self._time}s")
