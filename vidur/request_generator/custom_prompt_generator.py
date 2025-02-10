@@ -9,8 +9,8 @@ class CustomPromptGenerator(BaseRequestGenerator):
         # 定义不同类型的 prompt 参数和到达率
         self.prompt_types = [
             {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 3},
-            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 2},
-            {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 1},
+            #{"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 2},
+            #{"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 1},
             # 可以继续添加更多类型……
         ]
     def _generate_next_request(self, last_arrived_at: float) -> Request:

@@ -33,8 +33,8 @@ class BookingLimitReplicaScheduler(BaseReplicaScheduler):
         # 示例数据，实际应从配置或其他地方获取
         self.prompt_types = [
             {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 3},
-            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 2},
-            {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 1},
+            #{"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 2},
+            #{"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 1},
             # 可继续添加其他类型...
         ]
         self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}

@@ -439,8 +439,8 @@ class MetricsStore:
             )
             dataseries.plot_cdf(base_plot_path, dataseries._metric_name, y_axis_label)
 
-        # for dataseries in self._batch_metrics_count_distribution.values():
-        #     dataseries.plot_cdf(base_plot_path, dataseries._metric_name+f"_{self._scheduler_name.lower()}", COUNT_STR)
+        for dataseries in self._batch_metrics_count_distribution.values():
+            dataseries.plot_cdf(base_plot_path, dataseries._metric_name+f"_{self._scheduler_name.lower()}", COUNT_STR)
 
         if not self._config.keep_individual_batch_metrics:
             return

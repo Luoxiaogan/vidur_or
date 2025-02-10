@@ -116,17 +116,17 @@ def calculate_total_limit_new(prompt_types: List[Dict],
 if __name__ == "__main__":
     prompt_types = [
         {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 30},
-        {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 20},
-        {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 10},
+        #{"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 20},
+        #{"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 10},
     ]
     per_stage_limits = {
         "type1": 4,  # 假设 type1 每个 stage 需要 4
-        "type2": 2,  # 假设 type2 每个 stage 需要 2
-        "type3": 1,  # 假设 type3 每个 stage 需要 1
+        #"type2": 2,  # 假设 type2 每个 stage 需要 2
+        #"type3": 1,  # 假设 type3 每个 stage 需要 1
     }
     # 这里理想的比例应该与各 segment 的 arrival_sum 成正比，即 [60, 30, 10]，
     # 所以一个符合要求的示例为 [6, 3, 1]（注意：6:3:1 == 60:30:10）
-    per_stage_limits_new = [12, 6, 2]
+    per_stage_limits_new = [2]
     
     total_limit, total_required_per_type = calculate_total_limit(prompt_types, per_stage_limits)
     print("==============================================")
