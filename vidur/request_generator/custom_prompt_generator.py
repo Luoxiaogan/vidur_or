@@ -12,8 +12,10 @@ class CustomPromptGenerator(BaseRequestGenerator):
         # a 不会影响计算出来的booking_limit, 但是会影响总的到达速率
 
         self.prompt_types = [
-            {"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167*a},
-            {"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 31*a},
+            #{"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167*a},
+            #{"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 31*a},
+            {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 20000},
+            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 10000},
             # 可继续添加其他类型...
         ]
     def _generate_next_request(self, last_arrived_at: float) -> Request:

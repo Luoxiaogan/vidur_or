@@ -1,6 +1,6 @@
 #!/bin/bash
 # 运行 vidur 模拟器
-NUM_REQUESTS=10000
+NUM_REQUESTS=50000
 
 python -m vidur.main \
     --replica_config_device a100 \
@@ -11,7 +11,7 @@ python -m vidur.main \
     --request_generator_config_type custom \
     --custom_request_generator_config_num_requests $NUM_REQUESTS \
     --replica_scheduler_config_type vllm \
-    --vllm_scheduler_config_batch_size_cap 484 \
+    --vllm_scheduler_config_batch_size_cap 450 \
     --random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size 16384 \
     --random_forrest_execution_time_predictor_config_prediction_max_batch_size 2048 \
     --random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request 16384

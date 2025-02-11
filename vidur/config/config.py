@@ -748,3 +748,25 @@ class GeneralNestedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
     @staticmethod
     def get_type():
         return ReplicaSchedulerType.GENERAL_NESTED_BOOKING_LIMIT
+    
+@dataclass
+class ModifiedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
+    # 如果需要其他字段，可在此处添加
+    # 例如：
+    # some_parameter: int = field(default=123, metadata={"help": "Custom param"})
+    total_limit: int = field(
+        default=64,
+        metadata={"help": "Total booking limit for all prompt types."},
+    )
+    total_num_requests: int = field(
+        default=500,
+        metadata={"help": "Total number of requests allowed."},
+    )
+    force_clear: bool = field(
+        default=False,
+        metadata={"help": "Force clear the requests still in the scheduler when all requests arrived."},
+    )
+
+    @staticmethod
+    def get_type():
+        return ReplicaSchedulerType.MODIFIED_BOOKING_LIMIT

@@ -10,3 +10,4 @@ class ReplicaSchedulerType(BaseIntEnum):
     BOOKING_LIMIT = 6
     NESTED_BOOKING_LIMIT = 7
     GENERAL_NESTED_BOOKING_LIMIT = 8 
+    MODIFIED_BOOKING_LIMIT = 9
