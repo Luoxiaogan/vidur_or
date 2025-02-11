@@ -10,7 +10,7 @@ python -m vidur.main \
   --custom_request_generator_config_num_requests $NUM_REQUESTS \
   --replica_scheduler_config_type general_nested_booking_limit \
   --general_nested_booking_limit_scheduler_config_total_num_requests $NUM_REQUESTS \
-  --general_nested_booking_limit_scheduler_config_total_limit 72 \
+  --general_nested_booking_limit_scheduler_config_total_limit 100 \
   --general_nested_booking_limit_scheduler_config_force_clear  \
   --random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size 16384 \
   --random_forrest_execution_time_predictor_config_prediction_max_batch_size 2048 \

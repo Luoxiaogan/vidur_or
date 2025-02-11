@@ -22,9 +22,9 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         # 保证 prefill 相同，但 decode 和 arrival_rate 可能不同，
         # 并且可能不止三个 type
         self.prompt_types = [
-            {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 30},
-            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 20},
-            {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 10},
+            {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 300},
+            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 200},
+            {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 100},
             # 可以继续添加更多类型……
         ]
         self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}
@@ -50,6 +50,7 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         if self.num_arrival_requests == self.total_num_requests:
             self.all_requests_arrived = True
             print(f"计划到达个数:{self.total_num_requests}=已到达个数:{self.num_arrival_requests}")
+            print("当最后一个request到达时, scheduler里面还剩下的request的数目是:", len(self._request_queue))
 
             total_throughput = 0
             for prompt_type, count in self.request_count_per_type.items():
@@ -63,8 +64,8 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
     
     def calculate_nested_booking_limits(self) -> Tuple[Dict[int, int], List[Dict[str, int]]]:
         """
-        根据 self.prompt_types 的 decode 和 arrival_rate，一般化地划分 segments，
-        并计算每个 global stage 的 booking limit。
+        根据 self.prompt_types 的 decode 和 arrival_rate, 一般化地划分 segments
+        并计算每个 global stage 的 booking limit
 
         返回：
           - nested_booking_limits: {global_stage_index: per_stage_limit}

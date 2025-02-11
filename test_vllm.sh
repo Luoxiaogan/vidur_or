@@ -1,6 +1,6 @@
 #!/bin/bash
 # 运行 vidur 模拟器
-NUM_REQUESTS=10000
+NUM_REQUESTS=100
 
 python -m vidur.main \
 --replica_config_device a100 \
