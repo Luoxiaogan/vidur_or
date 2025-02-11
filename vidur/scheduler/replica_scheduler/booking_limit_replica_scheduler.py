@@ -31,10 +31,21 @@ class BookingLimitReplicaScheduler(BaseReplicaScheduler):
 
         # 假设在此处初始化 prompt_types 信息，包括 type 和 arrival_rate 等
         # 示例数据，实际应从配置或其他地方获取
+
+        a = 1
+        # a 不会影响计算出来的booking_limit, 但是会影响总的到达速率
+
         self.prompt_types = [
-            {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 3},
-            #{"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 2},
-            #{"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 1},
+            {"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167*a},
+            {"type": "type1", "prefill": 100, "decode": 171, "arrival_rate": 31*a},
+            {"type": "type1", "prefill": 150, "decode": 167, "arrival_rate": 10*a},
+            {"type": "type1", "prefill": 200, "decode": 157, "arrival_rate": 8*a},
+            {"type": "type1", "prefill": 250, "decode": 138, "arrival_rate": 9*a},
+            {"type": "type1", "prefill": 300, "decode": 159, "arrival_rate": 5*a},
+            {"type": "type1", "prefill": 350, "decode": 183, "arrival_rate": 3*a},
+            {"type": "type1", "prefill": 400, "decode": 182, "arrival_rate": 2*a},
+            {"type": "type1", "prefill": 450, "decode": 196, "arrival_rate": 2*a},
+            {"type": "type1", "prefill": 500, "decode": 229, "arrival_rate": 1*a},
             # 可继续添加其他类型...
         ]
         self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}

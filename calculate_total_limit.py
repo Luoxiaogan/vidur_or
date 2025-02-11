@@ -4,6 +4,17 @@
 import math
 from typing import List, Dict, Tuple
 
+def calculate_booking_limits(total_limit: int, prompt_types: List[Dict]) -> Dict:
+    prompt_rates = {pt["type"]: pt["arrival_rate"] * (pt["decode"] +1) for pt in prompt_types}
+    total_rate = sum(prompt_rates.values())
+    booking_limits_per_type = {}
+    for ptype, rate in prompt_rates.items():
+        num_stages = next(pt["decode"] + 1 for pt in prompt_types if pt["type"] == ptype)
+        booking_limits_per_type[ptype] = (rate / total_rate) * total_limit
+        per_stage_limit = int(max(booking_limits_per_type[ptype] / num_stages, 1))
+        print(f"Type {ptype}: {booking_limits_per_type[ptype]}, per_stage_limit is {per_stage_limit}")
+    return booking_limits_per_type
+
 ########################################################################
 # 原来的函数：根据各类型的 per_stage_limit 计算总的 total_limit
 ########################################################################
@@ -120,19 +131,25 @@ def calculate_nested_booking_limits(total_limit, prompt_types):
 ########################################################################
 if __name__ == "__main__":
     prompt_types = [
-        {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 300},
-        {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 200},
-        {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 100},
-    ]
-    per_stage_limits = {
-        "type1": 6,  # 假设 type1 每个 stage 需要 4
-        "type2": 4,  # 假设 type2 每个 stage 需要 2
-        "type3": 2,  # 假设 type3 每个 stage 需要 1
-    }
+        {"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167},
+        {"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 31},
+        {"type": "type3", "prefill": 150, "decode": 167, "arrival_rate": 10},
+        {"type": "type4", "prefill": 200, "decode": 157, "arrival_rate": 8},
+        {"type": "type5", "prefill": 250, "decode": 138, "arrival_rate": 9},
+        {"type": "type6", "prefill": 300, "decode": 159, "arrival_rate": 5},
+        {"type": "type7", "prefill": 350, "decode": 183, "arrival_rate": 3},
+        {"type": "type8", "prefill": 400, "decode": 182, "arrival_rate": 2},
+        {"type": "type9", "prefill": 450, "decode": 196, "arrival_rate": 2},
+        {"type": "type10", "prefill": 500, "decode": 229, "arrival_rate": 1},
+        # 可继续添加其他类型...
+        ]
     
-    calculate_total_limit(prompt_types, per_stage_limits)
+    total_limit = 10000
+    
+    print("\n在known的情况下")
+    calculate_booking_limits(total_limit, prompt_types)
     print("\n\n")
 
-    total_limit = 1000
     print("不知道decode的情况, 使用nested booking计算各segment的per-stage-limit:")
     calculate_nested_booking_limits(total_limit, prompt_types)
+    print("\n")

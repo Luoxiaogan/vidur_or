@@ -7,11 +7,22 @@ class CustomPromptGenerator(BaseRequestGenerator):
     def __init__(self, config):
         super().__init__(config)
         # 定义不同类型的 prompt 参数和到达率
+        
+        a = 1
+        # a 不会影响计算出来的booking_limit, 但是会影响总的到达速率
+
         self.prompt_types = [
-            {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 300},
-            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 200},
-            {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 100},
-            # 可以继续添加更多类型……
+            {"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167*a},
+            {"type": "type1", "prefill": 100, "decode": 171, "arrival_rate": 31*a},
+            {"type": "type1", "prefill": 150, "decode": 167, "arrival_rate": 10*a},
+            {"type": "type1", "prefill": 200, "decode": 157, "arrival_rate": 8*a},
+            {"type": "type1", "prefill": 250, "decode": 138, "arrival_rate": 9*a},
+            {"type": "type1", "prefill": 300, "decode": 159, "arrival_rate": 5*a},
+            {"type": "type1", "prefill": 350, "decode": 183, "arrival_rate": 3*a},
+            {"type": "type1", "prefill": 400, "decode": 182, "arrival_rate": 2*a},
+            {"type": "type1", "prefill": 450, "decode": 196, "arrival_rate": 2*a},
+            {"type": "type1", "prefill": 500, "decode": 229, "arrival_rate": 1*a},
+            # 可继续添加其他类型...
         ]
     def _generate_next_request(self, last_arrived_at: float) -> Request:
         # 选择一个 prompt 类型，例如基于到达率选择
