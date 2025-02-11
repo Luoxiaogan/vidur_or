@@ -11,7 +11,10 @@ python -m vidur.main \
     --request_generator_config_type custom \
     --custom_request_generator_config_num_requests $NUM_REQUESTS \
     --replica_scheduler_config_type sarathi \
+    --sarathi_scheduler_config_batch_size_cap 484 \
     --random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size 16384 \
     --random_forrest_execution_time_predictor_config_prediction_max_batch_size 2048 \
     --random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request 16384
 
+
+#     --sarathi_scheduler_config_batch_size_cap 484 \ 可以调整batch_size
