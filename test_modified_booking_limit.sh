@@ -1,4 +1,4 @@
-NUM_REQUESTS=50000  # 你想要的请求总数
+NUM_REQUESTS=10000  # 你想要的请求总数
 
 python -m vidur.main \
   --replica_config_device a100 \
@@ -10,7 +10,7 @@ python -m vidur.main \
   --custom_request_generator_config_num_requests $NUM_REQUESTS \
   --replica_scheduler_config_type modified_booking_limit \
   --modified_booking_limit_scheduler_config_total_num_requests $NUM_REQUESTS \
-  --modified_booking_limit_scheduler_config_total_limit 200 \
+  --modified_booking_limit_scheduler_config_total_limit 100 \
   --modified_booking_limit_scheduler_config_force_clear  \
   --random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size 16384 \
   --random_forrest_execution_time_predictor_config_prediction_max_batch_size 2048 \

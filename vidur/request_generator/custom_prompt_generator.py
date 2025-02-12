@@ -14,8 +14,8 @@ class CustomPromptGenerator(BaseRequestGenerator):
         self.prompt_types = [
             #{"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167*a},
             #{"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 31*a},
-            {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 20000},
-            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 10000},
+            {"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 1670},
+            {"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 310},
             # 可继续添加其他类型...
         ]
     def _generate_next_request(self, last_arrived_at: float) -> Request:
