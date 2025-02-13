@@ -34,17 +34,21 @@ def get_latest_simulation_folder(base_path="/Users/luogan/Code/vidur_or/simulato
     return latest_folder
 
 import os
-import shutil
 import glob
+import shutil
+import csv
 
-def copy_throughput_csv(source_folder, destination_folder, add=""):
+def copy_throughput_csv(source_folder, destination_folder, add="", find_batch_size=False):
     """
     复制 source_folder 目录下以 'throughput' 开头的 CSV 文件到 destination_folder，
-    并在目标文件名后面添加 add（如果提供）。
-    
+    并在目标文件名后面添加 add（如果提供）。如果 find_batch_size 为 True，
+    则在 plots 文件夹中查找 batch_size 开头的 CSV 文件，读取最后一行的 batch_size 值，
+    并将其添加到目标文件名中。
+
     :param source_folder: 源文件夹路径
     :param destination_folder: 目标文件夹路径
     :param add: 目标文件名后要追加的字符串（不包括扩展名），默认不添加
+    :param find_batch_size: 是否查找 batch_size 文件并提取 batch_size 值，默认为 False
     """
     if not os.path.isdir(source_folder):
         print(f"源文件夹不存在: {source_folder}")
@@ -69,12 +73,35 @@ def copy_throughput_csv(source_folder, destination_folder, add=""):
     
     # 目标文件名（添加 _add）
     dst_file_name = f"{base_name}_{add}{ext}" if add else f"{base_name}{ext}"
+    
+    # 如果 find_batch_size 为 True，查找 batch_size 文件并提取 batch_size 值
+    if find_batch_size:
+        plots_folder = os.path.join(source_folder, "plots")
+        batch_size_files = glob.glob(os.path.join(plots_folder, "batch_size*.csv"))
+        
+        if batch_size_files:
+            batch_size_file = batch_size_files[0]
+            with open(batch_size_file, 'r') as f:
+                reader = csv.reader(f)
+                last_row = None
+                for row in reader:
+                    last_row = row
+                if last_row:
+                    batch_size = int(float(last_row[-1]))  # 取最后一行的 batch_size 并转换为整数
+                    dst_file_name = f"{base_name}_{add}_batch_size_{batch_size}{ext}" if add else f"{base_name}_batch_size_{batch_size}{ext}"
+        else:
+            print(f"未找到 batch_size 开头的 CSV 文件于: {plots_folder}")
+
     dst_file = os.path.join(destination_folder, dst_file_name)
 
     shutil.copy(src_file, dst_file)
-    print(f"已复制")
+    print(f"已复制到 {dst_file}")
 
-def copy_latest_csv(destination_folder, add=""):
+# 示例调用
+# copy_throughput_csv("source_folder", "destination_folder", add="example", find_batch_size=True)
+
+
+def copy_latest_csv(destination_folder, add="", find_batch_size=False):
     """
     复制最新的模拟结果文件夹中的 throughput CSV 文件到目标文件夹，
     并在目标文件名后面添加 add。
@@ -90,4 +117,4 @@ def copy_latest_csv(destination_folder, add=""):
         return
     
     # 复制 throughput CSV 文件
-    copy_throughput_csv(latest_folder, destination_folder, add=add)
+    copy_throughput_csv(latest_folder, destination_folder, add=add, find_batch_size=find_batch_size)

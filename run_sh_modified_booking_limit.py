@@ -2,10 +2,10 @@ from utils import copy_latest_csv
 
 import subprocess
 
-destination_folder = "/Users/luogan/Code/vidur_or/results_analysis/test10__long_decode_high_rate/modified_booking_limit"
+destination_folder = "/Users/luogan/Code/vidur_or/results_analysis/test9__short_decode_high_rate/modified_booking_limit"
 
 # 设置 NUM_REQUESTS 变化范围
-for limit in range(2300, 2600, 100):
+for limit in range(420, 620, 20):
     cmd = [
         "python", "-m", "vidur.main",  # 通过 `-m` 方式运行模块
         "--replica_config_device", "a100",
@@ -31,4 +31,4 @@ for limit in range(2300, 2600, 100):
     
     print(f"完成: limit={limit}\n")
 
-    copy_latest_csv(destination_folder, add=f"limit_{limit}")
+    copy_latest_csv(destination_folder, add=f"limit_{limit}", find_batch_size=True)
