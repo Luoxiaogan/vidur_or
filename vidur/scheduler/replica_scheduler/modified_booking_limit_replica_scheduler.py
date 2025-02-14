@@ -179,23 +179,28 @@ class ModifiedBookingLimitReplicaScheduler(BaseReplicaScheduler):
             total_available_limits[ptype] = needed_2  # 保存 needed_2
 
         # -------------- 只严格校验 stage=0 是否凑齐 --------------
-        # 如果 stage=0 不够，则直接返回 None，不生成批次
-        all_stage0_ready = True
-        # print("Booking limits:", booking_limit)
-        # print(booking_limit.get((ptype, 0), 0))
-        # print("Booking Limits Per Type:", self.booking_limits_per_type)
-        # print("Prompt Stage Count:", prompt_stage_count)
-        # for ptype in prompt_rates.keys():
-        for ptype  in self.booking_limits_per_type.keys():
-            needed_1 = booking_limit.get((ptype, 0), 0)# 这个是原始的最严格的booking_limit策略所需要的stage0的数目
-            needed_2 = total_available_limits.get(ptype, 0)  # 已经预计算的 needed_2
+        #all_stage0_ready = True
+        #for ptype  in self.booking_limits_per_type.keys():
+        #    needed_1 = booking_limit.get((ptype, 0), 0)# 这个是原始的最严格的booking_limit策略所需要的stage0的数目
+        #    needed_2 = total_available_limits.get(ptype, 0)  # 已经预计算的 needed_2
             # 这个needed_2是每一个type的总的limit减去已经被占用的stage>0的请求数目(已经被占用的limit)
-            available = len(grouped_requests.get((ptype, 0), []))
-            if available < min(needed_1, needed_2):
+        #    available = len(grouped_requests.get((ptype, 0), []))
+        #    if available < min(needed_1, needed_2):
                 # 如果能填满limit, 那就出发; 如果能达到stage0的limit, 那就更好
-                all_stage0_ready = False
-                break
+        #        all_stage0_ready = False
+        #        break
 
+        # 这里重新修改了判断，只要有一个type的stage够了，就可以继续
+        # 也就是不需要相互等待
+        all_stage0_ready = False
+        for ptype  in self.booking_limits_per_type.keys():
+            needed_1 = booking_limit.get((ptype, 0), 0)
+            needed_2 = total_available_limits.get(ptype, 0)
+            available = len(grouped_requests.get((ptype, 0), []))
+            if available >= min(needed_1, needed_2):
+                all_stage0_ready = True
+                break
+        
     # 根据 new logic 修改分支判断：
         if not all_stage0_ready:
             if not self.all_requests_arrived:
