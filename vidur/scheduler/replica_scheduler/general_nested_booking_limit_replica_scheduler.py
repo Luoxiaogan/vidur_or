@@ -22,9 +22,9 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         # 保证 prefill 相同，但 decode 和 arrival_rate 可能不同，
         # 并且可能不止三个 type
         self.prompt_types = [
-            {"type": "type1", "prefill": 10, "decode": 10, "arrival_rate": 300},
-            {"type": "type2", "prefill": 10, "decode": 20, "arrival_rate": 200},
-            {"type": "type3", "prefill": 10, "decode": 30, "arrival_rate": 100},
+            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
+    {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
+    {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 2000},
             # 可以继续添加更多类型……
         ]
         self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}
