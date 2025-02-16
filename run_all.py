@@ -1,14 +1,21 @@
 import os
 import json
+from itertools import product
 from utils import run_modified, run_vllm, run_sarathi  # 假设 utils.py 中包含了这些函数
 
 # 定义可变的 arrival_rate 值
 arrival_rates = [2000, 4000, 6000, 8000]
 
-# 遍历所有可能的 prompt_types 组合
-for i, (ar1, ar2, ar3) in enumerate(zip(arrival_rates, arrival_rates, arrival_rates), start=1):
+# 生成所有可能的 (ar1, ar2, ar3) 组合
+all_combinations = list(product(arrival_rates, repeat=3))
+
+# 过滤掉 ar1 = ar2 = ar3 的组合
+filtered_combinations = [comb for comb in all_combinations if not (comb[0] == comb[1] == comb[2])]
+
+# 遍历所有过滤后的组合
+for i, (ar1, ar2, ar3) in enumerate(filtered_combinations, start=1):
     # 创建主文件夹路径
-    main_folder = os.path.join("/Users/luogan/Code/vidur_or/results_analysis/search_long_decode", f"test{i}")
+    main_folder = os.path.join("/Users/luogan/Code/vidur_or/results_analysis/search_long_decode", f"test{i+4}")
     os.makedirs(main_folder, exist_ok=True)
     
     # 创建子文件夹
@@ -23,7 +30,7 @@ for i, (ar1, ar2, ar3) in enumerate(zip(arrival_rates, arrival_rates, arrival_ra
         {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": ar3}
     ]
 
-    print(f"\n\nRunning test {i}")
+    print(f"\n\nRunning test {i+4} with arrival rates: {ar1}, {ar2}, {ar3}")
     
     # 保存 prompt_types 到 config.py 中
     config_file_path = os.path.join(main_folder, "config.py")
