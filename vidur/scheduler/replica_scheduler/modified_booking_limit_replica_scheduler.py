@@ -35,14 +35,7 @@ class ModifiedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         a = 50
         # a 不会影响计算出来的booking_limit, 但是会影响总的到达速率
 
-        self.prompt_types = [
-            #{"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167*a},
-            #{"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 31*a},
-            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
-    {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
-    {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 2000},
-            # 可继续添加其他类型...
-        ]
+        self.prompt_types = self._config.prompt_types
         self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}
 
         self.booking_limits_per_type = self.calculate_booking_limits()

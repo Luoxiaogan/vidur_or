@@ -2,6 +2,7 @@ from vidur.request_generator.base_request_generator import BaseRequestGenerator
 from typing import List  # 新增导入
 from vidur.entities import Request  # 确保 Request 类已更新，包含 prompt_type 和 current_stage
 import random
+import json
 
 class CustomPromptGenerator(BaseRequestGenerator):
     def __init__(self, config):
@@ -11,16 +12,8 @@ class CustomPromptGenerator(BaseRequestGenerator):
         a = 50
         # a 不会影响计算出来的booking_limit, 但是会影响总的到达速率
 
-        self.prompt_types = [
-            #{"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 167*a},
-            #{"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 31*a},
-            #{"type": "type1", "prefill": 50, "decode": 156, "arrival_rate": 1670},
-            #{"type": "type2", "prefill": 100, "decode": 171, "arrival_rate": 310},
-            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
-    {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
-    {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 2000},
-            # 可继续添加其他类型...
-        ]
+        # 如果 config.prompt_types 是 JSON 字符串，则解析它
+        self.prompt_types = self.config.prompt_types
     def _generate_next_request(self, last_arrived_at: float) -> Request:
         # 选择一个 prompt 类型，例如基于到达率选择
         prompt_type_info = random.choices(

@@ -118,3 +118,103 @@ def copy_latest_csv(destination_folder, add="", find_batch_size=False):
     
     # 复制 throughput CSV 文件
     copy_throughput_csv(latest_folder, destination_folder, add=add, find_batch_size=find_batch_size)
+
+import subprocess
+
+import subprocess
+import json
+
+def run_modified(destination_folder, limit_start, limit_end, limit_interval, num_requests, prompt_types=None):
+    if prompt_types is None:
+        prompt_types = [
+            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
+            {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
+            {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 8000}
+        ]
+
+    for limit in range(limit_start, limit_end, limit_interval):
+        cmd = [
+            "python", "-m", "vidur.main",  # 通过 `-m` 方式运行模块
+            "--replica_config_device", "a100",
+            "--replica_config_model_name", "meta-llama/Meta-Llama-3-8B",
+            "--cluster_config_num_replicas", "1",
+            "--replica_config_tensor_parallel_size", "1",
+            "--replica_config_num_pipeline_stages", "1",
+            "--request_generator_config_type", "custom",
+            "--custom_request_generator_config_prompt_types", json.dumps(prompt_types),
+            "--custom_request_generator_config_num_requests", str(num_requests),
+            "--replica_scheduler_config_type", "modified_booking_limit",
+            "--modified_booking_limit_scheduler_config_prompt_types", json.dumps(prompt_types),
+            "--modified_booking_limit_scheduler_config_total_num_requests", str(num_requests),
+            "--modified_booking_limit_scheduler_config_total_limit", str(limit),
+            "--modified_booking_limit_scheduler_config_force_clear",
+            "--random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size", "16384",
+            "--random_forrest_execution_time_predictor_config_prediction_max_batch_size", "2048",
+            "--random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request", "16384"
+        ]
+        print(f"运行modified: limit={limit}")
+        subprocess.run(cmd, check=True)
+        print(f"完成modified: limit={limit}\n")
+        copy_latest_csv(destination_folder, add=f"limit_{limit}", find_batch_size=True)
+
+def run_vllm(destination_folder, batchsize_start, batchsize_end, batchsize_interval, num_requests, prompt_types=None):
+    if prompt_types is None:
+        prompt_types = [
+            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
+            {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
+            {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 8000}
+        ]
+
+    for batch_size in range(batchsize_start, batchsize_end, batchsize_interval):
+        cmd = [
+            "python", "-m", "vidur.main",  # 通过 `-m` 方式运行模块
+            "--replica_config_device", "a100",
+            "--replica_config_model_name", "meta-llama/Meta-Llama-3-8B",
+            "--cluster_config_num_replicas", "1",
+            "--replica_config_tensor_parallel_size", "1",
+            "--replica_config_num_pipeline_stages", "1",
+            "--request_generator_config_type", "custom",
+            "--custom_request_generator_config_prompt_types", json.dumps(prompt_types),
+            "--custom_request_generator_config_num_requests", str(num_requests),
+            "--replica_scheduler_config_type", "vllm",
+            "--vllm_scheduler_config_batch_size_cap", str(batch_size),
+            "--random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size", "16384",
+            "--random_forrest_execution_time_predictor_config_prediction_max_batch_size", "2048",
+            "--random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request", "16384"
+        ]
+        print(f"运行vllm: batch_size ={batch_size}")
+        # 启动进程并等待完成
+        subprocess.run(cmd, check=True)
+        print(f"完成vllm: batch_size ={batch_size}\n")
+        copy_latest_csv(destination_folder, add=f"batch_size_{batch_size}", find_batch_size=False)
+
+def run_sarathi(destination_folder, batchsize_start, batchsize_end, batchsize_interval, num_requests, prompt_types=None):
+    if prompt_types is None:
+        prompt_types = [
+            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
+            {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
+            {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 8000}
+        ]
+
+    for batch_size in range(batchsize_start, batchsize_end, batchsize_interval):
+        cmd = [
+            "python", "-m", "vidur.main",  # 通过 `-m` 方式运行模块
+            "--replica_config_device", "a100",
+            "--replica_config_model_name", "meta-llama/Meta-Llama-3-8B",
+            "--cluster_config_num_replicas", "1",
+            "--replica_config_tensor_parallel_size", "1",
+            "--replica_config_num_pipeline_stages", "1",
+            "--request_generator_config_type", "custom",
+            "--custom_request_generator_config_prompt_types", json.dumps(prompt_types),
+            "--custom_request_generator_config_num_requests", str(num_requests),
+            "--replica_scheduler_config_type", "sarathi",
+            "--sarathi_scheduler_config_batch_size_cap", str(batch_size),
+            "--random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size", "16384",
+            "--random_forrest_execution_time_predictor_config_prediction_max_batch_size", "2048",
+            "--random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request", "16384"
+        ]
+        print(f"运行sarathi: batch_size ={batch_size}")
+        # 启动进程并等待完成
+        subprocess.run(cmd, check=True)
+        print(f"完成sarathi: batch_size ={batch_size}\n")
+        copy_latest_csv(destination_folder, add=f"batch_size_{batch_size}", find_batch_size=False)

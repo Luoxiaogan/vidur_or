@@ -196,6 +196,8 @@ class BaseRequestGeneratorConfig(BasePolyConfig):
         metadata={"help": "Seed for the random number generator."},
     )
 
+from typing import Dict
+
 @dataclass
 class CustomRequestGeneratorConfig(BaseRequestGeneratorConfig):
     max_tokens: int = field(
@@ -209,6 +211,12 @@ class CustomRequestGeneratorConfig(BaseRequestGeneratorConfig):
     duration: Optional[float] = field(
         default=None,
         metadata={"help": "Duration for Custom Request Generator."},
+    )
+    prompt_types: Optional[List[Dict]] = field(
+        default_factory=list,  # 默认值为空列表
+        metadata={
+            "help": "List of prompt types in JSON format.",
+        },
     )
     
     @staticmethod
@@ -765,6 +773,12 @@ class ModifiedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
     force_clear: bool = field(
         default=False,
         metadata={"help": "Force clear the requests still in the scheduler when all requests arrived."},
+    )
+    prompt_types: Optional[List[Dict]] = field(
+        default_factory=list,  # 默认值为空列表
+        metadata={
+            "help": "List of prompt types in JSON format.",
+        },
     )
 
     @staticmethod

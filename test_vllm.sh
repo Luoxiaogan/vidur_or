@@ -9,6 +9,10 @@ python -m vidur.main \
     --replica_config_tensor_parallel_size 1 \
     --replica_config_num_pipeline_stages 1 \
     --request_generator_config_type custom \
+    --custom_request_generator_config_prompt_types '[
+    {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000}, 
+    {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000}, 
+    {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 8000}]' \
     --custom_request_generator_config_num_requests $NUM_REQUESTS \
     --replica_scheduler_config_type vllm \
     --vllm_scheduler_config_batch_size_cap 80 \

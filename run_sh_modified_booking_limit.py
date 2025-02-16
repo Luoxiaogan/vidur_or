@@ -2,10 +2,10 @@ from utils import copy_latest_csv
 
 import subprocess
 
-destination_folder = "/Users/luogan/Code/vidur_or/results_analysis/test13_nested_long_decode/modified_booking_limit"
+destination_folder = "/Users/luogan/Code/vidur_or/results_analysis/test14_nested_long_decode/modified_booking_limit"
 
 # 设置 NUM_REQUESTS 变化范围
-for limit in range(420, 600, 20):
+for limit in range(100, 2100, 100):
     cmd = [
         "python", "-m", "vidur.main",  # 通过 `-m` 方式运行模块
         "--replica_config_device", "a100",
@@ -14,9 +14,9 @@ for limit in range(420, 600, 20):
         "--replica_config_tensor_parallel_size", "1",
         "--replica_config_num_pipeline_stages", "1",
         "--request_generator_config_type", "custom",
-        "--custom_request_generator_config_num_requests", "10000",
+        "--custom_request_generator_config_num_requests", "5000",
         "--replica_scheduler_config_type", "modified_booking_limit",
-        "--modified_booking_limit_scheduler_config_total_num_requests", "10000",
+        "--modified_booking_limit_scheduler_config_total_num_requests", "5000",
         "--modified_booking_limit_scheduler_config_total_limit", str(limit),
         "--modified_booking_limit_scheduler_config_force_clear",
         "--random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size", "16384",
