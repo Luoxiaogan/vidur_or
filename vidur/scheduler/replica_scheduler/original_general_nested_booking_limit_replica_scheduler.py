@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple
 from vidur.entities.batch import Batch, Request
 from vidur.scheduler.replica_scheduler.base_replica_scheduler import BaseReplicaScheduler
 
-class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
+class Original_GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -21,11 +21,15 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         
         # 保证 prefill 相同，但 decode 和 arrival_rate 可能不同，
         # 并且可能不止三个 type
-        self.prompt_types = self._config.prompt_types
+        self.prompt_types = [
+            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
+    {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
+    {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 2000},
+            # 可以继续添加更多类型……
+        ]
         self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}
         # 由于所有类型的 prefill 相同，这里取第一个即可；并假设 prefill 阶段视为 1 个 stage
         self.prefill = self.prompt_types[0]["prefill"]
-        print("统一的prefill阶段数:", self.prefill)
         self.prefill_stage_count = 1
         
         # 计算嵌套 booking limit：返回两个结果
@@ -100,8 +104,7 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
                 nested_booking_limits[global_stage] = per_stage_limit
                 global_stage += 1
             seg_end = global_stage - 1
-            seg_total_limit_int = (seg_end - seg_start + 1) * per_stage_limit
-            segments_info.append({"start": seg_start, "end": seg_end, "per_stage_limit": per_stage_limit, "seg_total_limit": seg_total_limit_int})
+            segments_info.append({"start": seg_start, "end": seg_end, "per_stage_limit": per_stage_limit})
             print(f"start: {seg_start}, end: {seg_end}, per_stage_limit: {per_stage_limit}")
         
         # 输出调试信息
@@ -160,37 +163,13 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         selected_requests: List[Request] = []
         selected_num_tokens: List[int] = []
 
-        first_segment_satisfied = False 
-        first_segment = self.segments[0]
-        firts_seg_start = first_segment["start"]
-        # required 是第一个限制, 是之前严格的booking limit限制
-        required = self.nested_booking_limits.get(firts_seg_start, 0)
-        # occupied 是当前在这个segment但不在初始位置的请求的数目, 也是已经被占用的limit
-        occupied = sum(1 for req in self._request_queue 
-                   if getattr(req, 'current_stage', 0) > first_segment["start"]
-                   and getattr(req, 'current_stage', 0)<= first_segment["end"])
-        # limit_for_this_segment 是这个segment的limit 
-        limit_for_this_segment = first_segment["seg_total_limit"]
-        # remain 是剩余的limit 
-        remain = limit_for_this_segment - occupied
-        print(f"remain={remain},     , required_limit={required}")
-        if len(grouped_requests.get(firts_seg_start, [])) >= min(required, remain):
-            first_segment_satisfied = True
-
         # 根据 all_requests_arrived 标识分两种逻辑
-        # if not self.all_requests_arrived:
-        if not self.all_requests_arrived or (self.all_requests_arrived and first_segment_satisfied):
+        if not self.all_requests_arrived:
             # 原有逻辑：依次检查各个 segment，要求前一个 segment 必须满足条件才能启动后续 segment
-            # 现在修改成了: 要么所有请求还没有到达, 要么已经全部到达但是第一个segment满足了
             for seg in self.segments:
                 seg_start = seg["start"]
                 required = self.nested_booking_limits.get(seg_start, 0)
-                occupied = sum(1 for req in self._request_queue 
-                    if getattr(req, 'current_stage', 0) > seg["start"]
-                    and getattr(req, 'current_stage', 0) <= seg["end"])
-                limit_for_this_segment = seg["seg_total_limit"]
-                remain = limit_for_this_segment - occupied
-                if len(grouped_requests.get(seg_start, [])) < min(required, remain):
+                if len(grouped_requests.get(seg_start, [])) < required:
                     # 如果该 segment 的起始阶段请求数不够，则不启动后续 segment
                     break
 
@@ -209,34 +188,34 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
                         selected_requests.append(req)
                         next_num = self._get_request_next_num_tokens(req)
                         selected_num_tokens.append(next_num)
-        else: 
-            # # 新逻辑：所有请求已到达
-            # found_segment = False  # 标记是否有至少一个 segment 的起始阶段满足 booking limit
-            # for seg in self.segments:
-            #     seg_start = seg["start"]
-            #     required = self.nested_booking_limits.get(seg_start, 0)
-            #     if len(grouped_requests.get(seg_start, [])) >= required:
-            #         # 如果该 segment 的起始阶段满足预设条件，则进行调度
-            #         found_segment = True
-            #         for stage in range(seg["start"], seg["end"] + 1):
-            #             limit = self.nested_booking_limits.get(stage, 0)
-            #             group = grouped_requests.get(stage, [])
-            #             for _ in range(limit):
-            #                 if not group:
-            #                     break
-            #                 req = group.pop(0)
-            #                 if req in self._request_queue:
-            #                     self._request_queue.remove(req)
-            #                 self._allocate_request(req)
-            #                 req.advance_stage()
-            #                 selected_requests.append(req)
-            #                 next_num = self._get_request_next_num_tokens(req)
-            #                 selected_num_tokens.append(next_num)
-            #     # 对于不满足条件的 segment，不进行处理break
+        else:
+            # 新逻辑：所有请求已到达
+            found_segment = False  # 标记是否有至少一个 segment 的起始阶段满足 booking limit
+            for seg in self.segments:
+                seg_start = seg["start"]
+                required = self.nested_booking_limits.get(seg_start, 0)
+                if len(grouped_requests.get(seg_start, [])) >= required:
+                    # 如果该 segment 的起始阶段满足预设条件，则进行调度
+                    found_segment = True
+                    for stage in range(seg["start"], seg["end"] + 1):
+                        limit = self.nested_booking_limits.get(stage, 0)
+                        group = grouped_requests.get(stage, [])
+                        for _ in range(limit):
+                            if not group:
+                                break
+                            req = group.pop(0)
+                            if req in self._request_queue:
+                                self._request_queue.remove(req)
+                            self._allocate_request(req)
+                            req.advance_stage()
+                            selected_requests.append(req)
+                            next_num = self._get_request_next_num_tokens(req)
+                            selected_num_tokens.append(next_num)
+                # 对于不满足条件的 segment，不进行处理
 
-            # if not found_segment:
-            #     # 如果所有 segment 的起始阶段都不满足 booking limit，则执行强制清空队列逻辑
-                print("所有请求已到达, 但是第一个segment不够, 所以都不能运行了 ,强制清除队列")
+            if not found_segment:
+                # 如果所有 segment 的起始阶段都不满足 booking limit，则执行强制清空队列逻辑
+                print("所有请求已到达, 每个segment都不能运行了 ,强制清除队列")
                 print("此时scheduler里面还剩下的request的数目是:", len(self._request_queue))
                 for req in self._request_queue:
                     if req.id in self._allocation_map:

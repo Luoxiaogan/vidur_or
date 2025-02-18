@@ -198,6 +198,39 @@ def run_modified(destination_folder, limit_start, limit_end, limit_interval, num
         print(f"完成modified: limit={limit}\n")
         copy_latest_csv(destination_folder, add=f"limit_{limit}", find_batch_size=True)
 
+def run_nested(destination_folder, limit_start, limit_end, limit_interval, num_requests, prompt_types=None):
+    if prompt_types is None:
+        prompt_types = [
+            {"type": "type1", "prefill": 20, "decode": 100, "arrival_rate": 6000},
+            {"type": "type2", "prefill": 20, "decode": 200, "arrival_rate": 4000},
+            {"type": "type3", "prefill": 20, "decode": 300, "arrival_rate": 8000}
+        ]
+
+    for limit in range(limit_start, limit_end, limit_interval):
+        cmd = [
+            "python", "-m", "vidur.main",  # 通过 `-m` 方式运行模块
+            "--replica_config_device", "a100",
+            "--replica_config_model_name", "meta-llama/Meta-Llama-3-8B",
+            "--cluster_config_num_replicas", "1",
+            "--replica_config_tensor_parallel_size", "1",
+            "--replica_config_num_pipeline_stages", "1",
+            "--request_generator_config_type", "custom",
+            "--custom_request_generator_config_prompt_types", json.dumps(prompt_types),
+            "--custom_request_generator_config_num_requests", str(num_requests),
+            "--replica_scheduler_config_type", "general_nested_booking_limit",
+            "--general_nested_booking_limit_scheduler_config_prompt_types", json.dumps(prompt_types),
+            "--general_nested_booking_limit_scheduler_config_total_num_requests", str(num_requests),
+            "--general_nested_booking_limit_scheduler_config_total_limit", str(limit),
+            "--general_nested_booking_limit_scheduler_config_force_clear",
+            "--random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size", "16384",
+            "--random_forrest_execution_time_predictor_config_prediction_max_batch_size", "2048",
+            "--random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request", "16384"
+        ]
+        print(f"运行nested: limit={limit}")
+        subprocess.run(cmd, check=True)
+        print(f"完成nested: limit={limit}\n")
+        copy_latest_csv(destination_folder, add=f"limit_{limit}", find_batch_size=True)
+
 def run_vllm(destination_folder, batchsize_start, batchsize_end, batchsize_interval, num_requests, prompt_types=None):
     if prompt_types is None:
         prompt_types = [

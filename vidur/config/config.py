@@ -752,6 +752,12 @@ class GeneralNestedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
         default=False,
         metadata={"help": "Force clear the requests still in the scheduler when all requests arrived."},
     )
+    prompt_types: Optional[List[Dict]] = field(
+        default_factory=list,  # 默认值为空列表
+        metadata={
+            "help": "List of prompt types in JSON format.",
+        },
+    )
 
     @staticmethod
     def get_type():
