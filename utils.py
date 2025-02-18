@@ -100,6 +100,46 @@ def copy_throughput_csv(source_folder, destination_folder, add="", find_batch_si
 # 示例调用
 # copy_throughput_csv("source_folder", "destination_folder", add="example", find_batch_size=True)
 
+def copy_complete_time_csv(source_folder, destination_folder, add=""):
+    """
+    复制 source_folder/plots 目录下以 'request_completion_time_series' 开头的 CSV 文件到 destination_folder，
+    并在目标文件名后面添加 add
+
+    :param source_folder: 源文件夹路径
+    :param destination_folder: 目标文件夹路径
+    :param add: 目标文件名后要追加的字符串（不包括扩展名），默认不添加
+    """
+    source_folder = source_folder + "/plots"
+    
+    if not os.path.isdir(source_folder):
+        print(f"源文件夹不存在: {source_folder}")
+        return
+    
+    if not os.path.isdir(destination_folder):
+        print(f"目标文件夹不存在，正在创建: {destination_folder}")
+        os.makedirs(destination_folder)
+
+    # 找到所有以 'request_completion_time_series' 开头的 CSV 文件
+    csv_files = glob.glob(os.path.join(source_folder, "request_completion_time_series*.csv"))
+    
+    if not csv_files:
+        print(f"未找到 request_completion_time_series 开头的 CSV 文件于: {source_folder}")
+        return
+
+    # 由于只有一个符合条件的文件，直接复制
+    src_file = csv_files[0]
+    
+    # 分离文件名和扩展名
+    base_name, ext = os.path.splitext(os.path.basename(src_file))
+    
+    # 目标文件名（添加 _add）
+    dst_file_name = f"{base_name}_{add}{ext}" if add else f"{base_name}{ext}"
+
+    dst_file = os.path.join(destination_folder, dst_file_name)
+
+    shutil.copy(src_file, dst_file)
+    print(f"已复制到 {dst_file}")
+
 
 def copy_latest_csv(destination_folder, add="", find_batch_size=False):
     """
@@ -118,6 +158,7 @@ def copy_latest_csv(destination_folder, add="", find_batch_size=False):
     
     # 复制 throughput CSV 文件
     copy_throughput_csv(latest_folder, destination_folder, add=add, find_batch_size=find_batch_size)
+    copy_complete_time_csv(latest_folder, destination_folder, add=add)
 
 import subprocess
 
