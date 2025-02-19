@@ -73,7 +73,8 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         
         segments = []
         # Segment1：所有请求至少需要 prefill 阶段（计1个 stage）加上最小 decode 次数
-        seg1_count = self.prefill_stage_count + unique_decodes[0]
+        #seg1_count = self.prefill_stage_count + unique_decodes[0]
+        seg1_count = unique_decodes[0] # 这里修改了, 例如decode10次, 那么是从 stage0 到 stage9
         seg1_arrival_sum = sum(pt["arrival_rate"] for pt in self.prompt_types)
         segments.append({"count": seg1_count, "arrival_sum": seg1_arrival_sum})
         
@@ -90,6 +91,7 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         nested_booking_limits = {}
         segments_info = []  # 用于记录每个 segment 在全局 stage 的起止边界及其 per_stage_limit
         global_stage = 0
+        total_limit_real = 0
         for seg in segments:
             seg_weight = seg["count"] * seg["arrival_sum"]
             seg_total_limit = self.total_limit * (seg_weight / total_weight) if total_weight > 0 else 0
@@ -101,12 +103,15 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
                 global_stage += 1
             seg_end = global_stage - 1
             seg_total_limit_int = (seg_end - seg_start + 1) * per_stage_limit
+            total_limit_real += seg_total_limit_int
             segments_info.append({"start": seg_start, "end": seg_end, "per_stage_limit": per_stage_limit, "seg_total_limit": seg_total_limit_int})
-            print(f"start: {seg_start}, end: {seg_end}, per_stage_limit: {per_stage_limit}")
+            print(f"start: {seg_start}, end: {seg_end}, per_stage_limit: {per_stage_limit}, segment_limit: {seg_total_limit_int}")
         
         # 输出调试信息
-        print("Nested Booking Limits per stage:", nested_booking_limits)
-        print("Segments info:", segments_info)
+        #print("Nested Booking Limits per stage:", nested_booking_limits)
+        #print("Segments info:", segments_info)
+        print("设定的总limit:", self.total_limit)
+        print("实际的总limit:", total_limit_real)
         
         return nested_booking_limits, segments_info
 
@@ -173,7 +178,7 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         limit_for_this_segment = first_segment["seg_total_limit"]
         # remain 是剩余的limit 
         remain = limit_for_this_segment - occupied
-        print(f"remain={remain},     , required_limit={required}")
+        #print(f"limit_for_first_segment={limit_for_this_segment},  occupied={occupied},  remain={remain},  required_limit={required}")
         if len(grouped_requests.get(firts_seg_start, [])) >= min(required, remain):
             first_segment_satisfied = True
 
