@@ -178,7 +178,8 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         limit_for_this_segment = first_segment["seg_total_limit"]
         # remain 是剩余的limit 
         remain = limit_for_this_segment - occupied
-        #print(f"limit_for_first_segment={limit_for_this_segment},  occupied={occupied},  remain={remain},  required_limit={required}")
+        stage_0_num = len(grouped_requests.get(firts_seg_start, []))
+        #print(f"\nlimit_for_first_segment={limit_for_this_segment},  occupied={occupied},  remain={remain},  required_limit={required},  stage_0_num={stage_0_num}")
         if len(grouped_requests.get(firts_seg_start, [])) >= min(required, remain):
             first_segment_satisfied = True
 
@@ -187,7 +188,9 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         if not self.all_requests_arrived or (self.all_requests_arrived and first_segment_satisfied):
             # 原有逻辑：依次检查各个 segment，要求前一个 segment 必须满足条件才能启动后续 segment
             # 现在修改成了: 要么所有请求还没有到达, 要么已经全部到达但是第一个segment满足了
+            seg_num = 0
             for seg in self.segments:
+                seg_num += 1
                 seg_start = seg["start"]
                 required = self.nested_booking_limits.get(seg_start, 0)
                 occupied = sum(1 for req in self._request_queue 
@@ -195,8 +198,12 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
                     and getattr(req, 'current_stage', 0) <= seg["end"])
                 limit_for_this_segment = seg["seg_total_limit"]
                 remain = limit_for_this_segment - occupied
+                # print(f"start={seg_start}, end={seg["end"]}, required={required}, occupied={occupied}, remain={remain}, limit_for_this_segment={limit_for_this_segment}, start_num={len(grouped_requests.get(seg_start, []))}")
+                # if seg == self.segments[-1] and len(grouped_requests.get(seg_start, [])) >= min(required, remain):
+                #     print(f"一共启动了{seg_num}个segment")
                 if len(grouped_requests.get(seg_start, [])) < min(required, remain):
                     # 如果该 segment 的起始阶段请求数不够，则不启动后续 segment
+                    #print(f"一共启动了{seg_num-1}个segment")
                     break
 
                 # 对该 segment 内每个阶段调度请求
