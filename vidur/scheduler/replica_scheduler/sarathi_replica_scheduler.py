@@ -184,3 +184,77 @@ class SarathiReplicaScheduler(BaseReplicaScheduler):
             return
 
         return Batch(self._replica_id, requests, num_tokens)
+
+    # def _get_next_batch(self) -> Batch:
+    #     requests = []
+    #     num_tokens = []
+    #     skipped_requests = []
+    #     running_prefills = []
+    #     contains_prefill = False
+    #     num_batch_tokens = 0
+
+    #     # 1. 处理排队队列中的请求
+    #     while self._request_queue:
+    #         if len(requests) == self._max_micro_batch_size:
+    #             break
+
+    #         request = self._request_queue[0]
+
+    #         next_num_tokens = self._get_request_next_num_tokens(request, contains_prefill, num_batch_tokens)
+
+    #         # 如果该请求无法分配资源，停止处理新请求
+    #         if not self._can_allocate_request(request):
+    #             break
+
+    #         if next_num_tokens == 0:
+    #             break
+
+    #         # 分配资源并将请求加入当前批次
+    #         self._allocate_request(request)
+    #         contains_prefill = True
+    #         num_batch_tokens += next_num_tokens
+    #         requests.append(request)
+    #         num_tokens.append(next_num_tokens)
+
+    #         # 从队列中移除已处理的请求
+    #         self._request_queue.pop(0)
+
+    #     # 2. 处理被抢占的请求
+    #     for request in self._preempted_requests:
+    #         if len(requests) == self._max_micro_batch_size:
+    #             break
+
+    #         if request.is_prefill_complete:
+    #             next_num_tokens = self._get_request_next_num_tokens(request, contains_prefill, num_batch_tokens)
+
+    #             if next_num_tokens == 0:
+    #                 skipped_requests.append(request)
+    #                 continue
+
+    #             # 分配资源并将被抢占请求加入当前批次
+    #             while not self._can_allocate_request(request):
+    #                 if self._preempted_requests:
+    #                     victim_request = self._preempted_requests.pop(-1)
+    #                     victim_request.restart()
+    #                     self.free(victim_request.id)
+    #                     self._request_queue = [victim_request] + self._request_queue
+    #                 else:
+    #                     request.restart()
+    #                     self.free(request.id)
+    #                     self._request_queue = [request] + self._request_queue
+    #                     break
+    #             else:
+    #                 self._allocate_request(request)
+    #                 num_batch_tokens += next_num_tokens
+    #                 requests.append(request)
+    #                 num_tokens.append(next_num_tokens)
+
+    #     # 3. 重新调整跳过的请求，确保FIFO顺序
+    #     self._preempted_requests = skipped_requests + self._preempted_requests
+    #     self._preempted_requests = sorted(self._preempted_requests, key=lambda req: req.arrived_at)
+
+    #     # 如果没有请求，返回空
+    #     if not requests:
+    #         return
+
+    #     return Batch(self._replica_id, requests, num_tokens)
