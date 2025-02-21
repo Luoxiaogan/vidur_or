@@ -183,6 +183,12 @@ class SarathiReplicaScheduler(BaseReplicaScheduler):
         if not requests:
             return
 
+        #  # 分析batch种的请求的组成
+        # prefill_incomplete_count = sum(1 for req in requests if not req._is_prefill_complete)
+        # num = len(requests)
+        # stage1_num = sum(1 for req in requests if req._num_processed_tokens == req._num_prefill_tokens+1)
+        # stage_last = sum(1 for req in requests if req._num_processed_tokens == req._num_prefill_tokens+req._num_decode_tokens-1)
+        # print(f"prefill数目={prefill_incomplete_count}, stage1数目={stage1_num}, stage_end数目={stage_last}, 总数目={num}, 比例={prefill_incomplete_count/num}")
         return Batch(self._replica_id, requests, num_tokens)
 
     # def _get_next_batch(self) -> Batch:
