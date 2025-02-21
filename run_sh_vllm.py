@@ -7,7 +7,7 @@ prompt_types = [
     {"type": "type2", "prefill": 120, "decode": 55, "arrival_rate": 100},
 ]
 
-batch_size_list = [130]
+batch_size_list = [128]
 
 run_vllm(
     destination_folder = destination_folder,

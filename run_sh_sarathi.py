@@ -2,14 +2,14 @@ from utils import copy_latest_csv, run_modified, run_sarathi, run_vllm
 
 import subprocess
 
-destination_folder = "/Users/luogan/Code/vidur_or/results_analysis/test29/sarathi"
+destination_folder = "./results_analysis/test29/sarathi"
 
 prompt_types = [
     {"type": "type1", "prefill": 120, "decode": 25, "arrival_rate": 200},
     {"type": "type2", "prefill": 120, "decode": 55, "arrival_rate": 100},
 ]
 
-batch_size_list = [130]
+batch_size_list = [128]
 
 run_sarathi(
     destination_folder = destination_folder,
