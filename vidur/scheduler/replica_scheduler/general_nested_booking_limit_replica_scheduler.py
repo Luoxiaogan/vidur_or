@@ -26,11 +26,11 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         # 保证 prefill 相同，但 decode 和 arrival_rate 可能不同，
         # 并且可能不止三个 type
         self.prompt_types = self._config.prompt_types
-        self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}
+        #self.request_count_per_type = {pt["type"]: 0 for pt in self.prompt_types}
         # 由于所有类型的 prefill 相同，这里取第一个即可；并假设 prefill 阶段视为 1 个 stage
-        self.prefill = self.prompt_types[0]["prefill"]
-        print("统一的prefill阶段数:", self.prefill)
-        self.prefill_stage_count = 1
+        #self.prefill = self.prompt_types[0]["prefill"]
+        #print("统一的prefill阶段数:", self.prefill)
+        #self.prefill_stage_count = 1
         
         # 计算嵌套 booking limit：返回两个结果
         # 1. nested_booking_limits: 一个字典 mapping 全局 stage index -> 每个 stage 的 limit
@@ -41,26 +41,26 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         self._request_queue.append(request)
         self.num_arrival_requests += 1
 
-        prompt_type = request.prompt_type  # 假设 request 具有 prompt_type 属性
-        if prompt_type in self.request_count_per_type:
-            self.request_count_per_type[prompt_type] += 1
-        else:
-            print(f"Warning: Received request with unknown type '{prompt_type}'")
+        #prompt_type = request.prompt_type  # 假设 request 具有 prompt_type 属性
+        #if prompt_type in self.request_count_per_type:
+            #self.request_count_per_type[prompt_type] += 1
+        #else:
+            #print(f"Warning: Received request with unknown type '{prompt_type}'")
 
         if self.num_arrival_requests == self.total_num_requests:
             self.all_requests_arrived = True
             print(f"计划到达个数:{self.total_num_requests}=已到达个数:{self.num_arrival_requests}")
             print("当最后一个request到达时, scheduler里面还剩下的request的数目是:", len(self._request_queue))
 
-            total_throughput = 0
-            for prompt_type, count in self.request_count_per_type.items():
-                print(f"Type:{prompt_type}, Count:{count}")
-                prompt_info = next((pt for pt in self.prompt_types if pt["type"] == prompt_type), None)
-                if prompt_info:
-                    total_throughput += count * (prompt_info["decode"] + 1)
-                else:
-                    print(f"Warning: prompt_type '{prompt_type}' not found in self.prompt_types")
-            print("理论上的throughput是:", total_throughput)
+            # total_throughput = 0
+            # for prompt_type, count in self.request_count_per_type.items():
+            #     print(f"Type:{prompt_type}, Count:{count}")
+            #     prompt_info = next((pt for pt in self.prompt_types if pt["type"] == prompt_type), None)
+            #     if prompt_info:
+            #         total_throughput += count * (prompt_info["decode"] + 1)
+            #     else:
+            #         print(f"Warning: prompt_type '{prompt_type}' not found in self.prompt_types")
+            # print("理论上的throughput是:", total_throughput)
     
     def calculate_nested_booking_limits(self) -> Tuple[Dict[int, int], List[Dict[str, int]]]:
         """
