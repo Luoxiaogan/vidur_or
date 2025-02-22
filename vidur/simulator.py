@@ -85,6 +85,12 @@ class Simulator:
             logger.info(f"Replica {replica_id} pending requests: {replica_scheduler.num_pending_requests}")
             logger.info(f"Replica {replica_id} allocated blocks: {len(replica_scheduler._allocation_map)}")
 
+            if not self._scheduler.is_empty():
+                print("\n启动强制清除\n")
+                while replica_scheduler._request_queue:
+                    req = replica_scheduler._request_queue.pop(0)
+                    replica_scheduler.free(req.id)
+
         assert self._scheduler.is_empty() or self._terminate
 
         logger.info(f"Simulation ended at: {self._time}s")
