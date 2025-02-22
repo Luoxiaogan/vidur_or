@@ -178,7 +178,5 @@ profiler_traces*
 experiments/profiling/get_profiled_data_from_trace.ipynb
 env_3
 
-results_plot/
-
 lmsys_chat_1m_dataset/lmsys___lmsys-chat-1m
 lmsys_chat_1m_dataset/_Users_luogan_Desktop_vidur_or_lmsys_chat_1m_dataset_lmsys___lmsys-chat-1m_default_0.0.0_200748d9d3cddcc9d782887541057aca0b18c5da.lock
