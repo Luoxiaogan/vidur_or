@@ -10,6 +10,7 @@ from vidur.logger import init_logger
 from vidur.metrics import MetricsStore
 from vidur.request_generator import RequestGeneratorRegistry
 from vidur.scheduler import BaseGlobalScheduler, GlobalSchedulerRegistry
+import pandas as pd
 
 logger = init_logger(__name__)
 
@@ -80,6 +81,10 @@ class Simulator:
         print("self._terminate: ", self._terminate)
         print("self._scheduler.is_empty(): ", self._scheduler.is_empty())
 
+        # cleared_requests_id = []
+        # cleared_requests_prefill = []
+        # cleared_requests_decode = []
+
         for replica_id, replica_scheduler in self._scheduler._replica_schedulers.items():
             logger.warning(f"Replica {replica_id} still has pending requests.")
             logger.info(f"Replica {replica_id} pending requests: {replica_scheduler.num_pending_requests}")
@@ -89,11 +94,26 @@ class Simulator:
                 print("\n启动强制清除\n")
                 while replica_scheduler._request_queue:
                     req = replica_scheduler._request_queue.pop(0)
+                    # cleared_requests_id.append(req.id)
+                    # cleared_requests_prefill.append(req._num_prefill_tokens)
+                    # cleared_requests_decode.append(req._num_decode_tokens)
                     replica_scheduler.free(req.id)
 
         assert self._scheduler.is_empty() or self._terminate
 
         logger.info(f"Simulation ended at: {self._time}s")
+
+        # # Combine cleared requests data into a DataFrame
+        # df = pd.DataFrame({
+        #     'request_id': cleared_requests_id,
+        #     'num_prefill_tokens': cleared_requests_prefill,
+        #     'num_decode_tokens': cleared_requests_decode
+        # })
+
+        # # Save the DataFrame to a CSV file
+        # output_file = "/Users/luogan/Code/vidur_or/results_analysis/test34/test_for_numbers/num_req=8e4.csv"
+        # df.to_csv(output_file, index=False)
+        # logger.info(f"Cleared requests data written to {output_file}")
 
     def _write_output(self) -> None:
         logger.info("Writing output")

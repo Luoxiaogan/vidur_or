@@ -1,5 +1,7 @@
 *.DS_Store
 
+**/.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -182,3 +184,18 @@ env_3
 
 lmsys_chat_1m_dataset/lmsys___lmsys-chat-1m
 lmsys_chat_1m_dataset/_Users_luogan_Desktop_vidur_or_lmsys_chat_1m_dataset_lmsys___lmsys-chat-1m_default_0.0.0_200748d9d3cddcc9d782887541057aca0b18c5da.lock
+
+# Ignore original Vidur repo (static reference)
+VIDUR_ORIGINAL/
+
+# Ignore data and output files
+*.csv
+*.pdf
+*.png
+*.zip
+*.DS_Store
+**/*.csv
+**/*.pdf
+**/*.png
+**/*.zip
+**/.DS_Store
