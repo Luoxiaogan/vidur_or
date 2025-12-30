@@ -399,33 +399,15 @@ class MetricsStore:
             file_name="request_metrics"+f"_{self._scheduler_name.lower()}",
         )
 
-        os.makedirs("./results_plot", exist_ok=True)
-
-        self._save_as_csv(
-            dataseries_list=all_request_metrics,
-            key_to_join=REQUEST_ID_STR,
-            base_path="./results_plot/",
-            file_name="request_metrics"+f"_{self._scheduler_name.lower()}",
-        )
-
         for dataseries in self._request_metrics_histogram.values():
             dataseries.plot_histogram(base_plot_path, dataseries._y_name)
 
         for dataseries in self._request_metrics_time_distributions.values():
             dataseries.plot_cdf(base_plot_path, dataseries._y_name, TIME_STR)
-        
-        # self._throughput_metric.plot_step(base_plot_path, "throughput", TIME_STR)
-        # self._save_as_csv([self._throughput_metric], TIME_STR, self._config.output_dir, "throughput")
 
         throughput_file_name = f"throughput_{self._scheduler_name.lower()}"
-
-        os.makedirs("./results_plot", exist_ok=True)
-
-        self._throughput_metric.plot_step(base_plot_path, throughput_file_name, TIME_STR,y_cumsum=False)
+        self._throughput_metric.plot_step(base_plot_path, throughput_file_name, TIME_STR, y_cumsum=False)
         self._save_as_csv([self._throughput_metric], TIME_STR, self._config.output_dir, throughput_file_name)
-
-        self._throughput_metric.plot_step("./results_plot/", throughput_file_name, TIME_STR,y_cumsum=False)
-        self._save_as_csv([self._throughput_metric], TIME_STR, "./results_plot/", throughput_file_name)
 
     def _store_batch_metrics(self, base_plot_path: str):
         if not self._config.store_batch_metrics:
@@ -479,19 +461,11 @@ class MetricsStore:
 
     def _store_completion_metrics(self, base_plot_path: str):
         if self._config.store_request_metrics:
-
             self._scheduler_name = ReplicaSchedulerType(self._replica_scheduler_type).name
-            
-            os.makedirs("./results_plot", exist_ok=True)
 
             for dataseries in self._request_completion_metrics_time_series.values():
                 dataseries.plot_step(
                     base_plot_path, f"{dataseries._y_name}_time_series"+f"_{self._scheduler_name.lower()}", COUNT_STR
-                )
-
-            for dataseries in self._request_completion_metrics_time_series.values():
-                dataseries.plot_step(
-                    "./results_plot/", f"{dataseries._y_name}_time_series"+f"_{self._scheduler_name.lower()}", COUNT_STR
                 )
 
         if not self._config.store_token_completion_metrics:
