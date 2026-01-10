@@ -13,11 +13,13 @@ PREFILL_TOKENS = 60
 DECODE_TOKENS = 200
 
 # 实验参数
-TOTAL_LIMIT = 100  # Booking Limit 的 threshold n (待调整)
-NUM_REQUESTS = 2000  # 每个实验的请求数量
+THRESHOLDS = [20, 40, 60, 80, 100]  # Booking Limit n 列表
+ARRIVAL_RATES = [5, 10, 15, 20]     # Arrival Rate 范围 (qps)
+NUM_REQUESTS = 2000                  # 每个实验的请求数量
 
-# Arrival Rate 范围 (qps)
-ARRIVAL_RATES = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-
-# 输出目录
+# 目录配置
 OUTPUT_DIR = "./results"
+ANALYSIS_OUTPUT_DIR = "./results/analysis"
+
+# 分析参数
+WARMUP_FRACTION = 0.1  # Warm-up 跳过比例
