@@ -97,7 +97,9 @@ class Simulator:
                     # cleared_requests_id.append(req.id)
                     # cleared_requests_prefill.append(req._num_prefill_tokens)
                     # cleared_requests_decode.append(req._num_decode_tokens)
-                    replica_scheduler.free(req.id)
+                    # 只释放已分配内存的请求
+                    if req.id in replica_scheduler._allocation_map:
+                        replica_scheduler.free(req.id)
 
         assert self._scheduler.is_empty() or self._terminate
 

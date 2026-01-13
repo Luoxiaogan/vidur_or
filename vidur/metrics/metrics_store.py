@@ -701,6 +701,11 @@ class MetricsStore:
         self._push_metric(
             BatchMetricsCountDistribution.BATCH_SIZE, batch.id, batch.size
         )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_TOTAL_KV_TOKENS,
+            batch.id,
+            sum(request.num_processed_tokens for request in batch.requests),
+        )
 
     @if_write_metrics
     def on_replica_schedule(

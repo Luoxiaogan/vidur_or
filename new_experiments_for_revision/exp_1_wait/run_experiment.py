@@ -18,7 +18,8 @@ sys.path.insert(0, PROJECT_ROOT)
 from utils import get_latest_simulation_folder
 from config import (
     GPU_TYPE, MODEL_NAME, PREFILL_TOKENS, DECODE_TOKENS,
-    THRESHOLDS, ARRIVAL_RATES, NUM_REQUESTS, OUTPUT_DIR
+    THRESHOLDS, ARRIVAL_RATES, NUM_REQUESTS, OUTPUT_DIR,
+    MAX_TOKENS, MEMORY_MARGIN_FRACTION
 )
 
 
@@ -59,10 +60,12 @@ def run_single_experiment(arrival_rate, total_limit, num_requests, prefill_token
         "python", "-m", "vidur.main",
         "--replica_config_device", GPU_TYPE,
         "--replica_config_model_name", MODEL_NAME,
+        "--replica_config_memory_margin_fraction", str(MEMORY_MARGIN_FRACTION),
         "--cluster_config_num_replicas", "1",
         "--replica_config_tensor_parallel_size", "1",
         "--replica_config_num_pipeline_stages", "1",
         "--request_generator_config_type", "custom",
+        "--custom_request_generator_config_max_tokens", str(MAX_TOKENS),
         "--custom_request_generator_config_prompt_types", json.dumps(prompt_types),
         "--custom_request_generator_config_num_requests", str(num_requests),
         "--replica_scheduler_config_type", "general_nested_booking_limit",
@@ -72,7 +75,8 @@ def run_single_experiment(arrival_rate, total_limit, num_requests, prefill_token
         "--general_nested_booking_limit_scheduler_config_force_clear",
         "--random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size", "16384",
         "--random_forrest_execution_time_predictor_config_prediction_max_batch_size", "2048",
-        "--random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request", "16384"
+        "--random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request", "32768",
+        "--metrics_config_keep_individual_batch_metrics"
     ]
 
     print(f"运行: n={total_limit}, λ={arrival_rate}")

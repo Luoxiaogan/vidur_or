@@ -74,6 +74,7 @@ class BatchMetricsCountDistribution(enum.Enum):
     BATCH_NUM_PREFILL_TOKENS = "batch_num_prefill_tokens"
     BATCH_NUM_DECODE_TOKENS = "batch_num_decode_tokens"
     BATCH_SIZE = "batch_size"
+    BATCH_TOTAL_KV_TOKENS = "batch_total_kv_tokens"
 
 
 class BatchMetricsTimeDistribution(enum.Enum):

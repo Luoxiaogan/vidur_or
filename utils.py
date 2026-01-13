@@ -2,7 +2,13 @@ import os
 import glob
 from datetime import datetime
 
-def get_latest_simulation_folder(base_path="/Users/luogan/Code/vidur_or/simulator_output"):
+# 动态计算项目根目录
+_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+_DEFAULT_OUTPUT_PATH = os.path.join(_PROJECT_ROOT, "simulator_output")
+
+def get_latest_simulation_folder(base_path=None):
+    if base_path is None:
+        base_path = _DEFAULT_OUTPUT_PATH
     # 获取所有子目录
     subdirs = [d for d in glob.glob(os.path.join(base_path, "*")) if os.path.isdir(d)]
     
