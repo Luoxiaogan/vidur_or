@@ -312,6 +312,11 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         """
         return not self._request_queue and not self._preempted_requests
 
+    @property
+    def stage_0_queue_length(self) -> int:
+        """返回 stage=0（等待 prefill）的请求数"""
+        return sum(1 for req in self._request_queue
+                   if getattr(req, 'current_stage', 0) == 0)
 
     # def _get_next_batch(self) -> Batch:
     #     """

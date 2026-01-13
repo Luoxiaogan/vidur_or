@@ -18,11 +18,11 @@ MEMORY_MARGIN_FRACTION = 0.1
 
 # 实验参数
 THRESHOLDS = [740]  # Booking Limit n 列表
-ARRIVAL_RATES = [10]     # Arrival Rate 范围 (qps)
-NUM_REQUESTS = 3000                  # 每个实验的请求数量
+ARRIVAL_RATES = [12,13,14,15,16,17,18,19,20,21,22]     # Arrival Rate 范围 (qps)
+NUM_REQUESTS = 6000                  # 每个实验的请求数量
 
 # 目录配置
-OUTPUT_DIR = "./results_single_test"
+OUTPUT_DIR = "./第一个实验_total_740"
 ANALYSIS_OUTPUT_DIR = OUTPUT_DIR + "/analysis"
 
 # 分析参数

@@ -659,7 +659,9 @@ class MetricsStore:
 
     @if_write_metrics
     def on_batch_end(
-        self, time: float, batch: Batch, replica_id: int, memory_usage_percent: int
+        self, time: float, batch: Batch, replica_id: int,
+        memory_usage_percent: int, batch_kv_tokens_percent: float,
+        stage_0_queue_length: int
     ) -> None:
         if (
             self._config.min_batch_index and batch.id < self._config.min_batch_index
@@ -705,6 +707,21 @@ class MetricsStore:
             BatchMetricsCountDistribution.BATCH_TOTAL_KV_TOKENS,
             batch.id,
             sum(request.num_processed_tokens for request in batch.requests),
+        )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_MEMORY_USAGE_PERCENT,
+            batch.id,
+            memory_usage_percent,
+        )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_KV_TOKENS_PERCENT,
+            batch.id,
+            batch_kv_tokens_percent,
+        )
+        self._push_metric(
+            BatchMetricsCountDistribution.BATCH_STAGE_0_QUEUE_LENGTH,
+            batch.id,
+            stage_0_queue_length,
         )
 
     @if_write_metrics

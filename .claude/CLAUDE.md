@@ -555,6 +555,7 @@ def handle_event(self, scheduler, metrics_store):
 - 优先使用 `Read` 工具查看具体文件，而非 `Task` 工具搜索
 - 使用 `Glob` 工具进行文件模式匹配
 - 修改代码前必须先 `Read` 理解上下文
+- **解释性文字直接写在回复里，禁止用 Bash 执行 python print 来输出文字说明**
 
 ### 本地修改 vs 网页端搜索判断规范
 
