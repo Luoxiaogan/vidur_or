@@ -1,4 +1,3 @@
-import atexit
 import heapq
 import json
 from typing import List
@@ -47,7 +46,8 @@ class Simulator:
         )
 
         self._init_event_queue()
-        atexit.register(self._write_output)
+        # 注意：不再使用 atexit.register，而是在 run() 末尾直接调用 _write_output()
+        # 这样可以确保在 subprocess 返回前文件已写入完成
 
     @property
     def scheduler(self) -> BaseGlobalScheduler:
@@ -104,6 +104,9 @@ class Simulator:
         assert self._scheduler.is_empty() or self._terminate
 
         logger.info(f"Simulation ended at: {self._time}s")
+
+        # 直接调用 _write_output()，确保在进程退出前完成文件写入
+        self._write_output()
 
         # # Combine cleared requests data into a DataFrame
         # df = pd.DataFrame({
