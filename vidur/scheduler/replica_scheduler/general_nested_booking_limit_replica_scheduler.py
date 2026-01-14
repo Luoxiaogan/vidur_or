@@ -38,6 +38,10 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         self.nested_booking_limits, self.segments = self.calculate_nested_booking_limits()
     
     def add_request(self, request: Request) -> None:
+        # PD分离补丁：已完成prefill的请求直接从stage 1开始，跳过stage 0的等待
+        if request._is_prefill_complete and request.current_stage == 0:
+            request.current_stage = 1
+
         self._request_queue.append(request)
         self.num_arrival_requests += 1
 

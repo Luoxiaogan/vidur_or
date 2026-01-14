@@ -279,6 +279,39 @@ class TraceRequestGeneratorConfig(BaseRequestGeneratorConfig):
 
 
 @dataclass
+class PDSeparatedRequestGeneratorConfig(BaseRequestGeneratorConfig):
+    """PD分离请求生成器配置 - 生成已完成Prefill的请求，用于测试Decode-only场景"""
+
+    num_requests: int = field(
+        default=1000,
+        metadata={"help": "Number of requests to generate."},
+    )
+    prefill_tokens: int = field(
+        default=512,
+        metadata={"help": "Number of prefill tokens per request (determines KV cache size)."},
+    )
+    decode_tokens: int = field(
+        default=128,
+        metadata={"help": "Number of decode tokens per request."},
+    )
+    arrival_rate: float = field(
+        default=10.0,
+        metadata={"help": "Request arrival rate (requests per second, Poisson process)."},
+    )
+    seed: int = field(
+        default=42,
+        metadata={"help": "Random seed for reproducibility."},
+    )
+
+    def __post_init__(self):
+        self.max_tokens = self.prefill_tokens + self.decode_tokens
+
+    @staticmethod
+    def get_type():
+        return RequestGeneratorType.PD_SEPARATED
+
+
+@dataclass
 class BaseReplicaSchedulerConfig(BasePolyConfig):
     batch_size_cap: int = field(
         default=128,
