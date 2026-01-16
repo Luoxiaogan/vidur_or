@@ -17,50 +17,52 @@ MAX_TOKENS = PREFILL_TOKENS + DECODE_TOKENS  # 650
 MEMORY_MARGIN_FRACTION = 0.1
 
 # 实验参数
-ARRIVAL_RATES = [14, 15,16, 17, 18, 19, 20]  # 测试不同负载
+# ARRIVAL_RATES = [14]  # 测试不同负载
+# ARRIVAL_RATES = [14, 15,16, 17, 18, 19, 20]  # 测试不同负载
+ARRIVAL_RATES = [16, 17, 18, 19, 20, 21]  # 测试不同负载
 # ARRIVAL_RATES = [14, 15,16, 17, 18, 19, 20, 21]  # 测试不同负载
-NUM_REQUESTS = 6000
+NUM_REQUESTS = 10000
 
 # 输出目录
-# OUTPUT_DIR = "./比较测试_3_baseline_use_defaults"
-OUTPUT_DIR = "./比较测试_2_memory_as_bottleneck"
+OUTPUT_DIR = "./比较测试_3_1_baseline_use_defaults"
+# OUTPUT_DIR = "./比较测试_4_test"
 
 # ============ WAIT (General Nested Booking Limit) ============
 WAIT_CONFIG = {
     "scheduler_type": "general_nested_booking_limit",
-    "total_limit": 720,  # n* x l1 = 36 x 20
+    "total_limit": 725,  
     "force_clear": True,
 }
 
 # ============ vLLM ============
-VLLM_CONFIG = {
-    "scheduler_type": "vllm",
-    "max_tokens_in_batch": 1000000,  # 足够大，不成为瓶颈，1000000；4096
-    "batch_size_cap": 2000,          # 足够大，不成为瓶颈，2000；128
-    "watermark_blocks_fraction": 0.01,
-}
-
 # VLLM_CONFIG = {
 #     "scheduler_type": "vllm",
-#     "max_tokens_in_batch": 4096,  # 足够大，不成为瓶颈，1000000；4096
-#     "batch_size_cap": 128,          # 足够大，不成为瓶颈，2000；128
+#     "max_tokens_in_batch": 1000000,  # 足够大，不成为瓶颈，1000000；4096
+#     "batch_size_cap": 2000,          # 足够大，不成为瓶颈，2000；128
 #     "watermark_blocks_fraction": 0.01,
 # }
 
-# ============ Sarathi ============
-SARATHI_CONFIG = {
-    "scheduler_type": "sarathi",
-    "chunk_size": 1000000,           # 足够大，不成为瓶颈，默认是512
-    "batch_size_cap": 2000,          # 足够大，不成为瓶颈；128
+VLLM_CONFIG = {
+    "scheduler_type": "vllm",
+    "max_tokens_in_batch": 4096,  # 足够大，不成为瓶颈，1000000；4096
+    "batch_size_cap": 128,          # 足够大，不成为瓶颈，2000；128
     "watermark_blocks_fraction": 0.01,
 }
 
+# ============ Sarathi ============
 # SARATHI_CONFIG = {
 #     "scheduler_type": "sarathi",
-#     "chunk_size": 512,           # 足够大，不成为瓶颈，默认是512
-#     "batch_size_cap": 128,          # 足够大，不成为瓶颈；128
+#     "chunk_size": 1000000,           # 足够大，不成为瓶颈，默认是512
+#     "batch_size_cap": 2000,          # 足够大，不成为瓶颈；128
 #     "watermark_blocks_fraction": 0.01,
 # }
+
+SARATHI_CONFIG = {
+    "scheduler_type": "sarathi",
+    "chunk_size": 512,           # 足够大，不成为瓶颈，默认是512
+    "batch_size_cap": 128,          # 足够大，不成为瓶颈；128
+    "watermark_blocks_fraction": 0.01,
+}
 
 # 调度器配置映射
 SCHEDULER_CONFIGS = {
@@ -71,6 +73,17 @@ SCHEDULER_CONFIGS = {
 
 # 要比较的调度器列表
 SCHEDULERS_TO_COMPARE = ["wait", "vllm", "sarathi"]
+# SCHEDULERS_TO_COMPARE = ["sarathi"]
 
 # ============ 分析配置 ============
-WARMUP_FRACTION = 0.5 
+WARMUP_FRACTION = 0.5
+
+# ============================================================
+# ============================================================
+# ============ Throughput 分析配置 ============
+# ============================================================
+# ============================================================
+THROUGHPUT_WINDOW = 60      # 滑动窗口大小（秒）
+THROUGHPUT_STEP = 10         # 滑动步长（秒）
+THROUGHPUT_START_TIME = 150   # 大窗口起始时刻（秒）
+THROUGHPUT_END_TIME = 410     # 大窗口结束时刻（秒）

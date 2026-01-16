@@ -252,6 +252,8 @@ class MetricsStore:
         )
         self._throughput_metric.put(0, 0)  # 初始化 throughput
 
+        # 新增：用于记录原始请求数据
+        self._my_request_metrics_list = []
 
     def _init_wandb(self):
         if (
@@ -408,6 +410,14 @@ class MetricsStore:
         throughput_file_name = f"throughput_{self._scheduler_name.lower()}"
         self._throughput_metric.plot_step(base_plot_path, throughput_file_name, TIME_STR, y_cumsum=False)
         self._save_as_csv([self._throughput_metric], TIME_STR, self._config.output_dir, throughput_file_name)
+
+        # 新增：保存原始请求数据到独立CSV
+        if self._my_request_metrics_list:
+            my_metrics_df = pd.DataFrame(self._my_request_metrics_list)
+            my_metrics_df.to_csv(
+                f"{self._config.output_dir}/my_request_metrics_{self._scheduler_name.lower()}.csv",
+                index=False
+            )
 
     def _store_batch_metrics(self, base_plot_path: str):
         if not self._config.store_batch_metrics:
@@ -602,6 +612,23 @@ class MetricsStore:
         self._request_metrics_histogram[
             RequestMetricsHistogram.REQUEST_NUM_RESTARTS
         ].put(request.id, request.num_restarts)
+
+        # 新增：收集原始请求数据
+        self._my_request_metrics_list.append({
+            'id': request.id,
+            'prefill_tokens': request.num_prefill_tokens,
+            'decode_tokens': request.num_decode_tokens,
+            'prompt_type': request.prompt_type,
+            'arrived_at': request.arrived_at,
+            'scheduled_at': request.scheduled_at,
+            'prefill_completed_at': request.prefill_completed_at,
+            'completed_at': request.completed_at,
+            'num_restarts': request.num_restarts,
+            'latest_stage_scheduled_at': request.latest_stage_scheduled_at,
+            'latest_stage_completed_at': request.latest_stage_completed_at,
+            'latest_iteration_scheduled_at': request.latest_iteration_scheduled_at,
+            'latest_iteration_completed_at': request.latest_iteration_completed_at,
+        })
 
     def _update_per_token_execution_times(
         self, time: float, request: Request, batch: Batch
