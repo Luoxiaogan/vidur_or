@@ -62,8 +62,9 @@ class PDSeparatedRequestGenerator(BaseRequestGenerator):
             # 注意：不要手动 += 1，让 on_batch_end 自然处理第一个 decode token
             request._is_prefill_complete = True
 
-            # 对于 WAIT 调度器，设置 current_stage = 1（跳过 stage 0 的等待）
-            request.current_stage = 1
+            # 注意：不要设置 current_stage = 1
+            # WAIT 调度器需要请求从 stage 0 开始，以便正确地进行 booking limit 控制
+            # _is_prefill_complete = True 已经足够让 _get_request_next_num_tokens 返回 1（decode token）
 
             requests.append(request)
 

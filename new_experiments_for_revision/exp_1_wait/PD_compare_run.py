@@ -9,6 +9,7 @@ import sys
 import json
 import shutil
 import subprocess
+import importlib.util
 from datetime import datetime
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -193,16 +194,41 @@ def run_single_scheduler(scheduler_name):
     print(f"\n{scheduler_name} 的 {total} 个实验完成!")
 
 
+def load_config_from_file(config_path):
+    """动态加载外部配置文件"""
+    spec = importlib.util.spec_from_file_location("external_config", config_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="PD 分离: WAIT vs vLLM vs Sarathi 公平比较实验")
+    parser.add_argument("config_file", type=str, nargs="?", default=None,
+                        help="外部配置文件路径（可选），覆盖默认配置")
     parser.add_argument("--scheduler", type=str, default=None,
                         help="只运行指定的调度器 (wait/vllm/sarathi)，默认运行所有")
     parser.add_argument("--rate", type=float, default=None,
                         help="只运行指定的 arrival rate，默认运行所有")
 
     args = parser.parse_args()
+
+    # 如果提供了外部配置文件，覆盖默认配置
+    if args.config_file:
+        print(f"加载外部配置文件: {args.config_file}")
+        ext_cfg = load_config_from_file(args.config_file)
+        CONFIG_VARS = [
+            "GPU_TYPE", "MODEL_NAME", "PREFILL_TOKENS", "DECODE_TOKENS",
+            "ARRIVAL_RATES", "NUM_REQUESTS", "OUTPUT_DIR", "MAX_TOKENS",
+            "MEMORY_MARGIN_FRACTION", "RANDOM_SEED",
+            "WAIT_CONFIG", "VLLM_CONFIG", "SARATHI_CONFIG", "SCHEDULERS_TO_COMPARE"
+        ]
+        for var_name in CONFIG_VARS:
+            if hasattr(ext_cfg, var_name):
+                globals()[var_name] = getattr(ext_cfg, var_name)
+        print(f"配置已覆盖: OUTPUT_DIR={OUTPUT_DIR}")
 
     if args.scheduler and args.rate:
         print(f"运行单个实验: scheduler={args.scheduler}, rate={args.rate}")

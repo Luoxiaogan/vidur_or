@@ -24,8 +24,8 @@ ARRIVAL_RATES = [14, 15,16, 17, 18, 19, 20]  # 测试不同负载
 NUM_REQUESTS = 10000
 
 # 输出目录
-# OUTPUT_DIR = "./比较测试_2_1_memory_as_bottleneck"
-OUTPUT_DIR = "./比较测试_3_1_baseline_use_defaults"
+OUTPUT_DIR = "./比较测试_2_1_memory_as_bottleneck"
+# OUTPUT_DIR = "./比较测试_3_1_baseline_use_defaults"
 
 # ============ WAIT (General Nested Booking Limit) ============
 WAIT_CONFIG = {

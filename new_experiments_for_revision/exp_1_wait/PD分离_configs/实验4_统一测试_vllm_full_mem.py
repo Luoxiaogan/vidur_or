@@ -25,7 +25,7 @@ ARRIVAL_RATES = [350, 360,370,380, 390, 400, 410, 420, 430, 440, 500]  # 测试�
 NUM_REQUESTS = 50000
 
 # 输出目录
-OUTPUT_DIR = "./PD分离实验3_统一测试_vllm_default"
+OUTPUT_DIR = "./PD分离实验4_统一测试_vllm_full_mem"
 
 # ============ WAIT (General Nested Booking Limit) ============
 WAIT_CONFIG = {
@@ -35,19 +35,19 @@ WAIT_CONFIG = {
 }
 
 # ============ vLLM ============
-# VLLM_CONFIG = {
-#     "scheduler_type": "vllm",
-#     "max_tokens_in_batch": 1000000,  # 足够大，不成为瓶颈，1000000；4096
-#     "batch_size_cap": 2000,          # 足够大，不成为瓶颈，2000；128
-#     "watermark_blocks_fraction": 0.01,
-# }
-
 VLLM_CONFIG = {
     "scheduler_type": "vllm",
-    "max_tokens_in_batch": 4096,  # 足够大，不成为瓶颈，1000000；4096
-    "batch_size_cap": 128,          # 足够大，不成为瓶颈，2000；128
+    "max_tokens_in_batch": 1000000,  # 足够大，不成为瓶颈，1000000；4096
+    "batch_size_cap": 2000,          # 足够大，不成为瓶颈，2000；128
     "watermark_blocks_fraction": 0.01,
 }
+
+# VLLM_CONFIG = {
+#     "scheduler_type": "vllm",
+#     "max_tokens_in_batch": 4096,  # 足够大，不成为瓶颈，1000000；4096
+#     "batch_size_cap": 128,          # 足够大，不成为瓶颈，2000；128
+#     "watermark_blocks_fraction": 0.01,
+# }
 
 # ============ Sarathi ============
 # SARATHI_CONFIG = {
@@ -74,7 +74,7 @@ SCHEDULER_CONFIGS = {
 
 # 要比较的调度器列表
 # SCHEDULERS_TO_COMPARE = ["wait", "vllm", "sarathi"]
-SCHEDULERS_TO_COMPARE = ["wait"]
+SCHEDULERS_TO_COMPARE = ["wait", "vllm"]
 
 # ============ 分析配置 ============
 WARMUP_FRACTION = 0.5

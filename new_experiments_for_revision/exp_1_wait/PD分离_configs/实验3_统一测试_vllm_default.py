@@ -74,7 +74,7 @@ SCHEDULER_CONFIGS = {
 
 # 要比较的调度器列表
 # SCHEDULERS_TO_COMPARE = ["wait", "vllm", "sarathi"]
-SCHEDULERS_TO_COMPARE = ["wait"]
+SCHEDULERS_TO_COMPARE = ["wait", "vllm"]
 
 # ============ 分析配置 ============
 WARMUP_FRACTION = 0.5
