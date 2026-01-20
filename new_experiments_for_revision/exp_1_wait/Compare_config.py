@@ -24,7 +24,7 @@ ARRIVAL_RATES = [14, 15,16, 17, 18, 19, 20]  # 测试不同负载
 NUM_REQUESTS = 10000
 
 # 输出目录
-OUTPUT_DIR = "./比较测试_2_1_memory_as_bottleneck"
+OUTPUT_DIR = "./PD分离实验4_统一测试_vllm_full_mem"
 # OUTPUT_DIR = "./比较测试_3_1_baseline_use_defaults"
 
 # ============ WAIT (General Nested Booking Limit) ============
@@ -72,7 +72,7 @@ SCHEDULER_CONFIGS = {
 }
 
 # 要比较的调度器列表
-SCHEDULERS_TO_COMPARE = ["wait", "vllm", "sarathi"]
+SCHEDULERS_TO_COMPARE = ["wait", "vllm"]
 # SCHEDULERS_TO_COMPARE = ["sarathi"]
 
 # ============ 分析配置 ============
@@ -83,10 +83,10 @@ WARMUP_FRACTION = 0.5
 # ============ Throughput 分析配置 ============
 # ============================================================
 # ============================================================
-THROUGHPUT_WINDOW = 60      # 滑动窗口大小（秒）
-THROUGHPUT_STEP = 10         # 滑动步长（秒）
-THROUGHPUT_START_TIME = 150   # 大窗口起始时刻（秒）
-THROUGHPUT_END_TIME = 410     # 大窗口结束时刻（秒）
+THROUGHPUT_WINDOW = 6      # 滑动窗口大小（秒）
+THROUGHPUT_STEP = 1         # 滑动步长（秒）
+THROUGHPUT_START_TIME = 20   # 大窗口起始时刻（秒）
+THROUGHPUT_END_TIME = 100     # 大窗口结束时刻（秒）
 
 # ============================================================
 # ============================================================

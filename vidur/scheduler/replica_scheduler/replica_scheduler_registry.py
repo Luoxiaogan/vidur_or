@@ -13,6 +13,9 @@ from vidur.scheduler.replica_scheduler.sarathi_replica_scheduler import (
 from vidur.scheduler.replica_scheduler.vllm_replica_scheduler import (
     VLLMReplicaScheduler,
 )
+from vidur.scheduler.replica_scheduler.vllm_pd_separated_replica_scheduler import (
+    VLLMPDSeparatedReplicaScheduler,
+)
 from vidur.scheduler.replica_scheduler.booking_limit_replica_scheduler import BookingLimitReplicaScheduler
 from vidur.scheduler.replica_scheduler.nested_booking_limit_replica_scheduler import NestedBookingLimitReplicaScheduler
 from vidur.scheduler.replica_scheduler.general_nested_booking_limit_replica_scheduler import GeneralizedNestedBookingLimitReplicaScheduler
@@ -50,4 +53,8 @@ ReplicaSchedulerRegistry.register(
 ReplicaSchedulerRegistry.register(
     ReplicaSchedulerType.MODIFIED_BOOKING_LIMIT,
     ModifiedBookingLimitReplicaScheduler,
+)
+ReplicaSchedulerRegistry.register(
+    ReplicaSchedulerType.VLLM_PD_SEPARATED,
+    VLLMPDSeparatedReplicaScheduler,
 )

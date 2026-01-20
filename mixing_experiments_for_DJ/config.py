@@ -1,26 +1,30 @@
 """
-vLLM 调度器混合请求类型实验配置
+vLLM PD 分离调度器实验配置（多 Type）
 
-实验目的: 测试 vLLM 调度器处理两种类型请求的性能
+实验目的: 测试 VLLMPDSeparatedReplicaScheduler 调度器
+- 无 Watermark
+- restart 时保持 is_prefill_complete=True（模拟 KV cache 从 CPU 重新加载）
+- 多 type 请求混合
 """
 
 # GPU 和模型配置
 GPU_TYPE = "a100"
 MODEL_NAME = "meta-llama/Meta-Llama-3-8B"
 
-# 请求类型定义 (两种类型)
+# PD 分离请求生成器参数（多 type 模式）
 PROMPT_TYPES = [
-    {"type": "A", "prefill": 20, "decode": 10, "arrival_rate": 1},
-    {"type": "B", "prefill": 11, "decode": 8, "arrival_rate": 1},
+    {"type": "A", "prefill": 2000, "decode": 11, "arrival_rate": 200000},
+    {"type": "B", "prefill": 2000, "decode": 15, "arrival_rate": 200000},
 ]
+SEED = 42
 
 # 实验参数
-NUM_REQUESTS = 2000
-BATCH_SIZE_CAP = 500  # vLLM 批处理大小上限
+NUM_REQUESTS = 10000
+BATCH_SIZE_CAP = 50000  # vLLM 批处理大小上限
 
-# vLLM 调度器参数
+# vLLM PD 分离调度器参数
 BLOCK_SIZE = 16
-WATERMARK_BLOCKS_FRACTION = 0.01
+WATERMARK_BLOCKS_FRACTION = 0  # 禁用 watermark
 MAX_TOKENS_IN_BATCH = 4096
 
 # 内存配置

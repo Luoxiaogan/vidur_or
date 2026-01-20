@@ -302,9 +302,18 @@ class PDSeparatedRequestGeneratorConfig(BaseRequestGeneratorConfig):
         default=42,
         metadata={"help": "Random seed for reproducibility."},
     )
+    prompt_types: List[Dict] = field(
+        default_factory=list,
+        metadata={"help": "List of prompt types. Each dict: {type, prefill, decode, arrival_rate}. If provided, overrides single-type params."},
+    )
 
     def __post_init__(self):
-        self.max_tokens = self.prefill_tokens + self.decode_tokens
+        if self.prompt_types:
+            # 多 type 模式：max_tokens 取所有 type 的最大值
+            self.max_tokens = max(pt["prefill"] + pt["decode"] for pt in self.prompt_types)
+        else:
+            # 单 type 模式：原有逻辑
+            self.max_tokens = self.prefill_tokens + self.decode_tokens
 
     @staticmethod
     def get_type():
@@ -341,6 +350,19 @@ class VllmSchedulerConfig(BaseReplicaSchedulerConfig):
     @staticmethod
     def get_type():
         return ReplicaSchedulerType.VLLM
+
+
+@dataclass
+class VllmPDSeparatedSchedulerConfig(BaseReplicaSchedulerConfig):
+    """PD分离场景的vLLM调度器配置"""
+    max_tokens_in_batch: int = field(
+        default=4096,
+        metadata={"help": "Maximum tokens in batch for vLLM PD Separated."},
+    )
+
+    @staticmethod
+    def get_type():
+        return ReplicaSchedulerType.VLLM_PD_SEPARATED
 
 
 @dataclass

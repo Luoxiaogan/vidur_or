@@ -1,71 +1,43 @@
-from math import ceil
-from typing import List
+"""
+PD分离场景的vLLM调度器
 
+继承VLLMReplicaScheduler，修改抢占逻辑：
+- restart时保持is_prefill_complete=True（模拟KV cache从CPU重新加载到GPU）
+- 被抢占的请求放回队列最前面
+"""
 from vidur.entities.batch import Batch, Request
-from vidur.scheduler.replica_scheduler.base_replica_scheduler import (
-    BaseReplicaScheduler,
+from vidur.scheduler.replica_scheduler.vllm_replica_scheduler import (
+    VLLMReplicaScheduler,
 )
 
 
-class VLLMReplicaScheduler(BaseReplicaScheduler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class VLLMPDSeparatedReplicaScheduler(VLLMReplicaScheduler):
+    """
+    PD分离场景的vLLM调度器
 
-        self._preempted_requests: List[Request] = []
-        self._num_running_batches = 0
-        # For vLLM and its derivatives, we only need to set a loose max batch size
-        # Memory requirements are handled explicitly by the scheduler
-        self._max_micro_batch_size = self._config.batch_size_cap // self._num_stages
-        self._watermark_blocks = int(
-            self._config.watermark_blocks_fraction * self._config.num_blocks
-        )
+    与标准vLLM调度器的唯一区别：
+    - 抢占时使用_pd_restart()而非restart()
+    - _pd_restart()保持is_prefill_complete=True，模拟KV cache从CPU重新加载
+    """
 
-    def on_batch_end(self, batch: Batch) -> None:
-        self._num_running_batches -= 1
+    def _pd_restart(self, request: Request) -> None:
+        """
+        PD分离版restart：保持is_prefill_complete=True
 
-        for request in batch.requests:
-            if request.completed:
-                self.free(request.id)
-            else:
-                self._preempted_requests.append(request)
-
-    def _can_allocate_request(self, request: Request) -> bool:
-        if request.id not in self._allocation_map:
-            # new request
-            num_required_blocks = ceil(
-                (request.num_prefill_tokens) / self._config.block_size
-            )
-            return (
-                self._config.num_blocks
-                - self._num_allocated_blocks
-                - num_required_blocks
-                >= self._watermark_blocks
-            )
-
-        # vllm requires at least one block to be available
-        return self._config.num_blocks - self._num_allocated_blocks >= 1
-
-    def _allocate_request(self, request: Request) -> None:
-        if request.id not in self._allocation_map:
-            # new request
-            num_required_blocks = ceil(
-                (request.num_prefill_tokens) / self._config.block_size
-            )
-            self.allocate(request.id, num_required_blocks)
-            return
-
-        num_tokens_reserved = self._allocation_map[request.id] * self._config.block_size
-        num_tokens_required = max(0, request.num_processed_tokens - num_tokens_reserved)
-        assert (
-            num_tokens_required == 0 or num_tokens_required == 1
-        ), f"num_tokens_required: {num_tokens_required}"
-
-        if num_tokens_required == 0:
-            return
-
-        self.allocate(request.id, 1)
+        模拟：Prefill的KV cache存储在CPU内存中，
+        被抢占后只需重新加载到GPU，无需重新计算prefill
+        """
+        request._num_processed_tokens = request._num_prefill_tokens
+        request._scheduled = False
+        request._preempted = False
+        request._completed = False
+        # 关键：不重置 _is_prefill_complete，保持为True
+        request._num_restarts += 1
 
     def _get_next_batch(self) -> Batch:
+        """
+        重写_get_next_batch，将restart()替换为_pd_restart()
+        """
         requests = []
         num_tokens = []
         num_batch_tokens = 0
@@ -126,13 +98,13 @@ class VLLMReplicaScheduler(BaseReplicaScheduler):
             while not self._can_allocate_request(request):
                 if self._preempted_requests:
                     victim_request = self._preempted_requests.pop(-1)
-                    victim_request.restart()
-                    num_restarts_in_scheduling += 1  # 新增：统计 restart
+                    self._pd_restart(victim_request)  # 改为_pd_restart
+                    num_restarts_in_scheduling += 1  # 新增：统计 _pd_restart
                     self.free(victim_request.id)
                     self._request_queue = [victim_request] + self._request_queue
                 else:
-                    request.restart()
-                    num_restarts_in_scheduling += 1  # 新增：统计 restart
+                    self._pd_restart(request)  # 改为_pd_restart
+                    num_restarts_in_scheduling += 1  # 新增：统计 _pd_restart
                     self.free(request.id)
                     self._request_queue = [request] + self._request_queue
                     break

@@ -255,6 +255,9 @@ class MetricsStore:
         # 新增：用于记录原始请求数据
         self._my_request_metrics_list = []
 
+        # 新增：用于记录 batch 调度指标
+        self._batch_scheduling_metrics_list = []
+
     def _init_wandb(self):
         if (
             not self._config.write_metrics
@@ -433,6 +436,14 @@ class MetricsStore:
 
         for dataseries in self._batch_metrics_count_distribution.values():
             dataseries.plot_cdf(base_plot_path, dataseries._metric_name+f"_{self._scheduler_name.lower()}", COUNT_STR)
+
+        # 新增：保存 batch_scheduling_metrics
+        if self._batch_scheduling_metrics_list:
+            scheduling_df = pd.DataFrame(self._batch_scheduling_metrics_list)
+            scheduling_df.to_csv(
+                f"{self._config.output_dir}/batch_scheduling_metrics_{self._scheduler_name.lower()}.csv",
+                index=False
+            )
 
         if not self._config.keep_individual_batch_metrics:
             return
@@ -688,7 +699,7 @@ class MetricsStore:
     def on_batch_end(
         self, time: float, batch: Batch, replica_id: int,
         memory_usage_percent: int, batch_kv_tokens_percent: float,
-        stage_0_queue_length: int
+        cpu_queue_length: int
     ) -> None:
         if (
             self._config.min_batch_index and batch.id < self._config.min_batch_index
@@ -746,10 +757,22 @@ class MetricsStore:
             batch_kv_tokens_percent,
         )
         self._push_metric(
-            BatchMetricsCountDistribution.BATCH_STAGE_0_QUEUE_LENGTH,
+            BatchMetricsCountDistribution.BATCH_CPU_QUEUE_LENGTH,
             batch.id,
-            stage_0_queue_length,
+            cpu_queue_length,
         )
+
+        # 新增：收集 batch 调度指标
+        scheduling_metrics = {
+            'batch_id': batch.id,
+            'time': batch.scheduled_at,
+            'num_admissions': batch.num_admissions,
+            'num_restarts_in_scheduling': batch.num_restarts_in_scheduling,
+        }
+        # 添加分 type 的列
+        for ptype, count in batch.admission_by_type.items():
+            scheduling_metrics[f'type_{ptype}'] = count
+        self._batch_scheduling_metrics_list.append(scheduling_metrics)
 
     @if_write_metrics
     def on_replica_schedule(

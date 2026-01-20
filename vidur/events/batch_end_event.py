@@ -42,12 +42,12 @@ class BatchEndEvent(BaseEvent):
         c_tokens = replica_scheduler._config.num_blocks * replica_scheduler._config.block_size
         batch_kv_tokens_percent = (batch_total_kv_tokens / c_tokens) * 100
 
-        # 获取 stage_0 队列长度（等待 prefill 的请求数）
-        stage_0_queue_length = getattr(replica_scheduler, 'stage_0_queue_length', 0)
+        # 获取 CPU 队列长度（等待进入 GPU 的请求数）
+        cpu_queue_length = replica_scheduler.cpu_queue_length
 
         metrics_store.on_batch_end(
             self.time, self._batch, self._replica_id,
-            memory_usage_percent, batch_kv_tokens_percent, stage_0_queue_length
+            memory_usage_percent, batch_kv_tokens_percent, cpu_queue_length
         )
 
         return [ReplicaScheduleEvent(self.time, self._replica_id)]

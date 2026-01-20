@@ -82,6 +82,11 @@ class BaseReplicaScheduler(ABC):
     def memory_usage_percent(self) -> int:
         return (self._num_allocated_blocks * 100) / self._config.num_blocks
 
+    @property
+    def cpu_queue_length(self) -> int:
+        """返回等待队列长度（未进入GPU的请求数）"""
+        return len(self._request_queue)
+
     def is_empty(self) -> bool:
         return (
             self.num_pending_requests == 0

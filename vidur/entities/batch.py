@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from vidur.entities.base_entity import BaseEntity
 from vidur.entities.request import Request
@@ -32,6 +32,9 @@ class Batch(BaseEntity):
         replica_id: int,
         requests: List[Request],
         num_tokens: List[int],
+        num_admissions: int = 0,
+        admission_by_type: Dict[str, int] = None,
+        num_restarts_in_scheduling: int = 0,
     ) -> None:
         self._id = Batch.generate_id()
         self._replica_id = replica_id
@@ -52,6 +55,11 @@ class Batch(BaseEntity):
         self._completed_at = None
         self._scheduled = False
         self._completed = False
+
+        # 新增：调度统计信息
+        self._num_admissions = num_admissions
+        self._admission_by_type = admission_by_type if admission_by_type is not None else {}
+        self._num_restarts_in_scheduling = num_restarts_in_scheduling
 
     @property
     def replica_id(self) -> int:
@@ -135,6 +143,18 @@ class Batch(BaseEntity):
     @property
     def completed_requests(self) -> List[Request]:
         return [request for request in self._requests if request.completed]
+
+    @property
+    def num_admissions(self) -> int:
+        return self._num_admissions
+
+    @property
+    def admission_by_type(self) -> Dict[str, int]:
+        return self._admission_by_type
+
+    @property
+    def num_restarts_in_scheduling(self) -> int:
+        return self._num_restarts_in_scheduling
 
     def to_dict(self) -> dict:
         return {

@@ -77,7 +77,7 @@ class BatchMetricsCountDistribution(enum.Enum):
     BATCH_TOTAL_KV_TOKENS = "batch_total_kv_tokens"
     BATCH_MEMORY_USAGE_PERCENT = "batch_memory_usage_percent"
     BATCH_KV_TOKENS_PERCENT = "batch_kv_tokens_percent"
-    BATCH_STAGE_0_QUEUE_LENGTH = "batch_stage_0_queue_length"
+    BATCH_CPU_QUEUE_LENGTH = "batch_cpu_queue_length"
 
 
 class BatchMetricsTimeDistribution(enum.Enum):
