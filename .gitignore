@@ -190,15 +190,17 @@ VIDUR_ORIGINAL/
 
 # Ignore data and output files
 *.csv
-*.pdf
+# *.pdf
 *.png
 *.zip
 *.DS_Store
 **/*.csv
-**/*.pdf
+# **/*.pdf
 **/*.png
 **/*.zip
 **/.DS_Store
+selected_for_draw/
+PDF/
 
 
 new_experiments_for_revision/exp_1_wait/results/
@@ -219,3 +221,6 @@ new_experiments_for_revision/exp_1_wait/PD分离实验1_比较测试
 new_experiments_for_revision/exp_1_wait/PD分离实验*
 mixing_experiments_for_DJ/results
 mixing_experiments_for_DJ/sglang_mixing/results/
+new_experiments_for_revision/exp_1_wait/draw_picture/非PD分离_baseline_use_defaults
+new_experiments_for_revision/exp_1_wait/draw_picture/非PD分离_memory_as_bottleneck
+new_experiments_for_revision/exp_1_wait/draw_picture/PD分离_vllm_default

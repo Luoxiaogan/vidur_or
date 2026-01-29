@@ -1,8 +1,7 @@
 """
-测试 sglang fake decode 模式 - 泊松过程发送请求
-- 2000 个请求
-- prefill_tokens=1000, decode_tokens=20
-- 泊松过程 rate=1000, seed=42
+测试 sglang fake decode 模式 - 一次性并行发送所有请求
+- 1000 个请求同时发送
+- 无延迟，真正的并发
 """
 import asyncio
 import time
@@ -15,11 +14,9 @@ SGLANG_URL = "http://localhost:30000/generate"
 MODEL_PATH = "/data/pretrained_models/Qwen2.5-1.5B-Instruct"
 
 # 请求参数
-NUM_REQUESTS = 500
+NUM_REQUESTS = 1000
 PREFILL_TOKENS = 5000
 DECODE_TOKENS = 2000
-POISSON_RATE = 2000  # requests per second
-SEED = 42
 
 # 加载 tokenizer
 print("Loading tokenizer...")
@@ -65,56 +62,35 @@ async def send_request_async(session: aiohttp.ClientSession, prompt: str, max_ne
 
 async def main():
     print("=" * 60)
-    print(f"Poisson Process Request Test")
+    print(f"Parallel Burst Request Test")
     print(f"  NUM_REQUESTS: {NUM_REQUESTS}")
     print(f"  PREFILL_TOKENS: {PREFILL_TOKENS}")
     print(f"  DECODE_TOKENS: {DECODE_TOKENS}")
-    print(f"  POISSON_RATE: {POISSON_RATE} req/s")
-    print(f"  SEED: {SEED}")
     print("=" * 60)
-
-    # 生成泊松过程的到达时间
-    np.random.seed(SEED)
-    inter_arrival_times = np.random.exponential(1.0 / POISSON_RATE, NUM_REQUESTS)
-    arrival_times = np.cumsum(inter_arrival_times)
-    arrival_times = arrival_times - arrival_times[0]  # 从 0 开始
-
-    print(f"Total expected duration: {arrival_times[-1]:.2f}s")
-    print(f"Average inter-arrival time: {np.mean(inter_arrival_times)*1000:.2f}ms")
 
     # 预先构造 prompt（避免在发送时重复计算）
     print("Creating prompt...")
     prompt = create_prompt_with_exact_tokens(PREFILL_TOKENS)
     print(f"Prompt created with {len(tokenizer.encode(prompt))} tokens")
 
-    # 发送请求
-    print("\nSending requests...")
-    start_time = time.time()
-
-    results = []
-    tasks = []
-
-    # 创建大连接池，避免连接数限制导致背压
+    # 创建大连接池的 session (避免连接数限制)
     connector = aiohttp.TCPConnector(limit=NUM_REQUESTS + 100)
 
-    async with aiohttp.ClientSession(connector=connector) as session:
-        for i in range(NUM_REQUESTS):
-            # 等待到达时间
-            target_time = start_time + arrival_times[i]
-            now = time.time()
-            if target_time > now:
-                await asyncio.sleep(target_time - now)
+    # 发送请求
+    print(f"\nSending {NUM_REQUESTS} requests in parallel...")
+    start_time = time.time()
 
-            # 创建异步任务
-            task = asyncio.create_task(
+    async with aiohttp.ClientSession(connector=connector) as session:
+        # 一次性创建所有任务
+        tasks = [
+            asyncio.create_task(
                 send_request_async(session, prompt, DECODE_TOKENS, i)
             )
-            tasks.append(task)
+            for i in range(NUM_REQUESTS)
+        ]
 
-            # 进度显示
-            if (i + 1) % 200 == 0:
-                elapsed = time.time() - start_time
-                print(f"  Sent {i+1}/{NUM_REQUESTS} requests, elapsed: {elapsed:.2f}s")
+        tasks_created_time = time.time()
+        print(f"  All {NUM_REQUESTS} tasks created in {(tasks_created_time - start_time)*1000:.2f}ms")
 
         # 等待所有请求完成
         print("\nWaiting for all requests to complete...")
@@ -122,6 +98,19 @@ async def main():
 
     end_time = time.time()
     total_time = end_time - start_time
+
+    # 分析发送时间分布
+    send_times = sorted([r["send_time"] for r in results])
+    send_duration = send_times[-1] - send_times[0]
+
+    print("\n" + "=" * 60)
+    print("发送时间分析")
+    print("=" * 60)
+    print(f"第 1 个请求发送时间: {(send_times[0] - start_time)*1000:.2f}ms (相对 start)")
+    print(f"第 100 个请求发送时间: {(send_times[99] - start_time)*1000:.2f}ms")
+    print(f"第 500 个请求发送时间: {(send_times[499] - start_time)*1000:.2f}ms")
+    print(f"第 1000 个请求发送时间: {(send_times[999] - start_time)*1000:.2f}ms")
+    print(f"所有请求发送耗时: {send_duration*1000:.2f}ms")
 
     # 统计结果
     print("\n" + "=" * 60)

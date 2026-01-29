@@ -13,8 +13,8 @@ MODEL_NAME = "meta-llama/Meta-Llama-3-8B"
 
 # PD 分离请求生成器参数（多 type 模式）
 PROMPT_TYPES = [
-    {"type": "A", "prefill": 2000, "decode": 11, "arrival_rate": 200000},
-    {"type": "B", "prefill": 2000, "decode": 15, "arrival_rate": 200000},
+    {"type": "A", "prefill": 5000, "decode": 110, "arrival_rate": 200000},
+    {"type": "B", "prefill": 5000, "decode": 111, "arrival_rate": 200000},
 ]
 SEED = 42
 
