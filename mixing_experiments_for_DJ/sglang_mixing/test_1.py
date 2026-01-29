@@ -16,9 +16,9 @@ MODEL_PATH = "/data/pretrained_models/Qwen2.5-1.5B-Instruct"
 
 # 请求参数
 NUM_REQUESTS = 500
-PREFILL_TOKENS = 5000
-DECODE_TOKENS = 2000
-POISSON_RATE = 2000  # requests per second
+PREFILL_TOKENS = 31000
+DECODE_TOKENS = 50
+POISSON_RATE = 5000  # requests per second
 SEED = 42
 
 # 加载 tokenizer
@@ -63,6 +63,25 @@ async def send_request_async(session: aiohttp.ClientSession, prompt: str, max_ne
     }
 
 
+async def delayed_send_request(
+    session: aiohttp.ClientSession,
+    prompt: str,
+    max_new_tokens: int,
+    request_id: int,
+    delay: float,
+    start_time: float
+):
+    """带延迟的异步发送请求 - 等待到指定时间后发送"""
+    # 等待到达时间
+    target_time = start_time + delay
+    now = time.time()
+    if target_time > now:
+        await asyncio.sleep(target_time - now)
+
+    # 发送请求
+    return await send_request_async(session, prompt, max_new_tokens, request_id)
+
+
 async def main():
     print("=" * 60)
     print(f"Poisson Process Request Test")
@@ -88,40 +107,45 @@ async def main():
     print(f"Prompt created with {len(tokenizer.encode(prompt))} tokens")
 
     # 发送请求
-    print("\nSending requests...")
-    start_time = time.time()
-
-    results = []
-    tasks = []
+    print("\nCreating all tasks...")
 
     # 创建大连接池，避免连接数限制导致背压
     connector = aiohttp.TCPConnector(limit=NUM_REQUESTS + 100)
 
     async with aiohttp.ClientSession(connector=connector) as session:
-        for i in range(NUM_REQUESTS):
-            # 等待到达时间
-            target_time = start_time + arrival_times[i]
-            now = time.time()
-            if target_time > now:
-                await asyncio.sleep(target_time - now)
+        start_time = time.time()
 
-            # 创建异步任务
-            task = asyncio.create_task(
-                send_request_async(session, prompt, DECODE_TOKENS, i)
+        # 一次性创建所有带延迟的任务
+        tasks = [
+            asyncio.create_task(
+                delayed_send_request(
+                    session, prompt, DECODE_TOKENS, i, arrival_times[i], start_time
+                )
             )
-            tasks.append(task)
+            for i in range(NUM_REQUESTS)
+        ]
 
-            # 进度显示
-            if (i + 1) % 200 == 0:
-                elapsed = time.time() - start_time
-                print(f"  Sent {i+1}/{NUM_REQUESTS} requests, elapsed: {elapsed:.2f}s")
+        tasks_created_time = time.time()
+        print(f"  All {NUM_REQUESTS} tasks created in {(tasks_created_time - start_time)*1000:.2f}ms")
+        print(f"\nWaiting for all requests to complete...")
 
-        # 等待所有请求完成
-        print("\nWaiting for all requests to complete...")
+        # 并行执行所有任务（每个任务内部有自己的延迟）
         results = await asyncio.gather(*tasks)
 
     end_time = time.time()
     total_time = end_time - start_time
+
+    # 发送时间分析
+    send_times = sorted([r["send_time"] for r in results])
+    send_duration = send_times[-1] - send_times[0]
+
+    print("\n" + "=" * 60)
+    print("发送时间分析")
+    print("=" * 60)
+    print(f"预期发送时间: {arrival_times[-1]*1000:.2f}ms")
+    print(f"实际发送时间: {send_duration*1000:.2f}ms")
+    print(f"第 1 个请求: {(send_times[0] - start_time)*1000:.2f}ms")
+    print(f"第 {NUM_REQUESTS} 个请求: {(send_times[-1] - start_time)*1000:.2f}ms")
 
     # 统计结果
     print("\n" + "=" * 60)
