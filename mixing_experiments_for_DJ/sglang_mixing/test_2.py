@@ -14,9 +14,9 @@ SGLANG_URL = "http://localhost:30000/generate"
 MODEL_PATH = "/data/pretrained_models/Qwen2.5-1.5B-Instruct"
 
 # 请求参数
-NUM_REQUESTS = 1000
+NUM_REQUESTS = 2000
 PREFILL_TOKENS = 5000
-DECODE_TOKENS = 2000
+DECODE_TOKENS = 1000
 
 # 加载 tokenizer
 print("Loading tokenizer...")
