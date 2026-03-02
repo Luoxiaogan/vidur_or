@@ -17,18 +17,16 @@ MAX_TOKENS = PREFILL_TOKENS + DECODE_TOKENS  # 650
 MEMORY_MARGIN_FRACTION = 0.1
 
 # 实验参数
-# ARRIVAL_RATES = [14]  # 测试不同负载
 ARRIVAL_RATES = [14, 15,16, 17, 18, 19, 20, 21]  # 测试不同负载
 NUM_REQUESTS = 10000
 
 # 输出目录
-OUTPUT_DIR = "./比较测试_3_1_baseline_use_defaults/02_28_small_wait_total_limit=80"
-# OUTPUT_DIR = "./比较测试_3_1_baseline_use_defaults"
+OUTPUT_DIR = "./比较测试_3_1_baseline_use_defaults/02_28_small_wait_total_limit=2"
 
 # ============ WAIT (General Nested Booking Limit) ============
 WAIT_CONFIG = {
     "scheduler_type": "general_nested_booking_limit",
-    "total_limit": 80,  
+    "total_limit": 2,  
     "force_clear": True,
 }
 

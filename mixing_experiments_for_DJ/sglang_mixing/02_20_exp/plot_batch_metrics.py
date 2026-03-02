@@ -22,19 +22,26 @@ OUTPUT_DIR = BASE_DIR
 
 # 实验配置
 EXPERIMENTS = {
-    "exp_single": {
-        "csv_path": BASE_DIR / "exp_single" / "batch_metrics_mix.csv",
+    "exp_two_non_coprime": {
+        "csv_path": BASE_DIR / "exp_two_non_coprime" / "batch_metrics_mix.csv",
         "start_batch_id": 12,  # dummy 之后的起始 batch_id
-        "title": "Single Type Experiment",
-        "output_name": "batch_metrics_exp_single.png",
-    },
-    "exp_two": {
-        "csv_path": BASE_DIR / "exp_two" / "batch_metrics_mix.csv",
-        "start_batch_id": 12,  # dummy 之后的起始 batch_id
-        "title": "Two Types Experiment",
-        "output_name": "batch_metrics_exp_two.png",
+        "title": "Two Types Non-Coprime Experiment",
+        "output_name": "batch_metrics_exp_two_non_coprime.png",
     },
 }
+
+# "exp_single": {
+#         "csv_path": BASE_DIR / "exp_single" / "batch_metrics_mix.csv",
+#         "start_batch_id": 12,  # dummy 之后的起始 batch_id
+#         "title": "Single Type Experiment",
+#         "output_name": "batch_metrics_exp_single.png",
+#     },
+#     "exp_two": {
+#         "csv_path": BASE_DIR / "exp_two" / "batch_metrics_mix.csv",
+#         "start_batch_id": 12,  # dummy 之后的起始 batch_id
+#         "title": "Two Types Experiment",
+#         "output_name": "batch_metrics_exp_two.png",
+#     },
 
 
 def load_and_filter_data(csv_path: Path, start_batch_id: int) -> pd.DataFrame:

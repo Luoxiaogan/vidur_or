@@ -36,15 +36,15 @@ MODEL_PATH = "/data/pretrained_models/Qwen2.5-1.5B-Instruct" # /data/pretrained_
 REQUEST_TYPES = {
     "short": {
         "prefill_tokens": 5000,   # 较短的 prefill
-        "decode_tokens": 1211,     # 中等 decode
+        "decode_tokens": 1200,     # 中等 decode
         "poisson_rate": 5000,      # 100 req/s
-        "count": 1000,            # 2500 个请求
+        "count": 10000,            # 2500 个请求
     },
     "long": {
         "prefill_tokens": 5000,   # 较长的 prefill
         "decode_tokens": 1000,     # 较短 decode
         "poisson_rate": 5000,       # 50 req/s
-        "count": 1000,            # 2500 个请求
+        "count": 10000,            # 2500 个请求
     }
 }
 

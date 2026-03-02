@@ -21,7 +21,7 @@ MEMORY_MARGIN_FRACTION = 0.1
 
 # 实验参数
 # ARRIVAL_RATES = [14, 15, 16, 17, 18, 19, 20, 21]  # 测试不同负载
-ARRIVAL_RATES = [275, 300, 325]  # 测试不同负载
+ARRIVAL_RATES = [350, 360,370,380, 390, 400, 410, 420, 430, 440, 500]  # 测试不同负载
 NUM_REQUESTS = 50000
 
 # 输出目录
@@ -73,7 +73,8 @@ SCHEDULER_CONFIGS = {
 }
 
 # 要比较的调度器列表
-SCHEDULERS_TO_COMPARE = ["wait", "vllm"]
+# SCHEDULERS_TO_COMPARE = ["wait", "vllm", "sarathi"]
+SCHEDULERS_TO_COMPARE = ["wait"]
 
 # ============ 分析配置 ============
 WARMUP_FRACTION = 0.5
