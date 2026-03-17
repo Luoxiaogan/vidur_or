@@ -817,7 +817,26 @@ class GeneralNestedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
     @staticmethod
     def get_type():
         return ReplicaSchedulerType.GENERAL_NESTED_BOOKING_LIMIT
-    
+
+@dataclass
+class GeneralNestedChunkedSchedulerConfig(GeneralNestedBookingLimitSchedulerConfig):
+    """
+    General Nested Booking Limit + Chunked Prefill 融合调度器配置
+
+    继承GeneralNestedBookingLimitSchedulerConfig的所有配置，并添加chunk_size参数
+
+    新增参数:
+        chunk_size: Chunked Prefill机制的chunk大小（仅在Stage 0使用）
+    """
+    chunk_size: int = field(
+        default=512,
+        metadata={"help": "Chunk size for chunked prefill in stage 0 (Sarathi mechanism)."},
+    )
+
+    @staticmethod
+    def get_type():
+        return ReplicaSchedulerType.GENERAL_NESTED_CHUNKED
+
 @dataclass
 class ModifiedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
     # 如果需要其他字段，可在此处添加
