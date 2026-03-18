@@ -48,7 +48,7 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         # ---- 自适应参数 ----
         self._n_max = self.total_limit  # 配置的 total_limit 作为上限
         # N_SEG: 初始值（可运行时调整）
-        self._n_seg = min(4, self._l1)
+        self._n_seg = min(2, self._l1)
         self._decode_segments = self._build_segments(self._l1, self._n_seg)
         self._seg_limit = max(1, self.total_limit // (self._n_seg + 1))
 
@@ -175,120 +175,137 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
 
     def _get_next_batch(self) -> Batch:
         """
-        统一分段调度:
-          1. Preempted → 直接分组到 segments（不经 queue）
-          2. Queue → 分组
-          3. Decode segments: 段间门控 + work-conserving 兜底
+        Peek-based 双阈值分段调度（零放回开销）:
+          1. Peek: 计数每段请求数（不取出，不移动）
+          2. 决策: lower_limit 决定段是否参与, upper_limit 限制每段最多几个
+          3. 选取: 只取要处理的请求（不需要的不碰）
           4. Prefill: chunk 预算
         """
-        # ---- Step 1: 分组（preempted 直接分组，不经 queue）----
-        prefill_group: List[Request] = []
-        decode_seg_groups: List[List[Request]] = [[] for _ in self._decode_segments]
+        # ---- Step 1: Peek 计数（不移动请求）----
+        # 统计 preempted 中每段的 decode 请求数
+        seg_counts = [0] * len(self._decode_segments)
+        prefill_in_preempted = 0
 
         for req in self._preempted_requests:
             if req.is_prefill_complete:
                 seg_idx = self._get_seg_index(getattr(req, 'current_stage', 1))
-                decode_seg_groups[seg_idx].append(req)
+                seg_counts[seg_idx] += 1
             else:
-                prefill_group.append(req)
-        self._preempted_requests.clear()
+                prefill_in_preempted += 1
 
+        # Queue 中的 decode 请求计数
+        seg_counts_queue = [0] * len(self._decode_segments)
+        prefill_in_queue = 0
         for req in self._request_queue:
             stage = getattr(req, 'current_stage', 0)
             if stage == 0 and req.is_prefill_complete:
                 req.advance_stage()
                 stage = req.current_stage
             if stage == 0:
-                prefill_group.append(req)
+                prefill_in_queue += 1
             else:
                 seg_idx = self._get_seg_index(stage)
-                decode_seg_groups[seg_idx].append(req)
+                seg_counts_queue[seg_idx] += 1
 
+        total_seg_counts = [a + b for a, b in zip(seg_counts, seg_counts_queue)]
+
+        # ---- Step 2: 双阈值决策（不移动请求）----
+        # lower_limit: 段内请求数 >= lower → 该段参与本 batch
+        # upper_limit: 该段最多取 upper 个请求进 batch
+        lower_limit = self._seg_limit  # 自适应调整
+        upper_limit = max(lower_limit * 2, self.total_limit // max(1, self._n_seg))
+
+        # 决定哪些段参与
+        active_segs = set()
+        for seg_idx in range(len(self._decode_segments)):
+            if total_seg_counts[seg_idx] >= lower_limit or self.all_requests_arrived:
+                active_segs.add(seg_idx)
+
+        # Work-conserving: 如果没有段达标，激活所有有请求的段
+        if not active_segs and not self.all_requests_arrived:
+            for seg_idx in range(len(self._decode_segments)):
+                if total_seg_counts[seg_idx] > 0:
+                    active_segs.add(seg_idx)
+
+        # ---- Step 3: 选取（只取 active 段的请求）----
         selected: List[Request] = []
         tokens: List[int] = []
-
-        # ---- Step 2: Decode segments ----
-        # 段间门控：凑够 seg_limit 才处理
-        # work-conserving 兜底：如果没有任何段凑够，仍处理所有可用的（不 idle GPU）
-        any_seg_fired = False
         batch_count = 0
+        remaining_preempted: List[Request] = []
 
-        for seg_idx in reversed(range(len(self._decode_segments))):
-            group = decode_seg_groups[seg_idx]
-            if not group:
-                continue
-
-            # 门控检查
-            if len(group) >= self._seg_limit or self.all_requests_arrived:
-                # 凑够了（或 drain 模式）→ 处理
-                for req in group:
+        # 从 preempted 选取 decode
+        for req in self._preempted_requests:
+            if req.is_prefill_complete:
+                seg_idx = self._get_seg_index(getattr(req, 'current_stage', 1))
+                if seg_idx in active_segs:
                     self._allocate_request(req)
                     req.advance_stage()
                     selected.append(req)
                     tokens.append(1)
                     batch_count += 1
-                any_seg_fired = True
+                else:
+                    remaining_preempted.append(req)  # 不参与，原地留着
             else:
-                # 不够 → 放回 preempted 等下次
-                for req in group:
-                    self._preempted_requests.append(req)
+                # running prefill → 留着稍后处理
+                remaining_preempted.append(req)
+        self._preempted_requests = remaining_preempted
 
-        # Work-conserving 兜底：如果没有段凑够，取出最大的段处理（不 idle GPU）
-        if not any_seg_fired and not self.all_requests_arrived:
-            # 找有请求的最大段
-            best_seg = -1
-            best_count = 0
-            for seg_idx in reversed(range(len(self._decode_segments))):
-                count = len(decode_seg_groups[seg_idx])
-                if count > best_count:
-                    best_count = count
-                    best_seg = seg_idx
-
-            if best_seg >= 0:
-                # 从 preempted 取回（刚放进去的）
-                to_process = []
-                remaining_preempted = []
-                seg_start, seg_end = self._decode_segments[best_seg]
-                for req in self._preempted_requests:
-                    stage = getattr(req, 'current_stage', 0)
-                    if seg_start <= stage <= seg_end:
-                        to_process.append(req)
-                    else:
-                        remaining_preempted.append(req)
-                self._preempted_requests = remaining_preempted
-
-                for req in to_process:
+        # 从 queue 选取 decode（active 段）
+        new_queue: List[Request] = []
+        prefill_group: List[Request] = []
+        for req in self._request_queue:
+            stage = getattr(req, 'current_stage', 0)
+            if stage == 0:
+                prefill_group.append(req)
+                new_queue.append(req)  # prefill 留在 queue
+            else:
+                seg_idx = self._get_seg_index(stage)
+                if seg_idx in active_segs:
                     self._allocate_request(req)
                     req.advance_stage()
                     selected.append(req)
                     tokens.append(1)
                     batch_count += 1
+                else:
+                    new_queue.append(req)  # 不参与，留在 queue
+        self._request_queue = new_queue
 
-        # ---- Step 3: Prefill ----
+        # ---- Step 4: Prefill（running prefill 续传 + 新请求）----
         num_batch_tokens = batch_count  # decode 计入 chunk 预算
-        prefill_cap = max(1, self.total_limit - batch_count)
 
-        for _ in range(prefill_cap):
-            if not prefill_group:
-                break
-            req = prefill_group[0]
+        # Running prefill 从 preempted 续传
+        still_preempted = []
+        for req in self._preempted_requests:
+            if not req.is_prefill_complete:
+                next_num = self._get_request_next_num_tokens(req, num_batch_tokens)
+                if next_num > 0:
+                    selected.append(req)
+                    tokens.append(next_num)
+                    num_batch_tokens += next_num
+                else:
+                    still_preempted.append(req)
+            else:
+                still_preempted.append(req)
+        self._preempted_requests = still_preempted
+
+        # 新请求从 queue
+        admitted = 0
+        prefill_cap = max(1, self.total_limit - batch_count)
+        while self._request_queue and admitted < prefill_cap:
+            req = self._request_queue[0]
+            if getattr(req, 'current_stage', 0) != 0:
+                break  # 非 prefill，停
             if not self._can_allocate_request(req):
                 break
             next_num = self._get_request_next_num_tokens(req, num_batch_tokens)
             if next_num == 0:
                 break
-            prefill_group.pop(0)
-            if req in self._request_queue:
-                self._request_queue.remove(req)
+            self._request_queue.pop(0)
             self._allocate_request(req)
             selected.append(req)
             tokens.append(next_num)
             num_batch_tokens += next_num
-
-        # 已处理的 decode 从 queue 移除
-        for req in selected:
-            if req.is_prefill_complete and req in self._request_queue:
-                self._request_queue.remove(req)
+            admitted += 1
 
         # 更新统计
         self._batch_count += 1
@@ -296,17 +313,14 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
 
         # ---- Force clear ----
         if not selected and self.all_requests_arrived:
-            if self._request_queue or self._preempted_requests:
-                # 清 queue
-                for req in self._request_queue:
-                    if req.id in self._allocation_map:
-                        self.free(req.id)
-                self._request_queue.clear()
-                # 清 preempted
-                for req in self._preempted_requests:
-                    if req.id in self._allocation_map:
-                        self.free(req.id)
-                self._preempted_requests.clear()
+            for req in self._request_queue:
+                if req.id in self._allocation_map:
+                    self.free(req.id)
+            self._request_queue.clear()
+            for req in self._preempted_requests:
+                if req.id in self._allocation_map:
+                    self.free(req.id)
+            self._preempted_requests.clear()
             return None
 
         if selected:
