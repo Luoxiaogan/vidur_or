@@ -9,6 +9,7 @@ from vidur.logger import init_logger
 from vidur.metrics import MetricsStore
 from vidur.request_generator import RequestGeneratorRegistry
 from vidur.scheduler import BaseGlobalScheduler, GlobalSchedulerRegistry
+from vidur.utils.memory_manager import SimulationMemoryManager
 import pandas as pd
 
 logger = init_logger(__name__)
@@ -45,9 +46,12 @@ class Simulator:
             self._cluster.replicas,
         )
 
+        self._memory_manager = SimulationMemoryManager(
+            cleanup_every_n_completions=500,
+            threshold_gb=12.0,
+        )
+
         self._init_event_queue()
-        # 注意：不再使用 atexit.register，而是在 run() 末尾直接调用 _write_output()
-        # 这样可以确保在 subprocess 返回前文件已写入完成
 
     @property
     def scheduler(self) -> BaseGlobalScheduler:
@@ -75,6 +79,9 @@ class Simulator:
                 chrome_trace = event.to_chrome_trace()
                 if chrome_trace:
                     self._event_chrome_trace.append(chrome_trace)
+
+            # 周期性内存清理（只清 event trace，不动 MetricsStore）
+            self._memory_manager.step(self)
 
         print("Event queue empty or termination triggered, checking pending requests...")
         print("self._event_queue: ", self._event_queue)
