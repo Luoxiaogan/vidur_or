@@ -285,10 +285,14 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                 still_preempted.append(req)
         self._preempted_requests = still_preempted
 
-        # 新请求从 queue
+        # 新请求从 queue — WAIT threshold 控制
+        # Paper 核心: 用 remain = total_limit - in_system 控制 prefill 准入
+        # in_system = 当前已分配内存的请求数（decode + running prefill）
+        in_system = len(self._allocation_map)
+        remain = max(0, self.total_limit - in_system)
+
         admitted = 0
-        prefill_cap = max(1, self.total_limit - batch_count)
-        while self._request_queue and admitted < prefill_cap:
+        while self._request_queue and admitted < remain:
             req = self._request_queue[0]
             if getattr(req, 'current_stage', 0) != 0:
                 break  # 非 prefill，停
