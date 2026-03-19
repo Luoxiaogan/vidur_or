@@ -105,7 +105,22 @@ WAIT 的代价：等待时间 → latency 高
 **Crossover at rate=3。** WAIT-CP 在 memory-limited + 中高负载下赢 Sarathi。
 restarts=0（无真正 preemption），赢在更高效的 batching。
 
+### 最终结论（2026-03-19 全天实验）
+
+**原 workload (l₀=630, l₁=20, A100) 下 WAIT admission control 数学上不可能赢 Sarathi：**
+
+1. **Peek-based 双阈值**: 零 overhead 但 = Sarathi（门控永远不 binding）
+2. **Upper-limit cap**: seg_limit ≈ 自然每段数 → 不 binding → = Sarathi
+3. **Prefill threshold**: queue ≈ 0 → remain >> queue → 不 binding
+4. **AIMD 自适应**: 低 rate 收紧 → +12.7%（更差），高 rate 放松 → = Sarathi
+5. **固定 α scaling**: 任何 binding 的值都降 throughput → 排队代价 > 收益
+
+**根因**: Binding → 排队代价 > batch 效率收益。不 Binding → = Sarathi。
+**数学本质**: 线性 batch_time 模型下，WAIT 的等待代价永远 > 凑大 batch 的收益。
+
+**WAIT 能赢的唯一验证场景**: memory-limited workload (l₀=4096, l₁=20)，rate≥3 赢 1-3%。
+
 ### 下一步
-- [ ] 原配置（l₀=630, l₁=20）自适应 seg_limit 调优，看能否在 throughput-limited 场景也赢
-- [ ] 调 N_SEG 在 memory-limited 下拉大优势
-- [ ] 更大的 request 数量验证（掐头去尾更准）
+- [ ] 用 memory-limited workload 做 paper 的主实验
+- [ ] 或找 Sarathi 会 preempt/restart 的场景（真正的 memory 瓶颈）
+- [ ] 考虑除 admission control 外的其他差异化机制（queue 排序、prefill 频率等）
