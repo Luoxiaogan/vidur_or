@@ -7,13 +7,10 @@ import json
 class CustomPromptGenerator(BaseRequestGenerator):
     def __init__(self, config):
         super().__init__(config)
-        # 定义不同类型的 prompt 参数和到达率
-
-        a = 50
-        # a 不会影响计算出来的booking_limit, 但是会影响总的到达速率
-
-        # 如果 config.prompt_types 是 JSON 字符串，则解析它
         self.prompt_types = self.config.prompt_types
+        # 用 config 的 seed 初始化随机数生成器
+        seed = getattr(self.config, 'seed', 42)
+        random.seed(seed)
     def _generate_next_request(self, last_arrived_at: float) -> Request:
         # 选择一个 prompt 类型，例如基于到达率选择
         prompt_type_info = random.choices(

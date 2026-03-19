@@ -108,6 +108,8 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         super().add_request(request)
 
     def _adapt(self):
+        return  # 禁用 AIMD（原 workload 下只有害无益）
+        # 以下为原 AIMD 代码，保留备用
         """纯反馈式自适应（AIMD 风格，不依赖 d₀/d₁）
 
         核心逻辑:
@@ -117,7 +119,7 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         """
         in_system = len(self._allocation_map)
         queue_len = len(self._request_queue)
-        min_limit = max(1, in_system // 2)  # 至少保留一半在飞数
+        min_limit = in_system  # 至少保留一半在飞数
 
         if queue_len > 2:
             # 有积压 → 放松（让更多请求进来提高 throughput）
