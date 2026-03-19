@@ -108,23 +108,27 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         super().add_request(request)
 
     def _adapt(self):
-        """自适应调整 total_limit 和 N_SEG"""
-        # ---- 自适应 total_limit = n*(λ) ----
-        denom = 1 - self._pipeline_depth * self._d1 * self._lambda_hat
-        if denom <= 0.01:
-            new_limit = self._n_max
-        else:
-            n_star = self._pipeline_depth * self._d0 * self._lambda_hat / denom
-            new_limit = min(max(1, ceil(n_star)), self._n_max)
+        """纯反馈式自适应（AIMD 风格，不依赖 d₀/d₁）
 
-        if new_limit != self.total_limit:
-            self.total_limit = new_limit
-            self._seg_limit = max(1, self.total_limit // (self._n_seg + 1))
+        核心逻辑:
+          - queue 为空且 in_system < total_limit → 收紧（additive decrease）
+          - queue 有积压 → 放松（multiplicative increase）
+          - 保证 total_limit ≥ min_limit（不低于最低稳定值）
+        """
+        in_system = len(self._allocation_map)
+        queue_len = len(self._request_queue)
+        min_limit = max(1, in_system // 2)  # 至少保留一半在飞数
+
+        if queue_len > 2:
+            # 有积压 → 放松（让更多请求进来提高 throughput）
+            self.total_limit = min(self._n_max, self.total_limit + 2)
+        elif queue_len == 0 and in_system < self.total_limit:
+            # 系统闲 → 收紧（减小 batch，lower latency）
+            self.total_limit = max(min_limit, self.total_limit - 1)
+
+        self._seg_limit = max(1, self.total_limit // (self._n_seg + 1))
 
         # ---- 自适应 N_SEG ----
-        # 思路: 根据平均 decode 数量调整分段粒度
-        # decode 多（忙）→ 更多段（更细的流量控制）
-        # decode 少（闲）→ 更少段（更低 overhead）
         if self._batch_count > 0 and self._batch_count % 100 == 0:
             avg_decode = self._total_decode_in_batches / self._batch_count
             if avg_decode < 3:
