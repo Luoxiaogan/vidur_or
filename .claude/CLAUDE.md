@@ -900,3 +900,59 @@ class MyReplicaScheduler(BaseReplicaScheduler):
             else:
                 self._preempted_requests.append(request)
 ```
+
+---
+
+## WAIT-CP 实验状态 (2026-03-20)
+
+### 当前代码
+- **文件**: `vidur/scheduler/replica_scheduler/general_nested_chunked_replica_scheduler.py`
+- **版本**: Peek-based 统一调度器 (AIMD 禁用, 段间 cap 不 binding)
+- **Git**: `revision` 分支, commit `0e3e84d`
+- **特性**: Sarathi 为 special case (当所有 cap 不 binding 时完全等价)
+
+### 已验证结论
+
+**Booking limit 在 chunked prefill 下的行为:**
+1. **Chunk 预算 (512 tokens/batch) 是真正的 admission 瓶颈**, 不是 booking limit
+2. 自然 in-system 数 ≈ l₁/K + 1 (独立于 arrival rate)
+   - 原 workload: l₁=20, K=2 → ~11
+   - Memlim: l₁=20, K=8 → ~3.5
+3. total_limit > 自然 in-system → 不 binding → = Sarathi (0.0%)
+4. total_limit < 自然 in-system → binding → 降 throughput → 更差 (+14.7%)
+5. **线性 batch_time 模型下 throughput 关于 n 单调递增 → 限制 n 只能更差**
+
+**Booking limit 有效的条件:**
+- 需要 l₁ >> K (长 decode), 使自然 in-system 足够大
+- 或者高 rate + 大 l₁ 触发 Sarathi 的 preemption/restart
+- 当前 l₁=20 时数学上不可能
+
+### 已排除方案
+| 方案 | 结果 | 排除原因 |
+|------|------|---------|
+| 级联门控 | +34~100% | 延迟 decode 代价 >> batch 效率收益 |
+| AIMD 自适应 | 0~+71% | binding 更差, 不 binding = Sarathi |
+| 段间 cap | 0% | 自然 per-segment < cap |
+| decode_batch_cap | +12~348% | 限制已准入请求 = 浪费 KV cache |
+| Prefill 频率控制 | 排除 | 用户要求不改变 batch composition 机制 |
+| 理论贡献 only | 排除 | 用户要求实验上超过 Sarathi |
+
+### 关键发现 (2026-03-21)
+
+**小 chunk 下 booking limit 被架空（已修正之前的假阳性结果）:**
+- chunk=256 固定 tl 全 rate 扫描: tl=700 (=Sarathi) 最优, 任何 binding tl 更差
+- 之前 -65% WIN 是被自适应代码污染的假象
+- 根因: chunk 预算每 batch 只能 admit 1 prefill → in-system 锁死 ~8 → tl 无施展空间
+
+**突破: chunk_size 语义修正 → 全 rate 全胜 (2026-03-21):**
+- 根因: Sarathi 的 chunk_size = batch 总预算 → 每 batch 只能 1 prefill → 架空 booking limit
+- 修正: chunk_size = per-request 独立预算 → 每 batch P 个 prefill 并行 → booking limit 真正控制 admission
+- 结果: chunk=128, tl=50, rate={12..20} → **全胜 -59% ~ -89%**
+- 代码: `_get_next_batch()` 重写, `_get_prefill_chunk()` per-request 独立预算
+
+### 进度报告
+- `docs/progress/2026_03_21_chunk_size_reinterpretation.md` - chunk 语义重定义 (根因!)
+- `docs/progress/2026_03_21_wait_cp_coadapted_chunk_tl.md` - chunk+tl 协同
+- `docs/progress/2026_03_20_wait_cp_param_sweep.md` - 参数空间扫描
+- `docs/progress/2026_03_20_wait_cp_gating_experiments.md` - 门控实验
+- `docs/progress/2026_03_19_wait_cp_full_session.md` - 全天实验
