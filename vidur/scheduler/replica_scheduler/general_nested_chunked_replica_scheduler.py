@@ -48,8 +48,12 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         self._K = max(1, ceil(self._l0 / self._per_req_budget))
         self._pipeline_depth = self._K + self._l1
         self._P = self.total_limit / self._pipeline_depth
-        # 无 total_budget 限制，batch 大小由 tl+cs 自然决定
-        # batch ≈ P×(l₀+l₁) tokens, tl requests
+        self._batch_est = int(ceil(self._P * (self._l0 + self._l1)))
+
+        # Gate: WAIT_CP_GATE=on → 用 total_budget 限制 batch; off → 不限制
+        import os
+        self._gate = os.environ.get("WAIT_CP_GATE", "on") == "on"
+        self._total_budget = self._batch_est if self._gate else float('inf')
 
         # 运行时统计
         self._batch_count = 0
@@ -57,7 +61,7 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
 
         print(f"WAIT-CP: per_req={self._per_req_budget}, K={self._K}, "
               f"tl={self.total_limit}, P={self._P:.2f}, "
-              f"batch_est={int(self._P*(self._l0+self._l1))}, "
+              f"batch_est={self._batch_est}, gate={'ON' if self._gate else 'OFF'}, "
               f"pipeline={self._pipeline_depth}, l0={self._l0}, l1={self._l1}")
 
     # ------------------------------------------------------------------ #
@@ -133,12 +137,13 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                 new_queue.append(req)
         self._request_queue = new_queue
 
-        # ---- Step 2: Running prefill (各 per_req_budget, 无 total_budget 限制) ----
+        # ---- Step 2: Running prefill (各 per_req_budget, 受 total_budget 限) ----
         still_preempted = []
         for req in self._preempted_requests:
             if not req.is_prefill_complete:
                 remaining = req.num_prefill_tokens - req.num_processed_tokens
-                give = min(remaining, self._per_req_budget)
+                give = min(remaining, self._per_req_budget,
+                           self._total_budget - batch_tokens)
                 if give > 0:
                     selected.append(req)
                     tokens.append(give)
@@ -149,19 +154,22 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                 still_preempted.append(req)
         self._preempted_requests = still_preempted
 
-        # ---- Step 3: New admit (只受 tl 限制) ----
+        # ---- Step 3: New admit (受 tl + total_budget 双重限制) ----
         in_system = len(self._allocation_map)
         remain = max(0, self.total_limit - in_system)
         admitted = 0
 
         while self._request_queue and admitted < remain:
+            if batch_tokens >= self._total_budget:
+                break
             req = self._request_queue[0]
             if getattr(req, 'current_stage', 0) != 0:
                 break
             if not self._can_allocate_request(req):
                 break
             remaining = req.num_prefill_tokens - req.num_processed_tokens
-            give = min(remaining, self._per_req_budget)
+            give = min(remaining, self._per_req_budget,
+                       self._total_budget - batch_tokens)
             if give <= 0:
                 break
             self._request_queue.pop(0)
@@ -169,7 +177,6 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
             selected.append(req)
             tokens.append(give)
             batch_tokens += give
-            admitted += 1
             admitted += 1
 
         # 统计
