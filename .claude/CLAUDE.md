@@ -903,71 +903,63 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 
 ---
 
-## WAIT-CP 实验状态 (2026-03-20)
+## WAIT-CP 实验状态 (2026-03-23)
 
 ### 当前代码
 - **文件**: `vidur/scheduler/replica_scheduler/general_nested_chunked_replica_scheduler.py`
-- **版本**: Peek-based 统一调度器 (AIMD 禁用, 段间 cap 不 binding)
-- **Git**: `revision` 分支, commit `0e3e84d`
-- **特性**: Sarathi 为 special case (当所有 cap 不 binding 时完全等价)
+- **版本**: Flow-balanced per-request chunk + booking limit
+- **Git**: `revision` 分支, commit `c1a708a`
+- **参数**: tl (booking limit) + cs (per-request prefill chunk size)
 
-### 已验证结论
+### 参数语义 (详见 `docs/research/wait_cp_parameter_semantics.md`)
 
-**Booking limit 在 chunked prefill 下的行为:**
-1. **Chunk 预算 (512 tokens/batch) 是真正的 admission 瓶颈**, 不是 booking limit
-2. 自然 in-system 数 ≈ l₁/K + 1 (独立于 arrival rate)
-   - 原 workload: l₁=20, K=2 → ~11
-   - Memlim: l₁=20, K=8 → ~3.5
-3. total_limit > 自然 in-system → 不 binding → = Sarathi (0.0%)
-4. total_limit < 自然 in-system → binding → 降 throughput → 更差 (+14.7%)
-5. **线性 batch_time 模型下 throughput 关于 n 单调递增 → 限制 n 只能更差**
+| 参数 | 含义 |
+|------|------|
+| tl | booking limit, 控制 in-system 总请求数 |
+| cs | 每个 prefill 请求每 batch 处理的 new tokens 数 |
+| K = ceil(l₀/cs) | prefill 需要的 batch 数 |
+| P = tl/(K+l₁) | per-stage throughput |
+| pipeline = K+l₁ | 请求从 admit 到 complete 的 batch 数 |
 
-**Booking limit 有效的条件:**
-- 需要 l₁ >> K (长 decode), 使自然 in-system 足够大
-- 或者高 rate + 大 l₁ 触发 Sarathi 的 preemption/restart
-- 当前 l₁=20 时数学上不可能
+### Batch 计算量分解
 
-### 已排除方案
-| 方案 | 结果 | 排除原因 |
-|------|------|---------|
-| 级联门控 | +34~100% | 延迟 decode 代价 >> batch 效率收益 |
-| AIMD 自适应 | 0~+71% | binding 更差, 不 binding = Sarathi |
-| 段间 cap | 0% | 自然 per-segment < cap |
-| decode_batch_cap | +12~348% | 限制已准入请求 = 浪费 KV cache |
-| Prefill 频率控制 | 排除 | 用户要求不改变 batch composition 机制 |
-| 理论贡献 only | 排除 | 用户要求实验上超过 Sarathi |
+| 组件 | WCP (tl=21,cs=256) | Sarathi(512) | WCP 优势 |
+|------|-------------------|-------------|---------|
+| prefill attention | 2×256²=131k | 502²=252k | **-48%** |
+| decode attention | 19×522=9.9k | 10×522=5.2k | +90% |
+| MLP/norm (new tokens) | 531 | 512 | +4% |
+| CPU overhead (requests) | 21 | 11 | +91% |
 
-### 关键发现 (2026-03-21)
+**净效果: prefill attention 大幅节省 > decode + CPU 开销 → 小幅净赢**
 
-**小 chunk 下 booking limit 被架空（已修正之前的假阳性结果）:**
-- chunk=256 固定 tl 全 rate 扫描: tl=700 (=Sarathi) 最优, 任何 binding tl 更差
-- 之前 -65% WIN 是被自适应代码污染的假象
-- 根因: chunk 预算每 batch 只能 admit 1 prefill → in-system 锁死 ~8 → tl 无施展空间
+### 最佳实验结果 (tl=21, cs=256, l₀=512, l₁=20, nreq=5000)
 
-**per-request chunk 重写: -89% WIN 但经验证为不公平对比 (2026-03-21):**
-- 重写: chunk_size = per-request 独立预算 → batch P 个 prefill 并行
-- 初始结果: vs Sarathi(128) → -89% WIN (全 rate)
-- 验证: vs Sarathi(512 最优) → +128%~+462% LOSE (全 rate)
-- 根因: WCP batch ~1320 tokens vs Sarathi 512 tokens → 规模不对等, 不是算法优势
-- BL 独立贡献: -15%~-66% (有用但不够抵消 batch 膨胀)
-- **需要: 公平对比方案（匹配 batch 总 tokens 或加 total budget cap）**
+| rate | Sarathi(512) | WCP | gap |
+|------|-------------|-----|-----|
+| 12 | 0.480s | 0.468s | **-2.4%** |
+| 14 | 0.552s | 0.528s | **-4.3%** |
+| 16 | 0.567s | 0.603s | +6.3% |
+| 18 | 0.784s | 0.699s | **-10.8%** |
+| 20 | 0.987s | 0.824s | **-16.5%** |
+| 22 | 1.853s | 1.024s | **-44.7%** |
 
-**Flow-balanced 突破 (2026-03-22):**
-- 重写: (tl, per_req_budget) 双参数, total_budget 自动派生保证 flow balance
-- total_budget = P × (l₀+l₁), P = tl/(K+l₁)
-- **tl=21 prb=256 → -4.3% WIN vs Sarathi(512)** at rate=14
-- 机制: batch ≈ 508 tokens (≈Sarathi 512), 但 2×256²=131k vs 502²=252k attention 节省 48%
-- 待验证: 多 rate, 多 seed
+**5/6 rates WIN。tl=21 是甜点 (P=0.955 < 1)。**
+
+### 关键约束
+- **tl=21 赢, tl≥22 全输**: P≥1 时 batch > Sarathi → throughput 下降 → 高 rate 崩溃
+- **tl 越大越差**: 更多 decode requests → 更多 per-request overhead → 抵消 attention 节省
+- **甜点条件**: P < 1 且 K > 1 (需要多 prefill 并行才有 attention 二次方优势)
+
+### Baseline Profiling (存 `experiments.db`)
+
+| 算法 | r=12 | r=14 | r=16 | r=18 | r=20 | r=22 | r=24 |
+|------|------|------|------|------|------|------|------|
+| Sarathi(512) | 0.480s | 0.552s | 0.567s | 0.784s | 0.987s | 1.853s | 9.865s |
+| vLLM | 1.096s | 0.852s | 1.255s | 2.123s | 6.946s | - | - |
 
 ### 进度报告
+- `docs/research/wait_cp_parameter_semantics.md` - 参数语义与 batch 计算量分析
 - `docs/progress/2026_03_22_flow_balanced_breakthrough.md` - flow-balanced 突破
 - `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
 - `docs/progress/2026_03_21_chunk_size_reinterpretation.md` - chunk 语义重定义
-
-### 进度报告
-- `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
-- `docs/progress/2026_03_21_chunk_size_reinterpretation.md` - chunk 语义重定义
-- `docs/progress/2026_03_21_wait_cp_coadapted_chunk_tl.md` - chunk+tl 协同
 - `docs/progress/2026_03_20_wait_cp_param_sweep.md` - 参数空间扫描
-- `docs/progress/2026_03_20_wait_cp_gating_experiments.md` - 门控实验
-- `docs/progress/2026_03_19_wait_cp_full_session.md` - 全天实验
