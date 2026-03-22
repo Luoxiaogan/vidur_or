@@ -944,14 +944,29 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 - 之前 -65% WIN 是被自适应代码污染的假象
 - 根因: chunk 预算每 batch 只能 admit 1 prefill → in-system 锁死 ~8 → tl 无施展空间
 
-**突破: chunk_size 语义修正 → 全 rate 全胜 (2026-03-21):**
-- 根因: Sarathi 的 chunk_size = batch 总预算 → 每 batch 只能 1 prefill → 架空 booking limit
-- 修正: chunk_size = per-request 独立预算 → 每 batch P 个 prefill 并行 → booking limit 真正控制 admission
-- 结果: chunk=128, tl=50, rate={12..20} → **全胜 -59% ~ -89%**
-- 代码: `_get_next_batch()` 重写, `_get_prefill_chunk()` per-request 独立预算
+**per-request chunk 重写: -89% WIN 但经验证为不公平对比 (2026-03-21):**
+- 重写: chunk_size = per-request 独立预算 → batch P 个 prefill 并行
+- 初始结果: vs Sarathi(128) → -89% WIN (全 rate)
+- 验证: vs Sarathi(512 最优) → +128%~+462% LOSE (全 rate)
+- 根因: WCP batch ~1320 tokens vs Sarathi 512 tokens → 规模不对等, 不是算法优势
+- BL 独立贡献: -15%~-66% (有用但不够抵消 batch 膨胀)
+- **需要: 公平对比方案（匹配 batch 总 tokens 或加 total budget cap）**
+
+**Flow-balanced 突破 (2026-03-22):**
+- 重写: (tl, per_req_budget) 双参数, total_budget 自动派生保证 flow balance
+- total_budget = P × (l₀+l₁), P = tl/(K+l₁)
+- **tl=21 prb=256 → -4.3% WIN vs Sarathi(512)** at rate=14
+- 机制: batch ≈ 508 tokens (≈Sarathi 512), 但 2×256²=131k vs 502²=252k attention 节省 48%
+- 待验证: 多 rate, 多 seed
 
 ### 进度报告
-- `docs/progress/2026_03_21_chunk_size_reinterpretation.md` - chunk 语义重定义 (根因!)
+- `docs/progress/2026_03_22_flow_balanced_breakthrough.md` - flow-balanced 突破
+- `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
+- `docs/progress/2026_03_21_chunk_size_reinterpretation.md` - chunk 语义重定义
+
+### 进度报告
+- `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
+- `docs/progress/2026_03_21_chunk_size_reinterpretation.md` - chunk 语义重定义
 - `docs/progress/2026_03_21_wait_cp_coadapted_chunk_tl.md` - chunk+tl 协同
 - `docs/progress/2026_03_20_wait_cp_param_sweep.md` - 参数空间扫描
 - `docs/progress/2026_03_20_wait_cp_gating_experiments.md` - 门控实验
