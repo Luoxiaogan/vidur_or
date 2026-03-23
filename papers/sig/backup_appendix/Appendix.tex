@@ -1,0 +1,110 @@
+% ============================================
+% APPENDIX - Proofs of Main Results
+% ============================================
+%
+% This appendix contains detailed proofs of the main theorems.
+% Each proof is organized in a separate file for modularity.
+%
+% Structure:
+% 0. Propositions: Stability conditions, throughput bounds, lower bounds
+% 1. Theorem 1 (WAIT): pf_thm_wait.tex
+% 2. Theorem 2 (Nested WAIT): pf_thm_nested.tex
+% 3. Theorem 3 (Time-varying): pf_thm_timevarying.tex
+% 4. Supporting Lemmas: pf_lemmas.tex
+%
+% Key References for Standard Results:
+% - Lindley recursion: Asmussen (2003), Applied Probability and Queues
+% - Random walk maximum: Strait (1974), Lemma 2
+% - Kingman's bound: Kingman (1962), negative drift processes
+% ============================================
+
+% ==================================================
+% PROOFS OF PROPOSITIONS
+% ==================================================
+
+\section{Proofs of Propositions}
+
+% --------------------------------------------------
+% Proposition: Stability Condition (prop:large_rate)
+% --------------------------------------------------
+\subsection{Proof of Proposition~\ref{prop:large_rate}}
+\label{appendix:proof_large_rate}
+
+\begin{proof}
+Consider a system with only type-$j$ prompts. In equilibrium with batch size $n_j$, prompts are uniformly distributed across stages, yielding memory $M_j = n_j(l_j + l_j'/2)$ and iteration time $\tau_j = d_0 + d_1 M_j$. During each iteration, expected arrivals are $\tau_j \lambda_j$ while completions are $n_j/(l_j'+1)$. The arrival-completion gap satisfies:
+$$\text{Arrivals}_j - \frac{n_j}{l_j'+1} = d_0\lambda_j + n_j\left[\lambda_j d_1 (l_j + l_j'/2) - \frac{1}{l_j'+1}\right] \geq d_0\lambda_j > 0,$$
+where the inequality follows from $\lambda_j d_1 (l_j'+1)(l_j + l_j'/2) \geq 1$. This positive gap implies queue length grows as $\Omega(N)$ after $N$ iterations, establishing instability.
+\end{proof}
+
+% --------------------------------------------------
+% Proposition: Throughput Upper Bound
+% --------------------------------------------------
+\subsection{Proof of Proposition~\ref{prop::online policy expected throughput upper bound, multiple type}}
+\label{appendix:proof_throughput_upper_bound}
+
+\begin{proof}
+Throughput is bounded by the total output tokens generated, which cannot exceed arrivals' output lengths. Over time horizon $[0,T]$: $\mathbb{E}[\throughput^{(\pi,T)}] \leq \sum_{j=1}^m \mathbb{E}[\text{Arrivals}_j^T/T] \cdot l_j' = \sum_{j=1}^m \lambda_j l_j' = \throughput^*$.
+\end{proof}
+
+% --------------------------------------------------
+% Proposition: FCFS Lower Bound
+% --------------------------------------------------
+\subsection{Proof of Proposition~\ref{prop:lower_bound_FCFS}}
+\label{appendix:proof_fcfs_lower_bound}
+
+\noindent\textbf{Proof Outline.} We construct a two-type example where FCFS suffers from cascading evictions even when capacity equals equilibrium memory $M^*$, leading to $\Omega(1)$ throughput gap.
+
+\begin{proof}
+Consider two prompt types: type~1 with $(l_1, l_1', \lambda_1) = (1, 1, 1)$ and type~2 with $(l_2, l_2', \lambda_2) = (1, 2, 1)$.
+
+\textbf{Fluid Equilibrium.} The equilibrium equations $d_0 + d_1(1.5n_1 + 2n_2) = n_1/2 = n_2/3$ yield:
+$$K = \frac{d_0}{1-9d_1}, \quad n_1^* = 2K, \quad n_2^* = 3K, \quad M^* = 9K.$$
+Setting $K = 1$ (without loss of generality), we have $n_1^* = 2$, $n_2^* = 3$, $M^* = 9$.
+
+\textbf{Equilibrium Batch Composition.} In equilibrium, the batch contains:
+\begin{itemize}
+\item Type~1: 1 prompt at stage~0 (memory $= 1$), 1 prompt at stage~1 (memory $= 2$, completing)
+\item Type~2: 1 prompt at stage~0 (memory $= 1$), 1 at stage~1 (memory $= 2$), 1 at stage~2 (memory $= 3$, completing)
+\end{itemize}
+
+\textbf{Overflow Probability.} Let $(X_1, X_2)$ denote arrivals during one iteration, where $X_j \sim \text{Poisson}(1)$. The combinations that do not cause memory overflow within two iterations are: $(0,0), (1,0), (0,1), (1,1), (2,0)$. All other combinations lead to overflow. The overflow probability is:
+$$p = 1 - \frac{1}{e^2} - \frac{1}{e^2} - \frac{1}{e^2} - \frac{1}{e^2} - \frac{1}{2e^2} = 1 - \frac{9}{2e^2} \approx 0.391.$$
+
+Since overflow probability is bounded away from zero, FCFS experiences eviction with constant probability at each iteration. This leads to queue length growth $\Omega(t)$ and throughput gap $\Omega(1)$.
+\end{proof}
+
+% --------------------------------------------------
+% Proposition: Unknown Output Length Lower Bound
+% --------------------------------------------------
+\subsection{Proof of Proposition~\ref{prop:unknown_lower_bound}}
+\label{appendix:proof_unknown_lower_bound}
+
+\begin{proof}
+Using the same two-type example as Proposition~\ref{prop:lower_bound_FCFS}, the key constraint is that prompt types cannot be distinguished until a type-2 prompt enters stage~2. At stages~0 and~1, both types appear identical to the scheduler.
+
+For any admissible batching policy and batch configuration, one of the following must hold: (1) \textbf{Memory underutilization}: The batch leaves significant memory unused, causing arrivals to exceed completions; or (2) \textbf{Overflow risk}: The batch fully utilizes memory but faces constant probability $\rho > 0$ of overflow. Since throughput is counted only upon completion, any policy incurs a throughput gap of at least $\Omega(\rho)$ compared to $\throughput^*$.
+\end{proof}
+
+% ==================================================
+% PROOFS OF MAIN THEOREMS
+% ==================================================
+
+% --------------------------------------------------
+% Proof of Theorem 1: WAIT Algorithm Optimality
+% --------------------------------------------------
+\input{pf_thm_wait}
+
+% --------------------------------------------------
+% Proof of Theorem 2: Nested WAIT Algorithm Optimality
+% --------------------------------------------------
+\input{pf_thm_nested}
+
+% --------------------------------------------------
+% Proof of Theorem 3: Time-Varying Nested WAIT
+% --------------------------------------------------
+\input{pf_thm_timevarying}
+
+% --------------------------------------------------
+% Supporting Lemmas and Technical Results
+% --------------------------------------------------
+\input{pf_lemmas}

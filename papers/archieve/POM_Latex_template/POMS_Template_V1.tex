@@ -1,0 +1,372 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Latex template for Production and Operations Management (POM) Journal
+%% The poms1.cls is required class file
+
+%% Authors of this template: Emre M. Demirezen, Subodha Kumar, and Rakesh Mallipeddi
+%For queries: pom.latex@gmail.com
+%% Version. 1.0, January 2021
+%We acknowledge INFORMS for allowing us to use a few portions of their template files.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\documentclass[poms,final,blindrev]{poms1_V1} % Use this for blind submissions
+\documentclass[poms,final,nonblindrev]{poms1_V1} % Use this for listing out authors' information submissions
+
+\OneAndAHalfSpacedXI % % default line spacing !!!!!!!!!!!!!!!!!!!!!!!
+%Manuscript length 32pages
+
+
+
+% If hyperref is used, dvi-to-ps driver of choice must be declared as
+%   an additional option to the \documentclass. For example
+%\documentclass[dvips,poms]{poms1}      % if dvips is used
+%\documentclass[dvipsone,poms]{poms1}   % if dvipsone is used, etc.
+
+%%% POMS uses footnotes. If want to use endnotes, remove a percent sign before
+%%% the \theendnotes command. This template does show how to use them.
+%\usepackage{endnotes}%; manuscript no.
+%\let\footnote=\endnote
+%\let\enotesize=\normalsize
+%\def\notesname{Endnotes}%
+%\def\makeenmark{$^{\theenmark}$}
+%\def\enoteformat{\rightskip0pt\leftskip0pt\parindent=1.75em
+ % \leavevmode\llap{\theenmark.\enskip}}
+
+% Private macros here (check that there is no clash with the style)
+
+% Natbib setup for author-year style
+ %\usepackage[center]{caption}
+
+\usepackage{graphicx}
+\usepackage{subfigure, epsfig}
+\usepackage{natbib}
+
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+%% Setup of theorem styles. Outcomment only one.
+%% Preferred default is the first option.
+\TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+%\TheoremsNumberedByChapter  % (Theorem 1.1, Lema 1.1, Theorem 1.2)
+\ECRepeatTheorems
+\newtheorem{observation}{Observation}
+%\newtheorem{proposition}{Proposition}
+%% Setup of the equation numbering system. Outcomment only one.
+%% Preferred default is the first option.
+\EquationsNumberedThrough    % Default: (1), (2), ...
+%\EquationsNumberedBySection % (1.1), (1.2), ...
+
+% In the reviewing and copyediting stage enter the manuscript number.
+%\MANUSCRIPTNO{} % When the article is logged in and DOI assigned to it,
+                 %   this manuscript number is no longer necessary
+
+%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%
+
+% Outcomment only when entries are known. Otherwise leave as is and
+%   default values will be used.
+%\setcounter{page}{1}
+%\VOLUME{00}%
+%\NO{0}%
+%\MONTH{Xxxxx}% (month or a similar seasonal id)
+%\YEAR{0000}% e.g., 2005
+%\FIRSTPAGE{000}%
+%\LASTPAGE{000}%
+%\SHORTYEAR{00}% shortened year (two-digit)
+%\ISSUE{0000} %
+%\LONGFIRSTPAGE{0001} %
+%\DOI{10.1287/xxxx.0000.0000}%
+
+% Author's names for the running heads
+% Sample depending on the number of authors;
+% \RUNAUTHOR{Jones}
+% \RUNAUTHOR{Jones and Wilson}
+% \RUNAUTHOR{Jones, Miller, and Wilson}
+% \RUNAUTHOR{Jones et al.} % for four or more authors
+% Enter authors following the given pattern:
+\RUNAUTHOR{Doe and Doe}
+
+
+% Enter the (shortened) title:
+\RUNTITLE{POM Template}
+
+% Full title. Sample:
+\TITLE{POM Journal Template}
+
+% Block of authors and their affiliations starts here:
+% NOTE: Authors with same affiliation, if the order of authors allows,
+%   should be entered in ONE field, separated by a comma.
+%   \EMAIL field can be repeated if more than one author
+\ARTICLEAUTHORS{%
+\AUTHOR{John Doe}
+\AFF{Department of Operations Management, Operations University, \EMAIL{jdoe@operations.edu}} %, \URL{}}
+\AUTHOR{Jane Doe}
+\AFF{Institute for Supply Chain Management, University of Management \EMAIL{jdoe@iscm.edu}}
+% Enter all authors
+} % end of the block
+
+\ABSTRACT{%
+This is a template file available to POM authors. Abstract goes here.  This is a template file available to POM authors. Abstract goes here. This is a template file available to POM authors. Abstract goes here. This is a template file available to POM authors. Abstract goes here. This is a template file available to POM authors. Abstract goes here.
+% Enter your abstract
+}%
+
+\KEYWORDS{latex, operations, POM}
+%Use this for final submission
+%\HISTORY{This paper was first submitted on January 1, 2021 and has been with the authors for 3 months for 2 revisions.}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Samples of sectioning (and labeling) in POMS
+% NOTE: (1) \section and \subsection do NOT end with a period
+%       (2) \subsubsection and lower need end punctuation
+%       (3) capitalization is as shown (title style).
+%
+%\section{Introduction.}\label{intro} %%1.
+%\subsection{Duality and the Classical EOQ Problem.}\label{class-EOQ} %% 1.1.
+%\subsection{Outline.}\label{outline1} %% 1.2.
+%\subsubsection{Cyclic Schedules for the General Deterministic SMDP.}
+%  \label{cyclic-schedules} %% 1.2.1
+%\section{Problem Description.}\label{problemdescription} %% 2.
+
+% Text of your paper here
+
+\section{Introduction}
+
+Production and Operations Management Society (POMS) represents the interest of academics and practitioners in the domain of production, operations, and supply chain management from around the world \citep{POMS2021}.
+The Production and Operations Management Journal is the flagship journal of POMS.
+
+This latex package gives you a template for writing manuscripts for submission to POM journal.
+
+\subsection{Motivation}
+
+\cite{Doe2014} is an internet article. Butter and gems \citep{Doe2009}.
+
+\subsubsection{Questions}
+Here is an example of subsubsection.\footnote{This is a footnote.}
+
+
+\section{Tables and Figures}
+In Table~\ref{table:mechanical_property}, we provide the results.  We show an example of side-by-side figures in Figures~\ref{fig:ss1} and \ref{fig:ss1}. Figure~\ref{fig:figure1} is an example for a stand along figure. Random text added to fill the space. Abc defg hijk lmn opq rst uvw xyz. Abc defg hijk lmn opq rst uvw xyz. Abc defg hijk lmn opq rst uvw xyz. Abc defg hijk lmn opq rst uvw xyz. Abc defg hijk lmn opq rst uvw xyz. Abc defg hijk lmn opq rst uvw xyz.
+
+
+\begin{table}[!ht]
+\caption{Numbers and numbers}
+\centering
+        {\def\arraystretch{1.5}  %change the number for increasing or decreasing the spacing.
+            %\scriptsize %uncomment this for changing the font size
+\begin{tabular*}{0.5\textwidth}{@{\extracolsep{\fill}}lcc}
+\hline
+\hline
+1st number & 2nd number & 3rd number\\
+\hline
+One        & Two        & Three\\
+Four       & Five       & Six\\
+\hline
+\hline
+\end{tabular*}
+\label{table:mechanical_property}
+}
+\end{table}
+
+
+
+\begin{figure}[!ht]
+    \centering
+    \begin{minipage}{.5\textwidth}
+        \centering
+    \caption{Example Side-by-side Figure 1}
+% \includegraphics[trim = 120 75 0 50, scale=.30]{figure1.eps}
+\includegraphics[trim = 120 75 0 50, scale=.30]{figure1.pdf}
+ \label{fig:ss1} %%.pdf
+     \end{minipage}%
+    \begin{minipage}{.5\textwidth}
+        \centering
+    \caption{Example Side-by-side Figure 2}
+%\includegraphics[trim = 120 75 0 50, scale=.30]{figure2.eps}     \label{fig:ss2}
+\includegraphics[trim = 120 75 0 50, scale=.30]{figure2.pdf}     \label{fig:ss2}
+    \end{minipage}
+    \vspace*{10pt}
+\end{figure}
+
+
+\begin{figure}[!ht]
+        \centering
+    \caption{Example Figure 3}
+% \includegraphics[trim = 120 75 0 50, scale=.30]{figure1.eps}       \label{fig:figure1}
+ \includegraphics[trim = 120 75 0 50, scale=.30]{figure1.pdf}       \label{fig:figure1}
+\end{figure}
+
+
+\section{Theorems and Math Formulations}
+\begin{theorem} \label{thm:A1}
+    In a reverse dictionary,  $(\alpha \succ x_{ij} \land\ Y^k_{ij} \succ \beta)$
+    Moreover, continuous reading of a compact subset of the dictionary  attains the minimum of patience at the moment of giving up.
+\end{theorem}
+
+The proof will be given in the e-companion to this paper.
+
+
+\begin{proposition} \label{Prop:A1}
+    The above theorem is correct according to ABC laws.
+\end{proposition}
+
+
+ \begin{observation} \label{obs:A1}
+    We observe  Theorem~\ref{thm:A1} is correct.
+ \end{observation}
+
+ \subsection{Math Expressions}
+ \begin{equation}\label{eq:a}
+    \text{Min} \hspace{0.25cm}
+    \Pi_{1} =   \prod_{i\in U} a_i x_i+ \sum_{j\in V} c_j \bar{t}_j X_j
+ \end{equation}
+
+ You can refer to the above expression as Equation~\ref{eq:a}. You can also skip equation number by:
+
+ \begin{equation} \nonumber
+    \text{Min} \hspace{0.25cm}
+    \Pi_{1} =   \prod_{i\in U} a_i x_i+ \sum_{j\in V} c_j \bar{t}_j X_j
+\end{equation}
+
+\section{Conclusion}
+We conclude here.
+
+You can add acknowledgment here. Acknowledgment will only show up in the non-blinded version.
+
+% Acknowledgments here
+\ACKNOWLEDGMENT{The authors gratefully thank the reviewers of POM.}
+
+
+
+%%REFERENCES%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This template complies references using bibtex. You will need to use pomsref.bst file for biblography style.
+%REFERENCES USING BIBTEX FILES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{pomsref}
+
+ \let\oldbibliography\thebibliography
+ \renewcommand{\thebibliography}[1]{%
+    \oldbibliography{#1}%
+    \baselineskip14pt %Change this for line spacing within the same reference
+    \setlength{\itemsep}{10pt}% %Change this for spacing between two referneces
+ }
+\bibliography{ref1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Hayes, R. H., G. P. Pisano. 1996. Manufacturing strategy: At the intersection of two paradigm shifts. Production and Operations Management, 5 (1), 25-41.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %If you don't use BiBTex, you can manually itemize references as shown in the referneces for the electronic comapanion. See below.
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%% Here starts the e-companion (EC). Place your appendix content here.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\ECSwitch % Comment this line out if you do not need e-companion.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Main head for the e-companion
+\ECHead{E-Companion for POM Journal Template}
+
+\noindent A general heading for the whole e-companion should be provided here as in the example above this paragraph.
+
+\section{Proof of Theorem \ref{thm:A1}}
+
+To avoid confusion, theorems that we repeat for readers' convenience
+will have the same appearance as when they were mentioned for the first
+time. However, here they should be coded by \verb+repeattheorem+ instead
+of \verb+theorem+ to keep labels/pointers uniquely resolvable. Other predefined theorem-like
+environments work similarly if they need to be repeated in what becomes the \mbox{e-companion.}
+
+
+\begin{repeattheorem}[Theorem 1.]
+    In a reverse dictionary,  $(\alpha \succ x_{ij} \land\ Y^k_{ij} \succ \beta)$
+    Moreover, continuous reading of a compact subset of the dictionary  attains the minimum of patience at the moment of giving up.
+\end{repeattheorem}
+
+\subsection{Preparatory Material}
+
+\begin{lemma}
+    \label{aux-lem1}
+    In a reverse dictionary, $\mbox{\bi g}\succ\mbox{\bi t\/}$.
+\end{lemma}
+
+\begin{lemma}
+    \label{aux-lem2}
+    In a reverse dictionary, $\mbox{\bi e}\succ\mbox{\bi r\/}$.
+\end{lemma}
+
+\proof{Proof of Lemmas \ref{aux-lem1} and \ref{aux-lem2}.} See the alphabet and the tebahpla.\Halmos
+\endproof
+
+\begin{remark}
+    Note that the title of the proof should be keyed
+    explicitly in each case. Authors can hardly agree on what would be the
+    default proof title, so there is no default. Even \verb+\proof{Proof.}+ should be keyed out.
+\end{remark}
+
+
+\subsection{Proof of the Main Result}
+
+\proof{Proof of Theorem 1.} The first statement is a consequence of
+Lemmas~\ref{aux-lem1} and \ref{aux-lem2}. The rest relies on the fact that the continuous
+image of a compact set into the reals is a closed interval, thus having
+a minimum point. \Halmos  
+\endproof
+
+
+However, just because we didn't produce any results, doesn't mean
+that there isn't good butter re-search going on out there.  Many
+researchers
+%%%(e.g., Tholstrup et al. 2006, Hodson et al. 2001)
+(e.g., \citealt{Doe2014}, \citealt{Doe2009}). You can use this reference style as well \citep[e.g.][]{Doe2014,Doe2009}.
+
+
+
+
+%If you don't use BiBTex, you can manually itemize references as shown below.
+
+\begin{thebibliography}{}
+
+
+    \bibitem[{Doe et~al.(2006)}]{Doe2014}
+    Doe, F., J. Smith, G. Toledano, R. Richard. 2006.
+    Title of the article here. {\it Journal of Science,} 89 (5), 882--887.
+
+        \bibitem[{Smith et~al.(2016)}]{Doe2009}
+Smith, A., J. Roe, R. Doe.  2016.
+    Another article title. {\it Another Journal Name,} 9 (1), 85--87.
+
+\end{thebibliography}
+
+
+% Use this for adding Appendix
+% Options are (1) APPENDIX (with or without general title) or
+%             (2) APPENDICES (if it has more than one unrelated sections)
+% Outcomment the appropriate case if necessary
+%
+% \begin{APPENDIX}{<Title of the Appendix>}
+% \end{APPENDIX}
+%
+%   or
+%
+% \begin{APPENDICES}
+% \section{<Title of Section A>}
+% \section{<Title of Section B>}
+% etc
+% \end{APPENDICES}
+
+
+%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%

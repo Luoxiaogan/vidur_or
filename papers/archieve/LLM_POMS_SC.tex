@@ -1,0 +1,346 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Latex template for Production and Operations Management (POM) Journal
+%% The poms1.cls is required class file
+
+%% Authors of this template: Emre M. Demirezen, Subodha Kumar, and Rakesh Mallipeddi
+%For queries: pom.latex@gmail.com
+%% Version. 1.0, January 2021
+%We acknowledge INFORMS for allowing us to use a few portions of their template files.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\documentclass[poms,final,blindrev]{poms1_V1} % Use this for blind submissions
+\documentclass[poms,final,blindrev]{poms1_V1} % Use this for listing out authors' information submissions
+
+\OneAndAHalfSpacedXI % % default line spacing !!!!!!!!!!!!!!!!!!!!!!!
+%Manuscript length 32pages
+
+% If hyperref is used, dvi-to-ps driver of choice must be declared as
+%   an additional option to the \documentclass. For example
+%\documentclass[dvips,poms]{poms1}      % if dvips is used
+%\documentclass[dvipsone,poms]{poms1}   % if dvipsone is used, etc.
+
+%%% POMS uses footnotes. If want to use endnotes, remove a percent sign before
+%%% the \theendnotes command. This template does show how to use them.
+\usepackage{endnotes}%; manuscript no.
+\let\footnote=\endnote
+\let\enotesize=\normalsize
+\def\notesname{Endnotes}%
+\def\makeenmark{$^{\theenmark}$}
+\def\enoteformat{\rightskip0pt\leftskip0pt\parindent=1.75em
+  \leavevmode\llap{\theenmark.\enskip}}
+
+% Private macros here (check that there is no clash with the style)
+
+% Natbib setup for author-year style
+ %\usepackage[center]{caption}
+
+\usepackage{graphicx}
+\usepackage{subfigure, epsfig}
+\usepackage{natbib}
+
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+% Additional packages from original file
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amssymb}
+\allowdisplaybreaks
+\usepackage{parskip}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{comment}
+\usepackage{bbm}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+
+\usepackage[unicode=true, bookmarks=false,
+breaklinks=false,pdfborder={0 0 1}]
+{hyperref} 
+
+\hypersetup{
+ colorlinks,citecolor=blue,filecolor=blue,linkcolor=blue,urlcolor=blue}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+% Custom commands from original
+\newcommand{\zjjt}{z_{jj'}(t)}
+\newcommand{\zjzt}{z_{j0}(t)}
+\newcommand{\djjkt}{d_{jj'k}(t)}
+\newcommand{\rjj}{r_{jj'}}
+
+\newcommand{\throughput}{\textbf{Throughput}}
+\newcommand{\Latency}{\textbf{Latency}}
+\newcommand{\TTFT}{\textbf{TTFT}}
+
+\input{command.tex}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+\newcommand{\Hongyu}[1]{{\color{red} Hongyu: #1}}
+\newcommand{\Hengyu}[1]{{\color{green} Hengyu: #1}}
+
+\newcommand*{\circled}[1]{\lower.7ex\hbox{\tikz\draw (0pt, 0pt)%
+    circle (.5em) node {\makebox[1em][c]{\small #1}};}}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} % Use Input in the format of Algorithm
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm
+\algnewcommand{\algorithmicand}{\textbf{and }}
+\algnewcommand{\algorithmicor}{\textbf{or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+  \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+      {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+      \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+      \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+      \fi
+      \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+  \end{center}
+  }
+\makeatother
+
+%% Setup of theorem styles. Outcomment only one.
+%% Preferred default is the first option.
+\TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+%\TheoremsNumberedByChapter  % (Theorem 1.1, Lema 1.1, Theorem 1.2)
+\ECRepeatTheorems
+\newtheorem{observation}{Observation}
+%\newtheorem{proposition}{Proposition}
+%% Setup of the equation numbering system. Outcomment only one.
+%% Preferred default is the first option.
+\EquationsNumberedThrough    % Default: (1), (2), ...
+%\EquationsNumberedBySection % (1.1), (1.2), ...
+
+% In the reviewing and copyediting stage enter the manuscript number.
+%\MANUSCRIPTNO{} % When the article is logged in and DOI assigned to it,
+                 %   this manuscript number is no longer necessary
+
+%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%
+
+% Outcomment only when entries are known. Otherwise leave as is and
+%   default values will be used.
+%\setcounter{page}{1}
+%\VOLUME{00}%
+%\NO{0}%
+%\MONTH{Xxxxx}% (month or a similar seasonal id)
+%\YEAR{0000}% e.g., 2005
+%\FIRSTPAGE{000}%
+%\LASTPAGE{000}%
+%\SHORTYEAR{00}% shortened year (two-digit)
+%\ISSUE{0000} %
+%\LONGFIRSTPAGE{0001} %
+%\DOI{10.1287/xxxx.0000.0000}%
+
+% Author's names for the running heads
+% Sample depending on the number of authors;
+% \RUNAUTHOR{Jones}
+% \RUNAUTHOR{Jones and Wilson}
+% \RUNAUTHOR{Jones, Miller, and Wilson}
+% \RUNAUTHOR{Jones et al.} % for four or more authors
+% Enter authors following the given pattern:
+\RUNAUTHOR{Ao et al.}
+
+% Enter the (shortened) title:
+\RUNTITLE{Memory-Constrained Resource Allocation in Large-Scale AI Systems: A Fluid Dynamics Approach to LLM Scheduling}
+
+% Full title. Sample:
+\TITLE{Memory-Constrained Resource Allocation in Large-Scale AI Systems: A Fluid Dynamics Approach to LLM Scheduling}
+
+% Block of authors and their affiliations starts here:
+% NOTE: Authors with same affiliation, if the order of authors allows,
+%   should be entered in ONE field, separated by a comma.
+%   \EMAIL field can be repeated if more than one author
+\ARTICLEAUTHORS{%
+\AUTHOR{Ruicheng Ao}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{aorc@mit.edu}}
+\AUTHOR{Gan Luo}
+\AFF{School of Mathematical Sciences, Peking University, Beijing 100871, \EMAIL{luogan@stu.pku.edu.cn}}
+\AUTHOR{David Simchi-Levi}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139; Department of Civil and Environmental Engineering, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{dslevi@mit.edu}}
+\AUTHOR{Xinshang Wang}
+\AFF{Alibaba Group, \EMAIL{xinshang.w@alibaba-inc.com}}
+% Enter all authors
+} % end of the block
+
+\ABSTRACT{%
+Large Language Model (LLM) inference systems serving millions of users face critical online scheduling challenges under strict memory constraints. Unlike traditional service systems with static resource requirements, LLM inference exhibits a unique characteristic: requests arrive stochastically and consume memory dynamically as they progress through multi-stage processing pipelines, with work-in-process requirements 
+(Key-Value cache) that grow unpredictably during execution. With operational costs exceeding \$700,000 daily for systems like ChatGPT, efficient scheduling is essential for sustainable service delivery. 
+We formulate this as a multi-stage online scheduling problem with stochastic arrivals and dynamic capacity consumption, analogous to flow management in traditional supply chains but with a unique challenge: resource requirements (memory footprint) grow unpredictably during processing, similar to work-in-process inventory that expands as jobs progress through manufacturing stages. Traditional scheduling approaches like Shortest Processing Time fail because they assume static resource consumption, whereas our system exhibits stage-dependent, dynamically expanding capacity requirements. We develop a fluid dynamics approximation---a technique from queueing theory widely used in supply chain optimization---to establish tractable performance benchmarks. This fluid model characterizes equilibrium flow rates and capacity utilization, providing insights for practical algorithm design. Building on this foundation, we introduce two scheduling policies. The Waiting for Accumulated Inference Threshold (WAIT) algorithm optimizes resource pooling when processing times are known. For realistic scenarios with uncertain processing requirements, the Nested WAIT algorithm adaptively learns job characteristics through a hierarchical framework, enabling effective capacity management under incomplete information. We prove near-optimality under heavy traffic conditions and validate through experiments using Llama-7B on A100 GPUs, demonstrating 15--30\% throughput improvements versus industry baselines (vLLM, Sarathi). Our framework bridges supply chain optimization and computational service management, providing theoretically grounded methods for managing high-volume, capacity-constrained service delivery systems.
+
+% Enter your abstract
+}%
+
+\KEYWORDS{Large Language Model, Key-value cache, Memory Constraint, Online scheduling}
+%Use this for final submission
+%\HISTORY{This paper was first submitted on January 1, 2021 and has been with the authors for 3 months for 2 revisions.}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Samples of sectioning (and labeling) in POMS
+% NOTE: (1) \section and \subsection do NOT end with a period
+%       (2) \subsubsection and lower need end punctuation
+%       (3) capitalization is as shown (title style).
+%
+%\section{Introduction.}\label{intro} %%1.
+%\subsection{Duality and the Classical EOQ Problem.}\label{class-EOQ} %% 1.1.
+%\subsection{Outline.}\label{outline1} %% 1.2.
+%\subsubsection{Cyclic Schedules for the General Deterministic SMDP.}
+%  \label{cyclic-schedules} %% 1.2.1
+%\section{Problem Description.}\label{problemdescription} %% 2.
+
+% Text of your paper here
+
+\section{Introduction}
+
+The proliferation of AI-powered digital services has created a new class of computational supply chains, where user requests flow through multi-stage processing pipelines, consuming shared resources and requiring sophisticated capacity management. Large Language Model (LLM) inference systems exemplify these modern service supply chains: chatbots \citep{anthropic2023claude, bai2023qwen, openai2024gpt4technicalreport, deepseekai2025deepseekr1incentivizingreasoningcapability}, search engines \citep{google2023bard, microsoft2023bing}, and programming assistants \citep{copilot, claude_3_7} process millions of user queries daily, each passing through sequential computational stages under strict memory capacity constraints \citep{devlin2019bert, brown2020language, kaplan2020scaling, ouyang2022training, wei2022emergent, wei2022chain, touvron2023llama}. These systems face the classic supply chain challenge: how to allocate scarce resources efficiently across multiple stages while managing stochastic demand and uncertain processing requirements \citep{garcia2019estimation}.
+
+The operational scale is substantial. Systems like ChatGPT incur daily costs exceeding \$700,000, with significant energy consumption contributing to carbon emissions \citep{patel2023peeling, patterson2021carbon}. Beyond direct costs, inefficient capacity allocation creates service quality degradation—excessive response times frustrate users and reduce engagement, while underutilized resources represent wasted capacity \citep{strubell2019energy, desislavov2021compute}. Effective resource management can simultaneously reduce costs, improve service responsiveness, and enhance sustainability \citep{wu2022sustainable}. This represents a critical challenge at the intersection of supply chain optimization and service operations, where traditional manufacturing-focused models must adapt to the unique characteristics of computational service delivery.
+
+\paragraph{Computational Service Chains: A New Supply Chain Paradigm.}
+Unlike traditional supply chains where physical goods flow through production and distribution stages with relatively predictable resource consumption, computational service supply chains exhibit several distinctive characteristics. To understand the resource flow dynamics, consider how a single user query traverses the LLM inference pipeline, illustrated in Figure~\ref{fig:intro_example}. When a user submits a query—such as ``Is apple a fruit?''—the system must allocate resources across two distinct processing stages:
+
+\begin{itemize}
+    \item \textbf{Prefill Stage (Initial Processing)}: Upon receiving the request, the system tokenizes the input into discrete units (e.g., ``Is'', ``apple'', ``a'', ``fruit'', ``?''). These tokens are processed simultaneously in a single forward pass to compute and store the \textit{Key-Value (KV) cache}—intermediate computational state containing attention keys and values for each token. This stage, corresponding to Stage 0 in Figure~\ref{fig:intro_example}, is analogous to the initial setup in a manufacturing process where raw materials are prepared and positioned. The KV cache functions as work-in-process inventory that enables efficient processing in subsequent stages.
+
+    \item \textbf{Decode Stage (Sequential Production)}: After initial processing, the system enters sequential production mode, generating output one token at a time. At each stage, the system queries the existing KV cache to compute the next token, appends it to the output, and updates the cache. For instance, the model might generate ``Yes'' (Stage 1), then ``it'' (Stage 2), followed by ``is'' (Stage 3), and finally the end-of-sequence marker (Stage 4), as depicted in Figure~\ref{fig:intro_example}. This sequential progression resembles an assembly line where each stage depends on previous outputs, but with a critical difference: the work-in-process inventory (KV cache) grows linearly with each production step, consuming increasing memory capacity.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{Experiments_pdf/fig_intro.pdf}
+    \caption{Resource flow in LLM inference as a multi-stage computational service supply chain.}
+    \label{fig:intro_example}
+\end{figure}
+
+From a supply chain perspective, this two-stage structure creates several key performance metrics analogous to traditional supply chain KPIs:
+\begin{itemize}
+    \item \textbf{Time-To-First-Token (TTFT)}: Analogous to order-to-fulfillment lead time, measuring responsiveness from request arrival to initial service delivery.
+    \item \textbf{Latency}: Total cycle time from request arrival to complete service delivery, similar to end-to-end supply chain lead time.
+    \item \textbf{Throughput}: System-wide processing capacity, measuring the average number of requests completed per unit time—the computational equivalent of supply chain flow rate.
+\end{itemize}
+
+This multi-stage structure with dynamic capacity consumption creates a novel resource allocation problem. The challenge resembles capacity management in service supply chains and make-to-order manufacturing, but with ``capacity consumption'' (memory footprint) that grows unpredictably during production—characteristic absent from traditional supply chain models. The KV cache is essential for computational efficiency, preventing redundant calculations at each stage (analogous to eliminating setup times through effective work-in-process management). However, the expanding cache poses significant capacity management challenges, as memory requirements grow unpredictably during processing. This variability, combined with stochastic demand arrivals and heterogeneous processing requirements, complicates resource pooling and allocation on hardware with finite capacity \citep{tay2022efficient, kang2024gear, hooper2025kvquant}.
+
+\paragraph{Why Traditional Supply Chain Scheduling Approaches Fail.}
+Scheduling in these computational service chains involves grouping requests into \textit{batches} processed concurrently—a form of resource pooling that improves capacity utilization, similar to batch processing in chemical or pharmaceutical supply chains. This process is constrained by memory capacity limits, as the KV cache (work-in-process inventory) grows with each production step, restricting the number of concurrent requests. Traditional supply chain scheduling methods, such as Shortest Processing Time (SPT)—a classic priority rule that minimizes mean flow time in manufacturing and service systems \citep{conway1967theory}—prove inadequate because they assume static capacity requirements and known processing times.
+
+Consider a concrete example with two requests: one with short input but long, uncertain output (e.g., ``Summarize recent developments in artificial intelligence''), and another with longer input but short output (e.g., ``Is 5 a prime number?''). In traditional supply chain scheduling, SPT would prioritize the second request, expecting shorter cycle time to minimize average waiting time and improve flow. However, in computational service chains, the first request's sequential production phase could generate hundreds of tokens, causing its work-in-process inventory (KV cache) to grow substantially and occupy significant capacity over an extended period, while the second request's rapid completion releases resources almost immediately. Prioritizing the second request might reduce initial response time, but the first request's prolonged capacity occupation could block other jobs, leading to resource under-utilization and reduced overall throughput.
+
+Beyond SPT, other traditional approaches like priority scheduling and earliest-due-date rules falter because they prioritize jobs without accounting for dynamic capacity consumption. While batch processing remains effective for improving throughput—a principle well-established in supply chain management—it requires dynamic adaptation based on real-time capacity availability to accommodate growing work-in-process inventory, departing significantly from the static batching familiar in traditional manufacturing or logistics operations \citep{patel2024splitwise, zhong2024distserve}. These characteristics—stochastic demand arrivals, multi-stage processing with distinct capacity profiles, and unpredictable capacity consumption that expands during production—render classical supply chain scheduling approaches inadequate, necessitating new methodologies that account for dynamic capacity growth and stage-specific resource requirements.
+
+\paragraph{Gap in Current Research and Practice.}
+Recent system-level optimizations for LLM inference \citep{yu2022orca, kwon2023efficient, agrawal2023sarathi, pope2023efficiently, deepseekai2024deepseekv2strongeconomicalefficient, patel2024splitwise, zhong2024distserve} have focused on engineering solutions—memory compression techniques, batch size tuning heuristics, and predictive scheduling—but lack rigorous mathematical foundations grounded in operations research and supply chain theory. These heuristic approaches, while practically useful in specific contexts, cannot provide performance guarantees or guide principled algorithm design under uncertainty. Moreover, they typically assume complete information about processing requirements at arrival, which is unrealistic: accurate prediction requires costly classification with fine-grained categorization, and performance degrades significantly under uncertainty (see Proposition \ref{prop:unknown_lower_bound} in Section \ref{sec:nested_wait}). This gap between supply chain optimization theory and computational service management practice motivates our work.
+
+\paragraph{Our Contribution: A Supply Chain Optimization Framework.}
+We address this gap by developing the first theoretically grounded supply chain optimization framework for computational service systems that handles realistic uncertainty about processing requirements. Our approach integrates methodologies from queueing theory, multi-stage flow optimization, and capacity management to address this emerging challenge in service supply chain management:
+
+\begin{itemize}
+\item \textbf{Fluid Approximation for Multi-Stage Flow Analysis}: We develop a multi-stage scheduling model accounting for queueable requests under capacity constraints (Section \ref{sec:model}). To analyze performance and guide practical algorithms, we employ fluid dynamics approximation—a technique widely used in supply chain optimization to study complex stochastic flow systems \citep{mandelbaum1998strong,maglaras2000discrete,bauerle2002optimal,liu2011network}. Our fluid model characterizes equilibrium flow rates and capacity utilization under idealized conditions, providing both upper bounds on achievable performance and structural insights for practical capacity management policies (Section \ref{sec:fluid}).
+
+    \item \textbf{WAIT Algorithm for Known Processing Requirements}: Building on fluid dynamics insights, we introduce the Waiting for Accumulated Inference Threshold (WAIT) algorithm, which maintains dynamically updated thresholds to determine optimal batching and resource pooling decisions (Section \ref{sec:wait}). WAIT optimizes capacity utilization when processing requirements are observable at arrival—analogous to make-to-order supply chains where customer specifications are known upfront. We establish asymptotic optimality under heavy traffic conditions via novel waiting time and coupling analyses from queueing theory.
+
+    \item \textbf{Nested WAIT for Uncertain Processing Requirements}: Recognizing that processing time prediction is often imprecise or costly in practice, we extend WAIT through a hierarchical multi-segment framework. The \textit{Nested WAIT} algorithm adaptively learns request characteristics during processing—similar to how supply chain systems update forecasts based on observed demand patterns—achieving near-optimal performance even under complete uncertainty about processing requirements (Section \ref{sec:nested_wait}). This addresses a critical gap in existing computational service management approaches that assume full information.
+    
+    \item \textbf{Theoretical Guarantees and Empirical Validation}: We prove both algorithms achieve asymptotic optimality in heavy traffic regimes, providing performance guarantees comparable to those established for classical supply chain and queueing systems. Extensive computational experiments using the Llama2-7B model on A100 GPUs demonstrate substantial throughput improvements (15-30\%) over industry-standard baselines such as vLLM \citep{kwon2023efficient} and Sarathi \citep{agrawal2023sarathi}, which are widely recognized high-performance inference engines, while maintaining lower cycle times (Section \ref{sec:experiments}).
+\end{itemize}
+
+These contributions extend supply chain optimization theory to computational service systems, addressing analytical challenges in stochastic, capacity-constrained multi-stage scheduling with applications to modern digital service delivery. Our framework provides both theoretical foundations for the supply chain management research community and practical tools for operators managing high-volume computational service supply chains.
+
+\subsection{Related Literature}
+
+Our work draws upon and contributes to several streams of literature in supply chain management, operations research, and service systems.
+
+\paragraph{Multi-Stage Scheduling and Queueing in Supply Chains.} 
+Classical multi-stage scheduling problems in supply chains focus on optimally sequencing jobs through sequential processing stages, each with varying cycle times. In settings with stochastic arrivals, foundational studies such as \citet{devanur2009adwords,vee2010optimal,cole2014sample,balkanski2016power,lattanzi2020online} have developed algorithms that learn arrival patterns to refine scheduling strategies over time. Works like \citet{im2013online,lucier2013efficient,liu2015online,li2020online} have explored simultaneous batching and scheduling in flow systems, grouping similar jobs to enhance capacity utilization. Within queueing theory applied to supply chain management, fluid models serve as first-order approximations of stochastic flow systems, enabling near-optimal control strategies \citep{mandelbaum1998strong,maglaras2000discrete,bauerle2002optimal,liu2011network}, while heavy-traffic analysis offers insights into long-term system behavior under high utilization. However, these traditional approaches assume static or known capacity requirements at each stage, unlike computational service chains where capacity consumption grows dynamically during processing through expanding work-in-process inventory (KV cache).
+
+\paragraph{Computational Service Systems and Infrastructure Management.} 
+Theoretical frameworks for analyzing computational service supply chains are scarce, despite their growing economic importance. Most prior work targets system-level engineering optimizations rather than rigorous supply chain modeling. System-level works like \citet{patel2023peeling} (``Splitwise'') and \citet{zhong2024distserve} (``DistServe'') partition processing across infrastructure stages, while scheduling methods such as \citet{yu2022orca}, \citet{agrawal2023sarathi}, and \citet{agrawal2024taming} use batch processing to boost throughput—similar to our approach but without theoretical foundations. Other optimizations, e.g., \citet{deepseekai2024deepseekv2strongeconomicalefficient} with memory compression techniques, or \citet{fu2025efficient} with prioritization heuristics, focus on engineering efficiency rather than providing supply chain optimization insights.
+
+Our work tackles these challenges by developing a scheduling framework grounded in supply chain optimization theory for realistic scenarios with uncertain processing requirements, using fluid dynamics approximations and coupling techniques from queueing theory to achieve asymptotic optimality. More recently, \citet{li2025throughput} propose a stochastic processing model based on linear batch processing time, demonstrating that work-conserving policies achieve optimal throughput. However, their analysis does not address capacity constraints from work-in-process inventory (KV caches) for queued requests, nor do they explore theoretical aspects of cycle time metrics important for service-level agreements in interactive systems. Our work complements this by providing explicit analysis of capacity constraints and latency guarantees, extending supply chain optimization principles to computational service management.
+
+\subsection{Notation}
+For integer $n\ge 1,$ we denote $[n]=\{1,2,\dots,n\}$ as the set of integers from $1$ to $n$. For $x\in\mathbb{R}$, denote $\lceil x\rceil$ as the smallest integer not smaller than $x$ and $\lfloor x\rfloor$ as the largest integer not greater than $x$. Denote $x_+=\max\{x, 0\}$. For set $S$, denote $|S|$ as its cardinality. For two functions $f(T)$ and $g(T)$, we use $f(T)=O(g(T))$ if there exists constant $c_1>0$ such that $f(T)\le c_1g(T)$ as $T\to+\infty$ and $f(T)=\Omega(g(T))$ if there exists constant $c_2>0$ such that $f(T)\ge c_2g(T)$ as $T\to +\infty$.
+\input{model}
+
+\input{fluid}
+
+\input{known_type}
+
+\input{unknown_type}
+
+\input{numerical}
+
+\input{conclusion}
+
+% Display endnotes
+% \theendnotes
+
+% Acknowledgments here
+\ACKNOWLEDGMENT{We sincerely thank Dr. Zijie Zhou and Prof. Jing Dong for their valuable suggestions and insightful comments, which significantly helped improve the quality of this work.}
+
+%%REFERENCES%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This template complies references using bibtex. You will need to use pomsref.bst file for biblography style.
+%REFERENCES USING BIBTEX FILES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{pomsref}
+
+ \let\oldbibliography\thebibliography
+ \renewcommand{\thebibliography}[1]{%
+    \oldbibliography{#1}%
+    \baselineskip14pt %Change this for line spacing within the same reference
+    \setlength{\itemsep}{10pt}% %Change this for spacing between two referneces
+ }
+\bibliography{main.bib}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Here starts the e-companion (EC). Place your appendix content here.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \ECSwitch % Comment this line out if you do not need e-companion.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Main head for the e-companion
+% \ECHead{E-Companion for Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints}
+
+% \noindent This e-companion contains additional proofs, technical details, and supplementary material referenced in the main paper.
+
+% \begin{APPENDICES}
+% \small
+% \fontsize{9}{10}
+% \clearpage
+% \input{extension}
+% \input{extension}
+
+ % \input{Appendix.tex}
+% \input{pf-lemmas.tex}
+% \input{tmp.tex}
+% \end{APPENDICES}
+
+%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%

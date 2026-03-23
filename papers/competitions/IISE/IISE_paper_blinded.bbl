@@ -1,0 +1,69 @@
+\begin{thebibliography}{10}
+
+\bibitem{brown2020language}
+T.~Brown, B.~Mann, N.~Ryder, M.~Subbiah, J.~D. Kaplan, P.~Dhariwal,
+  A.~Neelakantan, P.~Shyam, G.~Sastry, A.~Askell, {\em et~al.}, ``Language
+  models are few-shot learners,'' {\em Advances in neural information
+  processing systems}, vol.~33, pp.~1877--1901, 2020.
+
+\bibitem{openai2024gpt4technicalreport}
+OpenAI, ``Gpt-4 technical report,'' 2024.
+
+\bibitem{strubell2019energy}
+E.~Strubell, A.~Ganesh, and A.~McCallum, ``Energy and policy considerations for
+  deep learning in nlp,'' {\em arXiv preprint arXiv:1906.02243}, 2019.
+
+\bibitem{kwon2023efficient}
+W.~Kwon, Z.~Li, S.~Zhuang, Y.~Sheng, L.~Zheng, C.~H. Yu, J.~Gonzalez, H.~Zhang,
+  and I.~Stoica, ``Efficient memory management for large language model serving
+  with pagedattention,'' in {\em Proceedings of the 29th Symposium on Operating
+  Systems Principles}, pp.~611--626, 2023.
+
+\bibitem{agrawal2023sarathi}
+A.~Agrawal, A.~Panwar, J.~Mohan, N.~Kwatra, B.~S. Gulavani, and R.~Ramjee,
+  ``Sarathi: Efficient llm inference by piggybacking decodes with chunked
+  prefills,'' {\em arXiv preprint arXiv:2308.16369}, 2023.
+
+\bibitem{zheng2023lmsys}
+L.~Zheng, W.-L. Chiang, Y.~Sheng, T.~Li, S.~Zhuang, Z.~Wu, Y.~Zhuang, Z.~Li,
+  Z.~Lin, E.~P. Xing, {\em et~al.}, ``Lmsys-chat-1m: A large-scale real-world
+  llm conversation dataset,'' {\em arXiv preprint arXiv:2309.11998}, 2023.
+
+\bibitem{jaillet2025onlineschedulingllminference}
+P.~Jaillet, J.~Jiang, K.~Mellou, M.~Molinaro, C.~Podimata, and Z.~Zhou,
+  ``Online scheduling for llm inference with kv cache constraints,'' 2025.
+
+\bibitem{wang2025llm}
+M.~Wang, Y.~Ye, and Z.~Zhou, ``Llm serving optimization with variable prefill
+  and decode lengths,'' {\em arXiv preprint arXiv:2508.06133}, 2025.
+
+\bibitem{chen2025adaptively}
+Z.~Chen, Y.~Ye, and Z.~Zhou, ``Adaptively robust llm inference optimization
+  under prediction uncertainty,'' {\em arXiv preprint arXiv:2508.14544}, 2025.
+
+\bibitem{li2025throughput}
+Y.~Li, J.~Dai, and T.~Peng, ``Throughput-optimal scheduling algorithms for llm
+  inference and ai agents,'' 2025.
+
+\bibitem{zhong2024distserve}
+Y.~Zhong, S.~Liu, J.~Chen, J.~Hu, Y.~Zhu, X.~Liu, X.~Jin, and H.~Zhang,
+  ``{DistServe}: Disaggregating prefill and decoding for goodput-optimized
+  large language model serving,'' in {\em 18th USENIX Symposium on Operating
+  Systems Design and Implementation (OSDI 24)}, pp.~193--210, 2024.
+
+\bibitem{patel2024splitwise}
+P.~Patel, E.~Choukse, C.~Zhang, A.~Shah, {\'{I}}.~Goiri, S.~Maleki, and
+  R.~Bianchini, ``Splitwise: Efficient generative llm inference using phase
+  splitting,'' pp.~118--132, 2024.
+
+\bibitem{mandelbaum1998strong}
+A.~Mandelbaum, W.~A. Massey, and M.~I. Reiman, ``Strong approximations for
+  markovian service networks,'' {\em Queueing Systems}, vol.~30, no.~1,
+  pp.~149--201, 1998.
+
+\bibitem{maglaras2000discrete}
+C.~Maglaras, ``Discrete-review policies for scheduling stochastic networks:
+  Trajectory tracking and fluid-scale asymptotic optimality,'' {\em The Annals
+  of Applied Probability}, vol.~10, no.~3, pp.~897--929, 2000.
+
+\end{thebibliography}

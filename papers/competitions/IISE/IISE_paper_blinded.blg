@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2024)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: IISE_paper_blinded.aux
+The style file: ieeetr.bst
+Database file #1: references_iise.bib
+Warning--empty journal in patel2024splitwise
+You've used 14 entries,
+            1876 wiz_defined-function locations,
+            549 strings with 6626 characters,
+and the built_in function-call counts, 3827 in all, are:
+= -- 316
+> -- 251
+< -- 0
++ -- 89
+- -- 75
+* -- 297
+:= -- 592
+add.period$ -- 14
+call.type$ -- 14
+change.case$ -- 14
+chr.to.int$ -- 0
+cite$ -- 15
+duplicate$ -- 169
+empty$ -- 337
+format.name$ -- 75
+if$ -- 885
+int.to.chr$ -- 0
+int.to.str$ -- 14
+missing$ -- 11
+newline$ -- 45
+num.names$ -- 14
+pop$ -- 64
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 105
+stack$ -- 0
+substring$ -- 200
+swap$ -- 60
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 1
+while$ -- 32
+width$ -- 16
+write$ -- 121
+(There was 1 warning)

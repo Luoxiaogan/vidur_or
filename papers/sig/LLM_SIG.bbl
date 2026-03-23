@@ -1,0 +1,114 @@
+\begin{thebibliography}{36}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+
+\bibitem[{Agrawal et~al.(2024{\natexlab{a}})Agrawal, Kedia, Mohan, Panwar, Kwatra, Gulavani, Ramjee, \protect\BIBand{} Tumanov}]{agrawal2024vidur}
+Agrawal A, Kedia N, Mohan J, Panwar A, Kwatra N, Gulavani B, Ramjee R, Tumanov A (2024{\natexlab{a}}) Vidur: A large-scale simulation framework for llm inference. \emph{Proceedings of Machine Learning and Systems} 6:351--366.
+
+\bibitem[{Agrawal et~al.(2024{\natexlab{b}})Agrawal, Kedia, Panwar, Mohan, Kwatra, Gulavani, Tumanov, \protect\BIBand{} Ramjee}]{agrawal2024taming}
+Agrawal A, Kedia N, Panwar A, Mohan J, Kwatra N, Gulavani B, Tumanov A, Ramjee R (2024{\natexlab{b}}) Taming $\{$Throughput-Latency$\}$ tradeoff in $\{$LLM$\}$ inference with $\{$Sarathi-Serve$\}$. \emph{18th USENIX Symposium on Operating Systems Design and Implementation (OSDI 24)}, 117--134.
+
+\bibitem[{Agrawal et~al.(2023)Agrawal, Panwar, Mohan, Kwatra, Gulavani, \protect\BIBand{} Ramjee}]{agrawal2023sarathi}
+Agrawal A, Panwar A, Mohan J, Kwatra N, Gulavani BS, Ramjee R (2023) Sarathi: Efficient llm inference by piggybacking decodes with chunked prefills. \emph{arXiv preprint arXiv:2308.16369} .
+
+\bibitem[{Anthropic(2023)}]{anthropic2023claude}
+Anthropic (2023) Claude. \url{https://claude.ai}.
+
+\bibitem[{Asmussen(2003)}]{asmussen2003applied}
+Asmussen S (2003) \emph{Applied probability and queues}, volume~2 (Springer).
+
+\bibitem[{Balkanski et~al.(2016)Balkanski, Rubinstein, \protect\BIBand{} Singer}]{balkanski2016power}
+Balkanski E, Rubinstein A, Singer Y (2016) The power of optimization from samples. \emph{Advances in Neural Information Processing Systems} 29.
+
+\bibitem[{B{\"a}uerle(2002)}]{bauerle2002optimal}
+B{\"a}uerle N (2002) Optimal control of queueing networks: An approach via fluid models. \emph{Advances in Applied Probability} 34(2):313--328.
+
+\bibitem[{Cole \protect\BIBand{} Roughgarden(2014)}]{cole2014sample}
+Cole R, Roughgarden T (2014) The sample complexity of revenue maximization. \emph{Proceedings of the forty-sixth annual ACM symposium on Theory of computing}, 243--252.
+
+\bibitem[{DeepSeek-AI(2024)}]{deepseekai2024deepseekv2strongeconomicalefficient}
+DeepSeek-AI (2024) Deepseek-v2: A strong, economical, and efficient mixture-of-experts language model. \urlprefix\url{https://arxiv.org/abs/2405.04434}.
+
+\bibitem[{Devanur \protect\BIBand{} Hayes(2009)}]{devanur2009adwords}
+Devanur NR, Hayes TP (2009) The adwords problem: online keyword matching with budgeted bidders under random permutations. \emph{Proceedings of the 10th ACM conference on Electronic commerce}, 71--78.
+
+\bibitem[{Durrett(2019)}]{durrett2019probability}
+Durrett R (2019) \emph{Probability: theory and examples}, volume~49 (Cambridge university press).
+
+\bibitem[{Fu et~al.(2025)Fu, Zhu, Su, Qiao, Stoica, \protect\BIBand{} Zhang}]{fu2025efficient}
+Fu Y, Zhu S, Su R, Qiao A, Stoica I, Zhang H (2025) Efficient llm scheduling by learning to rank. \emph{Advances in Neural Information Processing Systems} 37:59006--59029.
+
+\bibitem[{Garc{\'i}a-Mart{\'i}n et~al.(2019)Garc{\'i}a-Mart{\'i}n, Rodrigues, Riley, \protect\BIBand{} Grahn}]{garcia2019estimation}
+Garc{\'i}a-Mart{\'i}n E, Rodrigues CF, Riley G, Grahn H (2019) Estimation of energy consumption in machine learning. \emph{Journal of Parallel and Distributed Computing} 134:75--88.
+
+\bibitem[{GitHub(2022)}]{copilot}
+GitHub (2022) Copilot. \urlprefix\url{https://github.com/features/copilot}.
+
+\bibitem[{Google(2023)}]{google2023bard}
+Google (2023) Bard. \url{https://bard.google.com}.
+
+\bibitem[{Im \protect\BIBand{} Moseley(2013)}]{im2013online}
+Im S, Moseley B (2013) Online batch scheduling for flow objectives. \emph{Proceedings of the twenty-fifth annual ACM symposium on Parallelism in algorithms and architectures}, 102--104.
+
+\bibitem[{Kang et~al.(2024)Kang, Zhang, Kundu, Jeong, Liu, Krishna, \protect\BIBand{} Zhao}]{kang2024gear}
+Kang H, Zhang Q, Kundu S, Jeong G, Liu Z, Krishna T, Zhao T (2024) Gear: An efficient kv cache compression recipefor near-lossless generative inference of llm. \emph{arXiv e-prints} arXiv--2403.
+
+\bibitem[{Kingman(1962)}]{kingman1962queues}
+Kingman JFC (1962) On queues in heavy traffic. \emph{Journal of the Royal Statistical Society: Series B (Methodological)} 24(2):383--392.
+
+\bibitem[{Kwon et~al.(2023)Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang, \protect\BIBand{} Stoica}]{kwon2023efficient}
+Kwon W, Li Z, Zhuang S, Sheng Y, Zheng L, Yu CH, Gonzalez J, Zhang H, Stoica I (2023) Efficient memory management for large language model serving with pagedattention. \emph{Proceedings of the 29th Symposium on Operating Systems Principles}, 611--626.
+
+\bibitem[{Lattanzi et~al.(2020)Lattanzi, Lavastida, Moseley, \protect\BIBand{} Vassilvitskii}]{lattanzi2020online}
+Lattanzi S, Lavastida T, Moseley B, Vassilvitskii S (2020) Online scheduling via learned weights. \emph{Proceedings of the Fourteenth Annual ACM-SIAM Symposium on Discrete Algorithms}, 1859--1877 (SIAM).
+
+\bibitem[{Li et~al.(2020)Li, Wang, Chai, \protect\BIBand{} Yuan}]{li2020online}
+Li W, Wang L, Chai X, Yuan H (2020) Online batch scheduling of simple linear deteriorating jobs with incompatible families. \emph{Mathematics} 8(2):170.
+
+\bibitem[{Li et~al.(2025)Li, Dai, \protect\BIBand{} Peng}]{li2025throughput}
+Li Y, Dai J, Peng T (2025) Throughput-optimal scheduling algorithms for llm inference and ai agents. \urlprefix\url{https://arxiv.org/abs/2504.07347}, accessed: 2025-04-11.
+
+\bibitem[{Liu \protect\BIBand{} Lu(2015)}]{liu2015online}
+Liu P, Lu X (2015) Online unbounded batch scheduling on parallel machines with delivery times. \emph{Journal of Combinatorial Optimization} 29:228--236.
+
+\bibitem[{Liu \protect\BIBand{} Whitt(2011)}]{liu2011network}
+Liu Y, Whitt W (2011) A network of time-varying many-server fluid queues with customer abandonment. \emph{Operations research} 59(4):835--846.
+
+\bibitem[{Lucier et~al.(2013)Lucier, Menache, Naor, \protect\BIBand{} Yaniv}]{lucier2013efficient}
+Lucier B, Menache I, Naor J, Yaniv J (2013) Efficient online scheduling for deadline-sensitive jobs. \emph{Proceedings of the twenty-fifth annual ACM symposium on Parallelism in algorithms and architectures}, 305--314.
+
+\bibitem[{Maglaras(2000)}]{maglaras2000discrete}
+Maglaras C (2000) Discrete-review policies for scheduling stochastic networks: Trajectory tracking and fluid-scale asymptotic optimality. \emph{The Annals of Applied Probability} 10(3):897--929.
+
+\bibitem[{Mandelbaum et~al.(1998)Mandelbaum, Massey, \protect\BIBand{} Reiman}]{mandelbaum1998strong}
+Mandelbaum A, Massey WA, Reiman MI (1998) Strong approximations for markovian service networks. \emph{Queueing Systems} 30(1):149--201.
+
+\bibitem[{OpenAI(2024)}]{openai2024gpt4technicalreport}
+OpenAI (2024) Gpt-4 technical report. \urlprefix\url{https://arxiv.org/abs/2303.08774}.
+
+\bibitem[{Patel(2023)}]{patel2023peeling}
+Patel D (2023) {Peeling The Onion’s Layers: Large Language Models’ Cost, Context, and Feature Breakdown}. Semianalysis blog, \urlprefix\url{https://semianalysis.com/2023/02/13/peeling-the-onions-layers-large-language/}, accessed: [Insert Date Here].
+
+\bibitem[{Patel et~al.(2024)Patel, Choukse, Zhang, Shah, Goiri, Maleki, \protect\BIBand{} Bianchini}]{patel2024splitwise}
+Patel P, Choukse E, Zhang C, Shah A, Goiri {\'I}, Maleki S, Bianchini R (2024) Splitwise: Efficient generative llm inference using phase splitting. in 2024 acm/ieee 51st annual international symposium on computer architecture (isca). \emph{IEEE Computer Society, Los Alamitos, CA, USA} 118--132.
+
+\bibitem[{Pope et~al.(2023)Pope, Douglas, Chowdhery, Devlin, Bradbury, Heek, Xiao, Agrawal, \protect\BIBand{} Dean}]{pope2023efficiently}
+Pope R, Douglas S, Chowdhery A, Devlin J, Bradbury J, Heek J, Xiao K, Agrawal S, Dean J (2023) Efficiently scaling transformer inference. \emph{Proceedings of Machine Learning and Systems} 5:606--624.
+
+\bibitem[{Strait(1974)}]{strait1974maximum}
+Strait P (1974) On the maximum and minimum of partial sums of random variables. \emph{Pacific Journal of Mathematics} 52(2):585--593.
+
+\bibitem[{Vee et~al.(2010)Vee, Vassilvitskii, \protect\BIBand{} Shanmugasundaram}]{vee2010optimal}
+Vee E, Vassilvitskii S, Shanmugasundaram J (2010) Optimal online assignment with forecasts. \emph{Proceedings of the 11th ACM conference on Electronic commerce}, 109--118.
+
+\bibitem[{Yu et~al.(2022)Yu, Jeong, Kim, Kim, \protect\BIBand{} Chun}]{yu2022orca}
+Yu GI, Jeong JS, Kim GW, Kim S, Chun BG (2022) Orca: A distributed serving system for $\{$Transformer-Based$\}$ generative models. \emph{16th USENIX Symposium on Operating Systems Design and Implementation (OSDI 22)}, 521--538.
+
+\bibitem[{Zheng et~al.(2023)Zheng, Chiang, Sheng, Li, Zhuang, Wu, Zhuang, Li, Lin, Xing et~al.}]{zheng2023lmsys}
+Zheng L, Chiang WL, Sheng Y, Li T, Zhuang S, Wu Z, Zhuang Y, Li Z, Lin Z, Xing EP, et~al. (2023) Lmsys-chat-1m: A large-scale real-world llm conversation dataset. \emph{arXiv preprint arXiv:2309.11998} .
+
+\bibitem[{Zhong et~al.(2024)Zhong, Liu, Chen, Hu, Zhu, Liu, Jin, \protect\BIBand{} Zhang}]{zhong2024distserve}
+Zhong Y, Liu S, Chen J, Hu J, Zhu Y, Liu X, Jin X, Zhang H (2024) $\{$DistServe$\}$: Disaggregating prefill and decoding for goodput-optimized large language model serving. \emph{18th USENIX Symposium on Operating Systems Design and Implementation (OSDI 24)}, 193--210.
+
+\end{thebibliography}

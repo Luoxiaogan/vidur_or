@@ -1,0 +1,334 @@
+\relax 
+\providecommand\babel@aux[2]{}
+\@nameuse{bbl@beforestart}
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{devlin2019bert,brown2020language,kaplan2020scaling,ouyang2022training,wei2022emergent,wei2022chain,touvron2023llama,openai2024gpt4technicalreport}
+\citation{anthropic2023claude,bai2023qwen,openai2024gpt4technicalreport,deepseekai2025deepseekr1incentivizingreasoningcapability}
+\citation{google2023bard,microsoft2023bing}
+\citation{copilot,claude_3_7}
+\citation{garcia2019estimation}
+\citation{patel2023peeling,patterson2021carbon}
+\citation{strubell2019energy,desislavov2021compute}
+\citation{wu2022sustainable}
+\babel@aux{english}{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces An example of LLM inference.}}{2}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:intro_example}{{1}{2}{An example of LLM inference}{figure.caption.1}{}}
+\citation{tay2022efficient,kang2024gear,hooper2025kvquant}
+\citation{sheng2023flexgen,aminabadi2022deepspeed}
+\citation{kwon2023efficient}
+\citation{vllm-v1-2025}
+\citation{li2025mirage}
+\citation{yu2022orca,kwon2023efficient,agrawal2023sarathi,pope2023efficiently,deepseekai2024deepseekv2strongeconomicalefficient,patel2024splitwise,zhong2024distserve}
+\citation{fu2025efficient}
+\citation{kwon2023efficient}
+\citation{agrawal2023sarathi}
+\citation{zhong2024distserve}
+\citation{patel2024splitwise}
+\citation{devanur2009adwords,vee2010optimal,cole2014sample,balkanski2016power,lattanzi2020online}
+\citation{im2013online,lucier2013efficient,liu2015online,li2020online}
+\citation{mandelbaum1998strong,maglaras2000discrete,bauerle2002optimal,liu2011network}
+\citation{patel2023peeling}
+\citation{zhong2024distserve}
+\citation{yu2022orca}
+\citation{agrawal2023sarathi}
+\citation{agrawal2024taming}
+\citation{deepseekai2024deepseekv2strongeconomicalefficient}
+\citation{fu2025efficient}
+\citation{jaillet2025onlineschedulingllminference}
+\citation{wang2025llm}
+\citation{chen2025adaptively}
+\citation{li2025throughput}
+\citation{jaillet2025onlineschedulingllminference}
+\citation{wang2025llm}
+\citation{chen2025adaptively}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Summary of Contributions}{4}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Other Related Work}{4}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Notations}{5}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Model}{5}{section.2}\protected@file@percent }
+\newlabel{sec:model}{{2}{5}{Model}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Notation}{5}{subsection.2.1}\protected@file@percent }
+\newlabel{subsec:notation}{{2.1}{5}{Notation}{subsection.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Prompts and Inference Process}{5}{subsection.2.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Summary of Notation}}{6}{table.caption.4}\protected@file@percent }
+\newlabel{tab:notation}{{1}{6}{Summary of Notation}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Batching and Iteration Time}{6}{subsection.2.3}\protected@file@percent }
+\citation{agrawal2023sarathi,kwon2023efficient,zhong2024distserve}
+\citation{zhong2024distserve,patel2024splitwise}
+\citation{li2025throughput}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Example of batching and scheduling.}}{7}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:batching_example}{{2}{7}{Example of batching and scheduling}{figure.caption.5}{}}
+\newlabel{eq:time_consump}{{1}{7}{Batching and Iteration Time}{equation.2.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Inference time of Llama-7B and Llama-13B with different number of tokens in the batch on a single L20 GPU}}{8}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:inference time}{{3}{8}{Inference time of Llama-7B and Llama-13B with different number of tokens in the batch on a single L20 GPU}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Memory Constraint and Challenges}{8}{subsection.2.4}\protected@file@percent }
+\newlabel{eq:memory_constraint}{{2}{8}{Memory Constraint and Challenges}{equation.2.2}{}}
+\newlabel{ex:memory_growth}{{1}{8}{Dynamic Memory Growth and Eviction}{example.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Core Challenge.}{9}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Performance Metrics}{9}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Optimization Problem and Policy Space}{9}{subsection.2.6}\protected@file@percent }
+\newlabel{eq:optimization}{{3}{9}{Optimization Problem and Policy Space}{equation.2.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Fluid Dynamics and Equilibrium}{10}{section.3}\protected@file@percent }
+\newlabel{sec:fluid}{{3}{10}{Fluid Dynamics and Equilibrium}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Single-Type Fluid Model}{10}{subsection.3.1}\protected@file@percent }
+\newlabel{prop:large_rate}{{1}{11}{Single-Type Fluid Model}{proposition.1}{}}
+\newlabel{eq:memory_single}{{5}{11}{Single-Type Fluid Model}{equation.3.5}{}}
+\newlabel{eq:throughput_fluid}{{6}{11}{Single-Type Fluid Model}{equation.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Multiple-Type Fluid Model}{12}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:memory_multi1}{{7}{12}{Multiple-Type Fluid Model}{equation.3.7}{}}
+\newlabel{eq:memory_multi2}{{8}{12}{Multiple-Type Fluid Model}{equation.3.8}{}}
+\newlabel{eq:time_fluid}{{9}{12}{Multiple-Type Fluid Model}{equation.3.9}{}}
+\newlabel{throughput_fluid_multiple}{{10}{12}{Multiple-Type Fluid Model}{equation.3.10}{}}
+\newlabel{prop::online policy expected throughput upper bound, multiple type}{{2}{12}{Multiple-Type Fluid Model}{proposition.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Scheduling with Known Arrival Types: The WAIT Algorithm}{13}{section.4}\protected@file@percent }
+\newlabel{sec:wait}{{4}{13}{Scheduling with Known Arrival Types: The WAIT Algorithm}{section.4}{}}
+\newlabel{remark:memory_assumption}{{1}{13}{On the Assumption $C \geq M^*$}{remark.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Motivation: Why Naive Scheduling Fails}{13}{subsection.4.1}\protected@file@percent }
+\newlabel{subsec:wait_motivation}{{4.1}{13}{Motivation: Why Naive Scheduling Fails}{subsection.4.1}{}}
+\newlabel{prop:lower_bound_FCFS}{{3}{13}{Motivation: Why Naive Scheduling Fails}{proposition.3}{}}
+\newlabel{ex:fcfs_cascade}{{2}{13}{Eviction Cascade under FCFS}{example.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}The WAIT Algorithm}{14}{subsection.4.2}\protected@file@percent }
+\newlabel{subsec:wait_algorithm}{{4.2}{14}{The WAIT Algorithm}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Algorithm Description.}{14}{section*.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Pipeline of Algorithm \ref {alg:wait}}}{15}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:wait}{{4}{15}{Pipeline of Algorithm \ref {alg:wait}}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Asymptotic Analysis}{15}{subsection.4.3}\protected@file@percent }
+\newlabel{subsec:asymptotic_analysis}{{4.3}{15}{Asymptotic Analysis}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Theoretical Analysis}{15}{subsection.4.4}\protected@file@percent }
+\newlabel{subsec:main_theorem}{{4.4}{15}{Theoretical Analysis}{subsection.4.4}{}}
+\newlabel{eq:wait_thresholds}{{11}{15}{Theoretical Analysis}{equation.4.11}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces WAIT: Waiting for Accumulated Inference Threshold}}{16}{algorithm.1}\protected@file@percent }
+\newlabel{alg:wait}{{1}{16}{WAIT: Waiting for Accumulated Inference Threshold}{algorithm.1}{}}
+\newlabel{thm:wait_heavy_traffic}{{1}{16}{Theoretical Analysis}{theorem.1}{}}
+\newlabel{prop::simple random walk, tight bound}{{4}{16}{Theoretical Analysis}{proposition.4}{}}
+\citation{fu2025efficient}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Scheduling with Unknown Arrival Types: The Nested WAIT Algorithm}{17}{section.5}\protected@file@percent }
+\newlabel{sec:nested_wait}{{5}{17}{Scheduling with Unknown Arrival Types: The Nested WAIT Algorithm}{section.5}{}}
+\newlabel{ex:unknown_output}{{3}{17}{Unknown Output Lengths}{example.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Algorithm Overview}{17}{subsection.5.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Pipeline of the Nested WAIT Algorithm}}{18}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:nested_wait}{{5}{18}{Pipeline of the Nested WAIT Algorithm}{figure.caption.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Example of the Nested WAIT Algorithm}}{19}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:nested_wait_example}{{6}{19}{Example of the Nested WAIT Algorithm}{figure.caption.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Main Theorem}{19}{subsection.5.2}\protected@file@percent }
+\newlabel{subsec:nested_main_theorem}{{5.2}{19}{Main Theorem}{subsection.5.2}{}}
+\newlabel{prop:unknown_lower_bound}{{5}{19}{Main Theorem}{proposition.5}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces Nested WAIT: Nested Waiting for Accumulated Inference Threshold}}{20}{algorithm.2}\protected@file@percent }
+\newlabel{alg:nested_wait}{{2}{20}{Nested WAIT: Nested Waiting for Accumulated Inference Threshold}{algorithm.2}{}}
+\newlabel{eq:nested_wait_thresholds}{{12}{20}{Main Theorem}{equation.5.12}{}}
+\newlabel{eq:nested_wait_memory}{{13}{20}{Main Theorem}{equation.5.13}{}}
+\newlabel{thm:nested_wait_heavy_traffic}{{2}{20}{Main Theorem}{theorem.2}{}}
+\newlabel{eq:nested_wait_memory_total}{{14}{21}{Main Theorem}{equation.5.14}{}}
+\citation{zheng2023lmsys}
+\citation{agrawal2024vidur}
+\citation{kwon2023efficient}
+\citation{agrawal2023sarathi}
+\citation{zheng2023lmsys}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Numerical Experiments}{22}{section.6}\protected@file@percent }
+\newlabel{sec:experiments}{{6}{22}{Numerical Experiments}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Experiment on WAIT Algorithm}{22}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Experiment on Nested WAIT Algorithm}{22}{subsection.6.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Average throughput and latency across algorithms on the synthetic dataset with low demand.}}{23}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:comparison WAIT short decode}{{7}{23}{Average throughput and latency across algorithms on the synthetic dataset with low demand}{figure.caption.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Average throughput and latency across algorithms on the synthetic dataset with high demand.}}{23}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:comparison WAIT long decode}{{8}{23}{Average throughput and latency across algorithms on the synthetic dataset with high demand}{figure.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Distribution of prefill and decode lengths in the real dataset.}}{24}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:distribution}{{9}{24}{Distribution of prefill and decode lengths in the real dataset}{figure.caption.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Mean prefill lengths and prompt counts per decode length bin in the real dataset.}}{24}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:group}{{10}{24}{Mean prefill lengths and prompt counts per decode length bin in the real dataset}{figure.caption.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Extensions}{24}{section.7}\protected@file@percent }
+\newlabel{sec:extension}{{7}{24}{Extensions}{section.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Average throughput and latency across algorithms on the synthetic dataset.}}{25}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:comparison Nested WAIT, short prefill}{{11}{25}{Average throughput and latency across algorithms on the synthetic dataset}{figure.caption.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Average throughput and latency across algorithms on the real dataset with clustered output lengths (low arrival rates).}}{25}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:comparison_Nested_WAIT_real_world_low}{{12}{25}{Average throughput and latency across algorithms on the real dataset with clustered output lengths (low arrival rates)}{figure.caption.17}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Average throughput and latency across algorithms on the real dataset with clustered output lengths (high arrival rates).}}{25}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:comparison Nested WAIT, real world, higher rate}{{13}{25}{Average throughput and latency across algorithms on the real dataset with clustered output lengths (high arrival rates)}{figure.caption.18}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Average throughput and latency across algorithms on the real dataset with actual output lengths.}}{26}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:comparison Nested WAIT, real world}{{14}{26}{Average throughput and latency across algorithms on the real dataset with actual output lengths}{figure.caption.19}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Time-Varying Arrival Rates}{26}{subsection.7.1}\protected@file@percent }
+\newlabel{sec:time_varying}{{7.1}{26}{Time-Varying Arrival Rates}{subsection.7.1}{}}
+\newlabel{eq:nested_wait_thresholds_time_varying}{{15}{26}{Time-Varying Arrival Rates}{equation.7.15}{}}
+\citation{zheng2023lmsys}
+\newlabel{thm:nested_wait_heavy_traffic_time_varying}{{3}{27}{Time-Varying Arrival Rates}{theorem.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Segment Design}{27}{subsection.7.2}\protected@file@percent }
+\newlabel{eq:nested_wait_thresholds_L}{{16}{27}{Segment Design}{equation.7.16}{}}
+\citation{zheng2023lmsys}
+\newlabel{thm:nested_wait_heavy_traffic, any segment}{{4}{28}{Segment Design}{theorem.4}{}}
+\newlabel{eq:nested_wait_memory_L}{{17}{28}{Segment Design}{equation.7.17}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Arrival rate construction from real data, with rates proportional to normalized frequencies.}}{29}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:lambda_list}{{15}{29}{Arrival rate construction from real data, with rates proportional to normalized frequencies}{figure.caption.20}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Memory usage proportions under low arrival rate (total rate = 50, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}}{29}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:fixed_T_200_rate_50_delta_0.1_1e-5}{{16}{29}{Memory usage proportions under low arrival rate (total rate = 50, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$}{figure.caption.21}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusion, Limitations, and Future Directions}{29}{section.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces Memory usage proportions under high arrival rate (total rate = 500, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}}{30}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:fixed_T_200_rate_500_delta_0.1_1e-5}{{17}{30}{Memory usage proportions under high arrival rate (total rate = 500, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$}{figure.caption.22}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces Memory usage proportions with varying time horizons (total rate = 50, $\delta = 0.001$). Left: $T = 20$; Right: $T = 2000$.}}{30}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:fixed_delta_0.001_rate_50_T_20_2000}{{18}{30}{Memory usage proportions with varying time horizons (total rate = 50, $\delta = 0.001$). Left: $T = 20$; Right: $T = 2000$}{figure.caption.23}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}More Volatile Arrivals}{30}{subsection.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Extension to Multi-GPU Systems}{30}{subsection.8.2}\protected@file@percent }
+\citation{deepseekai2024deepseekv2strongeconomicalefficient}
+\bibstyle{apalike}
+\bibdata{main.bib}
+\bibcite{agrawal2024vidur}{{1}{2024a}{{Agrawal et~al.}}{{}}}
+\bibcite{agrawal2024taming}{{2}{2024b}{{Agrawal et~al.}}{{}}}
+\bibcite{agrawal2023sarathi}{{3}{2023}{{Agrawal et~al.}}{{}}}
+\bibcite{aminabadi2022deepspeed}{{4}{2022}{{Aminabadi et~al.}}{{}}}
+\bibcite{anthropic2023claude}{{5}{2023}{{Anthropic}}{{}}}
+\bibcite{claude_3_7}{{6}{2025}{{Anthropic}}{{}}}
+\bibcite{asmussen2003applied}{{7}{2003}{{Asmussen}}{{}}}
+\bibcite{bai2023qwen}{{8}{2023}{{Bai et~al.}}{{}}}
+\bibcite{balkanski2016power}{{9}{2016}{{Balkanski et~al.}}{{}}}
+\bibcite{bauerle2002optimal}{{10}{2002}{{B{\"a}uerle}}{{}}}
+\bibcite{brown2020language}{{11}{2020}{{Brown et~al.}}{{}}}
+\bibcite{chen2025adaptively}{{12}{2025}{{Chen et~al.}}{{}}}
+\bibcite{cole2014sample}{{13}{2014}{{Cole and Roughgarden}}{{}}}
+\bibcite{deepseekai2024deepseekv2strongeconomicalefficient}{{14}{2024}{{DeepSeek-AI}}{{}}}
+\bibcite{deepseekai2025deepseekr1incentivizingreasoningcapability}{{15}{2025}{{DeepSeek-AI}}{{}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Analytical Framework for Up-to-Date LLM Inference Models}{31}{subsection.8.3}\protected@file@percent }
+\bibcite{desislavov2021compute}{{16}{2021}{{Desislavov et~al.}}{{}}}
+\bibcite{devanur2009adwords}{{17}{2009}{{Devanur and Hayes}}{{}}}
+\bibcite{devlin2019bert}{{18}{2019}{{Devlin et~al.}}{{}}}
+\bibcite{durrett2019probability}{{19}{2019}{{Durrett}}{{}}}
+\bibcite{fu2025efficient}{{20}{2025}{{Fu et~al.}}{{}}}
+\bibcite{garcia2019estimation}{{21}{2019}{{Garc{\'i}a-Mart{\'i}n et~al.}}{{}}}
+\bibcite{copilot}{{22}{2022}{{GitHub}}{{}}}
+\bibcite{google2023bard}{{23}{2023}{{Google}}{{}}}
+\bibcite{hooper2025kvquant}{{24}{2025}{{Hooper et~al.}}{{}}}
+\bibcite{im2013online}{{25}{2013}{{Im and Moseley}}{{}}}
+\bibcite{jaillet2025onlineschedulingllminference}{{26}{2025}{{Jaillet et~al.}}{{}}}
+\bibcite{kang2024gear}{{27}{2024}{{Kang et~al.}}{{}}}
+\bibcite{kaplan2020scaling}{{28}{2020}{{Kaplan et~al.}}{{}}}
+\bibcite{kingman1962queues}{{29}{1962}{{Kingman}}{{}}}
+\bibcite{kwon2023efficient}{{30}{2023}{{Kwon et~al.}}{{}}}
+\bibcite{lattanzi2020online}{{31}{2020}{{Lattanzi et~al.}}{{}}}
+\bibcite{li2025mirage}{{32}{2025a}{{Li et~al.}}{{}}}
+\bibcite{li2020online}{{33}{2020}{{Li et~al.}}{{}}}
+\bibcite{li2025throughput}{{34}{2025b}{{Li et~al.}}{{}}}
+\bibcite{liu2015online}{{35}{2015}{{Liu and Lu}}{{}}}
+\bibcite{liu2011network}{{36}{2011}{{Liu and Whitt}}{{}}}
+\bibcite{lucier2013efficient}{{37}{2013}{{Lucier et~al.}}{{}}}
+\bibcite{maglaras2000discrete}{{38}{2000}{{Maglaras}}{{}}}
+\bibcite{mandelbaum1998strong}{{39}{1998}{{Mandelbaum et~al.}}{{}}}
+\bibcite{microsoft2023bing}{{40}{2023}{{Microsoft}}{{}}}
+\bibcite{openai2024gpt4technicalreport}{{41}{2024}{{OpenAI}}{{}}}
+\bibcite{ouyang2022training}{{42}{2022}{{Ouyang et~al.}}{{}}}
+\bibcite{patel2023peeling}{{43}{2023}{{Patel}}{{}}}
+\bibcite{patel2024splitwise}{{44}{2024}{{Patel et~al.}}{{}}}
+\bibcite{patterson2021carbon}{{45}{2021}{{Patterson et~al.}}{{}}}
+\bibcite{pope2023efficiently}{{46}{2023}{{Pope et~al.}}{{}}}
+\bibcite{sheng2023flexgen}{{47}{2023}{{Sheng et~al.}}{{}}}
+\bibcite{strait1974maximum}{{48}{1974}{{Strait}}{{}}}
+\bibcite{strubell2019energy}{{49}{2019}{{Strubell et~al.}}{{}}}
+\bibcite{tay2022efficient}{{50}{2022}{{Tay et~al.}}{{}}}
+\bibcite{touvron2023llama}{{51}{2023}{{Touvron et~al.}}{{}}}
+\bibcite{vee2010optimal}{{52}{2010}{{Vee et~al.}}{{}}}
+\bibcite{vllm-v1-2025}{{53}{2025}{{vLLM Team}}{{}}}
+\bibcite{wang2025llm}{{54}{2025}{{Wang et~al.}}{{}}}
+\bibcite{wei2022emergent}{{55}{2022a}{{Wei et~al.}}{{}}}
+\bibcite{wei2022chain}{{56}{2022b}{{Wei et~al.}}{{}}}
+\bibcite{wu2022sustainable}{{57}{2022}{{Wu et~al.}}{{}}}
+\bibcite{yu2022orca}{{58}{2022}{{Yu et~al.}}{{}}}
+\bibcite{zheng2023lmsys}{{59}{2023}{{Zheng et~al.}}{{}}}
+\bibcite{zhong2024distserve}{{60}{2024}{{Zhong et~al.}}{{}}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Proofs of Propositions}{34}{appendix.A}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Proof of Proposition~\ref {prop:large_rate}}{34}{subsection.A.1}\protected@file@percent }
+\newlabel{appendix:proof_large_rate}{{A.1}{34}{Proof of Proposition~\ref {prop:large_rate}}{subsection.A.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Proof of Proposition~\ref {prop::online policy expected throughput upper bound, multiple type}}{34}{subsection.A.2}\protected@file@percent }
+\newlabel{appendix:proof_throughput_upper_bound}{{A.2}{34}{Proof of Proposition~\ref {prop::online policy expected throughput upper bound, multiple type}}{subsection.A.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Proof of Proposition~\ref {prop:lower_bound_FCFS}}{35}{subsection.A.3}\protected@file@percent }
+\newlabel{appendix:proof_fcfs_lower_bound}{{A.3}{35}{Proof of Proposition~\ref {prop:lower_bound_FCFS}}{subsection.A.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Proof of Proposition~\ref {prop:unknown_lower_bound}}{35}{subsection.A.4}\protected@file@percent }
+\newlabel{appendix:proof_unknown_lower_bound}{{A.4}{35}{Proof of Proposition~\ref {prop:unknown_lower_bound}}{subsection.A.4}{}}
+\citation{asmussen2003applied}
+\citation{kingman1962queues}
+\citation{strait1974maximum}
+\citation{asmussen2003applied}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Proof of Theorem~\ref {thm:wait_heavy_traffic}}{36}{appendix.B}\protected@file@percent }
+\newlabel{appexidx::proof of wait_heavy_traffic}{{B}{36}{Proof of Theorem~\ref {thm:wait_heavy_traffic}}{appendix.B}{}}
+\@writefile{toc}{\contentsline {paragraph}{Proof Outline.}{36}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {B.0.1}Single-Type Case}{36}{subsubsection.B.0.1}\protected@file@percent }
+\newlabel{lemma::throughput gap, single}{{1}{36}{Queue Length and Stuck Time}{lemma.1}{}}
+\newlabel{lem:coupled_process, single}{{2}{36}{Coupled Dominating Process}{lemma.2}{}}
+\citation{strait1974maximum}
+\citation{strait1974maximum}
+\@writefile{toc}{\contentsline {paragraph}{Lindley recursion.}{37}{section*.28}\protected@file@percent }
+\newlabel{lem:lindley_rep}{{3}{37}{Lindley Representation}{lemma.3}{}}
+\newlabel{lem:Y_T}{{4}{37}{Random Walk Maximum}{lemma.4}{}}
+\newlabel{lemma::throughput gap}{{5}{37}{Throughput Gap Bound}{lemma.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Asymptotic Regime.}{37}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {B.0.2}Multiple-Type Case}{37}{subsubsection.B.0.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Policy Class $\Pi $.}{37}{section*.30}\protected@file@percent }
+\newlabel{eq:batch_time_def}{{18}{37}{Policy Class $\Pi $}{equation.B.18}{}}
+\citation{kingman1962queues}
+\@writefile{toc}{\contentsline {paragraph}{Approaching Load Balance.}{38}{section*.31}\protected@file@percent }
+\newlabel{eq:policy_constraints}{{19}{38}{Approaching Load Balance}{equation.B.19}{}}
+\@writefile{toc}{\contentsline {paragraph}{Notation.}{38}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{State Transition.}{38}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Batch Processing Time.}{38}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Type Decoupling.}{38}{section*.35}\protected@file@percent }
+\newlabel{lemma::multiple-type coupled dominace}{{6}{38}{Multiple-Type Coupled Process}{lemma.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Case 1: Zero Drift ($\Delta T_{[1,\ldots  ,m]} = n_j/\lambda _j$).}{38}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Case 2: Negative Drift ($\Delta T_{[1,\ldots  ,m]} < n_j/\lambda _j$).}{39}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Equilibrium Case ($C = M^*$).}{39}{section*.38}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Asymptotic Regime.}{39}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Strictly Negative Drift Case.}{39}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Proof of Theorem~\ref {thm:nested_wait_heavy_traffic}}{39}{appendix.C}\protected@file@percent }
+\newlabel{appendix::proof of nested_wait_heavy_traffic}{{C}{39}{Proof of Theorem~\ref {thm:nested_wait_heavy_traffic}}{appendix.C}{}}
+\@writefile{toc}{\contentsline {paragraph}{Proof Outline.}{39}{section*.41}\protected@file@percent }
+\citation{kingman1962queues}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}First Segment Analysis}{40}{subsection.C.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Subsequent Segments Analysis ($k \geq 2$)}{40}{subsection.C.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{On-the-fly Classification via Binomial Thinning.}{40}{section*.42}\protected@file@percent }
+\newlabel{lemma::nested coupled process}{{7}{40}{Coupled Process for Segment $k$}{lemma.7}{}}
+\citation{kingman1962queues}
+\@writefile{toc}{\contentsline {paragraph}{Expected Queue Length.}{41}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Throughput Gap Bound}{41}{subsection.C.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Asymptotic Regime.}{41}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}High-Probability Memory Bound}{41}{subsection.C.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{High-Probability Bounds Prevent Eviction.}{41}{section*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Martingale Construction.}{41}{section*.46}\protected@file@percent }
+\newlabel{lemma::solution to martingale exists}{{8}{41}{Martingale Construction}{lemma.8}{}}
+\newlabel{eq::eq of theta}{{20}{41}{Martingale Construction}{equation.C.20}{}}
+\citation{durrett2019probability}
+\@writefile{toc}{\contentsline {paragraph}{Union bound for safety guarantee.}{42}{section*.47}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {D}Proof of Theorem~\ref {thm:nested_wait_heavy_traffic_time_varying}}{43}{appendix.D}\protected@file@percent }
+\newlabel{appendix:: proof of nested optimality, time varying.}{{D}{43}{Proof of Theorem~\ref {thm:nested_wait_heavy_traffic_time_varying}}{appendix.D}{}}
+\@writefile{toc}{\contentsline {paragraph}{Proof Outline.}{43}{section*.48}\protected@file@percent }
+\citation{kingman1962queues}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.1}First Segment Analysis}{44}{subsection.D.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Worst-case domination.}{44}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.2}Subsequent Segments Analysis ($k \geq 2$)}{44}{subsection.D.2}\protected@file@percent }
+\citation{kingman1962queues}
+\citation{kingman1962queues}
+\@writefile{toc}{\contentsline {paragraph}{Time-varying thinning probabilities.}{45}{section*.50}\protected@file@percent }
+\newlabel{lemma: coupling, time varying}{{9}{45}{Coupling for Time-Varying Case}{lemma.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.3}Throughput and High-Probability Bounds}{46}{subsection.D.3}\protected@file@percent }
+\newlabel{eq::eq of theta, time varying}{{21}{46}{Throughput and High-Probability Bounds}{equation.D.21}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {E}Proof of Lemmas}{46}{appendix.E}\protected@file@percent }
+\newlabel{sec:pf_lemmas}{{E}{46}{Proof of Lemmas}{appendix.E}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.1}Proof of Lemma~\ref {lemma::throughput gap, single}}{46}{subsection.E.1}\protected@file@percent }
+\newlabel{appendix_lemma::proof of throughput gap, single}{{E.1}{46}{Proof of Lemma~\ref {lemma::throughput gap, single}}{subsection.E.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.2}Proof of Lemma~\ref {lem:coupled_process, single}}{46}{subsection.E.2}\protected@file@percent }
+\newlabel{appendix_lemma::proof of coupled_process, single}{{E.2}{46}{Proof of Lemma~\ref {lem:coupled_process, single}}{subsection.E.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Base case.}{46}{section*.51}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Inductive step.}{46}{section*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.3}Proof of Lemma~\ref {lemma::multiple-type coupled dominace}}{47}{subsection.E.3}\protected@file@percent }
+\newlabel{appendix_lemma::proof of multiple-type coupled dominace}{{E.3}{47}{Proof of Lemma~\ref {lemma::multiple-type coupled dominace}}{subsection.E.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Proof idea.}{47}{section*.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Proof.}{47}{section*.54}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.4}Proof of Lemma~\ref {lemma::nested coupled process}}{47}{subsection.E.4}\protected@file@percent }
+\newlabel{appendix_lemma::proof of nested coupled process}{{E.4}{47}{Proof of Lemma~\ref {lemma::nested coupled process}}{subsection.E.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Base case.}{47}{section*.55}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Inductive step.}{47}{section*.56}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.5}Proof of Lemma~\ref {lemma::solution to martingale exists}}{48}{subsection.E.5}\protected@file@percent }
+\newlabel{appendix_lemma::proof of solution to martingale exists}{{E.5}{48}{Proof of Lemma~\ref {lemma::solution to martingale exists}}{subsection.E.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Existence and uniqueness.}{48}{section*.57}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Monotonicity in drift.}{48}{section*.58}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Drift-to-$\theta $ scaling.}{49}{section*.59}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{General lower bound.}{49}{section*.60}\protected@file@percent }
+\newlabel{eq::theta lower bound}{{22}{49}{General lower bound}{equation.E.22}{}}
+\gdef \@abspage@last{49}

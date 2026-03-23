@@ -1,0 +1,73 @@
+\section{Proof of Lemmas}\label{sec:pf_lemmas}
+\subsection{Proof of Lemma~\ref{lemma::throughput gap, single}}\label{appendix_lemma::proof of throughput gap, single}
+We take the expectation on both sides of the state transition equation
+$$\ex{}{W^{t+1}}=\ex{}{W^t}+\lambda - \lambda \mathbb{P}(W^t+X^t\geq \lambda)$$
+Summing from $t=0$ to $T-1$, and noting that $W_0=0$, we get the lemma
+$$\ex{}{W^T}=\lambda T - \lambda \ex{}{T-T_{\text{stuck}}}=\lambda\cdot \ex{}{T_{\text{stuck}}}$$
+
+\subsection{Proof of Lemma \ref{lem:coupled_process, single}}\label{appendix_lemma::proof of coupled_process, single}
+We prove this by induction. First, for $t = 0$, we have $\tilde{W}^0=2\lambda\geq \lambda=W^0+\lambda$. Next, assume that $\tilde{W}^t \geq W^t + \lambda$ holds for some $t \geq 0$. We now prove that $\tilde{W}^{t+1} \geq W^{t+1} + \lambda$. Consider the following two cases:
+
+1. If $W^t + X^t \geq \lambda$, then $W^{t+1} = W^t + X^t - \lambda$. In this case,
+$$\tilde{W}^{t+1}=\max\{ 2\lambda, \tilde{W}^t + X^t - \lambda \}\geq \tilde{W}^t + X^t - \lambda\geq( W^t+\lambda )+ X^t - \lambda=W^{t+1}+\lambda.$$
+
+2. If $W^t + X^t < \lambda$, then $W^{t+1} = W^t + X^t$. In this case,
+$$\tilde{W}^{t+1}=\max\{ 2\lambda, \tilde{W}^t + X^t - \lambda \}\geq 2\lambda = \lambda+\lambda>W^{t+1}+\lambda.$$
+Hence, $\tilde{W}^{t+1} \geq W^{t+1} + \lambda$. By the principle of induction, we have $\tilde{W}^t \geq W^t + \lambda$ for all $t \in \mathbb{N}$.
+
+\subsection{Proof of Lemma~\ref{lemma::multiple-type coupled dominace}}\label{appendix_lemma::proof of multiple-type coupled dominace}
+Since $\tilde{W}_{(j)}^t\geq 2n_j$, when $W^t_{(j)}< n_j$, we have $\tilde{W}_{(j)}^t\geq W^t_{(j)}$.
+
+At first, $W^0_{(j)}=0$, but $W^t_{(j)}$ will achieve $n_j$ and type $j$ starts to join the batch. And after a period of time, $W^t_{(j)}$ drops back below $n_j$, and repeats the process above.
+
+In each period $T_0\leq t\leq T_1$ when $W^t_{(j)}\geq n_j$, we set $\tau = \max\{t\leq T_0|W^t_{(j)} = n_j \}$. So $\forall t\in [T_0, T_1]$, the number of iterations of $W^t_{(j)}$ and $\tilde{W}^t_{(j)}$ from $\tau$ to $t$ is that
+$$I_{\tau\to t} \geq \lfloor\frac{t-\tau}{\Delta T_{[1,\cdots,m]}}\rfloor ,\,\tilde{I}_{\tau\to t}\leq 1+\lfloor\frac{t-\tau}{\Delta T_{[1,\cdots,m]}}\rfloor \Rightarrow \tilde{I}_{\tau\to t}\leq 1+I_{\tau\to t}.$$
+So the coupled process at most makes one more iteration than the real process after $\tau$. For example, at $\tau$, the real process is  just at a batch inference without type $j$, but the coupled process just finished a batch inference with all the types, which yields a $n_j$ drop on $\tilde{W}_{(j)}^t$. So at $\tau$, $\tilde{W}_{(j)}^t\geq n_j = W_{(j)}^t$. And for time $(\tau,t]$, since the arrival dynamic is the same between the two processes,  at the real process type $j$ joins every batch, and the batch may not contain all types compared with the coupled process. So the numbers of the finish of a batch of coupled process is at most the same as the real ones. So $\tilde{W}^t_{(j )}\geq W^t_{(j )}$ holds during $(\tau, t]$, hence $\forall t\geq 0$. 
+
+\subsection{Proof of Lemma~\ref{lemma::nested coupled process}}\label{appendix_lemma::proof of nested coupled process}
+We prove the dominance by induction. When $t = 0$, it is obvious that $ \tilde{W}_{(k)}^0 = n_{k}\geq 0=W_{(k)}^t $. Next, we assume that $\tilde{W}^t_{(k)}\geq W^t_{(k)}  $ holds for some $t\geq 0$. We now prove that $\tilde{W}^{t+1}_{(k)}\geq W^{t+1}_{(k)}  $. Consider the following two cases:
+
+1. If $ W^t_{(k)}+ Y^t_{(k)}\geq n_k $, then $W^t_{(k+1)}= W^{t}_{(k)}+Y^t_{(k)}  -  n_k $. In this case, 
+$$ \tilde{W}^{t+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{t}_{(k)} + X^t_{(k)}\} \geq \tilde{W}^{t}_{(k)} + X^t_{(k)}={W}^{t}_{(k)} + Y^t_{(k)}-n_k=W^t_{(k+1)}$$
+2. If $ W^t_{(k)}+ Y^t_{(k)}<n_k $, then $W^t_{(k+1)}= W^{t}_{(k)}+Y^t_{(k)}$. In this case, 
+$$\tilde{W}^{t+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{t}_{(k)} + X^t_{(k)}\} \geq n_{k}> W^t_{(k+1)}$$
+
+\subsection{Proof of Lemma~\ref{lemma::solution to martingale exists}}\label{appendix_lemma::proof of solution to martingale exists}
+First, we prove that the solution $\theta_k>0$ exists and is unique and for simplicity, we denote $\theta=\theta_k$ here. Define the function
+\[
+f(\theta) = e^{-\theta n_{k}} (1 - p_k + p_k e^{\theta})^{n_{k-1}}.
+\]
+We need to show that there exists \(\theta > 0\) such that \(f(\theta) = 1\). First, evaluate \(f(\theta)\) at \(\theta = 0\):
+\[
+f(0) = e^{0} (1 - p_k + p_k \cdot 1)^{n_{k-1}} = 1.
+\]
+Thus, \(\theta = 0\) is a solution, but we seek the solution \(\theta > 0\). Next, we consider the logarithm of $f(\theta)$
+$$g(\theta) = \ln f(\theta) = -\theta n_{k} + n_{k-1} \ln(1 - p_k + p_k e^{\theta}),$$
+$$ g^\prime(\theta) = -n_{k} + n_{k-1} \cdot \frac{p_k e^{\theta}}{1 - p_k + p_k e^{\theta}}.$$
+At \(\theta = 0\),
+\[
+g(0)=0,\,g^\prime(0) = -n_{k} + n_{k-1} p_k.
+\]
+Since \(\mathbb{E}[X^s_{(k)}] = n_{k-1} p_k - n_{k} < 0\), we have \(g'(0) < 0\), so \(f(\theta)\) is decreasing near \(\theta = 0\). Consider the second derivative:
+\[
+g''(\theta) = n_{k-1} \cdot \frac{p_k e^{\theta} (1 - p_k)}{(1 - p_k + p_k e^{\theta})^2} > 0 \quad \text{for} \quad \theta > 0,
+\]
+since \(p_k \in (0, 1)\) and \(n_{k-1} > 0\). Thus, \(g(\theta)\) is convex, and so is \(f(\theta)\). Now, consider the limit as \(\theta \to \infty\):
+\[
+f(\theta) \approx p_k^{n_{k-1}} e^{\theta (n_{k-1} - n_{k})}.
+\]
+By our settings, $n_{k-1}>n_k$, this ensures that $f(\theta)\to \infty, \theta\to \infty$. Thus, \(f(\theta)\) is continuous, convex, starts at \(f(0) = 1\), decreases below 1 for small \(\theta > 0\), and increases to infinity. By the intermediate value theorem, there exists only one \(\theta > 0\) such that \(f(\theta) = 1\). 
+
+Next, we prove the monotonicity of the solution $\theta>0$ with respect to \(D = n_k - n_{k-1} p_k\). Recall that \(g(0) = 0\), \(g'(0) = -D < 0\), and \(g''(\theta) > 0\) for \(\theta > 0\), so \(g(\theta)\) is strictly convex. The unique positive solution \(\theta > 0\) occurs where \(g(\theta)\) crosses zero after initially decreasing from \(g(0) = 0\). Consider two values \(D_1\) and \(D_2\) such that \(D_1 < D_2\), with corresponding functions \(g_1(\theta) = -\theta (n_{k-1} p_k + D_1) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\) and \(g_2(\theta) = -\theta (n_{k-1} p_k + D_2) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\), and solutions \(\theta_1\) and \(\theta_2\), respectively. 
+
+At \(\theta = 0\), \(g_1'(0) = -D_1 > g_2'(0) = -D_2\), meaning \(g_2(\theta)\) decreases more steeply from zero than \(g_1(\theta)\). For a fixed \(\theta > 0\), the partial derivative \(\frac{\partial g}{\partial D} = -\theta < 0\). Thus, increasing \(D\) decreases \(g(\theta)\) pointwise. Since \(g(\theta)\) is convex and approaches infinity as \(\theta \to \infty\), the zero crossing shifts to a larger \(\theta\) to restore \(g(\theta; D) = 0\). Hence, if \(D_2 > D_1\), then \(\theta_2 > \theta_1\).
+
+Finally, we provide asymptotic behavior and bounds for the solution \(\theta>0\) in terms of \(D\), \(n_{k-1}\), and \(p_k\). When \(D\) is small, \(\theta\) is also small. Expand \(g(\theta)\) around \(\theta = 0\), we have that $g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(0) \theta^2 + O(\theta^3) = 0 - D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 + O(\theta^3)$. Setting \(g(\theta) = 0\) and neglecting higher-order terms, we obtain that $-D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 \approx 0 \implies \theta \approx \frac{2D}{n_{k-1} p_k (1 - p_k)}$. Thus, for small \(D\), \(\theta = O(D)\), and specifically, $\theta \approx \frac{2 (n_k - n_{k-1} p_k)}{n_{k-1} p_k (1 - p_k)}$.
+
+Next we apply Taylor's theorem with remainder to find the general lower bound of the solution $\theta>0$.
+$$g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(c) \theta^2 = -D \theta + \frac{1}{2} g''(c) \theta^2 = 0\implies \theta = \frac{2D}{g''(c)}. \quad \text{for some } c \in (0, \theta)$$
+So we need to find an upper bound for \(g''(c)\), since $g^{\prime \prime}(x) = n_{k-1} \cdot \frac{p_k e^{x} (1 - p_k)}{(1 - p_k + p_k e^{x})^2}$, we define \(h(y) = \frac{p_k y (1 - p_k)}{(1 - p_k + p_k y)^2}\) where \(y = e^{x} \geq 1\). The function \(h(y)\) achieves a maximum of \(\frac{1}{4}\) over $y\geq 1$ and $0<p_k<1$. Thus we have that $
+g''(x) \leq n_{k-1} \cdot \frac{1}{4} = \frac{n_{k-1}}{4} \implies \theta = \frac{2D}{g''(c)} \geq \frac{2D}{n_{k-1}/4} = \frac{8D}{n_{k-1}}$. So a general lower bound is:
+\begin{align}
+    \theta \geq \frac{8 (n_k - n_{k-1} p_k)}{n_{k-1}}.\label{eq::theta lower bound}
+\end{align}

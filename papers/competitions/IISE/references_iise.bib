@@ -1,0 +1,137 @@
+% Compressed reference list for IISE DAIS Competition (15-20 core citations)
+
+% LLM foundational models
+@article{brown2020language,
+  title={Language models are few-shot learners},
+  author={Brown, Tom and Mann, Benjamin and Ryder, Nick and Subbiah, Melanie and Kaplan, Jared D and Dhariwal, Prafulla and Neelakantan, Arvind and Shyam, Pranav and Sastry, Girish and Askell, Amanda and others},
+  journal={Advances in neural information processing systems},
+  volume={33},
+  pages={1877--1901},
+  year={2020}
+}
+
+@article{ouyang2022training,
+  title={Training language models to follow instructions with human feedback},
+  author={Ouyang, Long and Wu, Jeffrey and Jiang, Xu and Almeida, Diogo and Wainwright, Carroll and Mishkin, Pamela and Zhang, Chong and Agarwal, Sandhini and Slama, Katarina and Ray, Alex and others},
+  journal={Advances in neural information processing systems},
+  volume={35},
+  pages={27730--27744},
+  year={2022}
+}
+
+@misc{openai2024gpt4technicalreport,
+  title={GPT-4 Technical Report},
+  author={OpenAI},
+  year={2024},
+  eprint={2303.08774},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL},
+  url={https://arxiv.org/abs/2303.08774}
+}
+
+% System-level LLM inference
+@inproceedings{kwon2023efficient,
+  title={Efficient memory management for large language model serving with pagedattention},
+  author={Kwon, Woosuk and Li, Zhuohan and Zhuang, Siyuan and Sheng, Ying and Zheng, Lianmin and Yu, Cody Hao and Gonzalez, Joseph and Zhang, Hao and Stoica, Ion},
+  booktitle={Proceedings of the 29th Symposium on Operating Systems Principles},
+  pages={611--626},
+  year={2023}
+}
+
+@article{agrawal2023sarathi,
+  title={Sarathi: Efficient llm inference by piggybacking decodes with chunked prefills},
+  author={Agrawal, Amey and Panwar, Ashish and Mohan, Jayashree and Kwatra, Nipun and Gulavani, Bhargav S and Ramjee, Ramachandran},
+  journal={arXiv preprint arXiv:2308.16369},
+  year={2023}
+}
+
+@inproceedings{zhong2024distserve,
+  title={{DistServe}: Disaggregating prefill and decoding for goodput-optimized large language model serving},
+  author={Zhong, Yinmin and Liu, Shengyu and Chen, Junda and Hu, Jianbo and Zhu, Yibo and Liu, Xuanzhe and Jin, Xin and Zhang, Hao},
+  booktitle={18th USENIX Symposium on Operating Systems Design and Implementation (OSDI 24)},
+  pages={193--210},
+  year={2024}
+}
+
+@article{patel2024splitwise,
+  title={Splitwise: Efficient generative llm inference using phase splitting},
+  author={Patel, Pratyush and Choukse, Esha and Zhang, Chaojie and Shah, Aashaka and Goiri, {\'{I}}{\~{n}}igo and Maleki, Saeed and Bianchini, Ricardo},
+  booktitle={2024 ACM/IEEE 51st Annual International Symposium on Computer Architecture (ISCA)},
+  pages={118--132},
+  year={2024},
+  organization={IEEE Computer Society}
+}
+
+% Related OR work on LLM scheduling
+@misc{jaillet2025onlineschedulingllminference,
+  title={Online Scheduling for LLM Inference with KV Cache Constraints},
+  author={Patrick Jaillet and Jiashuo Jiang and Konstantina Mellou and Marco Molinaro and Chara Podimata and Zijie Zhou},
+  year={2025},
+  eprint={2502.07115},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG},
+  url={https://arxiv.org/abs/2502.07115}
+}
+
+@article{wang2025llm,
+  title={LLM Serving Optimization with Variable Prefill and Decode Lengths},
+  author={Wang, Meixuan and Ye, Yinyu and Zhou, Zijie},
+  journal={arXiv preprint arXiv:2508.06133},
+  year={2025}
+}
+
+@article{chen2025adaptively,
+  title={Adaptively Robust LLM Inference Optimization under Prediction Uncertainty},
+  author={Chen, Zixi and Ye, Yinyu and Zhou, Zijie},
+  journal={arXiv preprint arXiv:2508.14544},
+  year={2025}
+}
+
+@misc{li2025throughput,
+  author = {Li, Yueying and Dai, Jim and Peng, Tianyi},
+  title = {Throughput-Optimal Scheduling Algorithms for LLM Inference and AI Agents},
+  year = {2025},
+  eprint = {2504.07347},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AI},
+  url = {https://arxiv.org/abs/2504.07347}
+}
+
+% Real-world dataset
+@article{zheng2023lmsys,
+  title={Lmsys-chat-1m: A large-scale real-world llm conversation dataset},
+  author={Zheng, Lianmin and Chiang, Wei-Lin and Sheng, Ying and Li, Tianle and Zhuang, Siyuan and Wu, Zhanghao and Zhuang, Yonghao and Li, Zhuohan and Lin, Zi and Xing, Eric P and others},
+  journal={arXiv preprint arXiv:2309.11998},
+  year={2023}
+}
+
+% Energy and cost considerations
+@article{strubell2019energy,
+  title={Energy and Policy Considerations for Deep Learning in NLP},
+  author={Strubell, Emma and Ganesh, Ananya and McCallum, Andrew},
+  journal={arXiv preprint arXiv:1906.02243},
+  year={2019}
+}
+
+% Queueing theory foundations
+@article{mandelbaum1998strong,
+  title={Strong approximations for Markovian service networks},
+  author={Mandelbaum, Avi and Massey, William A and Reiman, Martin I},
+  journal={Queueing Systems},
+  volume={30},
+  number={1},
+  pages={149--201},
+  year={1998},
+  publisher={Springer}
+}
+
+@article{maglaras2000discrete,
+  title={Discrete-review policies for scheduling stochastic networks: Trajectory tracking and fluid-scale asymptotic optimality},
+  author={Maglaras, Constantinos},
+  journal={The Annals of Applied Probability},
+  volume={10},
+  number={3},
+  pages={897--929},
+  year={2000},
+  publisher={Institute of Mathematical Statistics}
+}

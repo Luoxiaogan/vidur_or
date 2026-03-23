@@ -1,0 +1,133 @@
+\section{Numerical Experiments}
+\label{sec:experiments}
+
+We evaluate (Nested) WAIT on: (i) simulated prompts under controlled conditions; (ii) real-world dataset from \cite{zheng2023lmsys}. Experiments use Microsoft Vidur simulating an NVIDIA A100 GPU \citep{agrawal2024vidur}. We benchmark against vLLM \citep{kwon2023efficient} and Sarathi \citep{agrawal2023sarathi}, FCFS-based inference engines with fixed token/prompt limits per iteration.
+
+\subsection{Experiment on WAIT Algorithm}
+We first evaluate the WAIT algorithm when prompt output lengths are known upon arrival. We generate simulated prompts with varying input lengths \( l_j \) and output lengths \( l_j' \), drawn from distributions that emulate real-world variability. We adjust arrival rates \( \lambda_j \) to simulate both low-traffic and high-traffic scenarios, testing the algorithm's resilience under stress. Specifically, we generate type \( j \) prompts via a Poisson process with rate \( \lambda_j \) and test two scenarios:
+
+(i) \textbf{Low demand}: \( m=2 \), \( (l_1, l_2) = (10, 10) \), \( (l_1', l_2') = (10, 20) \), \( (\lambda_1, \lambda_2) = (1000, 1000) \);  
+
+(ii) \textbf{High demand}: \( m=3 \), \( (l_1, l_2, l_3) = (20, 20, 20) \), \( (l_1', l_2', l_3') = (100, 200, 300) \), \( (\lambda_1, \lambda_2, \lambda_3) = (6000, 4000, 2000) \).
+
+For practical implementation, we simplify threshold computation in WAIT. Given a batch size limit \( B \), we set the threshold for type \( j \) prompts as \( n_j = B \cdot \rho_j / (l_j' + 1) \), where \( \rho_j = \lambda_j / \sum_{j'=1}^m \lambda_{j'} \), aligning with Algorithm \ref{alg:wait}. To ensure a fair comparison, we enforce the same batch size limit across WAIT, Sarathi, and vLLM.
+
+WAIT surpasses benchmarks in throughput (Figure~\ref{fig:comparison WAIT short decode}, Figure~\ref{fig:comparison WAIT long decode} left panels) by optimizing batch formation, while maintaining acceptable latency (right panels).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test9_simulated_short_decode_throughput.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test9_simulated_short_decode_latency.pdf}
+    \end{minipage}
+    \caption{Average throughput and latency across algorithms on the synthetic dataset with low demand.}
+    \label{fig:comparison WAIT short decode}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test13_simulated_short_decode_bs=448_throughput.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test13_simulated_short_decode_bs=448_latency.pdf}
+    \end{minipage}
+    \caption{Average throughput and latency across algorithms on the synthetic dataset with high demand.}
+    \label{fig:comparison WAIT long decode}
+\end{figure}
+
+\subsection{Experiment on Nested WAIT Algorithm}
+Next, we evaluate Nested WAIT with unknown output lengths on synthetic and real-world datasets, using matched batch size limits and thresholds proportional to segment arrival rates.
+
+Synthetic dataset: \( m=4 \), prefill=10 tokens, decode=(20, 40, 80, 160), arrival ratio 20:40:80:160, threshold ratio 15:14:12:8. Figure \ref{fig:comparison Nested WAIT, short prefill} shows improved throughput and latency.
+
+Real-world dataset \citep{zheng2023lmsys}: 210,000+ prompts from Vicuna/Chatbot Arena. We sample 50,000 prompts with Poisson arrivals (Figure \ref{fig:distribution} shows length distribution). We group decode lengths into 10 bins of 50 tokens each, compute mean prefill (≈60 tokens, Figure \ref{fig:group}), set \( m=10 \), threshold ratio 66:43:32:24:17:11:7:4:2:1 (Equation~\eqref{eq:nested_wait_thresholds}), and assign decode stage \( k \) to segment \( \lceil k/50 \rceil \).
+% More discussions on this segment design are left in Appendix \ref{sec:extension}.
+
+Synthetic workload test: prefill=60, decode types=(50, 100,..., 500), matching real dataset arrival rates, QPS={55, 550} (Figure \ref{fig:comparison_Nested_WAIT_real_world_low}, \ref{fig:comparison Nested WAIT, real world, higher rate}). Nested WAIT outperforms benchmarks.
+
+% \gan{Maybe, we can say that the Figure \ref{fig:comparison_Nested_WAIT_real_world_low} and Figure \ref{fig:comparison Nested WAIT, real world, higher rate} are on static arrival rate, and Figure \ref{fig:comparison Nested WAIT, real world} is on time-varying arrival rate bt with static threshold, which leads to a little latency overflow.}
+
+Real dataset test with original lengths and same thresholds (Figure \ref{fig:comparison Nested WAIT, real world}): Nested WAIT achieves higher throughput with modest latency increase (≈0.5s per prompt) due to static thresholds applied to time-varying arrivals.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/question_answer_lengths_distribution.pdf}
+    \caption{Distribution of prefill and decode lengths in the real dataset.}
+    \label{fig:distribution}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/group.pdf}
+    \caption{Mean prefill lengths and prompt counts per decode length bin in the real dataset.}
+    \label{fig:group}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test30_simulated_short_decode_bs=128_nested_real_not_trace_throughput.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test30_simulated_short_decode_bs=128_nested_real_not_trace_latency.pdf}
+    \end{minipage}
+    \caption{Average throughput and latency across algorithms on the synthetic dataset.}
+    \label{fig:comparison Nested WAIT, short prefill}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test31_simulated_short_decode_bs=148_nested_real_not_trace_throughput.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test31_simulated_short_decode_bs=148_nested_real_not_trace_latency.pdf}
+    \end{minipage}
+    \caption{Average throughput and latency across algorithms on the real dataset with clustered output lengths (low arrival rates).}
+    \label{fig:comparison_Nested_WAIT_real_world_low}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test32_simulated_short_decode_bs=148_nested_real_not_trace_higher_rate_throughput.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test32_simulated_short_decode_bs=148_nested_real_not_trace_higher_rate_latency.pdf}
+    \end{minipage}
+    \caption{Average throughput and latency across algorithms on the real dataset with clustered output lengths (high arrival rates).}
+    \label{fig:comparison Nested WAIT, real world, higher rate}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test36_simulated_short_decode_bs=64_nested_real_TRACE_throughput.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test36_simulated_short_decode_bs=64_nested_real_TRACE_latency.pdf}
+    \end{minipage}
+    \caption{Average throughput and latency across algorithms on the real dataset with actual output lengths.}
+    \label{fig:comparison Nested WAIT, real world}
+\end{figure}

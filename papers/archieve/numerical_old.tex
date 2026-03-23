@@ -1,0 +1,244 @@
+\section{Numerical Experiments}
+\label{sec:experiments}
+
+In this section, we present a comprehensive evaluation of our (Nested) WAIT algorithm through numerical experiments. Our analysis focuses on two distinct scenarios: (i) simulated prompts crafted to test the algorithm under controlled conditions, and (ii) a real-world dataset sourced from \cite{zheng2023lmsys} to assess its performance in practical settings. All experiments are conducted using Microsoft Vidur to simulate an NVIDIA A100 GPU, mirroring the hardware configuration employed in prior studies \citep{agrawal2024vidur}\footnote{The code for Vidur is available at \url{https://github.com/microsoft/vidur}}. We measure performance by comparing the average throughput of our WAIT with vLLM \citep{kwon2023efficient} and Sarathi \citep{agrawal2023sarathi}, which are widely recognized inference engines in LLM inference research. They both use First-Come-First-Serve (FCFS) scheduling algorith and vLLM prioritizes the new arrivals, while Sarathi prioritizes the ongoing prompts. They both set fixed limit for total number of tokens as well as the number of prompts in each iteration.
+
+% In practice, users often limit the total number of prompts (batch size) on GPU in each iteration. 
+
+\subsection{Experiment on WAIT Algorithm}
+We first examine the performance of WAIT when the output lengths of prompts are known upon arrival. Simulated prompts are generated with differing input lengths \( l_j \) and output lengths \( l_j' \), drawn from distributions that emulate real-world variability. Arrival rates \( \lambda_j \) are modulated to simulate both low-traffic and high-traffic scenarios, testing the algorithm's resilience under stress. Specifically, we generate type $j$ prompts' arrival flow with Poisson process with arrival rate $\lambda_j$ and we test two scenarios: (i) low demand: $m=2$, $(l_1,l_2)=(10,10)$, $(l_1',l_2')=(10,20)$, $(\lambda_1,\lambda_2)=(1000,1000)$; (ii) high demand: $m=3$, $(l_1,l_2,l_3)=(20,20,20),(l_1',l_2',l_3')=(100,200,300),(\lambda_1,\lambda_2,\lambda_3)=(6000,4000,2000).$
+
+ In practice, there are batch size limits to restrict total number of prompts in each iterations. For practical implementation of our WAIT algorithm, we simplify the threshold computation. Specifically, for WAIT with known output length, given batch size $B$, we set the threshold for type $j$ prompts as $n_j=B\cdot\rho_j/(l_j'+1),$ where $\rho_j=\lambda_j/(\sum_{j'=1}^m\lambda_{j'})$ in Algorithm \ref{alg:wait}. For better comparison, we use the same batch size for WAIT and the benchmark algortihms (Sarathi and vLLM).
+
+ The throughput of WAIT surpasses that of the benchmark algorithms across all tested arrival rates, as illustrated in the left plots of Figure~\ref{fig:comparison WAIT short  decode} and Figure~\ref{fig:comparison WAIT long decode}. This improvement stems from WAIT’s ability to optimize batch formation, minimizing GPU idle time. Latency, shown in the right plots of Figure~\ref{fig:comparison WAIT short  decode} and Figure~\ref{fig:comparison WAIT long decode}, remains within acceptable limits, highlighting WAIT’s balance between efficiency and responsiveness. 
+% Memory usage, depicted in Figure \ref{fig:sim_memory}, consistently stays below the 80 GB threshold, affirming the algorithm’s resource efficiency.
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+\includegraphics[width=\textwidth]{Experiments_pdf/test9_simulated_short_decode_throughput.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test9_simulated_short_decode_latency.pdf}
+    \end{minipage}
+    \caption{
+    % This is tested with short decode lengths. Specifically, two types of prompts are considered, both with a prefill length of $10$. The decode lengths are $10$ and $20$, with a rate of $2000:1000$
+    Average throughput and latency across different algorithms on synthetic dataset with low demand. 
+    }
+    % \gan{Or we can say $2:1$, which ignore the total qps.}\gan{batch size =290, we may not use this?}}
+    \label{fig:comparison WAIT short  decode}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+\includegraphics[width=\textwidth]{Experiments_pdf/test13_simulated_short_decode_bs=448_throughput.pdf}
+        % \caption{Throughput vs. Time}
+        % \label{fig:throughput}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test13_simulated_short_decode_bs=448_latency.pdf}
+        % \caption{Latency vs. Row Number}
+        % \label{fig:e2e_time}
+    \end{minipage}
+    \caption{
+    % This is tested with long decode lengths. Specifically, three types of prompts are considered, both with a prefill length of $20$. The decode lengths are $100$, $200$ and $300$, with a rate of $6000:4000:2000$.
+        Average throughput and latency across different algorithms on synthetic dataset with high demand. 
+    } 
+    % \gan{Or we can say $3:2:1$, which ignore the total qps 
+    % \gan{batch size =448, we may not use this?}}
+    \label{fig:comparison WAIT long decode}
+\end{figure}
+
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{sim_throughput.png}
+%     \caption{Throughput of WAIT versus FCFS for simulated prompts under varying arrival rates.}
+%     \label{fig:sim_throughput}
+% \end{figure}
+
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{sim_latency.png}
+%     \caption{Latency comparison between WAIT and FCFS for simulated prompts.}
+%     \label{fig:sim_latency}
+% \end{figure}
+
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{sim_memory.png}
+%     \caption{Memory usage of WAIT over time in the simulated prompts scenario.}
+%     \label{fig:sim_memory}
+% \end{figure}
+
+% The results above are tested when we know the prefill length and decode length. But in real world LLM inference, we do not know the decode length, which makes the WAIT algorithm impractical. The decode length prediction in \ref{...} helps to reduce this concern, and our Nested WAIT algorithm is useful in the real world inference where we do not know the decode length of a specific prompt but we know the distribution of decode length and the corresponding prefill length.
+
+\subsection{Experiment on Nested WAIT Algorithm}
+% In real world LLM inference, although we do not know the decode length of a specific prompt, the distribution of decode length and the corresponding prefill length can be estimated from the history serving data.
+In this part, we examine the performance of Nested WAIT algorithm on both synthetic dataset and the real-world dataset in \cite{zheng2023lmsys}. Similar to the previous part, we set the same limit on the batch size of all algorithms and set thresholds for our algorithm proportional to the total arrival rates in each segment for practical implementation.
+
+We start with testing our Nested WAIT with synthetic dataset, where we set $m=4,$ prefill length of $10$ for each type, decode lengths $(20,40,80,160)$ and arrival rates $20:40:80:160.$ We set $4$ segments with thresholds $(n_1,n_2,n_3,n_4)$ satisfying $n_1:n_2:n_3:n_4= 15:14:12:8.$ Figure \ref{fig:comparison Nested WAIT, short prefill} shows the results of average throughput and latency of our algorithm compared with benchmarks. We can see the improvement in both throughput and latency.
+
+% With the help of the distribution knowledge, we can compute the threshold ratio $n_1:n_2:\cdots:n_{m}$ in Algorithm~\ref{alg:nested_wait}, \gan{making the prompts in the batch match the real distribution???}
+
+We then test our algorithm using the dataset from \citet{zheng2023lmsys}\footnote{The dataset is available at \url{https://huggingface.co/datasets/lmsys/lmsys-chat-1m}.}  as an example. The dataset is collected from over $210,000$ distinct IP addresses through the Vicuna demo and Chatbot Arena platforms. We treat the questions as the prompt requests and the answers as the decoded tokens. So the question length is our prefill length, and the answer length is the decode length. The distribution of prefill length and decode length of the prompts in the dataset is shown in Figure~\ref{fig:distribution}. For simulation, we randomly sample $50,000$ prompts to simulate the arrival flows according to Poisson process. 
+
+To show how we implement our Nested WAIT algorithm in practice, we group the decode lengths, ranging from $1$ to $500 $ tokens, into $10$ bins with a step size of $50$ (i.e., $[1\sim 50], [51\sim 100], \cdots, [451\sim 500]$). For each bin, we compute the mean prefill length, and the results are presented in Figure~\ref{fig:group}. The mean prefill length across all bins stabilizes around $60 $ tokens. Moreover, by calculating the total number of prompts in each bin, as shown in Figure~\ref{fig:group}, we can find that the arrival rates are proportional to $23 :11: 8 : 7 : 6 : 4 : 3 : 2 : 1 : 1 $.
+% \gan{why we choose the step size as 50? we can choose other! But here we blabla??}
+
+Based on this observation, we set $m=10$ and set the thresholds $(n_1,\dots,n_m)$ in Algorithm~\ref{alg:nested_wait} with ratio
+$$n_1:n_2:\dots:n_{10} = \sum_{j=1}^{10} \lambda_j : \sum_{j=2}^{10} \lambda_j :\dots: \lambda_{10} =66:43:32:24:17:11:7:4:2:1, $$ which is in accordance with \eqref{eq:nested_wait_thresholds}. We will treat prompts within $k$-th decode stages as in segment $\lceil k/50\rceil$ in Algorithm \ref{alg:nested_wait}.
+
+% \gan{Intuition? When the segment count combination in the batch is similar to the real distribution, the block-up is less? Although our theory prove that any threshold combination satisfy the condition blabla can achieve asymptotic optimal performance}
+
+We first construct a synthetic workload to simulate different prompt types. We fix the prefill length at 60 tokens and cluster decode lengths as 50, 100, 150, ..., 450, and 500 tokens, resulting in 10 distinct prompt types. The arrival rates for these prompt types are derived from the proportion of prompts in each decode length bin, as observed in Figure~\ref{fig:group}, yielding a rate ratio of $23 :11: 8 : 7 : 6 : 4 : 3 : 2 : 1 : 1 $. We then evaluate the WAIT algorithm under this workload with queries per second within two settings: (i) $55$; (ii) $550$. The experimental results are shown in Figure~\ref{fig:comparison_Nested_WAIT_real_world_low} and Figure~\ref{fig:comparison Nested WAIT, real world, higher rate}, respectively. We see that Nested WAIT outperforms the benchmark in both throughput and latency.
+
+Subsequently, we extend our evaluation to the real dataset, directly utilizing the original prefill and decode lengths, which are integers ranging over all possible integers in $\{1,\dots,500\}$. In this setting, the Nested WAIT algorithm operates with the same thresholds as before. Specifically, it controls the threshold for each segment (predefined as $10$ segments, consistent with the prior setup), while processing prompts with heterogenous prefill and decode lengths drawn from the real data. This approach allows us to assess the algorithm’s robustness and adaptability under realistic conditions. The results are shown in Figure~\ref{fig:comparison Nested WAIT, real world}. The Nested WAIT algorithm achieves higher throughput with moderately higher latency (around 0.5 per prompt), thereby improving the efficiency of the systems without mildly sacrificing the responsiveness.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Experiments_pdf/question_answer_lengths_distribution.pdf}
+    \caption{Distribution of real dataset.}
+    \label{fig:distribution}
+\end{figure}
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Experiments_pdf/group.pdf}
+    \caption{Distribution of real dataset grouped by token lengths.}
+    \label{fig:group}
+\end{figure}
+
+
+
+
+
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{real_throughput.png}
+%     \caption{Throughput of WAIT versus FCFS on the real-world dataset from \citet{jiang2024llm}.}
+%     \label{fig:real_throughput}
+% \end{figure}
+
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{real_latency.png}
+%     \caption{Latency performance of WAIT and FCFS on the real-world dataset.}
+%     \label{fig:real_latency}
+% \end{figure}
+
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{real_memory.png}
+%     \caption{Memory usage of WAIT over time on the real-world dataset.}
+%     \label{fig:real_memory}
+% \end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+\includegraphics[width=\textwidth]{Experiments_pdf/test30_simulated_short_decode_bs=128_nested_real_not_trace_throughput.pdf}
+        % \caption{Throughput vs. Time}
+        % \label{fig:throughput}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test30_simulated_short_decode_bs=128_nested_real_not_trace_latency.pdf}
+        % \caption{Latency vs. Row Number}
+        % \label{fig:e2e_time}
+    \end{minipage}
+    \caption{
+        Average throughput and latency across different algorithms on synthetic dataset. 
+    % This test of Nested WAIT algorithm is on the short prefill length. Specifically, four types of prompts are considered, bith with  prefill length of $10$. The decode lengths are $20,40,80,160$, with a rate of $20:40:80:160$.
+    % \gan{batch size =128, we may not use this?}
+    }
+    \label{fig:comparison Nested WAIT, short prefill}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+\includegraphics[width=\textwidth]{Experiments_pdf/test31_simulated_short_decode_bs=148_nested_real_not_trace_throughput.pdf}
+        % \caption{Throughput vs. Time}
+        % \label{fig:throughput}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test31_simulated_short_decode_bs=148_nested_real_not_trace_latency.pdf}
+        % \caption{Latency vs. Row Number}
+        % \label{fig:e2e_time}
+    \end{minipage}
+    \caption{
+        Average throughput and latency across different algorithms on real dataset, clustered output lengths with low arrival rates. 
+    % \gan{real data, without trace arrival}.
+    % This test of Nested WAIT algorithm is on the long prefill length. Specifically, ten types of prompts are considered, bith with  prefill length of $60$. The ecode lengths are $50,100,150,\cdots,450,500$, with a rate of $23:8:7:6:4:3:2:1:1$ proportional to the real world dataset. 
+    % % \gan{batch size =148, we may not use this?}
+    }
+    \label{fig:comparison_Nested_WAIT_real_world_low}
+\end{figure}
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+\includegraphics[width=\textwidth]{Experiments_pdf/test32_simulated_short_decode_bs=148_nested_real_not_trace_higher_rate_throughput.pdf}
+        % \caption{Throughput vs. Time}
+        % \label{fig:throughput}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test32_simulated_short_decode_bs=148_nested_real_not_trace_higher_rate_latency.pdf}
+        % \caption{Latency vs. Row Number}
+        % \label{fig:e2e_time}
+    \end{minipage}
+    \caption{
+    Average throughput and latency across different algorithms on real dataset, clustered output lengths with high arrival rates. 
+    % \gan{real data, without trace arrival}.
+    % This test of Nested WAIT algorithm is on the long prefill length. Specifically, ten types of prompts are considered, bith with  prefill length of $60$. The ecode lengths are $50,100,150,\cdots,450,500$, with a rate of $230:80:70:60:40:30:20:10:10$ from the real world dataset.
+    % \gan{batch size =148, we may not use this?}
+    }
+    \label{fig:comparison Nested WAIT, real world, higher rate}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+\includegraphics[width=\textwidth]{Experiments_pdf/test36_simulated_short_decode_bs=64_nested_real_TRACE_throughput.pdf}
+        % \caption{Throughput vs. Time}
+        % \label{fig:throughput}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Experiments_pdf/test36_simulated_short_decode_bs=64_nested_real_TRACE_latency.pdf}
+        % \caption{Latency vs. Row Number}
+        % \label{fig:e2e_time}
+    \end{minipage}
+    \caption{
+    % \textcolor{red}{real data, trace arrival, we may not use this fig?}.
+    Average throughput and latency across different algorithms on real dataset, real output lengths. 
+    % \gan{batch size =64, we may not use this?}
+    }
+    \label{fig:comparison Nested WAIT, real world}
+\end{figure}
+
+% \subsection{Discussion}
+
+% The results from both scenarios underscore the WAIT algorithm’s strengths. In the simulated prompts scenario, its superior throughput and controlled latency demonstrate robustness across a spectrum of conditions. The real-world dataset experiments further validate its practical efficacy, showcasing its ability to optimize resource utilization under realistic constraints.
+
+% These findings suggest that WAIT offers a compelling alternative to traditional scheduling policies like FCFS, particularly in memory-constrained LLM inference systems. Future work could explore dynamic threshold tuning to enhance adaptability or extend the algorithm to multi-GPU configurations for scalability. Collectively, these experiments affirm WAIT’s potential as an efficient and reliable scheduling solution.

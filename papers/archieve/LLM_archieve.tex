@@ -1,0 +1,271 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Author template for Operations Research (opre) for articles with no e-companion (EC)
+%% Mirko Janc, Ph.D., INFORMS, mirko.janc@informs.org
+%% ver. 0.95, December 2010
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \documentclass[opre, blindrev]{informs3}
+\documentclass[opre, nonblindrev]{informs3} % current default for manuscript submission
+% \usepackage{showlabels}
+
+% \DoubleSpacedXI % Made default 4/4/2014 at request
+\OneAndAHalfSpacedXI % current default line spacing
+% \documentclass[mnsc, blindrev]{informs3} % current default for manuscript submission
+
+% \DoubleSpacedXI % Made default 4/4/2014 at request
+% \OneAndAHalfSpacedXI
+\usepackage{graphicx}
+%\usepackage{graphicx}     % Required for including images
+%\usepackage{caption}      % Required for customizing captions
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amssymb}
+\allowdisplaybreaks
+\usepackage{parskip}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{subfigure}
+% \usepackage[inline]{showlabels}
+% \usepackage{algorithm}
+% \usepackage{algorithmicx}
+% \usepackage{algpseudocode}
+% \let\footnote=\endnote
+
+\let\enotesize=\normalsize
+\def\notesname{Endnotes}%
+\def\makeenmark{$^{\theenmark}$}
+\def\enoteformat{\rightskip0pt\leftskip0pt\parindent=1.75em
+  \leavevmode\llap{\theenmark.\enskip}}
+
+% Private macros here (check that there is no clash with the style)
+
+% Natbib setup for author-year style
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ % \setlength{\bibsep}{0.8ex}
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+\newcommand{\note}[1]{{\color{blue} [Note: {#1}]}}
+
+\newcommand{\rev}{\color{black}}
+
+%% Setup of theorem styles. Outcomment only one.
+%% Preferred default is the first option.
+\TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+%\TheoremsNumberedByChapter  % (Theorem 1.1, Lema 1.1, Theorem 1.2)
+\ECRepeatTheorems
+\usepackage{bbm}
+% \usepackage[ruled, algo2e]{algorithm2e}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+
+\usepackage[unicode=true, bookmarks=false,
+breaklinks=false,pdfborder={0 0 1}]
+{hyperref} 
+
+
+\hypersetup{
+ colorlinks,citecolor=blue,filecolor=blue,linkcolor=blue,urlcolor=blue}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+\newcommand{\zjjt}{z_{jj'}(t)}
+\newcommand{\zjzt}{z_{j0}(t)}
+\newcommand{\djjkt}{d_{jj'k}(t)}
+\newcommand{\rjj}{r_{jj'}}
+
+
+
+% \setstretch{1.5}
+
+\input{command.tex}
+
+% Margins
+\usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+% \usepackage[table]{xcolor}
+% \usepackage[table,usenames,dvipsnames]{xcolor}
+
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+\newcommand{\Hongyu}[1]{{\color{red} Hongyu: #1}}
+\newcommand{\Hengyu}[1]{{\color{green} Hengyu: #1}}
+
+% \newtheorem{proposition}{Proposition}
+% \newtheorem{definition}{Definition}
+% % \newtheorem{property}{Property}
+% % \newtheorem{corollary}{Corollary}
+% \newtheorem{remark}{Remark}
+% % \newtheorem{proof}{Proof}
+% % \newtheorem{example}{Example}
+% \newtheorem{assumption}{Assumption}
+% \newtheorem{Proposition}{Proposition}
+% \newtheorem{Definition}{Definition}
+% \newtheorem{Corollary}{Corollary}
+% \newtheorem{remark}{Remark}
+% \newtheorem{assumption}{Assumption}
+% \newtheorem{Condition}{Condition}
+% \newtheorem{condition}{Condition}
+% \newtheorem{theorem}{Theorem}
+% \newtheorem{lemma}{Lemma}
+% \newtheorem{example}{Example}
+
+\newcommand*{\circled}[1]{\lower.7ex\hbox{\tikz\draw (0pt, 0pt)%
+    circle (.5em) node {\makebox[1em][c]{\small #1}};}}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} % Use Input in the format of Algorithm
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm
+\algnewcommand{\algorithmicand}{\textbf{and }}
+\algnewcommand{\algorithmicor}{\textbf{or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+  \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+      {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+      \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+      \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+      \fi
+      \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+  \end{center}
+  }
+
+%%%%%%%%%%%%%%%%%
+%     Title     %
+%%%%%%%%%%%%%%%%%
+% \title{\huge Online Local False Discovery Rate Control:\texorpdfstring{\\}{} A Resource Allocation Approach}
+% \title{Overbooking in online reusable resource allocation}
+% \author{}
+% \date{}
+
+\begin{document}
+%%%%%%%%%%%%%%%%
+
+% Outcomment only when entries are known. Otherwise leave as is and
+%   default values will be used.
+%\setcounter{page}{1}
+%\VOLUME{00}%
+%\NO{0}%
+%\MONTH{Xxxxx}% (month or a similar seasonal id)
+%\YEAR{0000}% e.g., 2005
+%\FIRSTPAGE{000}%
+%\LASTPAGE{000}%
+%\SHORTYEAR{00}% shortened year (two-digit)
+%\ISSUE{0000} %
+%\LONGFIRSTPAGE{0001} %
+%\DOI{10.1287/xxxx.0000.0000}%
+
+% Author's names for the running heads
+% Sample depending on the number of authors;
+% \RUNAUTHOR{Jones}
+% \RUNAUTHOR{Jones and Wilson}
+% \RUNAUTHOR{Jones, Miller, and Wilson}
+% \RUNAUTHOR{Jones et al.} % for four or more authors
+% Enter authors following the given pattern:
+\RUNAUTHOR{Ao, Fu, Simchi-Levi}
+
+% Title or shortened title suitable for running heads. Sample:
+% \RUNTITLE{Bundling Information Goods of Decreasing Value}
+% Enter the (shortened) title:
+\RUNTITLE{Two-stage Online Reusable Resource Allocation: Reservation, Overbooking and Confirmation Call}
+
+% Full title. Sample:
+% \TITLE{Bundling Information Goods of Decreasing Value}
+% Enter the full title:
+
+
+\TITLE{OR for LLM \footnotetext{Author are sorted alphabetically.}
+% \arc{do you think Confirmation or Confirmation Timing is better}
+}
+
+% \TITLE{A Simple and Optimal Multi-armed Bandit Policy Design with Safety against Heavy-tailed Risk }
+
+% Block of authors and their affiliations starts here:
+% NOTE: Authors with same affiliation, if the order of authors allows,
+%   should be entered in ONE field, separated by a comma.
+%   \EMAIL field can be repeated if more than one author
+\ARTICLEAUTHORS{%
+\AUTHOR{Ruicheng Ao\textsuperscript{1} \quad\quad Gan Luo\textsuperscript{2} \quad\quad David Simchi-Levi\textsuperscript{1,3,4} }
+\AFF{\textsuperscript{1}Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{\texttt{\{aorc, dslevi\}@mit.edu}}\texorpdfstring{\\}
+{}\textsuperscript{2}School of Mathematical Sciences, Peking University, Beijing 100871, \EMAIL{\texttt{luogan@stu.pku.edu.cn}}\texorpdfstring{\\}
+{}\textsuperscript{3}Department of Civil and Environmental Engineering, Massachusetts Institute of Technology, Cambridge, MA 02139\texorpdfstring{\\}{}\textsuperscript{4}Operations Research Center, Massachusetts Institute of Technology, Cambridge, MA 02139 } %, \URL{}}
+% Enter all authors
+}
+
+\ABSTRACT{%
+blabla
+% Our results emphasize how  effective policies could be designed to balance mitigating resource waste and reducing overbooking losses while avoiding excessive confirmation calls in online reusable resource allocation with advance reservations.
+
+
+% Sample
+%\KEYWORDS{deterministic inventory theory; infinite linear programming duality;
+%  existence of optimal policies; semi-Markov decision process; cyclic schedule}
+}
+% Fill in data. If unknown, outcomment the field
+\KEYWORDS{blabla}
+% \HISTORY{\today.}
+
+\maketitle
+
+\section{Model}
+We consider a framework of LLM inference. We have discrete time horizon $[T]$. For each time $t\in[T],$ there are $N^t$ tasks arriving to the system, denoted by $(X_1^{t},Q_1^{t}),\dots(X_{N^t}^{t},Q_{N^t}^{t})$, where $X_i^{t},Q_i^{t}$ stand for contexts and queries, respectively. Before being sent to pre-processing, each context $X_i^{t}$ needs to be splitted into multiple chunks, say $\phi(X_i^t) = [Z_{i1}^t,\dots,Z_{im}^t]$, where $m$ denotes number of chunks. According to $Q_i^t,$ each task is marked as nested difficulty levels $l_i^t\in\{1,\dots,n\}.$ The time cost of pre-processing task $(X_1^{t},Q_1^{t})$ is given by $D_{l_i^t}(\phi(X_i^t))=\sum_{j=1}^mD_{l_i^t}(Z_{ij}^t)$. After pre-processing $(X_1^{t},Q_1^{t}),$ is has probability $P_{l_i^t}(\phi(X_i^t))=P_{l_i^t}(Z_i^t)$ to be converted to task of level $l_i^t+1$ and $1-P_{l_i^t}(Z_i^t)$ to be sent to the next stage. Each At the same time, there are total number of $N$ channels that can pre-process simultaneously. The objective is to minimize the total waiting costs by simultaneously optimize the splitting map as well as the channel allocation.
+
+\section{Model B}
+We consider a framework of LLM inference. We have discrete time horizon $[T]$. For each time $t\in[T],$ there are $N^t$ tasks arriving to the system, denoted by $(X_1^{t},Q_1^{t}),\dots(X_{N^t}^{t},Q_{N^t}^{t})$, where $X_i^{t},Q_i^{t}$ stand for contexts and queries, respectively. Here, the queries and contexts are not explicitly separated since the query is extracted later during the task of performing query extraction on the chunks. Before being sent to pre-processing, each prompt $(X_i^{t}, Q_i^t)$ needs to be splitted into multiple chunks, say $\phi(X_i^{t}, Q_i^t) = [Z_{i1}^t,\dots,Z_{im}^t]$, where $m$ denotes number of chunks. 
+
+Since we have not yet extracted the queries, we first need to perform basic pre-processing tasks on each chunk. Specifically, this involves applying basic formatting standards to each chunk, followed by using an NLP model to extract the queries. For simplicity, these tasks are marked as task$_1$, task$_2$. After extracting the query, each kind of task is marked as $\{3,\dots,n\}$ sequentially.
+
+For each kind of task$_k$, the computational resources constraint and the GPU memory constraint is formulated as the number of channels $N_k$ that can pre-process simultaneously and they should wait for schedule and the memory limit $M_k$. So for the chunks in process, their total memory should not exceed $M_k$. Since this is a constraint on a specific task, it can often be simplified to a single constraint. For example, when calling an API, the actual constraint is typically the channel constraint caused by network bandwidth. Similarly, when using a local model for processing, the actual constraint is usually the memory constraint.
+
+After the task$_k$ on chunk $Z_{il}^t$, is has probability $P_k(Z_{il}^t)$ to be sent to task$_{k+1}$ and $1-P_k(Z_{il}^t)$ to reprocess.
+
+The time cost of task$_k$ on chunk $Z_{il}^t$, is given by $D_k(Z_{il}^t)=\alpha_k+\beta_k|Z_{il}^t|^{\gamma_k}$ or $D_k(Z_{il}^t)=\max\{\alpha_k,\beta_k|Z_{il}^t|^{\gamma_k}\}$, where $|Z_{il}^t|$ denote the number of tokens in $Z_{il}^t$ and $\gamma_k$ usually equals to $1$. For special tasks like query-guided chunk completion, the processing time can be influenced by the query.
+
+\begin{align*}
+D_k(Z_{il}^t)&=\alpha_k+\beta_k|Z_{il}^t|^{\gamma_k}\\
+    D_k(Z_{il}^t)&=\max\{\alpha_k,\beta_k|Z_{il}^t|^{\gamma_k}\}
+\end{align*}
+
+The total time cost of each chunk $Z_{il}^{t}$, denoted by $D(Z_{il}^t)$, is not $\sum_{k=1}^n D_k(Z_{il}^t)$, since, for certain tasks, their computational and memory resources may be utilized by other chunks from the same prompt or from other prompts. 
+
+The total time cost of prompt $(X_i^t, Q_i^t)$, denoted by $D(X_i^t, Q_i^t)$ is given by $\max_{l}\{D(Z_{il}^t)\}$.
+
+The objective is to minimize the total waiting costs by simultaneously optimize the splitting map as well as the channel allocation.
+
+\bibliographystyle{apalike}  
+\bibliography{ref}
+
+\newpage 
+\setcounter{page}{1}
+\begin{APPENDICES}
+\small
+\fontsize{9}{10}
+\clearpage
+ \input{Appendix.tex}
+% \input{pf-lemmas.tex}
+% \input{tmp.tex}
+\end{APPENDICES}
+
+\end{document}
+

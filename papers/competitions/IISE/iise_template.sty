@@ -1,0 +1,92 @@
+% IISE Conference Template Style File
+% Based on IISE Annual Conference & Expo 2026 formatting guidelines
+
+\ProvidesPackage{iise_template}
+
+% Page layout
+\RequirePackage[letterpaper, top=1in, bottom=1in, left=1in, right=1in]{geometry}
+
+% Font settings
+\RequirePackage{times}  % Times New Roman
+\RequirePackage[T1]{fontenc}
+
+% Math and symbols
+\RequirePackage{amsmath,amssymb,amsthm}
+
+% Graphics
+\RequirePackage{graphicx}
+
+% Tables
+\RequirePackage{booktabs}
+\RequirePackage{multirow}
+
+% References - IEEE style
+\RequirePackage{cite}
+
+% Hyperlinks (optional, remove for final submission if needed)
+\RequirePackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+
+% Spacing
+\RequirePackage{setspace}
+\singlespacing
+
+% No paragraph indentation, blank line between paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{10pt}
+
+% Section formatting
+\RequirePackage{titlesec}
+
+% Section headings: 12pt, bold, numbered, left-justified, one blank line above
+\titleformat{\section}
+  {\fontsize{12}{14}\bfseries}{\thesection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{10pt}{0pt}
+
+% Subsection headings: 10pt, bold, numbered, left-justified
+\titleformat{\subsection}
+  {\fontsize{10}{12}\bfseries}{\thesubsection}{0.5em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{0pt}
+
+% Subsubsection headings: 10pt, bold, numbered, left-justified
+\titleformat{\subsubsection}
+  {\fontsize{10}{12}\bfseries}{\thesubsubsection}{0.5em}{}
+\titlespacing*{\subsubsection}{0pt}{10pt}{0pt}
+
+% Caption formatting
+\RequirePackage{caption}
+\captionsetup{
+  font=small,
+  labelfont=bf,
+  justification=centering,
+  singlelinecheck=true
+}
+
+% Equation numbering
+\numberwithin{equation}{section}
+
+% No page numbers or footers
+\pagestyle{empty}
+
+% Figure and table placement
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.15}
+\renewcommand{\floatpagefraction}{0.7}
+
+% Algorithm environment
+\RequirePackage{algorithm}
+\RequirePackage{algorithmic}
+
+% Colors (for optional highlighting during editing)
+\RequirePackage{xcolor}
+
+% Useful commands
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\throughput}{\Theta}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Expect}{\mathbb{E}}
+
+\endinput

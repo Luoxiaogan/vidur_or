@@ -1,0 +1,334 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage{authblk}
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{times}
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\scshape\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\bfseries\itshape}{\thesubsection}{1em}{}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{caption}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{url}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+\usepackage[unicode=true, bookmarks=false, breaklinks=false,pdfborder={0 0 1}]{hyperref}
+\hypersetup{colorlinks,citecolor=blue,filecolor=blue,linkcolor=blue,urlcolor=blue}
+\newcommand{\throughput}{\textbf{Throughput}}
+\newcommand{\Latency}{\textbf{Latency}}
+\newcommand{\TTFT}{\textbf{TTFT}}
+\newcommand{\keywords}[1]{\textbf{Keywords:} #1}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algnewcommand{\algorithmicand}{\textbf{and }}
+\algnewcommand{\algorithmicor}{\textbf{or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+\title{Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints}
+\author[1]{Ruicheng Ao}
+\author[2]{Gan Luo}
+\author[1,3,4]{David Simchi-Levi}
+\author[5]{Xinshang Wang}
+\affil[1]{Institute for Data, Systems, and Society, MIT, \texttt{\{aorc, dslevi\}@mit.edu}}
+\affil[2]{School of Mathematical Sciences, Peking University, \texttt{luogan@stu.pku.edu.cn}}
+\affil[3]{Department of Civil and Environmental Engineering, MIT}
+\affil[5]{Alibaba Group, \texttt{xinshang.w@alibaba-inc.com}}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+Large Language Models (LLMs) underpin applications like chatbots, programming assistants, and medical diagnostics, yet their inference is computationally intensive due to the memory-intensive Key-Value (KV) cache. We formulate LLM inference as a multi-stage online scheduling problem under memory constraints, with stochastic prompt arrivals and dynamic KV cache growth challenging traditional methods. Using fluid dynamics, we propose the Waiting for Accumulated Inference Threshold (WAIT) algorithm for known output lengths and the Nested WAIT algorithm for unknown lengths. Both exploit queueing theory and coupling techniques to achieve near-optimal throughput with bounded latency and Time to First Token (TTFT) in heavy traffic. Experiments with Llama-7B on an A100 GPU, using synthetic and real-world datasets, show superior throughput and latency compared to vLLM, Sarathi, and Orca. This work bridges operations research and machine learning, enabling efficient LLM deployment in resource-constrained settings.
+\end{abstract}
+\vspace{1em}
+\keywords{Large Language Model, Key-value cache, Memory Constraint, Online scheduling}
+\section{Introduction}
+Large Language Models (LLMs) are indispensable in natural language processing (NLP) \citep{devlin2019bert, brown2020language, kaplan2020scaling, ouyang2022training, wei2022emergent, wei2022chain, touvron2023llama, openai2024gpt4technicalreport}, supporting applications such as chatbots \citep{anthropic2023claude, bai2023qwen, openai2024gpt4technicalreport, deepseekai2025deepseekr1incentivizingreasoningcapability}, search engines \citep{google2023bard, microsoft2023bing}, and programming assistants \citep{copilot, claude_3_7}. However, inference—generating responses to user prompts—is resource-intensive due to the memory demands of the Key-Value (KV) cache \citep{garcia2019estimation}. With costs like ChatGPT’s \$700,000 daily inference expense \citep{patel2023peeling} and high energy consumption \citep{strubell2019energy}, efficient scheduling is vital to optimize GPU utilization, reduce costs, and enhance sustainability. Real-world deployment faces challenges like unpredictable prompt arrivals and limited GPU memory, necessitating robust scheduling strategies.
+
+The inference process, illustrated in Figure~\ref{fig:intro}, involves:
+- \textbf{Prefill phase}: Tokenizes the prompt (e.g., “Is apple a fruit?”) and computes the KV cache.
+- \textbf{Decode phase}: Generates output tokens (e.g., “Yes, it is”) iteratively, updating the KV cache.
+
+\begin{figure}[H]
+    \begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{Experiments_pdf/fig_intro.pdf}
+    \caption{LLM inference process with prefill and decode phases.}
+    \label{fig:intro}
+    \end{subfigure}
+    \begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{Experiments_pdf/fig_batching1.pdf}
+    \caption{Batching dynamics for concurrent GPU processing.}
+    \label{fig:batching}
+\end{subfigure}
+\caption{Illustration of LLM inference and batching.}
+\end{figure}
+
+Batching groups prompts for concurrent GPU processing, interleaving prefill and decode phases to maximize throughput, as shown in Figure~\ref{fig:batching}. Key metrics are \textbf{Throughput} (tokens per unit time), \textbf{Latency} (arrival to completion), and \textbf{Time to First Token (TTFT)} (arrival to first token). Scheduling challenges include dynamic KV cache growth, unknown output lengths, and memory constraints, rendering traditional methods like Shortest Job First (SJF) ineffective. For instance, prioritizing short prompts may starve longer ones, while large batches risk memory overflow.
+
+
+
+System-level optimizations \citep{yu2022orca, agrawal2023sarathi, kwon2023efficient} enhance efficiency but lack theoretical rigor. Queueing models \citep{li2025throughput} oversimplify memory dynamics. We model LLM inference as a multi-stage online scheduling problem, using fluid dynamics to approximate prompt flows, yielding:
+- \textbf{WAIT}: Optimizes batching for known output lengths.
+- \textbf{Nested WAIT}: Handles unknown lengths with a nested structure.
+
+Our contributions are:
+1. A mathematical model capturing KV cache dynamics.
+2. Asymptotically optimal WAIT and Nested WAIT algorithms.
+3. Experimental validation outperforming vLLM, Sarathi, and Orca.
+
+\subsection{Other Related Work}
+
+\paragraph*{Online Scheduling Problem and Queueing System.} 
+Classical online scheduling problems focus on optimally assigning jobs that arrive sequentially, each with varying completion times. In settings with stochastic arrivals, foundational studies such as \cite{devanur2009adwords,vee2010optimal,cole2014sample,balkanski2016power,lattanzi2020online} have developed algorithms that learn arrival patterns or distributions to refine scheduling strategies over time. Beyond individual job processing, works like \cite{im2013online,lucier2013efficient,liu2015online,li2020online} have explored simultaneous batching and scheduling, grouping similar jobs to enhance efficiency. Within queueing theory, fluid models serve as first-order approximations of stochastic systems, enabling near-optimal control strategies \cite{mandelbaum1998strong,maglaras2000discrete,bauerle2002optimal,liu2011network}, while heavy-traffic analysis offers insights into long-term system behavior. However, these traditional approaches fall short in addressing the unique dynamics of LLM inference, where resource requirements are dynamic due to the growing KV cache and the inference process involves distinct prefill and decode phases, unlike the static, single-phase jobs or fixed number phases and resource occupancy in classical scheduling.
+
+\paragraph*{LLM Inference.} 
+Theoretical frameworks for analyzing Large Language Model (LLM) inference are scarce, despite their widespread use, as most prior work targets system-level optimizations rather than the unique scheduling demands of LLMs. Unlike traditional scheduling, LLM inference involves stochastic arrivals, dynamic memory constraints, and multi-phase processing, complicating analytical efforts. System-level works like \cite{patel2023peeling} (``Splitwise") and \cite{zhong2024distserve} (``DistServe") split inference into prompt handling and pipeline execution, while scheduling methods such as \cite{yu2022orca}, \cite{agrawal2023sarathi}, and \cite{agrawal2024taming} use batching to boost throughput—similar to our approach. Other optimizations, e.g., \cite{deepseekai2024deepseekv2strongeconomicalefficient} with multi-head latent attention and low-rank KV compression, or \cite{fu2025efficient} with Kendall’s Tau for prioritizing prompts by predicted output lengths, focus on engineering efficiency rather than giving theoretical insight. 
+% More recently, \cite{jaillet2025onlineschedulingllminference} offers a notably theoretical framework, modeling LLM inference as an online scheduling problem and analyzing an adapted shortest-job-first algorithm with near-optimal regret—yet it assumes known output lengths at arrival, a condition rarely met in practice due to their unpredictability and estimation costs (for example, another neural network may be used at the input side). 
+Moreover, when full knowledge of the arriving prompts is not available, it may lead to significant performance drops (see Proposition \ref{prop:unknown_lower_bound} in Section \ref{sec:nested_wait}). Our work tries to tackle these challenges by developing a scheduling framework for the realistic case of unknown output lengths, using fluid dynamics approximations and coupling techniques from queueing theory to achieve asymptotic optimality, providing both practical relevance and a robust mathematical foundation. More recently, \cite{li2025throughput} propose a stochastic processing model for LLM inference based on a linear batch processing time approach, similar to our own. They demonstrate that work-conserving scheduling algorithms—policies designed to keep resources active whenever tasks are available—achieve optimal throughput for both individual requests and multi-agent AI workloads. Their framework extends to AI-agent scenarios such as parallel engines and fork-join models, highlighting its flexibility for complex LLM deployments. However, their analysis does not address the GPU memory usage of preempted or queued requests, particularly the memory needs of Key-Value caches for tasks awaiting processing. The study also does not explore theoretical aspects of latency metrics, such as time to first token (TTFT) or end-to-end request latency, which are important for real-time applications like interactive dialogue systems.
+
+
+\subsection{Notations}
+For integer $n\ge 1,$ we denote $[n]=\{1,2,\dots,n\}$ as the set of integers from $1$ to $n$. For $x\in\real$, denote $\lceil x\rceil$ as the smallest integer not smaller than $x$ and $\lfloor x\rfloor$ as the largest integer not greater than $x$. Denote $x_+=\max\{x, 0\}$. For set $S$, denote $|S|$ as its cardinality. For two functions $f(T)$ and $g(T)$, we use $f(T)=O(g(T))$ if there exists constant $c_1>0$ such that $f(T)\le c_1g(T)$ as $T\to+\infty$ and $f(T)=\Omega(g(T))$ if there exists constant $c_2>0$ such that $f(T)\ge c_2g(T)$ as $T\to +\infty$. 
+\section{Model}
+We model LLM inference as an online scheduling problem with memory constraints. Prompts of type \( j \in [m] \) arrive via a Poisson process with rate \( \lambda_j \), each with input length \( l_j \) and output length \( l_j' \). Inference involves:
+- \textbf{Prefill phase} (stage 0): Embeds \( l_j \) tokens, initializing the KV cache.
+- \textbf{Decode phase} (stages 1 to \( l_j' \)): Generates one token per iteration, updating the KV cache.
+
+The GPU processes batches of \( n_1 \) prefill and \( n_2 \) decode prompts, with iteration time:
+\[
+\tau = d_0 + d_1 \cdot \left( \sum_{i=1}^{n_1} k_i + \sum_{i'=1}^{n_2} s_{i'} \right),
+\]
+where \( k_i \) and \( s_{i'} \) are token counts, and \( d_0, d_1 \) are constants, validated in Figure~\ref{fig:inference_time}. Memory usage satisfies:
+\[
+\sum_{i \in B^t} (l_{j^t(i)} + k^t_i) \le C,
+\]
+where \( C \) is the GPU capacity.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{Experiments_pdf/inference_time_comparison.pdf}
+    \caption{Inference time validation for Llama-7B.}
+    \label{fig:inference_time}
+\end{figure}
+
+We optimize:
+\[
+\max_{\pi \in \Pi} \mathbb{E}[\throughput^{(T,\pi)}], \quad \text{s.t.} \quad \mathbb{E}[\Latency^{(T,\pi)}] \le L^T, \quad \mathbb{E}[\TTFT^{(T,\pi)}] \le F^T,
+\]
+where \(\Pi\) includes non-preemptive policies with KV cache retention. Scheduling trade-offs balance batch size (increasing throughput but risking memory overflow) and prompt prioritization (reducing TTFT but complicating batching). For example, in a chatbot, prioritizing short queries reduces TTFT but may delay longer analytical tasks, impacting throughput.
+
+\section{Scheduling with Known Arrival Types: The WAIT Algorithm}
+The Waiting for Accumulated Inference Threshold (WAIT) algorithm schedules prompts with known output lengths using thresholds \( n_j \). It batches type-\( j \) prompts when inventory \( n_{j0}^t \geq n_j \), guided by fluid dynamics to balance batch size and processing frequency. The pipeline is shown in Figure~\ref{fig:wait}. Algorithm~\ref{alg:wait} details the logic.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{Experiments_pdf/fig_WAIT.pdf}
+    \caption{WAIT algorithm pipeline.}
+    \label{fig:wait}
+\end{figure}
+
+\begin{algorithm}[H]
+\caption{WAIT Algorithm}
+\label{alg:wait}
+\begin{algorithmic}[1]
+\Require Memory \( C \), rates \( \lambda_j \), thresholds \( n_j \)
+\State Initialize inventories \( n_{jk} \gets 0 \), \( j \in [m], k \in \{0, \dots, l_j'\} \)
+\While{True}
+    \If{arrival of type \( j \)}
+        \State \( n_{j0} \gets n_{j0} + 1 \)
+    \ElsIf{batch completion}
+        \State Update inventories: \( n_{jk} \gets n_{jk} - \min\{n_j, n_{jk}\} \)
+        \State Advance prompts to next stage
+        \State Clear KV caches for completed prompts
+    \EndIf
+    \If{\( n_{j0} \geq n_j \) for some \( j \)}
+        \State Form batch \( B \) with \( \min\{n_j, n_{jk}\} \) prompts
+        \State Process batch \( B \), retaining KV caches
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+In heavy traffic (\( \lambda_j^{(\zeta)} = \zeta \lambda_j \), processing speeds scaled by \( \zeta^{-1} \)), thresholds satisfy:
+\[
+\Delta T(n_{1:m}) = d_0 + d_1 \sum_{j=1}^m n_j (l_j' + 1)(l_j + l_j'/2) \leq n_j / \lambda_j.
+\]
+The fluid model minimizes:
+\[
+\sum_{j=1}^m \frac{\lambda_j}{\mu_j(n_j)}, \quad \mu_j(n_j) = \frac{n_j}{\Delta T(n_{1:m})}.
+\]
+\begin{theorem}
+\label{thm:wait}
+Under these conditions, WAIT achieves:
+\[
+\throughput^* - \mathbb{E}[\throughput^{(\zeta,\pi)}] = O((\zeta T)^{-1/2}), \quad \mathbb{E}[\Latency^{(\zeta,\pi)}], \mathbb{E}[\TTFT^{(\zeta,\pi)}] = O((\zeta T)^{1/2}).
+\]
+If \( \Delta T_{[1,\dots,m]} < n_j / \lambda_j \), then:
+\[
+\throughput^* - \mathbb{E}[\throughput^{(\zeta,\pi)}] = O((\zeta T)^{-1}), \quad \mathbb{E}[\Latency^{(\zeta,\pi)}], \mathbb{E}[\TTFT^{(\zeta,\pi)}] = O(1).
+\]
+\end{theorem}
+First-Come-First-Serve (FCFS) policies yield a throughput gap of \( \Omega(1) \) (Appendix).
+
+\section{Scheduling with Unknown Arrival Types: The Nested WAIT Algorithm}
+For unknown output lengths, Nested WAIT organizes inference into \( m \) segments with thresholds \( n_i \), processing prompts as types are revealed. Thresholds are tuned numerically to optimize segment sizes based on arrival rates and lengths, balancing memory and throughput. The pipeline and an example with two types (\( l_1' < l_2' \)) are shown in Figure~\ref{fig:nested_wait_combined}. Algorithm~\ref{alg:nested_wait} formalizes the logic.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.48\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/fig_nestedWAIT.pdf}
+        \caption{Pipeline}
+        \label{fig:nested_wait}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/fig_nestedWAIT_example.pdf}
+        \caption{Example}
+        \label{fig:nested_wait_example}
+    \end{subfigure}
+    \caption{Nested WAIT algorithm pipeline and example.}
+    \label{fig:nested_wait_combined}
+\end{figure}
+
+\begin{algorithm}[H]
+\caption{Nested WAIT Algorithm}
+\label{alg:nested_wait}
+\begin{algorithmic}[1]
+\Require Memory \( C \), rates \( \lambda_j \), thresholds \( n_i \), lengths \( l_i' \)
+\State Initialize segment inventories \( n_{i,k} \gets 0 \)
+\While{True}
+    \If{arrival}
+        \State \( n_{1,0} \gets n_{1,0} + 1 \)
+    \ElsIf{batch completion for segment \( i \)}
+        \State Update inventories: \( n_{i,k} \gets n_{i,k} - \min\{n_i, n_{i,k}\} \)
+        \State Advance prompts
+        \If{prompts reach stage \( l_i' + 1 \)}
+            \State Move to segment \( i+1 \) or clear KV caches
+        \EndIf
+    \EndIf
+    \If{\( n_{i', \sum_{j=1}^{i'-1} l_j'} \geq n_{i'} \) for segments \( i' \leq i \)}
+        \State Form and process batch \( B \)
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+Thresholds satisfy:
+\[
+\Delta T_{[1,\dots,m]}(n_1, \dots, n_m) < \frac{n_1}{\sum_{j=1}^m \lambda_j}, \quad \frac{n_{i+1}}{n_i} > p_i, \quad p_i = \frac{\sum_{j=i+1}^m \lambda_j}{\sum_{j=i}^m \lambda_j}.
+\]
+Memory usage is:
+\[
+M^\pi = \sum_{j=1}^m n_j \left( l + \frac{1}{2} L_j' \right) \Delta l_j', \quad L_j' = \sum_{k=1}^j l_k', \quad \Delta l_j' = l_j' - l_{j-1}'.
+\]
+Segment optimization minimizes:
+\[
+\sum_{i=1}^m \frac{\sum_{j=i}^m \lambda_j}{\mu_i(n_i)}, \quad \mu_i(n_i) = \frac{n_i}{\Delta T_{[1,\dots,m]}}.
+\]
+\begin{theorem}
+\label{thm:nested_wait}
+With sufficient memory, Nested WAIT achieves:
+\[
+\throughput^* - \mathbb{E}[\throughput^{(\zeta,\pi)}] = O((\zeta T)^{-1}), \quad \mathbb{E}[\Latency^{(\zeta,\pi)}], \mathbb{E}[\TTFT^{(\zeta,\pi)}] = O(1).
+\]
+Non-predictive policies with \( C = M^* \) incur a throughput gap of \( \Omega(1) \).
+\end{theorem}
+
+\section{Numerical Experiments}
+We evaluate WAIT and Nested WAIT using Llama-7B on an NVIDIA A100 GPU (40GB memory) with synthetic and real-world datasets \citep{zheng2023lmsys}. Experiments simulate high-load conditions with Poisson arrivals, testing robustness across prompt lengths (10–160 tokens) and arrival rates (500–2000 prompts/s). For WAIT, synthetic prompts (\( m=2 \), \( l_j = 10 \), \( l_j' = (10, 20) \), \( \lambda_j = 1000 \)) outperform vLLM, Sarathi, and Orca in throughput and latency, as shown in Figure~\ref{fig:comparison_WAIT}. For Nested WAIT, synthetic data (\( m=4 \), decode lengths (20, 40, 80, 160)) and real-world data (10 bins of 50 tokens) show similar superiority (Figures~\ref{fig:comparison_Nested_WAIT} and \ref{fig:comparison_Nested_WAIT_real}). The real-world prompt length distribution, shown in Figure~\ref{fig:distribution}, exhibits long-tailed behavior, which Nested WAIT handles effectively. Baselines like vLLM struggle with memory constraints, while Orca’s optimizations yield 20–30\% higher latency. Our algorithms achieve up to 25\% higher throughput and 30\% lower latency than Sarathi in real-world settings.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.44\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/test9_simulated_short_decode_throughput.pdf}
+        \caption{Throughput}
+        \label{fig:wait_throughput}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.44\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/test9_simulated_short_decode_latency.pdf}
+        \caption{Latency}
+        \label{fig:wait_latency}
+    \end{subfigure}
+    \caption{WAIT performance on synthetic data.}
+    \label{fig:comparison_WAIT}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.44\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/test30_simulated_short_decode_bs=128_nested_real_not_trace_throughput.pdf}
+        \caption{Throughput}
+        \label{fig:nested_throughput}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.44\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/test30_simulated_short_decode_bs=128_nested_real_not_trace_latency.pdf}
+        \caption{Latency}
+        \label{fig:nested_latency}
+    \end{subfigure}
+    \caption{Nested WAIT on synthetic data.}
+    \label{fig:comparison_Nested_WAIT}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.44\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/test36_simulated_short_decode_bs=64_nested_real_TRACE_throughput.pdf}
+        \caption{Throughput}
+        \label{fig:nested_real_throughput}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.44\linewidth}
+        \includegraphics[width=\linewidth]{Experiments_pdf/test36_simulated_short_decode_bs=64_nested_real_TRACE_latency.pdf}
+        \caption{Latency}
+        \label{fig:nested_real_latency}
+    \end{subfigure}
+    \caption{Nested WAIT on real-world data.}
+    \label{fig:comparison_Nested_WAIT_real}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{Experiments_pdf/question_answer_lengths_distribution.pdf}
+    \caption{Real-world prompt length distribution.}
+    \label{fig:distribution}
+\end{figure}
+
+\section{Extensions}
+We extend Nested WAIT to time-varying arrival rates \( \lambda_j^t \), bounded by \( \lambda_{\max} \), with thresholds satisfying:
+\[
+\sum_{j=1}^m \lambda_j[t, t + \Delta t] \leq \sum_{j=1}^m \lambda_j[t, t + \Delta T_{[1,\dots,m]}] < n_1, \quad \frac{n_{i+1}}{n_i} > p_i[t, t + \Delta t].
+\]
+Implementation uses a 10-second sliding window to estimate rates, updating thresholds dynamically. Challenges include ensuring accurate rate estimation under bursty arrivals. Figure~\ref{fig:memory_usage} shows memory usage trends, indicating stability. Segment design groups \( m \) prompt types into \( L \leq m \) segments with rates \( \lambda_i' = \sum_{(i-1)\Delta L+1 \leq j \leq i\Delta L} \lambda_j \), balancing granularity and memory usage. These extensions maintain near-optimal performance with low overhead (Appendix).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{Experiments_pdf/total_rate=50,T=200.pdf}
+    \caption{Memory usage trends for time-varying rates.}
+    \label{fig:memory_usage}
+\end{figure}
+
+\section{Conclusion}
+We propose WAIT and Nested WAIT for LLM inference scheduling, achieving near-optimal throughput with bounded latency and TTFT. Limitations include stationary arrival assumptions and single-GPU settings, which may not capture real-world variability or distributed systems. Future work will explore: (1) adaptive algorithms for volatile arrivals, (2) multi-GPU scheduling with frameworks like NVIDIA’s Megatron-LM, (3) integration with optimizations like multi-head latent attention \citep{deepseekai2024deepseekv2strongeconomicalefficient}, and (4) user-driven priority adaptation for personalized inference.
+
+% \newpage
+\bibliographystyle{plain}
+\bibliography{main}
+\end{document}

@@ -1,0 +1,203 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%	Service Management SIG Day 2026 Submission
+%%	Based on MSOM format template
+%%	Ver. 1.0, January 13, 2026
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Use dblanonrev for Double Anonymous Review submission
+\documentclass[msom,dblanonrev]{informs4}
+%
+\usepackage{eqndefns-left} % For checking the display equation width and equation environment definitions %
+\RequirePackage{tgtermes}
+\RequirePackage{newtxtext}
+\RequirePackage{newtxmath}
+\RequirePackage{bm}
+\RequirePackage{endnotes}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amssymb, mathtools}
+\allowdisplaybreaks
+\usepackage{parskip}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+% \usepackage{setspace}  % Already loaded via \OneAndAHalfSpacedXII
+% \usepackage{subfigure}  % Conflicts with subcaption, removed
+\usepackage{comment}
+
+\OneAndAHalfSpacedXII % Current default line spacing
+
+% Optional LaTeX Packages
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+
+% Natbib setup for author-number style
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+%% Setup of the equation numbering system.
+\EquationsNumberedThrough    % Default: (1), (2), ...
+
+%% Setup of theorem styles.
+\TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+\ECRepeatTheorems  %
+
+% For new submissions, leave this number blank.
+\MANUSCRIPTNO{}
+
+\let\enotesize=\normalsize
+\def\notesname{Endnotes}%
+\def\makeenmark{$^{\theenmark}$}
+\def\enoteformat{\rightskip0pt\leftskip0pt\parindent=1.75em
+  \leavevmode\llap{\theenmark.\enskip}}
+
+\newcommand{\note}[1]{{\color{blue} [Note: {#1}]}}
+\newcommand{\rev}{\color{black}}
+
+\usepackage{bbm}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+
+\usepackage[unicode=true, bookmarks=false,
+breaklinks=false,pdfborder={0 0 1}]
+{hyperref}
+
+\hypersetup{
+ colorlinks,citecolor=blue,filecolor=blue,linkcolor=blue,urlcolor=blue}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+\newcommand{\throughput}{\textbf{Throughput}}
+\newcommand{\Latency}{\textbf{Latency}}
+\newcommand{\TTFT}{\textbf{TTFT}}
+
+\input{command.tex}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+\newcommand{\Hongyu}[1]{{\color{red} Hongyu: #1}}
+\newcommand{\Hengyu}[1]{{\color{green} Hengyu: #1}}
+
+\newcommand*{\circled}[1]{\lower.7ex\hbox{\tikz\draw (0pt, 0pt)%
+    circle (.5em) node {\makebox[1em][c]{\small #1}};}}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} % Use Input in the format of Algorithm
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm
+\algnewcommand{\algorithmicand}{\textbf{and }}
+\algnewcommand{\algorithmicor}{\textbf{or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+  \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+      {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+      \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+      \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+      \fi
+      \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+  \end{center}
+  }
+
+%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%
+
+\RUNAUTHOR{Ao, Luo, Simchi-Levi, Wang}
+
+\RUNTITLE{Data-Driven Threshold Scheduling for LLM Inference}
+
+\TITLE{Data-Driven Threshold Scheduling for LLM Inference: Preventing Memory Eviction Cascades}
+
+% Block of authors and their affiliations starts here:
+\ARTICLEAUTHORS{%
+\AUTHOR{Ruicheng Ao}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{aorc@mit.edu}
+}
+
+\AUTHOR{Gan Luo}
+\AFF{School of Mathematical Sciences, Peking University, Beijing 100871, \EMAIL{luogan@stu.pku.edu.cn}
+}
+
+\AUTHOR{David Simchi-Levi}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{dslevi@mit.edu}
+}
+
+\AUTHOR{Xinshang Wang}
+\AFF{Alibaba Group, \EMAIL{xinshang.w@alibaba-inc.com}
+} % end of the block
+}
+
+\ABSTRACT{%
+\input{abstract_service}
+}
+
+\KEYWORDS{Large Language Model, Service Operations, Key-value Cache, Memory Constraint, Online Scheduling}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Text of your paper here
+
+\input{introduction_service}
+
+\input{model}
+
+\input{fluid}
+
+\input{known_type}
+
+\input{unknown_type}
+
+\input{numerical}
+
+\input{extension}
+
+\input{conclusion_service}
+
+%\THEEndNotes
+\begingroup \parindent 0pt \parskip 4ex \def\enotesize{\normalsize}
+\theendnotes
+\endgroup
+
+% Acknowledgments here
+\ACKNOWLEDGMENT{We sincerely thank Dr. Zijie Zhou and Prof. Jing Dong for their valuable suggestions and insightful comments, which significantly helped improve the quality of this work.}
+
+% References
+\bibliographystyle{informs2014}
+\bibliography{main.bib}
+\newpage
+% ============================================
+% ONLINE SUPPLEMENT (Electronic Companion)
+% ============================================
+\begin{APPENDICES}
+\section*{Online Supplement}
+\renewcommand{\thesection}{EC.\arabic{section}}
+\setcounter{section}{0}
+\input{Appendix}
+\end{APPENDICES}
+%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%

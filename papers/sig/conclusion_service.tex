@@ -1,0 +1,3 @@
+\section{Conclusion}
+
+We introduce the (Nested) WAIT algorithm, which provides theoretical guarantees for LLM inference scheduling under unknown output lengths. Using queueing theory and fluid models, our algorithms achieve 12--25\% throughput improvement and 30\% latency reduction compared to existing systems. Future directions include: (1) adapting to time-varying arrivals and demand surges (Section \ref{sec:extension} shows preliminary results for moderate variations), (2) extending to multi-GPU distributed systems with load balancing across facilities, and (3) integrating emerging optimizations such as multi-head latent attention \citep{deepseekai2024deepseekv2strongeconomicalefficient} into theoretical frameworks.

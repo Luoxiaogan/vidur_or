@@ -1,0 +1,210 @@
+\section{Fluid Dynamics and Equilibrium}\label{sec:fluid}
+To design an effective scheduling policy for LLM inference, we first establish a theoretical benchmark representing the system's optimal performance under idealized, steady-state conditions. This section develops a \textit{fluid model} that approximates the stochastic, discrete prompt arrivals and processing with continuous, deterministic flows, where the arrivals and outputs are in equilibrium. 
+
+Fluid models are widely used in operations research to study online scheduling, queueing systems, resource allocation by transforming random, discrete events into continuous flows. In LLM inference, prompts arrive stochastically (following a Poisson process with rate \(\lambda_j\) for type \(j\)), and processing consumes significant GPU memory due to KV caches. A fluid model provides a tractable framework to analyze the system's equilibrium state, where prompt arrival rates balance completion rates and memory usage stabilizes. This benchmark quantifies the ideal throughput achievable under memory constraints.
+
+Consider a system processing prompts of types \(j \in \{1, \dots, m\}\), each arriving at rate \(\lambda_j\), with input length \(l_j\) (tokens processed in the prefill phase) and output length \(l_j'\) (tokens generated in the decode phase). We build this model by starting with a single type and extending to more general scenarios with multiple types of prompts.
+
+\subsection{Single-Type Fluid Model}
+We begin with a system handling prompts of a single type \(j\). Each prompt occupies memory based on its stage: \(l_j\) tokens in the prefill stage and \(l_j + k\) tokens in the \(k\)-th decode stage (\(k = 1, \dots, l_j'\)). And note that when the prompt is in the $l_j^\prime$-th decode stage, which means the prompt finishes the decoding, the memory of this prompt will be cleared on the GPU. In equilibrium, the steady-state number of active prompts is \(n_j^*\) (i.e. processing prompts in each batch of iteration). By allowing the prompt numbers to be a continuous number, we can, without loss of generality, assume that for each stage $k\in\{0,1,\dots,l_j'\}$, 
+% and since the prompts of stage $l_j^\prime$ are not in the batch, 
+there are exactly $n_j^*/(l_j'+1)$ prompts of stage $k$ in the batch, which not only simplifies the dynamics but provides the most balanced combinations of different stages' prompts in equilibrium. As a result, there are $n_j^*/(l_j'+1)$ prompts of type $j$ requiring memory of size $l_j+k$ during each LLM inference iteration, while the KV cache of prompts at stage $l_j'$ will be cleared after the iteration.  Additionally, we assume that $\lambda_j d_0 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right) <1$, otherwise, the latency will grow to infinity.
+\begin{proposition}\label{prop:large_rate}
+When the condition  $
+\lambda_j d_0 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right) \geq 1
+$
+is satisfied, the system becomes unstable in the sense that, the expected average latency under any scheduling policy with deterministic arrival rate \( \lambda_j \) grows linearly with time. Formally,  
+$$
+\mathbb{E}[\textbf{Latency}^{(T,\pi)}] = \Omega(T) \quad \text{as} \quad T \to \infty.
+$$
+\end{proposition}
+To see intuition for this result, observe that completing a single prompt requires a total processing time of \(d_0 \sum_{k=0}^{l_j'} (l_j + k) = d_1 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right)\) for its key-value (KV) cache across all processing stages. Each iteration also incurs an additional fixed overhead time \(d_0\). The condition \(\lambda_j d_0 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right) \geq 1\) implies that the product of the prompt arrival rate \(\lambda_j\) and the processing time per prompt is at least 1, indicating that the system’s processing capacity is insufficient to keep pace with incoming prompts. As a result, the queue of pending prompts grows over time, causing the expected average latency to increase linearly with \(T\). Detailed proofs of this result are provided in Appendix \ref{appendix::proof of fluid lower bound}.
+
+% \arc{anyway, prove that when $n_j^*$ has not positive solution, then latency cannot be controlled. ,there is an instance such that $\ex{}{\text{Latency}^T}\to\infty$ as $T\to\infty.$}
+
+By direct calculation, the total memory usage  is given by:
+\begin{equation}
+    M_j^* = \frac{n_j^*}{l_j^{\prime}+1}\sum_{k=0}^{l_j^{\prime}}(l_j+k) = n_j^*\prn{l_j+\frac{l_j'}{2}}.
+\end{equation}
+% \[
+% M_j^* = n_j^* \left( \frac{l_j}{1 + l_j'} + \sum_{k=1}^{l_j'} \frac{l_j + k}{1 + l_j'} \right) = n_j^* \left( l_j + \frac{l_j' (l_j' + 1)}{2 (1 + l_j')} \right),
+% \]
+% $$ M_j^* = \frac{n_j^*}{l_j^{\prime}+1}\sum_{k=0}^{l_j^{\prime}}(l_j+k) = n_j^*\prn{l_j+\frac{l_j'}{2}}\,\text{ and }\,M_{jc}^*=\frac{n_j^*}{l_j^{\prime}+1}\sum_{k=1}^{l_j^{\prime}}(l_j+k) = \frac{l_j'n_j^*}{l_j'+1}\prn{l_j+\frac{l_j'}{2}}.$$
+% \gan{I think the total memory usage is 
+
+% }
+
+% With \(1 + l_j'\) stages per prompt, the rate of completions is \(\frac{n_j^*}{1 + l_j'}\). In equilibrium, the completion rate equals the arrival rate \(\lambda_j\). Therefore, we have
+% \[
+% \frac{n_j^*}{1 + l_j'} = \lambda_j \quad \implies \quad n_j^* = \lambda_j (1 + l_j').
+% \]
+% Substituting into the memory equation:
+% \[
+% M_j^* = \lambda_j (1 + l_j') \left( l_j + \frac{l_j'}{2} \right).
+% \]
+% Recall 
+While in equilibrium, the arrivals during each iteration should equal the number of completions, i.e. the number of prompts in stage $l_j'$. By our model assumption \eqref{eq:time_consump}, we have 
+$$ \underset{\text{Time per iteration}}{\underbrace{(d_0+d_1M_j^{*} )}}\lambda_j =\left(d_0+d_1 n_j^*\left( l_j +\frac{l_j^{\prime}}{2} \right) \right)\lambda_j= \frac{n_j^*}{l_j^{\prime}+1} $$
+Thus
+$$n_j^* = \frac{d_0\lambda_j(l_j^{\prime}+1)}{1-d_1\lambda_j(l_j^{\prime}+1)(l_j+\frac{l_j^{\prime}}{2})}.$$
+It follows that the equilibrium memory occupancy $M_j^*$ is given by
+\begin{equation}
+    \label{eq:memory_single}
+M_j^* = n_j^*\left( l_j+\frac{l_j^{\prime}}{2} \right) 
+=  \frac{d_0\lambda_j(l_j^{\prime}+1)\left( l_j+\frac{l_j^{\prime}}{2} \right) }{1-d_1\lambda_j(l_j^{\prime}+1)(l_j+\frac{l_j^{\prime}}{2})}
+\end{equation}
+% \begin{comment}
+% When the available memory is bigger than the equilibrium memory $M_j^*$, we can form a batch with a bigger  batch size. For example, each stage has $\frac{n_j^*}{l_j^\prime+1}+1$ prompts, and the memory $M_j^{+}$ is that
+% $$M_j^{+} = \left(\frac{n_j^*}{l_j^\prime+1}+1\right)\sum_{k=0}^{l_j^{\prime}}(l_j+k)=(n_j^*+l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right) = M_j^* + (l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right)  $$
+% So the arrival and completion ratio is that 
+% $$ 
+% \frac{\text{Arrival}}{\text{Completion}} 
+% = \frac{\left(d_0+d_1M_j^*+d_1 (l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right)\right)\lambda_j}{\frac{n_j^*}{l_j^\prime+1}+1} 
+% = \frac{n_j^*+d_1 \lambda_j(l_j^\prime+1)^2\left( l_j + \frac{l_j^\prime}{2} \right)}{n_j^*+l_j^\prime+1} < 1 $$
+% Where the last inequality comes from that $d_1 \lambda_j(l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right)<1$. Similarly, when the available memory is smaller than equilibrium memory $M_j^*$, we have to form a batch with a smaller batch size. For example, each stage has $\frac{n_j^*+1}{l_j^\prime} -1$ prompts, and the memory $M_j^{-}$ is that
+% $$
+% M_j^{-}
+% = \left( \frac{n_j^*}{l_j^\prime+1}-1 \right) \sum_{k=0}^{l_j^\prime}(l_j+k) = M_j^* - (l_j^\prime+1)\left(l_j + \frac{l_j^\prime}{2} \right)
+% $$
+% So the arrival and completion ratio is that 
+% $$
+% \frac{\text{Arrival}}{\text{Completion}} 
+% = \frac{n_j^* - d_1\lambda_j(l_j^\prime+1)^2\left( l_j + \frac{l_j^\prime}{2} \right) }{ n_j^* - (l_j^\prime+1)  }>1
+% $$
+% \end{comment}
+The average throughput at equilibrium is thereby the number of prompts in each batch divided by the time consumption for one iteration:
+\begin{equation}\label{eq:throughput_fluid}
+\throughput_j^* = \frac{n_j^*}{d_0+d_1n_j^*\prn{l_j+\frac{l_j'}{2}}},
+\end{equation}
+as each completed prompt generates \(l_j'\) tokens. This establishes the relationship between arrival rate, memory, and throughput for a single prompt type under equilibrium, where the arrivals equal the completions.
+
+% \gan{I should add more explanation. Why we introduce this class.}
+% Moreover, we define a class of scheduling policies \(\Pi\) that includes non-predictive policies without \textit{preemption}. Here, \textit{non-predictive} means the policy uses only the realized sample path up to the current time, without knowing future information. The term \textit{preemption} describes the action where the policy clears the memory used by an ongoing prompt request and re-queues it to the front of the waiting prompts, usually because of limited memory. Policies in \(\Pi\) avoid preemption because it causes problems. For instance, preemption interrupts the ongoing work, requiring the system to restart or reload data for that prompt, which takes extra time and uses more computing resources. This delay in finishing the preempted prompt also lowers the system’s overall efficiency by repeating tasks unnecessarily. As an example, a non-predictive policy that reserves memory of \(l_{\max} + l_{\max}'\) for each prompt—where \(l_{\max} + l_{\max}'\) is the maximum memory one prompt can need—avoids preemption by always having enough memory, making it a policy in \(\Pi\) (though in this way, it may utilize the memory inefficiently).
+% \gan{cite some example of scheduling policies without Preemption.}
+
+% \begin{proposition}\label{prop::online policy expected throughput upper bound}
+% Suppose the memory capacity is not smaller than the equilibrium memory capacity $M^*_j$, consider the expected upper bound of any online policy $c\in \Pi$ in the stochastic scenario, compared with the throughput of the steady system, we have that
+% $$\ex{}{\throughput^{c}(T)}\leq \throughput^*= \lambda_j(l_j^\prime+1)$$
+% \end{proposition}
+% So for any policy without \textbf{Preemption}, the expectation of average throughput is bounded by $\throughput^*$. Detailed proofs are provided in Appendix~\ref{appendix::proof of online policy expected throughput upper bound}
+% \begin{comment}The time cost for processing $K\cdot n_j^*$ prompts of type $j$ of static system is $Kd_0+d_{c}KM^*_j$. Under any online policy $c\in \Pi$, the time cost is $\tilde{N}\cdot d_0+d_{c}KM^*_j$ under stochastic scenario, where $\tilde{N}$ is the number of batch iterations. The second term is the same since this term only corresponds to the total memory of all the processed prompts, which is $KM_j^*$. For the first term, it only corresponds to the number of batch iterations to complete the inference of all the prompts. Since the accumulated total memory usage is $KM_j^*$, and the biggest batch size is $M_j^*$, we can easily derive that $\tilde{N}\geq K$. So we have that
+% $$\ex{}{\text{Average Throughput}^{c}(T)}\leq \text{Average Throughput}^*= \lambda_j(l_j^\prime+1) $$
+% \end{comment}
+
+
+
+
+\subsection{Multiple-Type Fluid Model}
+We now extend our fluid dynamics in equilibrium to multiple types \(j \in \{1, \dots, m\}\), each with arrival rate \(\lambda_j\), output length of \(l_j\) after prefill phase, and additionally \(l_j'\) output length after decode phase. We assume that the system will maintain \(n_j^*\) active prompts per type in equilibrium. We can calculate the total memory utilization in equilibrium following the derivation of \eqref{eq:memory_single}:
+\begin{equation}
+\label{eq:memory_multi1}
+    M^* = \sum_{j=1}^m n_j^*\left(l_j + \frac{l_j^\prime}{2}\right)
+\end{equation}
+with:
+$$ \underset{\text{Time per iteration}}{\underbrace{(d_0+d_1M^*)}}\lambda_j = n_j^*, \;\forall j \in \{1,2,\cdots,m\}$$
+since the arrivals during each iteration should equal the number of completions in equilibrium. Substituting the above equations into \eqref{eq:memory_multi1} yields
+\begin{equation}
+\label{eq:memory_multi2}
+M^* = \frac{d_0\sum_{j=1}^m \lambda_j (l_j^{\prime}+1)\left(l_j + \frac{l_j^{\prime}}{2} \right)}{1-d_1\sum_{j=1}^m \lambda_j (l_j^{\prime}+1)\left(l_j + \frac{l_j^{\prime}}{2} \right) } 
+\end{equation}
+Aggregating the results above, we get the processing time per iteration in equilibrium:
+\begin{equation}    \label{eq:time_fluid}
+    \begin{aligned}
+            &\text{Processing Time}^* \\&= d_0 + d_1 M^*  \\
+                  &= \frac{d_0}{1 - d_1 \sum_{j=1}^m \lambda_j (l_j' + 1)(l_j + \tfrac{1}{2}l_j')},
+    \end{aligned}
+\end{equation}
+as well as the average throughput:
+\begin{equation}
+    \label{throughput_fluid_multiple}
+    \begin{aligned}
+        &\throughput^* 
+        \\&= \frac{1}{d_0}\left(\sum_{j=1}^n n_j^*\right) \cdot \left(1 - \sum_{j=1}^m \lambda_j (l_j^{\prime}+1)\left(l_j + \frac{l_j^{\prime}}{2} \right)\right) \\
+        &= \sum_{j=1}^m \lambda_j(l_j^{\prime}+1)
+    \end{aligned}
+\end{equation}
+% \begin{equation}
+%             \throughput^* 
+%         = \frac{1}{d_0}\left(\sum_{j=1}^n n_j^*\right) \cdot \left(1 - \sum_{j=1}^m \lambda_j (l_j^{\prime}+1)\left(l_j + \frac{l_j^{\prime}}{2} \right)\right) 
+%         = \sum_{j=1}^m \lambda_j(l_j^{\prime}+1)
+% \end{equation}
+The equilibrium throughput serves as a benchmark for evaluating the theoretical performance of any non-predictive policy within the policy class \(\Pi\). The following proposition demonstrates that the expected throughput of any policy in \(\Pi\) is bounded above by the equilibrium throughput \(\throughput^*\), as specified in Equation \eqref{throughput_fluid_multiple}. Detailed proofs are presented in Appendix~\ref{appendix::proof online policy expected throughput upper bound, multiple type}.
+\begin{proposition}\label{prop::online policy expected throughput upper bound, multiple type}
+Suppose that the memory capacity satisfies \(C \geq M^*\), where \(M^*\) denotes the equilibrium memory given in \eqref{eq:memory_multi2}. Then, for any online policy \(\pi \in \Pi\), the expected throughput satisfies
+\[
+\mathbb{E}[\throughput^{(T,\pi)}] \leq \throughput^*,
+\]
+where \(\throughput^*\) is given in \eqref{throughput_fluid_multiple}.
+\end{proposition}
+Thus, for any non-predictive policy without preemption, the expected average throughput cannot exceed \(\throughput^*\). Additionally, the equilibrium throughput, expressed as \(\sum_{j=1}^m \lambda_j (l_j' + 1)\), characterizes the system’s optimal steady-state performance under the memory constraint \(C\). This benchmark not only guides the design of scheduling policies in subsequent sections but also facilitates the evaluation of how closely practical strategies can approximate this optimal performance under stochastic conditions.
+
+
+
+
+\begin{comment}Similar to the discussion in the single-type fluid model, when the available memory is larger than the equilibrium memory \( M^* \), we can form a batch with a larger batch size, resulting in \(\text{Arrival} < \text{Completion}\). For example, consider the type \( j \) with the smallest value of \((l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)\). Without loss of generality, we set \( j=1 \) and the number of prompts of each stage of type $j=1$ is that $\frac{n_1^*}{l_1^\prime+1}+1$. And the memory \( M^+ \) is defined as
+$$M^+ = M^* + (l_1^\prime+1)(l_1+\frac{l_1^\prime}{2})$$
+So the arrival and completion ratio is that:
+\begin{align*}
+\frac{ \text{Arrival}}{ \text{Completion} }=& 
+\frac{\left(d_0+d_1M^*+d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\right)\sum_{j=1}^m \lambda_j}{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} +1}\\
+=&\frac{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} +d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\sum_{j=1}^m\lambda_j }{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} +1}<1
+\end{align*}
+The last inequality comes from that: 
+$$ d_1(l_1^\prime+1)\left(l_1+\frac{l_1^\prime}{2}\right)\sum_{j=1}^m \lambda_j  \leq d_1\sum_{j=1}^m \lambda_j (l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)<1$$
+Similarly, when the the available memory is smaller than the equilibrium memory $M^*$, we can form a batch with a smaller batch size, resulting in \(\text{Arrival} > \text{Completion}\). For example, consider the number of prompts of each stage of type \( j=1 \) is that $\frac{n_1^*}{l_1^\prime+1}-1$. And the memory $M^-$ is given by
+$$M^- = M^* - (l_1^\prime+1)(l_1+\frac{l_1^\prime}{2})$$
+So the arrival and completion ratio is that:
+\begin{align*}
+\frac{ \text{Arrival}}{ \text{Completion} }=& 
+\frac{\left(d_0+d_1M^*-d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\right)\sum_{j=1}^m \lambda_j}{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} -1}\\
+=&\frac{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} -d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\sum_{j=1}^m\lambda_j }{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} -1}>1
+\end{align*}
+\end{comment}
+
+% with:
+% \[
+% n_j^* = \lambda_j (1 + l_j') \quad \forall j.
+% \]
+% Thus:
+% \[
+% M^* = \sum_{j=1}^m \lambda_j (1 + l_j') \left( l_j + \frac{l_j' + 1}{2} \right)= C,
+% \]
+% where the last equality holds since the system dynamics are in equilibrium. Aggregating the results above, we get:
+% \[
+% \throughput^* = \frac{\sum_{j=1}^mn_j^*}{\sum_{j=1}^m\brk{d_0+d_1n_j^*\prn{l_j+\frac{l_j'}{2}}}}.
+% \]
+
+% Now we step We refine the fluid model to incorporate this, defining:
+% \begin{itemize}
+%     \item \(n_{j, \text{prefill}}^*\): steady-state number of type-\(j\) prompts in the prefill stage per batch.
+%     \item \(n_{j, \text{decode}}^*\): steady-state number of type-\(j\) prompts in decode stages per batch.
+% \end{itemize}
+
+% The \textit{iteration time} \(\tau^*\), the duration to process one batch, is:
+% \[
+% \tau^* = \max \left\{ d_f \cdot \max_j \{ l_j \}, \; d_1 \cdot \sum_{j=1}^m n_{j, \text{decode}}^* \left( l_j + \frac{l_j' + 1}{2} \right) \right\},
+% \]
+% where \(d_f\) and \(d_1\) are prefill and decode processing times per token, and \(\frac{l_j' + 1}{2}\) approximates the average decode-stage memory.
+
+% \textbf{Equilibrium Conditions}: The batch processing rate matches arrivals:
+% \[
+% \frac{n_{j, \text{prefill}}^*}{\tau^*} = \lambda_j \quad \text{and} \quad \frac{n_{j, \text{decode}}^*}{\tau^*} = \lambda_j l_j' \quad \forall j,
+% \]
+% reflecting one prefill and \(l_j'\) decode iterations per prompt. Memory must satisfy:
+% \[
+% \sum_{j=1}^m \left( n_{j, \text{prefill}}^* l_j + n_{j, \text{decode}}^* \left( l_j + \frac{l_j' + 1}{2} \right) \right) \leq C,
+% \]
+% where \(C\) is the GPU memory capacity.
+
+% \textbf{Throughput}: The equilibrium throughput remains:
+% \[
+% \throughput^* = \sum_{j=1}^m \lambda_j l_j',
+% \]
+% consistent with token generation rates.
+
+% This refinement aligns the model with practical constraints, assuming a steady batch composition in equilibrium.
+
+% \subsection{Equilibrium Throughput as a Benchmark}
+
+
+% \arc{Add details on : 1. overloaded system and underloaded system 2. Lemma on upper bound of fluid throughput over all online non-preemptive policy $\Pi$. 3. Check the calculation.}

@@ -1,0 +1,98 @@
+\documentclass[twocolumn]{article}
+
+\usepackage[UTF8]{ctex}      % 如果不需要中文可以去掉
+\usepackage{minted}
+
+% 全局设置 minted，防止出栏
+\setminted{
+  breaklines,
+  breakanywhere,        % 关键：允许在任意位置断行
+  breaksymbolleft={},
+  breaksymbolright={},
+  fontsize=\small       % 字体略小一点，视觉上更协调
+}
+
+\setlength{\columnsep}{15pt} % 两栏之间的间距，可自行调整
+
+\begin{document}
+
+\begin{minted}{json}
+"file_operations_reader": {
+    "name": "file_operations_reader",
+    "description": "This tool is specifically designed to read and retrieve data from files.",
+    "parameters": [
+      {
+        "name": "source",
+        "type": "string",
+        "description": "Source location or identifier",
+        "required": true,
+        "default": null,
+        "constraints": {}
+      },
+      {
+        "name": "options",
+        "type": "object",
+        "description": "Additional options",
+        "required": false,
+        "default": {},
+        "constraints": {}
+      }
+    ],
+    "returns": [
+      {
+        "name": "success",
+        "type": "boolean",
+        "description": "Whether operation succeeded"
+      },
+      {
+        "name": "data",
+        "type": "object",
+        "description": "Retrieved or parsed data"
+      },
+      {
+        "name": "metadata",
+        "type": "object",
+        "description": "Operation metadata"
+      }
+    ],
+    "errors": [
+      {
+        "code": "INVALID_INPUT",
+        "description": "Input validation failed"
+      },
+      {
+        "code": "OPERATION_FAILED",
+        "description": "Operation could not be completed"
+      },
+      {
+        "code": "TIMEOUT",
+        "description": "Operation timed out"
+      },
+      {
+        "code": "FILE_NOT_FOUND",
+        "description": "Specified file not found"
+      },
+      {
+        "code": "PERMISSION_DENIED",
+        "description": "Insufficient permissions"
+      }
+    ],
+    "dependencies": [],
+    "dependency_metadata": {
+      "level": 0,
+      "execution_order": 0,
+      "category": "file_operations"
+    },
+    "metadata": {
+      "category": "file_operations",
+      "operation": "reader",
+      "version": "1.0.0",
+      "created_at": "2025-06-27T17:38:31.057340",
+      "dependency_level": 0,
+      "execution_order": 0
+    },
+    "canonical_name": "file_operations_reader"
+},
+\end{minted}
+
+\end{document}

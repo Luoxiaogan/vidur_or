@@ -1,0 +1,271 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% COMPLETE LATEX FILE WITH (i),(ii),(iii),(iv), CORRECTED DEFINITIONS,
+%% DETAILED GEOMETRIC SETUP (INNER PRODUCT, COVARIANT DERIVATIVE, ETC.),
+%% MANIFOLD EXTENSION OF SAHA-TEWARI LEMMA 4,
+%% AND NO DELETIONS FROM PREVIOUS PROOF
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+% \input{command.tex}
+% Use ICML 2025 style
+% \usepackage[accepted]{icml2025}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% RECOMMENDED PACKAGES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \OneAndAHalfSpacedXI % current default line spacing
+% \documentclass[mnsc, blindrev]{informs3} % current default for manuscript submission
+
+% \DoubleSpacedXI % Made default 4/4/2014 at request
+% \OneAndAHalfSpacedXI
+\usepackage{graphicx}
+%\usepackage{graphicx}     % Required for including images
+%\usepackage{caption}      % Required for customizing captions
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amssymb}
+\allowdisplaybreaks
+\usepackage{parskip}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{subfigure}
+\usepackage{comment}
+\usepackage{subcaption}
+\usepackage[inline]{showlabels}
+% \usepackage{algorithm}
+% \usepackage{algorithmicx}
+% \usepackage{algpseudocode}
+% \let\footnote=\endnote
+
+
+\let\enotesize=\normalsize
+\def\notesname{Endnotes}%
+\def\makeenmark{$^{\theenmark}$}
+\def\enoteformat{\rightskip0pt\leftskip0pt\parindent=1.75em
+  \leavevmode\llap{\theenmark.\enskip}}
+
+% Private macros here (check that there is no clash with the style)
+
+% Natbib setup for author-year style
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ % \setlength{\bibsep}{0.8ex}
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+\newcommand{\note}[1]{{\color{blue} [Note: {#1}]}}
+
+\newcommand{\rev}{\color{black}}
+
+%% Setup of theorem styles. Outcomment only one.
+%% Preferred default is the first option.
+% \TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+%\TheoremsNumberedByChapter  % (Theorem 1.1, Lema 1.1, Theorem 1.2)
+% \ECRepeatTheorems
+\usepackage{bbm}
+% \usepackage[ruled, algo2e]{algorithm2e}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+
+\usepackage[unicode=true, bookmarks=false,
+breaklinks=false,pdfborder={0 0 1}]
+{hyperref} 
+
+
+\hypersetup{
+ colorlinks,citecolor=blue,filecolor=blue,linkcolor=blue,urlcolor=blue}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+
+\newcommand{\throughput}{\textbf{Thoughput}}
+\newcommand{\Latency}{\textbf{Latency}}
+\newcommand{\TTFT}{\textbf{TTFT}}
+
+% \setstretch{1.5}
+
+\input{command.tex}
+
+% Margins
+% \usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+% \usepackage[table]{xcolor}
+% \usepackage[table,usenames,dvipsnames]{xcolor}
+
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+\newcommand{\Hongyu}[1]{{\color{red} Hongyu: #1}}
+\newcommand{\Hengyu}[1]{{\color{green} Hengyu: #1}}
+
+\newtheorem{proposition}{Proposition}
+% \newtheorem{definition}{Definition}
+% % \newtheorem{property}{Property}
+% % \newtheorem{corollary}{Corollary}
+% \newtheorem{remark}{Remark}
+\newtheorem{proof}{Proof}
+% % \newtheorem{example}{Example}
+% \newtheorem{assumption}{Assumption}
+\newtheorem{Proposition}{Proposition}
+% \newtheorem{Definition}{Definition}
+% \newtheorem{Corollary}{Corollary}
+% \newtheorem{remark}{Remark}
+% \newtheorem{assumption}{Assumption}
+% \newtheorem{Condition}{Condition}
+% \newtheorem{condition}{Condition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+% \newtheorem{example}{Example}
+
+\newcommand*{\circled}[1]{\lower.7ex\hbox{\tikz\draw (0pt, 0pt)%
+    circle (.5em) node {\makebox[1em][c]{\small #1}};}}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} % Use Input in the format of Algorithm
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm
+\algnewcommand{\algorithmicand}{\textbf{and }}
+\algnewcommand{\algorithmicor}{\textbf{or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+  \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+      {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+      \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+      \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+      \fi
+      \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+  \end{center}
+  }
+
+\begin{document}
+\title{Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints}
+\author{Ruicheng Ao\thanks{R. Ao and D. Simchi-Levi are with the Institute of Data, System and Society at Massachusetts Institute of Technology; emails: {\tt\small \{aorc, dslevi\}@mit.edu}.}\\
+Massachusetts Institute of Technology \\
+\and
+Gan Luo\thanks{G. Luo is with School of Mathematical Sciences, Peking University, Beijing, China; email: {\tt\small luogan@stu.pku.edu.cn}.} \\
+Peking University \\
+\and David Simchi-Levi\footnotemark[1]\\
+Massachusetts Institute of Technology
+\and
+Xinshang Wang\thanks{X. Wang is with DAMO Acedamy, Alibaba US, Seattle, WA; email: {\tt\small xinshang.w@alibaba-inc.com}.} \\
+Alibaba Group \\
+}
+\maketitle
+% \twocolumn[
+% \icmltitle{Learning to Price with Resource Constraints: \\ From Full Information to Machine-Learned Prices}
+
+% % It is OKAY to include author information, even for blind
+% % submissions: the style file will automatically remove it for you
+% % unless you've provided the [accepted] option to the icml2025
+% % package.
+
+% % List of affiliations: The first argument should be a (short)
+% % identifier you will use later to specify author affiliations
+% % Academic affiliations should list Department, University, City, Region, Country
+% % Industry affiliations should list Company, City, Region, Country
+
+% % You can specify symbols, otherwise they are numbered in order.
+% % Ideally, you should not use this facility. Affiliations will be numbered
+% % in order of appearance and this is the preferred way.
+% %\icmlsetsymbol{equal}{*}
+
+% \begin{icmlauthorlist}
+% \icmlauthor{Ruicheng Ao}{comp}
+% \icmlauthor{Jiashuo Jiang}{yyy}
+% \icmlauthor{David Simchi-Levi}{comp}
+% %\icmlauthor{Firstname4 Lastname4}{sch}
+% %\icmlauthor{Firstname5 Lastname5}{yyy}
+% %\icmlauthor{Firstname6 Lastname6}{sch,yyy,comp}
+% %\icmlauthor{Firstname7 Lastname7}{comp}
+% %\icmlauthor{}{sch}
+% %\icmlauthor{Firstname8 Lastname8}{sch}
+% %\icmlauthor{Firstname8 Lastname8}{yyy,comp}
+% %\icmlauthor{}{sch}
+% %\icmlauthor{}{sch}
+% \end{icmlauthorlist}
+
+% \icmlaffiliation{yyy}{Department of Industrial Engineering and Decision Analytics, Hong Kong University of Science and Technology, Hong Kong, China}
+% \icmlaffiliation{comp}{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Massachusetts, United States}
+% %\icmlaffiliation{sch}{School of ZZZ, Institute of WWW, Location, Country}
+
+% \icmlcorrespondingauthor{Firstname1 Lastname1}{first1.last1@www.uk}
+% \icmlcorrespondingauthor{Firstname2 Lastname2}{first2.last2@www.uk}
+
+% % You may provide any keywords that you
+% % find helpful for describing your paper; these are used to populate
+% % the "keywords" metadata in the PDF but will not be shown in the document
+% \icmlkeywords{Online learning, dynamic pricing, resource constraint, informed price}
+
+% \vskip 0.3in
+% ]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+% \printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+%\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+\noindent\textbf{Keywords:} Large Lanugage Model, Key-value cache, Memory Constraint, Online scheduling
+
+\input{introduction}
+
+\input{model}
+
+\input{fluid}
+
+\input{known_type}
+
+\input{unknown_type}
+
+\input{numerical}
+
+\input{extension}
+
+\input{conclusion}
+
+\bibliographystyle{apalike}
+
+\bibliography{main.bib}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\appendix
+% \onecolumn
+\input{Appendix}
+
+\end{document}
+
+

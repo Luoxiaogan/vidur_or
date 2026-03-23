@@ -1,0 +1,1400 @@
+\documentclass[preprint]{article}
+
+% Loading the NeurIPS 2025 style file
+% \usepackage{neurips_2025}
+\usepackage[final]{neurips_2025}
+
+% Standard packages required by NeurIPS
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{subfigure}
+\usepackage{subcaption}
+\usepackage{enumitem}
+
+% Additional packages from ICML paper for compatibility
+\usepackage{amsmath}        % for mathematical typesetting
+\usepackage{amssymb}        % for additional math symbols
+\usepackage{mathtools}      % for advanced math typesetting
+\usepackage{amsthm}         % for theorem environments
+\usepackage[capitalize,noabbrev]{cleveref} % for cross-referencing
+\usepackage{graphicx}       % for figures (though images are commented out)
+\usepackage{bm}             % for bold math symbols
+\usepackage{parskip}        % for paragraph spacing
+\usepackage{setspace}       % for line spacing control
+\usepackage{algorithm}      % for algorithmic environment
+\usepackage{algorithmic}    % for algorithmic pseudocode
+% \usepackage{natbib}         % for bibliography
+\usepackage{bbm}            % for indicator functions
+\usepackage[ruled,algo2e]{algorithm2e} % for algorithm formatting
+\usepackage{tikz}           % for diagrams
+\usepackage{xparse}         % for advanced command definitions
+\usepackage[textsize=tiny]{todonotes} % for development notes
+\newcommand{\throughput}{\textbf{Thoughput}}
+\newcommand{\Latency}{\textbf{Latency}}
+\newcommand{\TTFT}{\textbf{TTFT}}
+
+% TikZ libraries
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{arrows.meta}
+
+% Configuring hyperref to match ICML style
+\hypersetup{
+  colorlinks,
+  citecolor=blue,
+  filecolor=blue,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% Theorem definitions from ICML paper
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}{Example}
+
+% Custom commands from ICML paper
+% Note: command.tex is not provided; include its content here or define commands inline
+% Placeholder for commands from command.tex
+\input{command.tex} % Uncomment and provide command.tex content if available
+% \newcommand{\prnbig}[1]{\left(#1\right)} % Example command; replace with actual commands
+\newcommand{\zjjt}{z_{jj'}(t)}
+\newcommand{\zjzt}{z_{j0}(t)}
+\newcommand{\djjkt}{d_{jj'k}(t)}
+\newcommand{\rjj}{r_{jj'}}
+\newcommand{\Vsemi}[2]{V_{{#1}}^{\mathsf{Semi},t}({#2})}
+\newcommand{\Vdlp}[1]{V_{{#1}}^{\mathsf{DLP},t}}
+\newcommand{\Voff}[2]{V_{{#1}}^{\mathsf{Off},t}({#2})}
+\newcommand{\Vonline}[3]{V_{{#1}}^{\mathsf{Online},\pi,{#2}}({#3})}
+\newcommand{\qjst}[1]{q_{j,#1}^{*,t}}
+\newcommand{\VI}{V^{\mathrm{Fluid}}}
+\newcommand{\dist}[1]{\mathsf{Dist}\prnbig{{#1}}}
+% \NewDocumentCommand{\regret}{O{} m}{\mathsf{Regret}^{#1}\prnbig{#2}}
+\newcommand{\regreth}[1]{\mathsf{Regret}_h\prnbig{{#1}\big\vert\mathcal F^T}}
+\newcommand{\Spi}[1]{S^{\pi,{#1}}}
+\newcommand{\gap}[2]{\mathsf{Gap}_{#1}\prnbig{\pi,{#2}}}
+
+% Title
+\title{Optimizing LLM Inference: Fluid-Based Online Scheduling under Memory Constraints}
+
+% Author block
+\author{%
+  Ruicheng Ao \\
+  Institute for Data, Systems, and Society \\
+  Massachusetts Institute of Technology \\
+  % Massachusetts, United States \\
+  \texttt{ao@mit.edu} \\
+  \And
+ Gan Luo \\
+  School of Mathematical Sciences \\
+  Peking University \\
+  % Beijing, China \\
+  \texttt{luogan@stu.pku.edu.cn} \\
+  \And
+  David Simchi-Levi \\
+  Institute for Data, Systems, and Society \\
+  Massachusetts Institute of Technology \\
+  % Massachusetts, United States \\
+  \texttt{dslevi@mit.edu} \\
+  \And
+    Xinshang Wang \\
+  Alibaba Group \\
+  \texttt{xinshang.w@alibaba-inc.com} \\
+}
+
+\begin{document}
+% \workshoptitle{MLxOR: Mathematical Foundations and Operational Integration of Machine Learning for Uncertainty-Aware Decision-Making}
+
+\maketitle
+\begin{abstract}
+Large Language Model (LLM) inference faces unique scheduling challenges due to the dynamically growing Key-Value (KV) cache during token generation, making traditional scheduling algorithms ineffective. We develop a fluid dynamics approximation to establish an optimal throughput benchmark and propose the WAIT (Waiting for Accumulated Inference Threshold) algorithm that achieves near-optimal performance with near-optimal throughput gap. For practical scenarios with unknown output lengths, we introduce Nested WAIT that maintains asymptotic optimality through hierarchical segmentation. Experiments on Llama-7B demonstrate 20-30\% throughput improvements over state-of-the-art systems like vLLM.
+\end{abstract}
+
+\section{Introduction}
+
+LLM inference presents a fundamental scheduling challenge: the Key-Value (KV) cache grows dynamically during token generation, with memory requirements increasing unpredictably from initial prompt processing (prefill) through autoregressive decoding. This dynamic memory growth invalidates classical scheduling approaches like Shortest Job First, as jobs with initially small memory footprints can expand to dominate GPU resources during execution.
+
+Current system-level solutions~\cite{kwon2023efficient,agrawal2023sarathi} employ engineering optimizations but lack theoretical foundations. Our work bridges operations research and machine learning by developing a queueing-theoretic framework for LLM inference scheduling. Unlike prior theoretical work that assumes known output lengths, we address the realistic setting where output lengths are unknown at arrival.
+
+\textbf{Contributions:} We make three key contributions:
+\begin{itemize}
+\item \textbf{Fluid benchmark:} We establish a fluid dynamics model that characterizes optimal throughput $\throughput^* = \sum_j \lambda_j(l_j'+1)$ under memory constraints, providing a theoretical performance bound.
+\item \textbf{WAIT algorithm:} For known output lengths, our threshold-based algorithm achieves near-optimal throughput with gap $O(1/T)$ under heavy traffic.
+\item \textbf{Nested WAIT:} For unknown output lengths, we develop a hierarchical segmentation approach that maintains asymptotic optimality while ``learning'' prompt types during execution.
+\end{itemize}
+
+Our algorithms achieve 20-30\% throughput improvements over production systems on real workloads, demonstrating that principled scheduling can substantially improve LLM serving efficiency. More detailed literature reviews and problem background can be found in Appendix \ref{sec:extended}
+
+\section{Model}
+
+We consider an LLM inference system processing prompts on a single GPU with memory capacity $C$. Prompts arrive stochastically as $m$ types, where type $j \in [m]$ has:
+\begin{itemize}[leftmargin=*,topsep=0pt,itemsep=0pt]
+\item Arrival rate $\lambda_j$ (Poisson process)
+\item Input length $l_j$ tokens (prefill phase)
+\item Output length $l_j'$ tokens (decode phase)
+\end{itemize}
+
+During inference, each prompt undergoes one prefill iteration followed by $l_j'$ decode iterations. A prompt at \textbf{stage $k$} ($k \in \{0,1,\ldots,l_j'\}$) has processed its input and generated $k$ output tokens, consuming memory $l_j + k$ for its KV cache.
+
+\textbf{Batching dynamics:} The GPU processes batches containing prompts at various stages. For a batch with $n_1$ prompts in prefill (lengths $k_1,\ldots,k_{n_1}$) and $n_2$ prompts in decode (current sizes $s_1,\ldots,s_{n_2}$), the iteration time is:
+\begin{equation}
+\tau = d_0 + d_1 \cdot \left( \sum_{i=1}^{n_1} k_i + \sum_{i=1}^{n_2} s_i \right)
+\end{equation}
+where $d_0$ is fixed overhead and $d_1$ is per-token memory cost. This linear model, validated experimentally, reflects memory-bound computation in attention mechanisms.
+
+\textbf{Optimization objective:} Maximize throughput subject to memory and latency constraints:
+\begin{align}
+\max_{\pi \in \Pi} \quad &\mathbb{E}[\throughput^{(T,\pi)}] \\
+\text{s.t.}\quad & \sum_{i \in B^t} (l_{j(i)} + k_i^t) \le C \quad \forall t \nonumber
+\end{align}
+where $\Pi$ denotes non-preemptive scheduling policies and $B^t$ is the batch at time $t$.
+
+\section{Fluid Dynamics and Benchmark}
+
+To establish a performance benchmark, we develop a fluid model where discrete stochastic arrivals are approximated by continuous deterministic flows. In equilibrium, the system maintains $n_j^*$ active prompts of type $j$, with exactly $n_j^*/(l_j'+1)$ prompts at each stage $k \in \{0,1,\ldots,l_j'\}$.
+
+\textbf{Equilibrium analysis:} The total memory usage for type $j$ is:
+\begin{equation}
+M_j^* = n_j^* \left(l_j + \frac{l_j'}{2}\right)
+\end{equation}
+
+In steady state, arrivals equal completions during each iteration:
+\begin{equation}
+(d_0 + d_1 M^*)\lambda_j = \frac{n_j^*}{l_j'+1}
+\end{equation}
+
+Solving this system yields the equilibrium memory:
+\begin{equation}\label{eq:memory_wait}
+M^* = \frac{d_0\sum_{j=1}^m \lambda_j(l_j'+1)(l_j + \frac{l_j'}{2})}{1 - d_1\sum_{j=1}^m \lambda_j(l_j'+1)(l_j + \frac{l_j'}{2})}
+\end{equation}
+
+The optimal throughput benchmark is:
+\begin{equation}
+\throughput^* = \sum_{j=1}^m \lambda_j(l_j'+1)
+\end{equation}
+
+\textbf{Key insight:} This fluid benchmark represents the maximum achievable throughput for any non-preemptive policy. We prove that $\mathbb{E}[\throughput^{(T,\pi)}] \leq \throughput^*$ for all policies $\pi \in \Pi$, establishing this as the fundamental performance limit for LLM inference scheduling.
+
+\section{WAIT Algorithm for Known Output Lengths}
+
+The WAIT (Waiting for Accumulated Inference Threshold) algorithm uses threshold-based batching to approach fluid equilibrium. For each prompt type $j$, we set threshold $n_j$ and process type $j$ only when at least $n_j$ prompts are waiting at stage 0 (prefill).
+
+\begin{algorithm}[h]
+\caption{WAIT Algorithm}
+\begin{algorithmic}[1]\label{alg:wait}
+\STATE Initialize inventories $n_{jk} = 0$ for all types $j$, stages $k$
+\WHILE{true}
+    \STATE Wait for arrivals or batch completion
+    \FOR{each type $j$ with $n_{j0} \geq n_j$}
+        \STATE Add $\min\{n_j, n_{jk}\}$ prompts at each stage $k$ to batch
+    \ENDFOR
+    \IF{batch is non-empty}
+        \STATE Process batch and update inventories
+    \ENDIF
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Threshold selection:} Choose $n_j$ satisfying:
+\begin{equation}
+\Delta T(n_1,\ldots,n_m) := d_0 + d_1\sum_j n_j(l_j'+1)(l_j+\frac{l_j'}{2}) < \frac{n_j}{\lambda_j}
+\end{equation}
+
+This ensures arrivals during processing don't exceed completions, maintaining stability.
+
+\begin{theorem}[WAIT Optimality]\label{thm:wait_heavy_traffic}
+Under heavy traffic scaling with arrival rates $\lambda_j^{(\zeta)} = \zeta\lambda_j$, suppose the total memory $M>M^*$, where $M^*$ is given in \eqref{eq:memory_wait}, WAIT achieves:
+\begin{align}
+\throughput^* - \mathbb{E}[\throughput^{(\zeta,\pi)}] &= O((\zeta T)^{-1}) \\
+\mathbb{E}[\text{Latency}^{(\zeta,\pi)}] &= O(1)
+\end{align}
+\end{theorem}
+
+The proof uses coupling arguments from queueing theory, constructing a dominant process to bound performance gaps. WAIT achieves the optimal $O(1/T)$ convergence rate, matching theoretical lower bounds.
+
+\section{Nested WAIT for Unknown Output Lengths}
+
+Real-world LLM inference faces unknown output lengths at arrival. Nested WAIT addresses this by organizing processing into $m$ segments corresponding to potential output lengths $l_1' < l_2' < \ldots < l_m'$.
+
+\textbf{Key idea:} Prompts become distinguishable as they progress through decoding. Initially, all prompts enter segment 1 (stages 0 to $l_1'$). After $l_1'$ iterations, type-1 prompts complete while others advance to segment 2, revealing their true types progressively.
+
+\textbf{Segment dynamics:}
+\begin{itemize}
+\item Segment $i$ contains prompts at stages $\{l_{i-1}'+1, \ldots, l_i'\}$
+\item Arrival rate for segment $i$: $\sum_{j=i}^m \lambda_j$ 
+\item Threshold $n_i$ triggers processing when segment $i$ has sufficient prompts
+\end{itemize}
+
+\begin{algorithm}[h]
+\caption{Nested WAIT Algorithm}
+\begin{algorithmic}[1]\label{alg:nested_wait}
+\STATE Initialize segment inventories, thresholds $[n_1,\ldots,n_m]$
+\WHILE{true}
+    \STATE Find largest $i$ where all segments $1$ to $i$ meet thresholds
+    \IF{such $i$ exists}
+        \STATE Form batch from segments $1$ to $i$
+        \STATE Process batch, advance prompts to next segments
+    \ELSE
+        \STATE Wait for more arrivals
+    \ENDIF
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Nested WAIT Optimality]\label{thm:nested_wait_heavy_traffic}
+With thresholds satisfying $n_{i+1}/n_i > (\sum_{j=i+1}^m\lambda_j)/(\sum_{j=i}^m\lambda_j)$ and the total memory satisfying equation (9) in \cite{ao2025optimizingllminferencefluidguided}, Nested WAIT achieves:
+\[\throughput^* - \mathbb{E}[\throughput^{(\zeta,\pi)}] = O((\zeta T)^{-1})\]
+\end{theorem}
+
+Despite unknown types, Nested WAIT maintains the same asymptotic optimality as WAIT, demonstrating robustness to uncertainty.
+
+\section{Experiments}
+
+We evaluate (Nested) WAIT against vLLM~\cite{kwon2023efficient} and Sarathi~\cite{agrawal2023sarathi} using Llama-7B on A100 GPU (Microsoft Vidur simulator~\cite{agrawal2024vidur}).
+
+\textbf{Workloads:} (1) \textit{Synthetic:} For WAIT with known lengths, we test low demand (2 types, $l'=(10,20)$, $\lambda=(1000,1000)$) and high demand (3 types, $l'=(100,200,300)$, $\lambda=(6000,4000,2000)$). For Nested WAIT, we use 4 types with $l'=(20,40,80,160)$. (2) \textit{Real:} LMSYS-Chat-1M~\cite{zheng2023lmsys} with 50K prompts, grouped into 10 bins (50 tokens each) for Nested WAIT.
+
+\begin{figure}[h]
+\centering
+\vspace{-0.2cm}
+\begin{minipage}{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Experiments_pdf/test13_simulated_short_decode_bs=448_throughput.pdf}
+    \caption*{\scriptsize (a) WAIT: Throughput}
+\end{minipage}
+\begin{minipage}{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Experiments_pdf/test13_simulated_short_decode_bs=448_latency.pdf}
+    \caption*{\scriptsize (b) WAIT: Latency}
+\end{minipage}
+\begin{minipage}{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Experiments_pdf/test32_simulated_short_decode_bs=148_nested_real_not_trace_higher_rate_throughput.pdf}
+    \caption*{\scriptsize (c) Nested: Throughput}
+\end{minipage}
+\begin{minipage}{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Experiments_pdf/test32_simulated_short_decode_bs=148_nested_real_not_trace_higher_rate_latency.pdf}
+    \caption*{\scriptsize (d) Nested: Latency}
+\end{minipage}
+\vspace{-0.2cm}
+\caption{Throughput and latency comparison under high load: (a-b) WAIT on synthetic data, (c-d) Nested WAIT on real data.}
+\label{fig:results}
+\vspace{-0.3cm}
+\end{figure}
+
+\textbf{Results:} Figures (a) and (c) demonstrate consistent 20-30\% throughput improvements across both algorithms. WAIT achieves peak gains under high synthetic load, while Nested WAIT maintains similar performance on real workloads despite unknown output lengths. Latency plots (b,d) show the tradeoff: while our algorithms incur slightly higher latency at low loads due to batching, they achieve superior throughput-latency balance under heavy traffic—the target operating regime for production systems. The threshold-based approach effectively approaches theoretical fluid limits in practice.
+
+
+\section{Conclusion}
+
+We developed a theoretically grounded framework for LLM inference scheduling that bridges operations research and machine learning. Our fluid dynamics model establishes fundamental performance limits, while the (Nested) WAIT algorithms achieve near-optimal throughput with provable guarantees. The hierarchical segmentation in Nested WAIT elegantly handles unknown output lengths—a critical challenge in practical deployments—while maintaining asymptotic optimality.
+
+\textbf{Future directions:} Extensions to multi-GPU systems with pipeline parallelism, handling time-varying arrival patterns, and incorporating recent system optimizations like multi-head latent attention present promising research opportunities. Our framework provides a foundation for principled scheduling in increasingly complex LLM serving scenarios.
+
+% \section*{References}
+% {\small
+% \bibliographystyle{plain}
+% \bibliography{references}
+% }
+
+
+% \section{Impact statement}
+% This paper presents work whose goal is to advance the field of Machine Learning. There are some potential societal consequences of our work, none of which we feel being significant enough to be specifically highlighted here. Overall, our work advances the understanding of online resource allocation and dynamic pricing, providing both theoretical insights and practical algorithms that operate effectively under realistic constraints and varying information structures.
+
+% \section*{References}
+{
+\small
+\bibliography{main.bib}
+\bibliographystyle{plainnat}
+}
+
+\newpage
+\appendix
+
+\section{Extended Introduction and Related Work}\label{sec:extended}
+
+
+\subsection{LLM Inference Process: Detailed Description}
+
+Understanding the LLM inference process is essential for tackling its associated scheduling challenges. Figure~\ref{fig:intro_example_appendix} provides a step-by-step illustration of how a query is processed during inference.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\linewidth]{Experiments_pdf/fig_intro.pdf}
+    \caption{An example of LLM inference. The process begins with a user prompt (``Is apple a fruit?'') that undergoes prefill (Stage 0) to initialize the KV cache, followed by sequential decode stages (1-4) where output tokens are generated one at a time. The figure shows how memory usage grows during decoding and illustrates key metrics: TTFT (Time to First Token), Latency, and Throughput.}
+    \label{fig:intro_example_appendix}
+\end{figure}
+
+The process begins when a user submits a prompt—e.g., ``Is apple a fruit?''—which is then passed through several computational stages. The inference pipeline consists of two main phases:
+
+\textbf{Prefill Phase (stage 0):} Upon receiving the prompt, the model first tokenizes the input into a sequence of discrete units (e.g., ``Is'', ``apple'', ``a'', ``fruit'', ``?''). These tokens are then embedded and simultaneously processed in a single forward pass to compute the Key-Value (KV) cache, which stores intermediate representations (i.e., attention keys and values) for each token. These precomputed values are critical for enabling efficient reuse during subsequent decoding steps. This phase corresponds to Stage 0 in Figure~\ref{fig:intro_example_appendix}, where all prompt tokens are embedded and their KV representations are added to the cache.
+
+\textbf{Decode Phase (stages 1 to $l'$):} After the prefill phase, the model enters the decode phase, where it generates the output one token at a time. At each stage, the model queries the existing KV cache to compute the next token, appends the new token to the output sequence, and updates the KV cache with its key-value pair. For instance, the model might first generate ``Yes'' (Stage 1), then ``it'' (Stage 2), followed by ``is'' (Stage 3), and finally the End of Sequence (EOS) token (Stage 4). This progression is depicted in the lower part of Figure~\ref{fig:intro_example_appendix}. Each token generation step involves both reading from and writing to the KV cache, resulting in a memory footprint that grows linearly with the length of the generated sequence.
+
+Figure~\ref{fig:intro_example_appendix} also highlights key performance metrics in LLM inference:
+\begin{itemize}
+\item \textbf{Time-To-First-Token (TTFT)} measures the latency from user input to the first generated token.
+\item \textbf{Latency} refers to the total time required to complete the generation of all output tokens.
+\item \textbf{Throughput} captures the average number of tokens generated per unit time.
+\end{itemize}
+
+This inference structure, particularly the growing memory requirements and sequential decoding pattern, introduces fundamental constraints on scheduling and batching. Efficient scheduling must account for both prompt heterogeneity and KV cache dynamics in order to optimize latency and resource utilization.
+
+
+\subsection{Why Traditional Scheduling Fails for LLM Inference}
+
+The KV cache is essential for efficiency, as it prevents the model from recalculating the attention history for each new token. Without it, the computational cost would scale quadratically with the sequence length, making real-time inference infeasible. However, the expanding KV cache poses a significant scheduling challenge, as the memory footprint grows unpredictably during the decode phase. This variability, combined with stochastic prompt arrivals and differing response lengths, complicates resource allocation on hardware with finite capacity, such as GPUs. Exceeding memory limits can force the system to offload data to slower storage mediums, degrading performance and increasing latency.
+
+Scheduling LLM inference tasks involves grouping prompts into batches processed concurrently on a GPU, combining prefill and decode phases to optimize resource use. This process is constrained by GPU memory limits, as the KV cache grows with each generated token, restricting the number of active prompts. Traditional scheduling methods, such as Shortest Job First (SJF), assume fixed job sizes and known processing times, making them unsuitable for LLM inference where memory demands increase dynamically and output lengths are often unknown. 
+
+For example, consider two prompts: one with a short input but a long, unpredictable output (e.g., ``Summarize the history of artificial intelligence''), and another with a longer input but a short output (e.g., ``Is 5 a prime number?''). In a traditional setting, SJF would prioritize the second prompt, expecting its shorter processing time to minimize average wait times. However, in LLM inference, the first prompt's decode phase could generate hundreds of tokens, causing its KV cache to balloon over time and occupy significant memory, while the second prompt's quick decode phase releases resources almost immediately after a longer prefill. Prioritizing the second prompt might reduce initial latency, but the first prompt's prolonged memory usage could block other tasks, leading to GPU under-utilization and reduced throughput. 
+
+Beyond SJF, other traditional methods like priority scheduling falter as they prioritize prompts without accounting for the KV cache's unpredictable growth, potentially exhausting memory. While batching remains effective, it requires dynamic adaptation—e.g., adjusting batch sizes based on current memory usage—to accommodate the KV cache's expansion, unlike static batching in traditional settings. These characteristics—stochastic prompt arrivals, multi-phase processing, and unpredictable resource needs—render classical operations research approaches inadequate, necessitating tailored scheduling strategies that account for dynamic memory growth and phase-specific demands.
+
+\subsection{Recent Work on LLM Inference Scheduling}
+
+Recent system-level optimizations for LLM inference~\cite{yu2022orca, kwon2023efficient, agrawal2023sarathi, pope2023efficiently, deepseekai2024deepseekv2strongeconomicalefficient, patel2024splitwise, zhong2024distserve} focus on engineering solutions, such as batching and memory compression, but lack a rigorous mathematical foundation. 
+
+Notable theoretical contributions include:
+\begin{itemize}
+\item \cite{jaillet2025onlineschedulingllminference} models LLM inference as an online scheduling problem with KV cache constraints, developing an adapted shortest-job-first algorithm with near-optimal regret bounds, though it assumes known output lengths at arrival—a limitation for real-world scenarios.
+\item \cite{wang2025llm} optimizes serving with variable prefill and decode lengths through a stochastic optimization framework.
+\item \cite{chen2025adaptively} proposes robust optimization techniques to handle prediction uncertainty in LLM inference scheduling.
+\item \cite{li2025throughput} proposes a stochastic processing model showing that work-conserving scheduling algorithms achieve optimal throughput for both individual requests and multi-agent AI workloads.
+\end{itemize}
+
+In practice, output length predictions are imprecise or costly. For example, as shown in \cite{fu2025efficient}, high-accuracy prediction is sensitive to the bucket size of output lengths for classification. When the output length is unknown, the performance of algorithms may degenerate significantly and performance guarantees obtained in full knowledge scenarios no longer hold. To address this problem, we develop a fluid dynamics approximation to establish a tractable benchmark, providing insights for devising effective scheduling algorithms that can handle unknown output lengths while maintaining theoretical guarantees.
+
+\subsection{Detailed Contributions}
+
+This work contributes to LLM inference scheduling through the following:
+
+\textbf{Mathematical Model:} We develop a multi-stage online scheduling model for LLM inference, accounting for queueable prompts under memory constraints. To analyze performance and inform practical algorithms, we employ a fluid dynamics approximation based on queueing theory, which serves as both an analytical tool and a performance benchmark.
+
+\textbf{Asymptotically Optimal Algorithms:} We develop the WAIT algorithm for known output lengths as a warm-up and extend it to the Nested WAIT algorithm for unknown output lengths, both achieving asymptotic optimality under heavy traffic via novel waiting time and coupling analyses.
+
+\textbf{Experimental Validation:} We evaluate our algorithms on synthetic and real-world datasets, outperforming benchmarks like vLLM and Sarathi, which are widely recognized high-performance inference engines, in average throughput using Llama2-7B on a single A100 GPU.
+
+These contributions bridge operations research and machine learning, addressing analytical challenges in stochastic, memory-constrained online scheduling problems.
+
+\section{Extensions}\label{sec:extension}
+
+In this section, we present two extensions to our generalize our algorithms and theoretic analysis. First, we investigate the adaptation of Algorithm \ref{alg:nested_wait} to accommodate time-varying arrival rates. Second, we propose a generalized segment design for Algorithm \ref{alg:nested_wait}, extending beyond the existing $m$-segment parameterization. We establish that these extensions preserve comparable theoretical guarantees as in Theorem \ref{thm:nested_wait_heavy_traffic}.
+
+\subsection{Time-Varying Arrival Rates}\label{sec:time_varying}
+
+In this part, we analyze the asymptotic optimality of the Nested WAIT algorithm under time-varying arrival rates, denoted $\lambda_j^t$ for prompt type $j \in [m]$ at time $t \in [0, T]$. We assume that $\lambda_j^t$ are continuous functions of time, uniformly bounded by $\lambda_{\max} < \infty$. Define the accumulated arrivals of type $j$ over the interval $[t_1, t_2]$ as $\lambda_j[t_1, t_2] := \int_{t_1}^{t_2} \lambda_j^t \, dt$. Notice that $\Delta T_{[1,2,\dots,m]}(n_1,\cdots,n_m)$ represents the per-iteration time cost when processing exactly $n_i$ prompts at each stage in segment $i$, for all $i \in [m]$ ($n_i$ is the threshold defined in Algorithm \ref{alg:nested_wait}).
+
+For the Nested WAIT policy defined by $\pi = [n_1, \dots, n_m]$, we consider the following conditions for all $t\in [0, T]$, $0<\Delta t\leq \Delta T_{[1,2,\cdots,m]}(n_1,\cdots,n_m)$ and $i = 1, 2, \dots, m-1$.
+\begin{equation}
+\label{eq:nested_wait_thresholds_time_varying}
+\begin{aligned}
+        & \sum_{j=1}^m \lambda_j\big[t, t + \Delta t\big] \leq \sum_{j=1}^m \lambda_j\big[t, t +\Delta T_{[1,2,\cdots,m]}(n_1,\cdots,n_m)\big]< n_1, \\
+        & n_{i+1}/n_i > p_i[t,t+\Delta t],
+    % & n_{i+1} \sum_{j=i}^m \lambda_j\big[t, t + \Delta t \big]  > n_i \sum_{j=i+1}^m \lambda_j\big[t, t + \Delta t \big],.
+\end{aligned}
+\end{equation}
+where $p_i[t,t+\Delta t] = (\sum_{j=i+1}^m\lambda_j[t,t+\Delta t])/(\sum_{j=i}^m\lambda_j[t,t+\Delta t]).$
+
+% Analogous to Equation \eqref{eq:nested_wait_thresholds}, we consider thresholds satisfying:
+% \begin{equation}
+%     \label{eq:nested_wait_thresholds_time_varying_ineq}
+%     \Delta T_{[1,\dots,m]}(n_1,\dots,n_m) < \frac{n_1}{\sum_{j=1}^m \lambda_j(s)}, \quad 
+%     \frac{n_{i+1}}{\sum_{j=i+1}^m \lambda_j(s)} > \frac{n_i}{\sum_{j=i}^m \lambda_j(s)}, \quad \forall i = 1, 2, \dots, m-1, \; \forall s \in \mathbb{N}.
+% \end{equation}
+ We define that the total number of iterations over time horizon $[0,T]$ as $ S$. Therefore, we have $T\ge\sum_{s=1}^S \Delta T_{s\text{-th Batch}}\geq S\cdot \min \Delta T_{\text{Batch}}$, where $ \Delta T_{s\text{-th Batch}}$ denotes the time cost of the $s$-th iteration and $\Delta T_{\min}=\min_s\{\Delta T_{\text{Batch}}\}$.
+We now present the following result that extends Theorem \ref{thm:nested_wait_heavy_traffic}.
+
+\begin{theorem}
+\label{thm:nested_wait_heavy_traffic_time_varying}
+Suppose the thresholds $\pi = [n_1, \dots, n_m]$ satisfy \eqref{eq:nested_wait_thresholds_time_varying}, and the memory $M^{(\zeta,\pi)}$ fulfills:
+\[
+\begin{aligned}
+M^{(\zeta,\pi)}
+&\geq M^{\pi} + \sum_{j=2}^m (l + l_{j-1}') \left(n_j + \theta_j^{-1} \ln\!\left( \tfrac{m \zeta S}{\delta} \right)\right) \\
+&= O\!\left( 2M^\pi + \sum_{j=1}^m \theta_j^{-1}  (l + l_{j-1}') \ln\!\left( \tfrac{m \zeta S}{\delta} \right) \right),
+\end{aligned}
+\]
+where $\theta_j$ is given in (\ref{eq::eq of theta, time varying}) with the lower bound in Equation (\ref{eq::theta lower bound}). Then, the following asymptotic bounds hold:
+$$
+    \begin{aligned}
+        &\throughput^* - \mathbb{E}\left[ \throughput^{(\zeta, \pi)} \right] 
+   = O\left( (\zeta T)^{-1} \right), \\
+&\mathbb{E}\left[ \Latency^{(\zeta, \pi)} \right], \,\mathbb{E}\left[ \TTFT^{(\zeta, \pi)} \right] = O(1).
+    \end{aligned}
+$$
+Additionally, the memory usage remains below $M^{\zeta,\pi}$ with probability at least $1 - \delta$ over the time hotizon $[0,T].$
+% total batch counts $s\in \{1,\cdots,S\}$ in time horizon $[0,T]$, bounded by $S \le T=\sum_{i=1}^S \Delta T_{i\text{-th Batch}}  /\min \Delta T_{\text{Batch}}$.
+\end{theorem}
+
+The proof constructs a coupled dominant stochastic process, extending the approach of Theorem \ref{thm:nested_wait_heavy_traffic} with adjustments for time-varying arrival rates. A detailed proof is provided in Appendix \ref{appendix:: proof of nested optimality, time varying.}.
+
+\subsection{Segment Design}
+
+In this subsection, we generalize the segment design in Algorithm \ref{alg:nested_wait}. We assume constant arrival rates, though the approach can be extended to time-varying rates as discussed earlier. Consider $m$ prompt types with decode lengths $l_1' < \cdots < l_m'$ and arrival rates $\lambda_1, \lambda_2, \cdots, \lambda_m$. Our objective is to merge these into $L$ segments, where $L \leq m$. For notational convenience, let $\Delta L:= m/L$. We partition the $m$ types into $L$ segments as follows: types $1$ to $\Delta L$, types $\Delta L+ 1$ to $2\Delta L$, $\dots$, types $(L-1)\Delta L+ 1$ to $m$.
+
+For each segment $i \in \{1, \dots, L\}$, the total arrival rate is defined as $\lambda_i' = \sum_{(i-1)\Delta L+1\le j\le i\Delta L} \lambda_j$. Additionally, we define $\lambda'(i_1 \to i_2) := \sum_{j=i_1}^{i_2} \lambda_j'$ for $1 \leq i_1 \leq i_2 \leq L$.
+
+Given a policy $\pi=[n_1,\dots,n_L]$ with threshold $n_i$ for the $i$-th segment in Algorithm \ref{alg:nested_wait}, we formulate a linear system:
+\begin{equation}          \label{eq:nested_wait_thresholds_L}
+    \begin{aligned}
+    &\Delta T_{[1:L]}(n_{1:L}) \leq \frac{n_1}{\sum_{j=1}^L \lambda_j'},  \\
+    &\frac{n_{i+1}}{n_i} > p_i, \ \forall i < L,
+    \end{aligned}
+\end{equation}
+where $p_i =\frac{\lambda'(i+1 \to L)}{\lambda'(i \to L)}$, $\Delta T_{[1,\dots,L]}(n_1,\dots,n_L) = d_0 + d_1 M^\pi(n_1, \dots, n_L)$, and the  memory $M^\pi$ running with $n_i$ at each stage in segment $i$ is given by:
+\[
+M^{\pi}(n_1, \dots, n_L) = \sum_{i=1}^L n_i \left( l + \frac{i}{2} \Delta L\right) \Delta L.
+\]
+
+ We define that the total number of iterations over time horizon $[0,T]$ as $ S$. Therefore, we have $T\ge\sum_{s=1}^S \Delta T_{s\text{-th Batch}}\geq S\cdot \min \Delta T_{\text{Batch}}$, where $ \Delta T_{s\text{-th Batch}}$ denotes the time cost of the $s$-th iteration and $\Delta T_{\min}=\min_s\{\Delta T_{\text{Batch}}\}$. We demonstrate that the Nested WAIT algorithm (Algorithm \ref{alg:nested_wait}) with $L$ segments and thresholds $[n_1, \dots, n_L]$ satisfying Equation \eqref{eq:nested_wait_thresholds_L} achieves asymptotic optimality under the heavy-traffic conditions.
+\begin{theorem}
+\label{thm:nested_wait_heavy_traffic, any segment}
+For any fixed number of segments $L$ and thresholds $\pi = [n_1, \dots, n_L]$ satisfying Equation \eqref{eq:nested_wait_thresholds_L}, if the memory capacity $M^{(\zeta, \pi)}$ satisfies:
+\begin{equation}
+    \label{eq:nested_wait_memory_L}
+    \begin{aligned}
+M^{(\zeta, \pi)} 
+&\geq M^\pi 
++ \sum_{j=2}^L (l + l_{j-1}') n_j 
++ \sum_{j=2}^L (l + l_{j-1}') \theta_j^{-1} 
+\ln\left( \frac{m \zeta S}{\delta} \right) \\
+&= O\biggl( 2M^\pi 
++ \sum_{j=1}^L (l + l_{j-1}') \theta_j^{-1}
+\ln\left( \frac{m \zeta S}{\delta} \right) \biggr),
+    \end{aligned}
+\end{equation}
+where $\theta_j$ is given by Equation (\ref{eq::eq of theta}) with lower bound $8(n_j-n_{j-1}p_j)/n_j..$
+% in Equation (\ref{eq::theta lower bound})
+, then the performance of Nested WAIT is guaranteed by:
+\[ 
+    \begin{aligned}
+        \throughput^* 
+- \mathbb{E}\left[ \throughput^{(\zeta, \pi)} \right] 
+&= O\left( (\zeta T)^{-1} \right), \\
+\mathbb{E}\left[ \Latency^{(\zeta, \pi)} \right] ,\,\mathbb{E}\left[ \TTFT^{(\zeta, \pi)} \right] 
+&= O(1).
+    \end{aligned}
+\]
+Moreover, memory is not exceeded with probability at least \( 1 - \delta \) over the total batch counts $s\in \{1,\cdots,S\}$ as well as the time horizon $t \in [0, T]$.
+% , where the total time horizon $T=\sum_{i=1}^S \Delta T_{i\text{-th Batch}}\geq S\cdot \min \Delta T_{\text{Batch}}$.
+\end{theorem}
+
+The proof follows a similar structure to that of Theorem \ref{thm:nested_wait_heavy_traffic}, substituting the original arrival rates $(\lambda_1, \dots, \lambda_m)$ with the clustered rates $(\lambda_1', \dots, \lambda_L')$ as in Appendix \ref{appendix::proof of nested_wait_heavy_traffic}. We omit here for simplicity.
+
+To show how the memory requirements in \eqref{eq:nested_wait_memory_L} varies with different model parameters, we utilize the dataset from \cite{zheng2023lmsys}, with $m = 500$ prompt types, decode lengths ranging from 1 to 500, and a fixed prefill length of 62. The distribution of prompt types is shown in Figure \ref{fig:lambda_list}, where arrival rates are set proportional to normalized frequencies.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/lambda_list.pdf}
+    \caption{Arrival rate construction from real data, with rates proportional to normalized frequencies.}
+    \label{fig:lambda_list}
+\end{figure}
+
+We analyze the three components of the memory bound in Equation \eqref{eq:nested_wait_memory_L}: (1) the peak batch memory usage $\sum_{j=1}^L n_j \left( l + \frac{j}{2} \Delta \right) \Delta$, (2) the queue length bound $\sum_{j=2}^L n_j (l + l_{j-1}')$, and (3) the high-probability queue length bound $\sum_{j=2}^L \theta_j^{-1} (l + l_{j-1}') \ln\left( \frac{(L - 1) (T + 1)}{\delta} \right)$.
+
+Simulations under varying total arrival rates, time horizons $T$, and confidence levels $\delta$ are presented in Figures \ref{fig:fixed_T_200_rate_50_delta_0.1_1e-5}, \ref{fig:fixed_T_200_rate_500_delta_0.1_1e-5}, and \ref{fig:fixed_delta_0.001_rate_50_T_20_2000}. These figures depict the memory usage proportions of the three terms across different segment numbers $L$, revealing that the overall memory demand is primarily driven by the first term (fluid equilibrium memory) and follows a U-shaped trend with respect to $L$, suggesting that moderate segment number can reduce waste of memory usage. Additionally, Nested WAIT effectively manages unknown prompt types with only a marginal increase in memory beyond the fluid equilibrium requirement. In practice, a moderate number of segments, such as $L = 10$ as used, is sufficient.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/total_rate=50,T=200.pdf}
+    \caption{Memory usage proportions under low arrival rate (total rate = 50, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
+    \label{fig:fixed_T_200_rate_50_delta_0.1_1e-5}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/total_rate=500,T=200.pdf}
+    \caption{Memory usage proportions under high arrival rate (total rate = 500, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
+    \label{fig:fixed_T_200_rate_500_delta_0.1_1e-5}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/total_rate=50,delta=0.001,T=20or2000.pdf}
+    \caption{Memory usage proportions with varying time horizons (total rate = 50, $\delta = 0.001$). Left: $T = 20$; Right: $T = 2000$.}
+    \label{fig:fixed_delta_0.001_rate_50_T_20_2000}
+\end{figure}
+
+% \subsection{Different prefill length}
+% For the analysis of Nested WAIT, we assume that the prefill lengths of different prompts are all $l$.
+
+
+
+% \subsection{Optimality under arbitrary segments}
+% \gan{Maybe this subsection should be put later.}
+
+
+% \input{extension}
+
+
+% \section{Proof of Propositions}
+
+% \subsection{Proof of Proposition~\ref{prop:large_rate}}\label{appendix::proof of fluid lower bound}
+% When $\lambda_jd_1l_j^{\prime}\left( l_j + \frac{l_j^\prime}{2} \right)\geq 1$, consider the number of prompts in a batch is $n_j$. If the equilibrium still holds, the number of prompts at stage $0 \to l_j^\prime-1$ is $n_j/l_j^\prime$, and the memory consumption of the batch is that
+% $$M_j = \frac{n_j}{l_j^\prime}\sum_{i=0}^{l_j^\prime-1}\left( l_j +i \right) = n_j \left(l_j + \frac{l_j^\prime-1}{2} \right)$$
+% Then the time to process the batch is that
+% $$\text{Processing Time}_j = d_0+d_1M_j=  
+%  d_0+d_1n_j \left(l_j + \frac{l_j^\prime-1}{2} \right)
+% $$
+% During the processing of the batch, the number of the arrival prompts is that
+% $$\text{Arrival}_j =\text{Processing Time}_j \cdot \lambda_j= 
+%  d_0\lambda_j+\lambda_jd_1n_j \left(l_j + \frac{l_j^\prime-1}{2} \right)$$
+% And the number of completion prompts is that
+% $$\text{Completion}_j = \frac{n_j}{l_j^\prime}$$
+% Estimating the gap gives that
+% $$\text{Arrival}_j - \text{Completion}_j  = d_0\lambda_j + \lambda_j d_1 n_j \left(l_j + \frac{l_j^\prime - 1}{2} \right) - \frac{n_j}{l_j^\prime} \geq d_0\lambda_j$$
+% Notice that this holds for all $n_j>0$, which means that the length of the queue corresponding to the batch iteration $N$ as well as to the time $T(N) = N \cdot \left(d_0+d_1n_j\left(l_j + \frac{l_j^\prime-1}{2}\right)\right)$ is that
+% $$\text{Queue Length}\left(T(N)\right) \geq d_0\lambda_j\cdot N$$
+% So the latency of the prompt arrived at $T(N)$ is at least 
+% $$\text{Latency}^{T(N)} \geq  \left(\frac{d_0\lambda_jN}{n_j\left(l_j + \frac{l_j^\prime-1}{2} \right)}+1\right)\cdot \left( 
+%  d_0+d_1n_j \left(l_j + \frac{l_j^\prime-1}{2} \right) \right)\to \infty,\;N\to \infty$$
+
+
+% \subsection{Proof of Proposition~\ref{prop::online policy expected throughput upper bound, multiple type}}\label{appendix::proof online policy expected throughput upper bound, multiple type}
+% We consider the multiple-type fluid model, and the calculation gives that
+% $$\Delta T = \frac{d_0}{ 1- d_1\sum_{j=1}^m \lambda_j(l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right) },\,n_j^* = \Delta T\cdot \lambda_j(l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right) ,\, M^* = \Delta T \cdot \sum_{j=1}^m \lambda_j(l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right),\,$$
+% Here, $\Delta T$ denotes the time of one iteration for batch consisting of exact $n_j^*/(l_j'+1)$ of type $j$ prompts at each stages ($0,1,\dots,l_j'$). Since in the steady system, the processing time of a batch is equal to the time cost to arrive as many prompts as the completion. Denote $\text{Average Arrival}_j^T$ as the average arrivals of type $j$ prompts over time horizon $[0,T].$ the So we have that
+% $$\sum_{j=1}^m\ex{}{ \text{Average Arrival}_j^T }\cdot l_j'=  \sum_{j=1}^m\text{Average Arrival}_j^T \cdot l_j'= \lambda_jl_j' = \throughput^* $$
+% In stochastic setting, the average throughput is not greater than
+% \[ 
+% \sum_{j=1}^m\text{Average Arrival}_j^T \cdot l_j'.
+% \]
+% By taking expectation of the total arrivals and taking average over time yields 
+% $$\ex{}{\throughput^{(\pi,T)}}\leq \ex{}{\sum_{j=1}^m\text{Average Arrival}_j^T\cdot l_j'}=\ex{}{\throughput^*}  $$
+
+
+
+% \subsection{Proof of Proposition~\ref{prop:lower_bound_FCFS}}\label{appendix::proof of lower bound of of FCFS}
+% We just need to give an example of prompt types where the FCFS meets the throughput gap of $\Omega(T)$.Consider there are two types of prompts, where prompts of type $1$ with $l_1=1, l_1^\prime=1, \lambda_1=1$ and prompts of type $1$ with $l_2=1, l_2^\prime=2, \lambda_2=1$. \\
+% Firstly, we compute the fluid model, and the total memory usage and equilibrium equations are given by
+% $$M = 1.5n_1+2n_2,\, d_0+d_1\cdot (1.5n_1+2n_2) = \frac{n_1}{2}=\frac{n_2}{3}$$
+% Thus
+% $$K = \frac{d_0}{1-9d_1},\, n_1 = 2K,\, n_2=3K,\, M=9K$$
+% where $K$ represents the time cost of the batch inference. Without loss of generality, we set $K=1$, then $n_1=2, \,n_2=3,\,M=9 $. \\
+% Secondly, we consider the stochastic case, where $X_i^{(t)}\overset{i.i.d}{\sim} P(1), i=1,2$. Assume that at time $t$, the system is in equilibrium, Equilibrium batch at time $t$:
+% \begin{itemize}
+%     \item Type $1$:
+%     \begin{itemize}
+%         \itemsep0em
+%         \item $1$ prompt in stage $0$, memory = $1$, just get prefilled
+%         \item $1$ prompt in stage $1$, memory = $2$, the memory will be cleared
+%     \end{itemize}
+%     \item Type $2$:
+%     \begin{itemize}
+%         \itemsep0em
+%         \item $1$ prompt in stage $0$, memory = $1$, just get prefilled
+%         \item $1$ prompt in stage $1$, memory = $2$
+%         \item $1$ prompt in stage $2$, memory = $3$, the memory will be cleared
+%     \end{itemize}
+% \end{itemize}
+% Then we consider the number of arriving prompts of each type $(X_1^{(t)}, X_2^{(t)})$. The combinations that will not lead memory to exceed $9$ in two batch iterations are $(0,0),\,(1,0),\,(0,1),\,(1,1),\,(2,0)$, so the probability of other combinations is 
+% $$p = 1 - \frac{1}{e^2}- \frac{1}{e^2}- \frac{1}{e^2}- \frac{1}{e^2}- \frac{1}{2e^2}=1- \frac{9}{2}e^{-2} \approx 0.391 $$
+% This means that even under optimal conditions where the system is in equilibrium at $t$, there is still a probability of $p = 0.391$ of memory overflow in $2$ time steps, which will lead to at least $1$ additional queue length of type $2$ in $2$ time steps. So the queue length of type $2$ at $t$ has a lower bound:
+% $$\text{Queue Length}_2(t) \geq 0.3t$$
+
+% \subsection{Proof of Proposition~\ref{prop:unknown_lower_bound}}\label{sec:proof_unknown_lower_bound}
+% We use the same example as in the proof of Proposition \ref{prop:lower_bound_FCFS}. Consider there are two types of prompts, where prompts of type $1$ with $l_1=1, l_1^\prime=1, \lambda_1=1$ and prompts of type $1$ with $l_2=1, l_2^\prime=2, \lambda_2=1$. \\
+% Firstly, we compute the fluid model, and the total memory usage and equilibrium equations are given by
+% $$M = 1.5n_1+2n_2,\, d_0+d_1\cdot (1.5n_1+2n_2) = \frac{n_1}{2}=\frac{n_2}{3}$$
+% Thus
+% $$K = \frac{d_0}{1-9d_1},\, n_1 = 2K,\, n_2=3K,\, M=9K$$
+% where $K$ represents the time cost of the batch inference. Without loss of generality, we set $K=1$, then $n_1=2, \,n_2=3,\,M=9 $. \\
+% Secondly, we consider the stochastic case, where $X_{(i)}^{t}\overset{i.i.d}{\sim} P(1), i=1,2$. Assume that at time $t$, the system is in equilibrium, Equilibrium batch at time $t$:
+% \begin{itemize}
+%     \item Type $1$:
+%     \begin{itemize}
+%         \itemsep0em
+%         \item $1$ prompt in stage $0$, memory = $1$, just get prefilled
+%         \item $1$ prompt in stage $1$, memory = $2$, the memory will be cleared
+%     \end{itemize}
+%     \item Type $2$:
+%     \begin{itemize}
+%         \itemsep0em
+%         \item $1$ prompt in stage $0$, memory = $1$, just get prefilled
+%         \item $1$ prompt in stage $1$, memory = $2$
+%         \item $1$ prompt in stage $2$, memory = $3$, the memory will be cleared
+%     \end{itemize}
+% \end{itemize}
+% Then we consider the number of arriving prompts of each type $(X_{(1)}^{t}, X_{(2)}^{t})$. We cannot distinguish the two types unless type 2 prompt enters stage $2$. Consider all possible combinations of one batch, one can prove with easy discussion that, for each possible batch, it either under-utilizes the memory (i.e. there are expected arrivals greater than the completions during the iteration), or will have positive constant probability at least $\rho>0$ of memory overflow (i.e. the total memory of output will exceed the memory capacity). Moreover, the throughput is counted only after the prompt is completed. Since the fluid throughput in equilibrium equals to the expected arrivals' output length in unit time, the throughput gap is at least $\Omega(\rho).$
+
+
+\section{Proof of Theorem~\ref{thm:wait_heavy_traffic}}\label{appexidx::proof of wait_heavy_traffic}
+First we consider the single-type case, and prove some useful lemmas.
+\subsubsection{Single-Type}
+
+First, consider the single-type scenario. For the booking limit policy, it can be inferred from the recursion that the waiting time is necessarily spent on awaiting the accumulation of sufficient prompts for prefill.
+\begin{lemma}\label{lemma::throughput gap, single}
+The number of incoming prompts $X^t$ at each time step $n$ follows a Poisson distribution with parameter $\lambda$. The service processes up $\lambda$ prompts at each time step when there are at least $\lambda$ prompts available. Let $W^t$ represent the number of prompts in the queue at time $t$, starting with $W^0=0$. The state transition rule is given by
+$$W^{t+1}=W^t+X^t-\lambda\cdot \mathbf{1}\{W^t+X^t\geq \lambda\}$$
+Define the total number of stuck time steps as $T_{\text{stuck}}$, which is also the total number of time steps of $W^t+X^t<\lambda$, and the following relationship holds
+$$\mathbb{E}[W^T]= \lambda\cdot\mathbb{E}[T_{\text{stuck}}].$$
+\end{lemma}
+Detailed proof is in Appendix~\ref{appendix_lemma::proof of throughput gap, single}. In order to estimate the expected upper bound, we need to construct a coupled process to dominate $W^t$.
+
+\begin{lemma}\label{lem:coupled_process, single}
+Define a new process $\{\tilde{W}^t\}$ as a coupled version of $\{W^t\}$ as follows:
+$$
+\tilde{W}^0 = 2\lambda, \quad \tilde{W}^{t+1} = \max\{ 2\lambda, \tilde{W}^t + X^t - \lambda \}.
+$$
+Then, we have $\tilde{W}^t \geq W^t + \lambda, \;\forall t\in \mathbb{N}$.
+\end{lemma}
+Detailed proof is in Appendix~\ref{appendix_lemma::proof of coupled_process, single}. Next, by Proposition 6.3 in \cite{asmussen2003applied}, we have that 
+\begin{lemma}
+    $$\tilde{W}^T=2\lambda+\max(S^T, S^T-S^1,\cdots,S^T-S^{T-1},0),\; S^k=\sum_{r=1}^k (X^r-\lambda) $$
+\end{lemma}
+Let $\xi^k = X^k-\lambda$, and notice that 
+$$\max(S^T, S^T-S^1,\cdots,S^T-S^{T-1},0)=\max_{1\leq k\leq T}(\sum_{r=k}^{T}\xi^r)^+\overset{d}{=}\max_{1\leq s\leq T}(\sum_{r=1}^{s}\eta^r)^+, \; \eta^r\overset{d}{=}X^1-\lambda$$
+So we have that $\tilde{W}^T \overset{d}{=}2\lambda+\max_{1\leq s\leq T}(\sum_{r=1}^{s}\eta^r)^+ $. 
+
+Since $\tilde{W}^T \geq \lambda^T$, we have $\mathbb{E}[W^T]\leq \mathbb{E}[\tilde{W}^T]-\lambda = \mathbb{E}[\max_{1\leq s\leq T}(\sum_{r=1}^{s}\eta^r)^+]+\lambda$. Let $Y^T = \max_{1\leq s\leq T}(\sum_{r=1}^{s}\eta^r)^+$, consider the expectation $\ex{}{Y^T}$.
+By Lemma 2 in \cite{strait1974maximum}, we get that
+\begin{lemma}\label{lem:Y_T}
+    $$\ex{}{Y^T}=\ex{}{\max_{1\leq s\leq T}(\sum_{r=1}^s\eta^r)^+}=\ex{}{\max_{1\leq k\leq T}(S^k)^+}=\sum_{k=1}^T \frac{1}{k}\ex{}{(S^k)^+}$$
+\end{lemma}
+Then we consider the $\mathbb{E}[(S^k)^+]$, and just use Cauchy's inequality
+$$\mathbb{E}[(S^k)^+] = \mathbb{E}[\max\{S^k, 0\}]
+    \leq \mathbb{E}[|S^k|] \leq \sqrt{\mathbb{E}[(S^k)^2]}= \sigma\sqrt{k} = \sqrt{\lambda k}
+    \Rightarrow \mathbb{E}[Y^T] \leq \sqrt{\lambda} \sum_{k=1}^T \frac{1}{\sqrt{k}} \sim \sqrt{\lambda T}
+$$
+So we have that 
+\begin{lemma}\label{lemma::throughput gap}
+    $$\mathbb{E}[W^T]-\lambda\leq \mathbb{E}[Y^T]\leq  \sqrt{\lambda} \sum_{k=1}^T \frac{1}{\sqrt{k}} \sim\sqrt{\lambda T},\; T\to \infty$$
+\end{lemma}
+Then consider the average throughput. In the deterministic scenario, the average throughput $\throughput^* = \lambda$. Thus, in the stochastic case, the expected gap between the average throughput $\throughput$ and $\throughput^*$ is given by $\frac{1}{T}\mathbb{E}[W^T]$.\\
+% In \textbf{Many-Server Heavy-Traffic} case, 
+% \begin{align*}
+%     \frac{1}{T^{\zeta}} \mathbb{E}[W^{T,\zeta}]
+%     &= \frac{\lambda^{\zeta} + (\lambda T)^{\zeta/2}}{T^{\zeta}} \\
+%     &= \frac{\zeta \lambda + \zeta \sqrt{\lambda T}}{\zeta T} \\
+%     &= \frac{\lambda + \sqrt{\lambda T}}{T} \to 0 \quad (T \to \infty)
+% \end{align*}
+In \textbf{Conventional Heavy-Traffic} case, 
+$$\frac{1}{T^{\zeta}}\mathbb{E}[W^{T,\zeta}]= \frac{\lambda^{\zeta}}{T^{\zeta}} + \frac{(\lambda T)^{\zeta/2}}{T^{\zeta}} = \left(\frac{\lambda}{T}\right)^{\!\zeta} + \lambda^{\zeta/2} T^{-\zeta/2} \to 0 \quad \text{as } \zeta \to \infty$$
+\subsubsection{Multiple-Type}
+
+When the memory constraint $C\geq M^*$, consider the WAIT policy $\pi$, which is defined by the $[n_1,\cdots,n_m]$, where $n_j$ represents the threshold of the number of prompts of type $j$ in each stage.
+
+Solving the linear system:
+$$d_0+d_1\sum_{j=1}^mn_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)\leq \frac{n_j}{\lambda_j},\,M^{\pi} = \sum_{j=1}^mn_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)\geq  M^{*}$$
+we obtain the policy class $\Pi$, each $\pi = [n_1,\cdots,n_m]\in \Pi$ with corresponding memory capacity $M^{\pi} \geq  M^*$.
+
+$\forall \pi \in \Pi$, when prompts of all $m$ types are in the same batch, $\text{Arrival}_j\leq \text{Completion}_j$. Indeed, when type $j$ is in the batch, no matter what the other types are in the batch, we have that $\text{Arrival}_j\leq \text{Completion}_j$. Specifically, when $M^\pi = M$, the policy is $\pi = [ \frac{n_1^*}{l_1^\prime+1},\,\cdots,\,\frac{n_m^*}{l_m^\prime+1} ]$. 
+
+Now we define some notations. Let $s$ denote the batch index, $J^s$ denote the types contained in the $s$-th batch, $s(J^s)$ denote the time at the start of the inference of the $s$-th batch and $e(J^s)$ denote the time at the end of the inference of the $s$-th batch. Note that $s(J^{s+1})-e(J^s)$ denotes the waiting time before $s+1$-th batch, this waiting condition only occurs when all $m$ types do not satisfy the threshold.
+
+At $s+1$-th batch, the state transition rule is given by
+$$W_{(j)}^{e(J^{s+1})}=W_{(j)}^{e(J^s)}+X_{(j)}^{s(J^{s+1})-e(J^{s})}+Y_{(j)}^{e(J^{s+1})-s(J^{s+1})}- n_j\cdot \mathbf{1}\{j\in J^{s+1}\} ,\,\forall j  = 1,\cdots,m$$
+where $X_{(j)}^{s(J^{s+1})-e(J^{s})}$ and $Y_{(j)}^{e(J^{s+1})-s(J^{s+1})}$ are independent with
+$$X_{(j)}^{s(J^{s+1})-e(J^{s})} \sim P(\lambda_j \cdot (s(J^{s+1})-e(J^{s}))),\,Y_{(j)}^{e(J^{s+1})-s(J^{s+1})} \sim P(\lambda_j \cdot (e(J^{s+1})-s(J^{s+1})))$$
+
+Since $s(J^{s+1})-e(J^{s})>0$ if and only if  when all $m$ types do not satisfy the threshold, so $\forall t \in [e(J^s), s(J^{s+1})]$, $W_{(j)}^{e(J^s)}+X^t_{(j)}\leq n_j,\, \forall j \in \{1,\cdots,m\}$. We will use this property to construct a coupled process to dominate this. 
+
+\begin{lemma}\label{lemma::multiple-type coupled dominace}
+Define a coupled process $\tilde{W}^t_{(j)}$ with continuous time:
+$$\tilde{W}_{(j)}^0=2n_j, \tilde{W}_{(j)}^{t+\Delta T_{[1,\cdots,m]}}= \max\{ 2n_j,\, \tilde{W}_{(j)}^t +X_{(j)}^{\Delta T_{[1,\cdots,m]}}-n_j \},\, X^{\Delta T_{[1,\cdots,m]}}_{(j)} \sim P(\lambda_j\cdot \Delta T_{[1,\cdots,m]}) $$
+We have that $\tilde{W}_t\geq W_t,\,\forall t\geq 0$
+\end{lemma}
+Detailed proof is in Appendix~\ref{appendix_lemma::proof of multiple-type coupled dominace}. For the coupled process $\tilde{W}^t_{(j)}$, since the processing time of a batch containing all $m$ types $\Delta T_{[1,\cdots,m]}$ is the same under fixed thresholds $[n_1,\cdots,n_m]$:
+$$\Delta T_{[1,\cdots,m]} =  d_0 + d_1 \cdot \sum_{j=1}^m n_j(l_j^\prime+1)\left( l_j+\frac{l_j^\prime}{2} \right) ,$$
+we can use batch index $s$ for simplicity. So the coupled process is equivalent to
+$$\tilde{W}^0_{(j)} = 2n_j,\, \tilde{W}^{s+1}_{(j)} = \max\{ 2n_j, \, \tilde{W}^s_{(j)}+X^s_{(j)} - n_j \}=\max\{ 2n_j, \, \tilde{W}^s_{(j)}+Y^s_{(j)} \},\, X^s_{(j)} \sim P(\lambda_j \cdot \Delta T_{[1,\cdots,m]})  $$
+
+1. When $ \Delta T_{[1,\cdots,m]} = \frac{n_j}{\lambda_j}$, we have that
+$$\lambda_j\cdot \Delta T = n_j\Rightarrow \ex{}{Y^s_{(j)}}=0.$$
+So by Lemma~\ref{lemma::throughput gap}, we have that
+$$\ex{}{W^S_{(j)}}\leq \ex{}{\tilde{W}^S_{(j)}}\leq \lambda_j + \sqrt{\lambda_j S}, $$
+
+% and Proposition~\ref{prop::simple random walk, tight bound} shows that this bound is tight.
+2. When $\Delta T_{[1,\cdots,m]} < \frac{n_j}{\lambda_j}$, the expectation $\ex{}{Y^s_{(j)}}<0$. The coupled process $\tilde{W}^s_{(j)}$ has a negative drift. Since
+$$\text{Var}(Y^s_{(j)} )= \text{Var}(X^s_{(j)} )  = \lambda_j \cdot \Delta T_{[1,\cdots,m]},\,
+\left| \ex{}{Y^s_{(j)}} \right| = n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}$$
+By Kingman, we have that
+$$\ex{}{W^S_{(j)}}\leq \ex{}{\tilde{W}^S_{(j)}}\leq 2n_j + \frac{\text{Var}(Y^s_{(j)} )}{2\left| \ex{}{Y^s_{(j)}} \right| } =2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\cdots,m]}}{2\cdot\left(n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}\right)}$$
+
+So when $C = M^*$, we have that $\pi = [\frac{n_1^*}{l_1^\prime+1},\,\cdots,\, \frac{n_m^*}{l_m^\prime+1}]$. This is a special case where all types satisfy the condition $\Delta T_{[1,\cdots,m]} = \frac{n_j}{\lambda_j}$. So with the union bound, we have the expected upper bound of the throughput gap to the $\text{Throughput}^*$ under the fluid system.
+$$\frac{1}{S}\sum_{j=1}^m \ex{}{W^S_{(j)}}\leq \frac{1}{S}\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\frac{1}{S}\lambda_j} $$
+% Note that Proposition~\ref{prop::online policy expected throughput upper bound, multiple type} shows that this bound is tight.
+In \textbf{Conventional Heavy-Traffic} case,
+$$\frac{1}{S^{\zeta }}\sum_{j=1}^m \lambda_j^{\zeta } +\sum_{j=1}^m \sqrt{\frac{1}{S^{\zeta }}\lambda_j^{\zeta }}  =\frac{1}{\zeta S}\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\frac{1}{\zeta S}\lambda_j} \to 0, \,\zeta \to \infty.$$
+With the expected end-to-end latency
+$$\frac{1}{S}\cdot\Delta T_{[1,\cdots,m]} \cdot \left(\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\lambda_j\cdot S} \right) \sim \Omega(\sqrt{\frac{1}{S}})$$
+
+When all $m$ types satisfy the condition $\Delta T_{[1,\cdots,m]} < \frac{n_j}{\lambda_j}$, the expected upper bound of the throughput gap is bounded:
+$$\frac{1}{S}\sum_{j=1}^m \ex{}{W^S_{(j)}}\leq \frac{1}{S}  \sum_{j=1}^m \left(2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\cdots,m]}}{2\cdot\left(n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}\right)}\right) $$
+with the bounded expected end-to-end latency
+$$ \Delta T_{[1,\cdots,m]} \cdot\frac{1}{S}\sum_{j=1}^m \ex{}{W^S_{(j)}}\leq \Delta T_{[1,\cdots,m]}\frac{1}{S}  \sum_{j=1}^m \left(2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\cdots,m]}}{2\cdot\left(n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}\right)}\right) \sim \Omega(\frac{1}{S})$$
+
+% \begin{comment}
+
+% \gan{above is new}
+
+% Next, we consider the scenario with multiple types of prompts. In this scenario, our booking limit policy is expressed as follows: there are $m$ independent $W_t^{(j)}$. At time $t$, the processing of type $j$ occurs if $W_t^{(j)} \geq \lambda_j$ and all the prompts of which type satisfy the condition are added to a batch. In this case, under the deterministic scenario where $\lambda_j$ prompts of type $j$ arrive at each time step, the average throughput, given by $\lambda_1 + \dots + \lambda_m$, represents the optimal average throughput.
+
+% In the stochastic case, the gap between the throughput from time $0$ to $T$ and the optimal throughput $T(\lambda_1 + \dots + \lambda_m)$ can be bounded above using $W_T^{(i)}$ from the single-type scenario.
+
+% \gan{Since each batch may contain different types, the processing time of each batch is also different. Without the loss of generality, we set $\min_{j}\{ \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right) \}=1$, so the batch with smallest batch size is that contains only prompts of type $1$:
+% $$M_1 = \frac{d_0\lambda_1(l_1^\prime+1)\left(l_1+\frac{l_1^\prime}{2}\right)}{1-d_1\sum_{j=1}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}, \, \Delta T_{[1]} = d_0+d_1\cdot M_1 = d_0\cdot
+% \frac{1-d_1\sum_{j=2}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}{1-d_1\sum_{j=1}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}$$
+% It is easy to derive that, when type $j_1,\cdots, j_r$ are in the batch, the processing time is:
+% $$\Delta T_{[j_1,\cdots,j_r]}= d_0\cdot
+% \frac{1-d_1\sum_{j=1,j\neq j_1,\cdots,j\neq j_r}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}{1-d_1\sum_{j=1}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}$$
+% For each fixed type $j^*$, as long as type $j^*$ is contained in the batch $[j^*, j_1,\cdots,j_r]$, the arrival and completion ratio is:
+% $$\frac{\text{Arrival}}{\text{Completion}}=1 - d_1\cdot\sum_{j=1, j\neq j^*, j\neq j_1, \cdots, j\neq j_r}^m \lambda_j (l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right)\leq 1$$
+% This means that the gap of throughput from type $j^*$ only comes from the condition when type $j^*$ is not in the batch. So consider the \textbf{iteration step} $t$, the state transition rule of $W_T^{(j^*)}$ is given by
+% $$W_{t+1}^{(j^*)}  =W_t^{(j^*)}+X_t^{(j^*)} - \lambda_{j^*} \Delta T_{[1,\cdots,m]} \{W_t^{(j^*)}+X_t^{(j^*)}\geq \lambda_{j^*} \Delta T_{[1,\cdots,m]}\}$$
+% where $\lambda_{j^*} \Delta T_{[1,\cdots,m]} = \frac{n_j^*}{l_j^\prime+1}$ and the batch is $\text{Batch}_t = [j_1,\cdots,j_r],\, j_k\neq j^*$ with
+% $$X_t^{j^*}\sim P(\lambda_{j^*} \cdot \Delta T_{[j_1,\cdots,j_r]}) = P\left(\lambda_{j^*}d_0\cdot \frac{1-d_1\sum_{j=1,j\neq j_1,\cdots,j\neq j_r}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}{1-d_1\sum_{j=1}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}\right)$$
+% Define a new process $\{\bar{W}_t^{(j^*)}\}$ as a coupled version of $W_t^{(j^*)}$ as follows
+% $$\bar{W}_{t+1}^{(j^*)}  =\bar{W}_t^{(j^*)}+\bar{X}_t^{(j^*)} - \lambda_{j^*} \Delta T_{[1,\cdots,m]} \{\bar{W}_t^{(j^*)}+\bar{X}_t^{(j^*)}\geq \lambda_{j^*} \Delta T_{[1,\cdots,m]}\}$$
+% where 
+% $$\bar{X}_t^{j^*}\sim P(\lambda_{j^*} \cdot \Delta T_{[1,\cdots,m]}) = P\left(\lambda_{j^*}\cdot d_0\cdot \frac{1}{1-d_1\sum_{j=1}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}\right)$$
+% We know that $W_t^{(j^*)}\leq \bar{W}_t^{(j^*)}, \forall t \in \mathbb{N}$. So by Lemma~\ref{lemma::throughput gap} we have that
+% $$\ex{}{W_t^{(j^*)}}\leq \lambda_{j^*}\Delta T_{[1,\cdots,m]}+\sqrt{\lambda_{j^*}\Delta T_{[1,\cdots,m]}\cdot T},\, T\text{ is the step of batch inference}$$
+% So the expected upper bound of the final gap is given by
+% $$\sum_{j=1}^m \ex{}{W_t^{(j)}}\leq \Delta T_{[1,\cdots,m]}\sum_{j=1}^m \lambda_j+ \sum_{j=1}^m \sqrt{\lambda_j\Delta T_{[1,\cdots,m]}\cdot T },\, \Delta T_{[1,\cdots,m]} = d_0\cdot \frac{1}{1-d_1\sum_{j=1}^m \lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)}$$
+% So the expected upper bound of the gap of average throughput is that
+% $$\frac{1}{T} \Delta T_{[1,\cdots,m]}\sum_{j=1}^m \lambda_j+ \sum_{j=1}^m \sqrt{\lambda_j\Delta T_{[1,\cdots,m]}\cdot \frac{1}{T} }$$
+% In \textbf{Many-Server Heavy-Traffic} case, 
+% $$\frac{1}{T^{\zeta}} \Delta T_{[1,\cdots,m]}^{\zeta}\sum_{j=1}^m \lambda_j^{\zeta}+ \sum_{j=1}^m \sqrt{\lambda_j^{\zeta}\Delta T_{[1,\cdots,m]}^{\zeta}\cdot \frac{1}{T^{\zeta}} }\leq 
+% \frac{1}{T} \Delta T_{[1,\cdots,m]}\sum_{j=1}^m \lambda_j+ \sum_{j=1}^m \sqrt{\lambda_j\Delta T_{[1,\cdots,m]}\cdot \frac{1}{T} } \to 0, \, T\to \infty$$
+% In \textbf{Conventional Heavy-Traffic} case, 
+% $$\frac{1}{T^{\zeta}} \Delta T_{[1,\cdots,m]}^{\zeta}\sum_{j=1}^m \lambda_j^{\zeta}+ \sum_{j=1}^m \sqrt{\lambda_j^{\zeta}\Delta T_{[1,\cdots,m]}^{\zeta}\cdot \frac{1}{T^{\zeta}} }\leq 
+% \frac{1}{\zeta T} \Delta T_{[1,\cdots,m]}\sum_{j=1}^m \lambda_j+ \sum_{j=1}^m \sqrt{\lambda_j\Delta T_{[1,\cdots,m]}\cdot \frac{1}{\zeta T} } \to 0, \, \zeta \to \infty$$
+% }
+% \textcolor{red}{Remark: when $\lambda_j^{\zeta} = \zeta \lambda_j$ scales with $\zeta$, we should make sure that this condition still holds.
+% $$1\geq d_1\sum_{j=1}^m \zeta\lambda_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)$$
+% }
+
+% The worst-case scenario occurs when at least $\lambda_i$ prompts are queued for the other $m-1$ types, but one remaining type fails to satisfy the condition to start processing. Therefore, for each type, the expected upper bound of the stuck time is $\mathbb{E}\left[\sum_{j=1}^m T^{(j)}_{\text{stuck}}\right]$. Consequently, using the Lemma \ref{throughput gap}, we have that the expected upper bound of the final gap is given by
+% $$
+% \left(\sum_{i=1}^m \lambda_i\right)\cdot \mathbb{E}\left[\sum_{j=1}^m T^{(j)}_{\text{stuck}}\right]=\left(\sum_{i=1}^m \lambda_i\right)\cdot \mathbb{E}\left[\sum_{j=1}^m \frac{1}{\lambda_j}W_T^{(j)}\right]=\sum_{i=1}^m\sum_{j=1}^m\frac{\lambda_i}{\lambda_j}\mathbb{E}[W_T^{(j)}]
+% $$
+% So the expected upper bound of the gap of average throughput is that 
+% $$\frac{1}{T}\sum_{i=1}^m\sum_{j=1}^m\frac{\lambda_i}{\lambda_j}\mathbb{E}[W_T^{(j)}]\leq \frac{1}{T}\sum_{i=1}^m\sum_{j=1}^m\frac{\lambda_i}{\lambda_j}\left( \lambda_j+\sqrt{\lambda_jT} \right)=\frac{m}{T}\sum_{i=1}^m\lambda_i+\frac{1}{\sqrt{T}}\sum_{i=1}^m\sum_{j=1}^m\sqrt{\frac{\lambda_i}{\lambda_j}}$$
+% In \textbf{Many-Server Heavy-Traffic} case, 
+% \begin{align*}
+%    \frac{m}{T^{\zeta}}\sum_{i=1}^m\lambda_i^{\zeta}+\frac{1}{\sqrt{T^{\zeta}}}\sum_{i=1}^m\sum_{j=1}^m\sqrt{\frac{\lambda_i^{\zeta}}{\lambda_j^{\zeta}}}= \frac{m}{\zeta T}\sum_{i=1}^m\zeta\lambda_i+\frac{1}{\sqrt{\zeta T}}\sum_{i=1}^m\sum_{j=1}^m\sqrt{\frac{\lambda_i}{\lambda_j}}\underbrace{\to \frac{m}{T}\sum_{i=1}^m\lambda_i}_{\zeta\to \infty}\to 0,\; T\to \infty 
+% \end{align*}
+% In \textbf{Conventional Heavy-Traffic} case, 
+% \begin{align*}
+%  \frac{m}{T^{\zeta}}\sum_{i=1}^m\lambda_i^{\zeta}+\frac{1}{\sqrt{T^{\zeta}}}\sum_{i=1}^m\sum_{j=1}^m\sqrt{\frac{\lambda_i^{\zeta}}{\lambda_j^{\zeta}}}= \frac{m}{\zeta T}\sum_{i=1}^m\lambda_i+\frac{1}{\sqrt{\zeta T}}\sum_{i=1}^m\sum_{j=1}^m\sqrt{\frac{\lambda_i}{\lambda_j}}\to 0,\; \zeta\to \infty
+% \end{align*}
+
+% \end{comment}
+
+
+
+
+\section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic}}\label{appendix::proof of nested_wait_heavy_traffic}
+
+% \begin{comment}
+
+% Assume there are $ m $ types of incoming prompts, each following a Poisson distribution with parameter $\lambda_i$, and suppose their input lengths are all $ l $, while the required number of decoding steps is $ l^{\prime}_1 < l^{\prime}_2 < \cdots < l^{\prime}_{m}$. Therefore, for a prompt of type $i$, one prefill operation and $l^{\prime}_i$ decode operations are required.
+
+% \subsubsection{Many-Server Heavy-Traffic}
+% Consider the nested booking limit policy. We divide the entire process into $m$ segments. In the first segment, the total arrival rate is $\lambda_1 + \cdots + \lambda_m$, and $1 + l^{\prime}_1$ iterations need to be processed. Subsequently, the process enters the second segment, $l^{\prime}_2-l^{\prime}_1$ iterations are required. This pattern continues analogously for the remaining segments. When the number of prompts required by the booking-limit policy for the $i$-th segment is insufficient, the work of the $i$-th segment and all subsequent segments will be paused. The process will resume only when the required number of prompts becomes sufficient. Note that the preceding segments remain unaffected.
+
+% Consider a simple example. There are two types of prompts, arriving at rates $\lambda_1$ and $\lambda_2$, respectively. Both have the same initial length $l$, but require different numbers of decoding steps, with $l^{\prime}_1 < l^{\prime}_2$. In segment 1, the arrival rate is $\lambda_1 + \lambda_2$, and $1 + l^{\prime}_1$ iterations need to be executed. In segment 2, $1 + l^{\prime}_2$ iterations are required. 
+
+% We first consider the fluid benchmark, which has exact $\lambda_i$ arrivals at each time $t$ and the
+% output is equal to the input. Set the number of tasks in each stage is constant and denoted as $n_1$ and $n_2$ for type 1 and type 2, respectively. The total memory usage $M$ is given by:
+% $$M = n_1 \sum_{i=1}^{l_1'} (l + i) + n_2 \sum_{i=l_1^{\prime}+1}^{l_2'} (l + i) = n_1 \left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right) + n_2 \left( l\cdot( l_2'-l_1^{\prime}) + \frac{(l_2'-l_1^{\prime} ) (l_1'+l_2' + 1)}{2} \right).$$
+% The equilibrium conditions are:
+% $$(d_0 + d_1 M) \lambda_1 = n_1,\;\textcolor{red}{\text{seems should be }n_1-n_2 \text{ instead?}} \; (d_0 + d_1 M) \lambda_2 = n_2.$$
+% Solving the system of equations yields:
+% \begin{align*}
+%     n_1 = \frac{d_0 \lambda_1}{1 - d_1 A},\;n_2 = \frac{d_0 \lambda_2}{1 - d_1 A},\;A = \lambda_1 \left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right) + \lambda_2 \left( l\cdot( l_2'-l_1^{\prime}) + \frac{(l_2'-l_1^{\prime} ) (l_1'+l_2' + 1)}{2} \right).
+% \end{align*}
+% Therefore, we have derived the memory requirements for two scenarios:
+% \begin{itemize}
+%     \item $M_{12}$: The memory required when processing both Segment 1 and Segment 2 together.
+%     \item $M_1$: The memory required when processing only Segment 1.
+% \end{itemize}
+% \begin{align*}
+% M_{12}&=M=\frac{d_0 \lambda_1}{1 - d_1 A} \left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right) +\frac{d_0 \lambda_2}{1 - d_1 A} \left( l\cdot( l_2'-l_1^{\prime}) + \frac{(l_2'-l_1^{\prime} ) (l_1'+l_2' + 1)}{2} \right)=\frac{d_0 A}{1 - d_1 A}\\
+% M_{1}&=\frac{d_0 \lambda_1}{1 - d_1 A} \left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right) +\frac{d_0 \lambda_2}{1 - d_1 A} \left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right)=\frac{d_0 (\lambda_1+\lambda_2)}{1 - d_1 A}\left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right)
+% \end{align*}
+% So the processing time for each iteration is that
+% \begin{align*}
+%     \Delta T_{12} &= d_0+d_1M_{12}=d_0+\frac{d_0 d_1 A}{1 - d_1 A}=\frac{d_0 }{1 - d_1 A}\\
+%     \Delta T_{1} &= d_0+d_1M_{1}=d_0+\frac{d_0 d_1 (\lambda_1+\lambda_2)}{1 - d_1 A}\left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right)=\frac{d_0 \left(1-d_1\lambda_2B\right)}{1 - d_1 A}\\
+%     B&=\left( l\cdot( l_2'-l_1^{\prime}) + \frac{(l_2'-l_1^{\prime} ) (l_1'+l_2' + 1)}{2} \right)-\left( l \cdot l_1' + \frac{l_1' (l_1' + 1)}{2} \right)\\
+%     \Rightarrow \frac{\Delta T_{1}}{\Delta T_{12}}&= 1-d_1\lambda_2B
+% \end{align*}
+% Then we consider the stochastic scenario. We normalize $\Delta T_1$ to $1$, and accordingly, $\Delta T_{12}$ is normalized to $\Delta t = \frac{1}{1-d_1\lambda_2B}$. The arrival rate of each type becomes $\Delta T_1 \cdot \lambda_i = \frac{d_0 \lambda_i\left(1-d_1\lambda_2B\right)}{1 - d_1 A}$.
+
+% Under the new time interval, the gap between the throughput and the fluid benchmark from time $t = 0$ to $T$ is given by $W_T^{(1)}+W_T^{(2)}$. Where $W_T^{(1)}$ and $W_T^{(2)}$ denote denote the queue lengths of stage 1 and stage 2 at time $T$, respectively. And we have that $W_0^{(1)}=W_0^{(2)}=0$. When processing only Segment 1, the iteration time under the new time interval is $1$.
+% \begin{align*}
+% W_{t+1}^{(1)}&=W_t^{(1)}+X_t^{(1)}-\frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}\cdot \mathbf{1}\left\{ W_t^{(1)} + X_t^{(1)} \geq \frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A},\;W_t^{(2)} + X_t^{(2)} < \frac{d_0 \lambda_2}{1-d_1 A} \right\}\\ 
+% X_t^{(1)}&\sim P(\frac{d_0 \left(\lambda_1+\lambda_2\right)\left(1-d_1\lambda_2B\right)}{1 - d_1 A})
+% \end{align*}
+% When processing both Segment 1 and Segment 2 together, the iteration time under the new time interval is $\Delta t = \frac{1}{1-d_1\lambda_2B}$. 
+% \begin{align*}
+% W_{t+\Delta t}^{(1)}&=W_t^{(1)}+\hat{X}_t^{(1)}-\frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}\cdot \mathbf{1}\left\{ W_t^{(1)} + \hat{X}_t^{(1)} \geq \frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A},\;W_t^{(2)} + X_t^{(2)} \geq  \frac{d_0 \lambda_2}{1-d_1 A} \right\}\\ 
+% \hat{X}_t^{(1)}&\sim P(\frac{d_0 \left(\lambda_1+\lambda_2\right)\left(1-d_1\lambda_2B\right)}{1 - d_1 A}\Delta t)=P(\frac{d_0 \left(\lambda_1+\lambda_2\right)}{1 - d_1 A})
+% \end{align*}
+% So we can easily construct a process to dominate $\{W_t^{(1)}\}$
+% \begin{lemma}\label{lemma::coupled process for unknown type}
+%     Define a coupled process $\hat{W}_t^{(1)}$, and $\hat{W}_0^{(1)}=0$ and that
+%     \begin{align*}
+% \hat{W}_{t+\Delta t}^{(1)}&=\hat{W}_t^{(1)}+\hat{X}_t^{(1)}-\frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}\cdot \mathbf{1}\left\{ \hat{W}_t^{(1)} + \hat{X}_t^{(1)} \geq \frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}\right\}\\ 
+% \hat{X}_t^{(1)}&\sim P(\frac{d_0 \left(\lambda_1+\lambda_2\right)}{1 - d_1 A})
+%     \end{align*}
+% We have that $\hat{W}_t^{(1)}\geq W_t^{(1)}$.
+% \end{lemma}
+
+% By Lemma~\ref{lemma::throughput gap}, we have the estimation:
+% $$\ex{}{W_{T}^{(1)}}\leq \ex{}{\hat{W}_T^{(1)}}\leq \frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}+\sqrt{\frac{d_0 (\lambda_1+\lambda_2)(1-d_1\lambda_2 B)}{1-d_1 A}T}\leq \frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}+\sqrt{\frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}T}$$
+% For the estimation of $\mathbb{E}[W_T^{(2)}]$, we know that $W_0^{(2)} = 0$. Moreover, only if Stage 1 was processed in the previous iteration will $\tilde{X}_2$ prompts, which have already been decoded $l_1'$ times, arrive before the start of the current iteration. Here, $\tilde{X}_t^{(2)} \sim \text{Binomial}(\frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}, \frac{\lambda_2}{\lambda_1+\lambda_2})$. Therefore, we can treat each iteration of Stage 1 processing as a time step for Stage 2, denoted as $\tilde{t}$. And we have that 
+% \begin{align*}
+% W_{\tilde{t}+1}^{(2)}&=W_{\tilde{t}}^{(2)}+X_{\tilde{t}}^{(2)}-\frac{d_0\lambda_2}{1-d_1A}\cdot \mathbf{1}\left\{W_{\tilde{t}}^{(2)} + X_{\tilde{t}}^{(2)} \geq \frac{d_0\lambda_2}{1-d_1A} \right\}\\
+% X_t^{(2)} &\sim \text{Binomial}(\frac{d_0 (\lambda_1+\lambda_2)}{1-d_1 A}, \frac{\lambda_2}{\lambda_1+\lambda_2})
+% \end{align*}
+% Similar to Lemma~\ref{lem:coupled_process}, we can construct a process to dominate $\{W_{\tilde{t}}^{(2)}\}$
+% \begin{lemma}
+%     Define a coupled process $\tilde{W}_{\tilde{t}}^{(2)}$, where
+%     \begin{align*}
+% \tilde{W}_{0}^{(2)}=\frac{2d_0 \lambda_2}{1-d_1 A},\;\tilde{W}_{\tilde{t}+1}^{(2)}=\max\{\frac{2d_0 \lambda_2}{1-d_1 A},\tilde{W}_{\tilde{t}}^{(2)}-X_{\tilde{t}}^{(2)}-\frac{d_0\lambda_2}{1-d_1A}\}
+%     \end{align*}
+% \end{lemma}
+% We prove this by induction. First, for $t = 0$, we have $\tilde{W}_{0}^{(2)}=\frac{2d_0 \lambda_2}{1-d_1 A}\geq \frac{d_0 \lambda_2)}{1-d_1 A}={W}_{0}^{(2)}+\frac{d_0 \lambda_2}{1-d_1 A}$. Next, assume that $\tilde{W}_{\tilde{t}}^{(2)} \geq W_{\tilde{t}}^{(2)} + \frac{d_0 \lambda_2}{1-d_1 A}$ holds for some $t \geq 0$. We now prove that $\tilde{W}_{\tilde{t}+1}^{(2)} \geq W_{\tilde{t}+1}^{(2)}  + \frac{d_0 \lambda_2}{1-d_1 A}$. Consider the following two cases:
+
+% 1. If $W_{\tilde{t}}^{(2)} + X_{\tilde{t}}^{(2)} \geq \frac{d_0\lambda_2}{1-d_1A}$, then ${W}_{\tilde{t}+1}^{(2)} = {W}_{\tilde{t}}^{(2)}+X_{\tilde{t}}^{(2)}-\frac{d_0\lambda_2}{1-d_1A}$. In this case,
+% \begin{align*}
+%     \tilde{W}_{\tilde{t}+1}^{(2)}=&\max\{\frac{2d_0 \lambda_2}{1-d_1 A},\tilde{W}_{\tilde{t}}^{(2)}-X_{\tilde{t}}^{(2)}-\frac{d_0\lambda_2}{1-d_1A}\}\geq \tilde{W}_{\tilde{t}}^{(2)}-X_{\tilde{t}}^{(2)}-\frac{d_0\lambda_2}{1-d_1A}\\
+%     \geq&( W_{\tilde{t}}^{(2)}+\frac{d_0\lambda_2}{1-d_1A} )+ X_t - \frac{d_0\lambda_2}{1-d_1A}=W_{\tilde{t}+1}^{(2)}+\frac{d_0\lambda_2}{1-d_1A}.
+% \end{align*}
+
+% 2. If $W_{\tilde{t}}^{(2)} + X_{\tilde{t}}^{(2)} < \frac{d_0\lambda_2}{1-d_1A}$, then ${W}_{\tilde{t}+1}^{(2)} = {W}_{\tilde{t}}^{(2)}+X_{\tilde{t}}^{(2)}$. In this case,
+% \begin{align*}
+%     \tilde{W}_{\tilde{t}+1}^{(2)}=&\max\{\frac{2d_0 \lambda_2}{1-d_1 A},\tilde{W}_{\tilde{t}}^{(2)}-X_{\tilde{t}}^{(2)}-\frac{d_0\lambda_2}{1-d_1A}\}\\\geq& \frac{2d_0 \lambda_2}{1-d_1 A} = \frac{2d_0 \lambda_2}{1-d_1 A}+\frac{2d_0 \lambda_2}{1-d_1 A}>\tilde{W}_{\tilde{t}+1}+\frac{2d_0 \lambda_2}{1-d_1 A}.
+% \end{align*}
+% Hence, $\tilde{W}_{\tilde{t}+1}^{(2)} \geq W_{\tilde{t}+1}^{(2)}  + \frac{d_0 \lambda_2}{1-d_1 A}$. By the principle of induction, we have $\tilde{W}_{\tilde{t}+1}^{(2)} \geq W_{\tilde{t}+1}^{(2)}  + \frac{d_0 \lambda_2}{1-d_1 A}$ for all $\tilde{t} \in \mathbb{N}$.
+
+% By Lemma~\ref{lemma::throughput gap}, we have the estimation
+% \begin{align*}
+%     \ex{}{W_{\tilde{T}}^{(2)}}\leq \frac{d_0 \lambda_2}{1-d_1 A}+\sqrt{\frac{d_0 \lambda_2}{1-d_1 A}\tilde{T}}
+% \end{align*}
+% Since, under the time interval $\Delta T_{1} \sim 1$, the total number of Stage 1 iterations from $t = 0$ to $T$ is at most $T$, we have that 
+% \begin{align*}
+%     \ex{}{W_{T}^{(2)}}\leq \frac{d_0 \lambda_2}{1-d_1 A}+\sqrt{\frac{d_0 \lambda_2}{1-d_1 A}T}.
+% \end{align*}
+% So the upper bound of the gap of expected average throughput is that 
+% \begin{align*}
+%     \frac{d_0 (\lambda_1+2\lambda_2)}{(1-d_1 A)T}+\sqrt{\frac{d_0 (\lambda_1+\lambda_2)}{(1-d_1 A)T}}+\sqrt{\frac{d_0 \lambda_2}{(1-d_1 A)T}}
+% \end{align*}
+% In \textbf{Many-Server Heavy-Traffic} case,
+% \begin{align*}
+% &\frac{2d_0 (\lambda_1^{\zeta}+2\lambda_2^{\zeta})}{(1-d_1 A^{\zeta})T^{\zeta}}+\sqrt{\frac{d_0 (\lambda_1^{\zeta}+\lambda_2^{\zeta})}{(1-d_1 A^{\zeta})T^{\zeta}}}+\sqrt{\frac{d_0 \lambda_2^{\zeta}}{(1-d_1 A^{\zeta})T^{\zeta}}}\\
+% =&\frac{d_0 (\lambda_1+2\lambda_2)}{(1-d_1 A)\zeta T}+\sqrt{\frac{d_0 (\lambda_1+\lambda_2)}{(1-d_1 A)\zeta T}}+\sqrt{\frac{d_0 \lambda_2}{(1-d_1 A)\zeta T}}\to 0,\; \zeta \to \infty
+% \end{align*}
+% Therefore, in the general case with $m$ types of prompts, it can be easily derived that
+% \gan{$m$ types scenario left to write}
+
+% Consider the $m$ types scenario, first consider the fluid benchmark. Set the number of tasks in each stage as constant and denoted as $n_j$. The total memory usage $M$ is given by:
+% \begin{align*}
+%     M = (n_1+\cdots+n_m)\sum_{i=1}^{l_1^{\prime}}(l+i)+(n_2+\cdots+n_m)\sum_{i=l_1^{\prime}+1}^{l_2^{\prime}}(l+i)+\cdots+n_m\sum_{i=l_{m-1}^{\prime}+1}^{l_m^{\prime}}(l+i)
+% \end{align*}
+% The equilibrium conditions give that
+% \begin{align*}
+%     (d_0+d_1M)\lambda_j = n_j, j=1,2,\cdots,m
+% \end{align*}
+% Solving the system of equations yields:
+% \begin{align*}
+% n_j &= \frac{d_0 \lambda_j}{1 - d_1 A}, \quad j=1,2,\ldots,m, \\
+% A &= (\lambda_1 +\cdots+\lambda_m)\sum_{i=1}^{l_1'} (l+i) + (\lambda_2+\cdots+\lambda_m) \sum_{i=l_1'+1}^{l_2'} (l+i) + \cdots + \lambda_m \sum_{i=l_{m-1}'+1}^{l_m'} (l+i).
+% \end{align*}
+% So the memory required when processing only Segment 1 is that
+% \begin{align*}
+%     M_1 = (\sum_{j=1}^m n_j)\cdot \sum_{i=1}^{l_1^{\prime}}(l+i)=\frac{d_0\sum_{j=1}^m\lambda_j}{1-d_1A}\sum_{i=1}^{l_1^{\prime}}(l+i)
+% \end{align*}
+% So the processing time when processing only Segment 1 is that 
+% \begin{align*}
+% \Delta T_1=d_0+d_1M_1=d_0+d_1\frac{d_0\sum_{j=1}^m\lambda_j}{1-d_1A}\sum_{i=1}^{l_1^{\prime}}(l+i)=\frac{d_0}{1-d_1A}\left[1-d_1A+d_1\sum_{j=1}^m\lambda_j\sum_{i=1}^{l_1^{\prime}}(l+i)\right]:=\frac{d_0(1-d_1B)}{1-d_1A}
+% \end{align*}
+% And the memory required for the total serving is that 
+% \begin{align*}
+%     M_{1\to m}=M=(\sum_{j=1}^m n_j)\cdot \sum_{i=1}^{l_1^{\prime}}(l+i)+(\sum_{j=2}^m n_j)\cdot \sum_{i=l_1^{\prime}+1}^{l_2^{\prime}}(l+i)+\cdots+n_m\cdot\sum_{i=l_{m-1}^{\prime}+1}^{l_m^{\prime}}(l+i)=\frac{d_0A}{1-d_1A}
+% \end{align*}
+% So the processing time when all $m$ Stages are processed together is that 
+% \begin{align*}
+%     \Delta T_{1\to m}=d_0+d_1M=\frac{d_0}{1-d_1A}
+% \end{align*}
+% Then we consider the stochastic scenario. We normalize $\Delta T_1$ to $1$, and accordingly, the $\Delta T_{1\to m}$ normalize to $\frac{1}{1-d_1B}$ and the arrival rate of each type becomes $\Delta T_1\cdot \lambda_j=\frac{d_0(1-d_1B)}{1-d_1A}\cdot \lambda_j$.
+
+% Under the new time interval, the gap between the throughput and the fluid benchmark
+% from time $t=0$ to $T$ is given by $\sum_{j=1}^mW_T^{(j)}$, where $W_T^{(j)}$ denotes the queue lengths of stage $j$. And we have that $W_0^{(j)}=0$.
+
+% Similar to Lemma~\ref{lemma::coupled process for unknown type}, we have that 
+% \begin{lemma}
+%     Define a coupled process $\hat{W}_t^{(1)}$, and $\hat{W}_0^{(1)}=0$ and that
+%     \begin{align*}
+%     \Delta t&=\frac{1}{1-d_1B}\\
+%         \hat{W}_{t+\Delta t}^{(1)} &= \hat{W}_{t}^{(1)}+\hat{X}_t^{(1)}-\frac{d_0(\lambda_1+\cdots+\lambda_m)}{1-d_1A}\mathbf{1}\{\hat{W}_{t}^{(1)}+\hat{X}_t^{(1)}\geq \frac{d_0(\lambda_1+\cdots+\lambda_m)}{1-d_1A}\}\\
+%         \hat{X}_t^{(1)}&\sim P(\frac{d_0(1-d_1B)}{1-d_1A}\cdot \lambda_j\cdot \Delta t)=P(\frac{d_0(\lambda_1+\cdots+\lambda_m)}{1-d_1A})
+%     \end{align*}
+%     We have that $\hat{W}_t^{(1)}\geq W_t^{(1)}$.   
+% \end{lemma}
+% \gan{Remark: There are $m$ kinds of process containing the Stage 1. Need more explain.}
+
+% So by Lemma~\ref{lemma::throughput gap}, we have the estimation:
+% \begin{align*}
+%     \ex{}{W_T^{(1)}}\leq \ex{}{\hat{W}_T^{(1)}}&\leq \frac{d_0(\lambda_1+\cdots+\lambda_m)}{1-d_1A}+\sqrt{\frac{d_0(\lambda_1+\cdots+\lambda_m)}{1-d_1A}\cdot T\cdot \frac{1}{\Delta t}}\\
+%     \leq &\frac{d_0(\lambda_1+\cdots+\lambda_m)}{1-d_1A}+\sqrt{\frac{d_0(\lambda_1+\cdots+\lambda_m)}{1-d_1A}\cdot T}
+% \end{align*}
+% Consider $\tilde{W}_t^{(j)}, 2\leq j\leq m$, we can can treat each iteration of Stages $1\to j-1$ as a time step for Stage $j$. And similar to Lemma 7, we have the estimation
+% \begin{align*}
+%     \ex{}{W_T^{(j)}}\leq \frac{d_0(\lambda_j+\cdots+\lambda_m)}{1-d_1A}+\sqrt{\frac{d_0(\lambda_j+\cdots+\lambda_m)}{1-d_1A}T}
+% \end{align*}
+% So the upper bound of the gap of expected average throughput is that
+% \begin{align*}
+% \sum_{j=1}^m\frac{d_0(\lambda_j+\cdots+\lambda_m)}{(1-d_1A)T}+\sum_{j=1}^m\sqrt{\frac{d_0(\lambda_j+\cdots+\lambda_m)}{(1-d_1A)T}}=\frac{d_0(m\lambda_1+(m-1)\lambda_2+\cdots+\lambda_m)}{(1-d_1A)T}+\sum_{j=1}^m\sqrt{\frac{d_0(\lambda_j+\cdots+\lambda_m)}{(1-d_1A)T}}
+% \end{align*}
+% In \textbf{Many-Server Heavy-Traffic} case,
+% \begin{align*}
+% &\frac{d_0(m\lambda_1^{\zeta}+(m-1)\lambda_2^{\zeta}+\cdots+\lambda_m^{\zeta})}{(1-d_1A^{\zeta})T^{\zeta}}+\sum_{j=1}^m\sqrt{\frac{d_0(\lambda_j^{\zeta}+\cdots+\lambda_m^{\zeta})}{(1-d_1A^{\zeta})T^{\zeta}}}  \\=&\frac{d_0(m\lambda_1+(m-1)\lambda_2+\cdots+\lambda_m)}{(1-d_1A)\zeta T}+\sum_{j=1}^m\sqrt{\frac{d_0(\lambda_j+\cdots+\lambda_m)}{(1-d_1A)\zeta T}}\to 0,\; \zeta \to \infty
+% \end{align*}
+
+% \subsubsection{Conventional Heavy-Traffic} 
+% Consider that in Stage 1, the memory capacity is sufficient for $x_1$ type 1 tasks and $x_2$ type 2 tasks, with the condition that $\frac{x_1}{x_2} = \frac{\lambda_1}{\lambda_2}$. Setting $\frac{x_1}{x_2} = \frac{\lambda_1}{\lambda_2}=k$, we have that 
+% \begin{align*}
+%     M_1 &= (x_1+x_2)\sum_{i=1}^{l_1^{\prime}}(l+i)=(x_1+x_2)\cdot\frac{2l+l^{\prime}_1+1}{2}
+% \end{align*}
+
+% For Stage 2, the arrival process is $\hat{X} \sim \text{Binomial}\left(x_1 + x_2, \frac{\lambda_2}{\lambda_1 + \lambda_2}\right)$, but only if Stage 1 is processed. Therefore, Stage 2 can be modeled as a process where the counting of time steps is triggered by the process of Stage 1 iterations. In this case, the expected serving rate of Stage 2 is $(x_1+x_2)\cdot \frac{\lambda_2}{\lambda_1 + \lambda_2}$, so we set the memory capacity here is available for $(x_1+x_2)\cdot \frac{\lambda_2}{\lambda_1 + \lambda_2}+1$ type 2 prompts, which is 
+% \begin{align*}
+%     M_2&=\left[(x_1+x_2)\cdot \frac{\lambda_2}{\lambda_1 + \lambda_2}+1\right]\cdot \sum_{i=1}^{l_2^{\prime}}(l+l_1^{\prime}+i)=\left[(x_1+x_2)\cdot \frac{\lambda_2}{\lambda_1 + \lambda_2}+1\right]\cdot \frac{2l+2l_1^{\prime}+l_2^{\prime}+1 }{2}
+% \end{align*}
+% So the total memory capacity here is 
+% \begin{align*}
+%     M_{12}&=(x_1+x_2)\cdot\frac{2l+l^{\prime}_1+1}{2}+\left[(x_1+x_2)\cdot \frac{\lambda_2}{\lambda_1 + \lambda_2}+1\right]\cdot \frac{2l+2l_1^{\prime}+l_2^{\prime}+1 }{2}
+% \end{align*}
+% When processing both Segment 1 and Segment 2 together, the iteration time is given by $d_0+d_1\cdot M_{12}$, so we want that
+% \begin{align*}
+%     \left(d_0+d_1\cdot M_{12}\right)\cdot \lambda_1< x_1,\;\left(d_0+d_1\cdot M_{12}\right)\cdot \lambda_2< (x_1+x_2)\cdot \frac{\lambda_2}{\lambda_1 + \lambda_2}+1
+% \end{align*}
+% Since $x_1=k\lambda_1,x_2=k\lambda_2$, we set $\Lambda = \lambda_1+\lambda_2$, $\Lambda_2^{\prime}=\lambda_2$, $C_1=\sum_{i=1}^{l_1^{\prime}}(l+i)$, $C_2=\sum_{i=l_1^{\prime}+1}^{l_2^{\prime}}(l+i)$. Then we have that 
+% \begin{align*}
+%     M_1 = k\Lambda C_1, \; M_2 = (k \Lambda_2^{\prime}+1)C_2
+% \end{align*}
+% and 
+% \begin{align*}
+% M_{total}&=M_{12}=kA+B\\
+% A&=\Lambda C_1+\Lambda_2^{\prime}C_2,\;B=C_2
+% \end{align*}
+% The inequalities are
+% \begin{align*}
+%     [d_0+d_1(kA+B)]\lambda_1<k\lambda_1,\; [d_0+d_1(kA+B)]\lambda_2<k\Lambda_2^{\prime}+1
+% \end{align*}
+% We have that 
+% \begin{align*}
+%     k>\max\{\frac{d_0+d_1B}{1-d_1A},\;\frac{d_0+d_1B-\frac{1}{\lambda_2}}{\frac{\Lambda_2^{\prime}}{\lambda_2}-d_1A}\}=\max\{\frac{d_0+d_1B}{1-d_1A},\;\frac{d_0+d_1B-\frac{1}{\lambda_2}}{1-d_1A}\}=\frac{d_0+d_1B}{1-d_1A},
+% \end{align*}
+% where $x_1=k\lambda_1$, $x_2=k\lambda_2$. 
+
+% So under this condition, we achieve the asymptotic optimality in Conventional Heavy-Traffic.\gan{$m$ types scenario left to write}
+
+% Consider in Stage 1, the memory capacity is sufficient for $x_j$ type $j$, with the condition that $\frac{x_j}{\lambda_j}\equiv k, j=1,\cdots,m$. And we have that
+% \begin{align*}
+%     M_1 = (x_1+\cdots+x_m)\sum_{i=1}^{l_1^{\prime}}(l+i)
+% \end{align*}
+% For Stage $2$, the arrival process is $\hat{X}^{(2)}\sim \text{Binomial}(x_{1}+\cdots+x_m, \frac{\lambda_{2}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m})$, but only if Stage $1$ is processed. Therefore, Stage $2$ can be modeled as a process where the counting of time steps is triggered by the process of Stage $1$ iterations. In this case, the expected serving rate of Stage $2$ is $(x_{1}+\cdots+x_m)\cdot \frac{\lambda_{2}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}$, so we set the memory capacity here is available for $(x_{1}+\cdots+x_m)\cdot \frac{\lambda_{2}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}+1$ type $2\to m$ prompts, which is 
+% \begin{align*}
+% M_2 = \left[(x_{1}+\cdots+x_m)\cdot \frac{\lambda_{2}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}+1\right]\cdot \sum_{i=l_{1}^{\prime}+1}^{l_2^{\prime}}(l+i)
+% \end{align*}
+% So for Stage 3, the arrival process is $\hat{X}^{(3)}\sim \text{Binomial}\left((x_{1}+\cdots+x_m)\cdot \frac{\lambda_{2}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}+1, \frac{\lambda_3+\cdots+\lambda_m}{\lambda_2+\cdots+\lambda_m}\right)$, but only if Stage 2 is processed. Therefore, Stage 2 can be modeled as a process where the counting of time steps is triggered by the process of Stage 2 iterations. Similarly, we can set  the memory capacity here is available for $(x_{1}+\cdots+x_m)\cdot \frac{\lambda_{3}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}+2$ type $3\to m$ prompts, which is 
+% \begin{align*}
+% M_3 = \left[(x_{1}+\cdots+x_m)\cdot \frac{\lambda_{3}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}+2 \right]\cdot \sum_{i=l_{2}^{\prime}+1}^{l_3^{\prime}}(l+i)
+% \end{align*}
+% So we can easily derive that for Stage $j\;,(2\leq j\leq m)$
+% \begin{align*}
+%     \hat{X}^{(j)}&\sim \text{Binomial}\left((x_{1}+\cdots+x_m)\cdot \frac{\lambda_{j-1}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}+j-2, \frac{\lambda_j+\cdots+\lambda_m}{\lambda_{j-1}+\lambda_j+\cdots+\lambda_m}\right)\\
+%     M_j&= \left[(x_{1}+\cdots+x_m)\cdot \frac{\lambda_{j}+\cdots+\lambda_m}{\lambda_{1}+\lambda_{2}+\cdots+\lambda_m}+\underbrace{j-1}_{\text{Buffer}} \right]\cdot \sum_{i=l_{j-1}^{\prime}+1}^{l_j^{\prime}}(l+i)
+% \end{align*}
+% We want that \gan{This is in deterministic. We should prove in stochastic, the queue length is limited?}
+% \begin{align*}
+% \left[d_0+d_1(M_1+\cdots+M_m)\right]\cdot \lambda_1&<x_1\\
+% \left[d_0+d_1(M_1+\cdots+M_m)\right]\cdot \lambda_2&<(x_1+\cdots+x_m)\cdot \frac{\lambda_2+\cdots+\lambda_m}{\lambda_1+\cdots+\lambda_m}+1 \\
+% \left[d_0+d_1(M_1+\cdots+M_m)\right]\cdot \lambda_3&<(x_1+\cdots+x_m)\cdot \frac{\lambda_3+\cdots+\lambda_m}{\lambda_1+\cdots+\lambda_m}+2 \\
+% \cdots&\\
+% \left[d_0+d_1(M_1+\cdots+M_m)\right]\cdot \lambda_m&<(x_1+\cdots+x_m)\cdot \frac{\lambda_m}{\lambda_1+\cdots+\lambda_m}+m-1 \\
+% \end{align*}
+% Since $\frac{x_j}{\lambda_j}\equiv k$, we set $\Lambda = \sum_{i=1}^m \lambda_i$, $\Lambda_j^{\prime}=\sum_{i=j}^m \lambda_i$, $C_j=\sum_{i=l_{j-1}^{\prime}+1}^{l_j^{\prime}}(l+i), 2\leq j\leq m$. Then we have that
+% \begin{align*}
+%     M_j = \begin{cases}
+% k \Lambda C_1, & j=1, \\
+% \left( k \Lambda_j' + (j-1) \right) C_j, & j \geq 2,
+% \end{cases}
+% \end{align*}
+% and 
+% \begin{align*}
+% M_{\text{total}} &= k \Lambda C_1 + \sum_{j=2}^m \left( k \Lambda_j' + (j-1) \right) C_j=kA+B\\
+% A& = \Lambda C_1 + \sum_{j=2}^m \Lambda_j' C_j,\;B = \sum_{j=2}^m (j-1) C_j
+% \end{align*}
+% The inequalities are
+% \begin{align*}
+%     [d_0+d_1(kA+B)]\lambda_1&<k\lambda_1\\
+% [d_0+d_1(kA+B)]\lambda_j&<k\Lambda_j^{\prime}+j-1,\;2\leq j\leq m
+% \end{align*}
+% We have that
+% \begin{align*}
+% k > \max\left\{ 
+% \frac{d_0 + d_1 B}{1 - d_1 A}, \quad 
+% \max_{2\leq j \leq m} \frac{d_0 + d_1 B  - \frac{j-1}{\lambda_j}}{\frac{\Lambda_j'}{\lambda_j} - d_1 A } 
+% \right\},\; x_j = \lambda_j k
+% \end{align*}
+% So under the above memory capacity, in stochastic scenario, notice that in fluid benchmark, our equilibrium equalities are
+% \begin{align*}
+%     [d_0+d_1kA]\lambda_j=x_j=k\lambda_j\Rightarrow k=\frac{d_0}{1-d_1A}
+% \end{align*}
+
+% \gan{We want prove that, for each segment, as long as the }
+
+% \end{comment}
+
+% \begin{comment}
+% Let $W_t^{(i)}$ represent the number of prompts in the queue at time $t$ of segment $i$ with $W_0^{(i)}=0$, and $T_{\text{stuck}}^{(i)}$ means the stuck time steps. So we have that
+% \begin{align*}
+%     W_{t+1}^{(1)}&=W_t^{(1)}+X_t^{(1)}-(\lambda_1+\lambda_2)\cdot \mathbf{1}\{W_t^{(1)}+X_t^{(1)}\geq \lambda_1+\lambda_2 \}\\
+%     W_{t+1}^{(2)}&=W_t^{(2)}+X_t^{(2)}-\lambda_2\cdot \mathbf{1}\left\{ W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2,\;W_t^{(2)} + X_t^{(2)} \geq \lambda_2 \right\}\\
+%     X_{t+1}^{(1)}&\sim P(\lambda_1+\lambda_2)\\
+%     X_{t+1}^{(2)}&=\hat{X_t}^{(2)}\cdot \mathbf{1}\{W_t^{(1)}+X_t^{(1)}\geq \lambda_1+\lambda_2\},\;\hat{X_t}^{(2)}\sim \text{Binomial}(\lambda_1+\lambda_2, \frac{\lambda_2}{\lambda_1+\lambda_2})\\
+%     T_{\text{stuck}}^{(1)}&=\sum_{t=0}^T \mathbf{1}\{W_t^{(1)}+X_t^{(1)}\geq \lambda_1+\lambda_2 \}\\
+%     T_{\text{stuck}}^{(2)} &= \sum_{t=0}^T \mathbf{1}\left\{ W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2,\;W_t^{(2)} + X_t^{(2)} \geq \lambda_2 \right\}\\
+%     \ex{}{W_T^{(1)}}&=(\lambda_1+\lambda_2) \ex{}{T_{\text{stuck}}^{(1)}}\\
+%     \ex{}{W_T^{(2)}}&=\lambda_2 \ex{}{T_{\text{stuck}}^{(2)}}
+% \end{align*}
+% Since 
+% \begin{align*}
+% \ex{}{W_T^{(1)}}+\ex{}{W_T^{(2)}}\leq (\lambda_1+2\lambda_2) \ex{}{T_{\text{stuck}}^{(1)}}=\frac{\lambda_1+2\lambda_2}{\lambda_1+\lambda_2}\ex{}{W_T^{(1)}},
+% \end{align*}
+% so the upper bound of the gap of expected average throughput is that 
+% \begin{align*}
+%     \frac{1}{T}\cdot\frac{\lambda_1+2\lambda_2}{\lambda_1+\lambda_2}\ex{}{W_T^{(1)}}\leq\frac{\lambda_1+2\lambda_2}{\lambda_1+\lambda_2}\cdot  \frac{\lambda_1+\lambda_2+\sqrt{(\lambda_1+\lambda_2)T}}{T}
+% \end{align*}
+% In \textbf{Many-Server Heavy-Traffic} case,
+% \begin{align*}
+% \frac{\lambda_1^{\zeta}+2\lambda_2^{\zeta}}{\lambda_1^{\zeta}+\lambda_2^{\zeta}}\cdot \frac{\lambda_1^{\zeta}+\lambda_2^{\zeta}+\sqrt{(\lambda_1^{\zeta}+\lambda_2^{\zeta})T^{\zeta}}}{T^{\zeta}}=\frac{\lambda_1+2\lambda_2}{\lambda_1+\lambda_2}\cdot  \frac{\lambda_1+\lambda_2+\sqrt{(\lambda_1+\lambda_2)\zeta T}}{\zeta T}\to 0,\; \zeta \to \infty
+% \end{align*}
+% Therefore, in the general case with $m$ types of prompts, it can be easily derived that
+% \begin{align*}
+% &\ex{}{W_T^{(1)}}+\ex{}{W_T^{(2)}}+\cdots+\ex{}{W_T^{(m-1)}}+\ex{}{W_T^{(m)}}\\
+% =&(\lambda_1+\cdots+\lambda_m)\ex{}{T_{\text{stuck}}^{(1)}}+\cdots+(\lambda_{m-1}+\lambda_m)\ex{}{T_{\text{stuck}}^{(m-1)}}+\lambda_m\ex{}{T_{\text{stuck}}^{(m)}}\\
+% \leq &(\lambda_1+\cdots+\lambda_m)\ex{}{T_{\text{stuck}}^{(1)}}+\cdots+(\lambda_{m-1}+2\lambda_m)\ex{}{T_{\text{stuck}}^{(m-1)}}\\
+% \leq &(\lambda_1+2\lambda_2+\cdots+(m-1)\lambda_{m-1}+m\lambda_m )\ex{}{T_{\text{stuck}}^{(1)}}\\
+% =& \frac{\sum_{i=1}^m i\lambda_i}{\sum_{i=1}^m \lambda_i}\ex{}{W_T^{(1)}}\leq \frac{\sum_{i=1}^m i\lambda_i}{\sum_{i=1}^m \lambda_i}\cdot \left(\sum_{i=1}^m \lambda_i + \sqrt{(\sum_{i=1}^m \lambda_i)T}\right)
+% \end{align*}
+% In \textbf{Many-Server Heavy-Traffic} case,
+% \begin{align*}
+% \frac{\sum_{i=1}^m i\lambda_i^{\zeta}}{\sum_{i=1}^m \lambda_i^{\zeta}}\cdot \frac{\sum_{i=1}^m \lambda_i^{\zeta} + \sqrt{(\sum_{i=1}^m \lambda_i^{\zeta})T^{\zeta}}}{T^{\zeta}}=\frac{\sum_{i=1}^m i\lambda_i}{\sum_{i=1}^m \lambda_i}\cdot \frac{\sum_{i=1}^m \lambda_i + \sqrt{(\sum_{i=1}^m \lambda_i)\zeta T}}{\zeta T}\to 0,\; \zeta \to \infty
+% \end{align*}
+% \end{comment}
+
+% \begin{comment}
+    
+
+% Consider a similar coupled process in Lemma \ref{lem:coupled_process}. Let $\tilde{X}_t^{(2)}\sim P(\lambda_2)$, $\tilde{W}_0^{(2)}=2\lambda_2$, $\tilde{W}_{t+1}^{(2)}=\max\{2\lambda_2,\;\tilde{W}_t^{(2)}+\tilde{X}_t^{(2)}-\lambda_2\}$,
+
+% Define $\tilde{X}_t^{(2)}\sim P(\lambda_2)$, $\tilde{W}_0^{(2)}=0$, $\tilde{W}_{t+1}^{(2)}=\tilde{W}_t^{(2)}+\tilde{X}_t^{(2)}-\lambda_2\cdot \mathbf{1}\{\tilde{W}_t^{(2)}+\tilde{X}_t^{(2)}\geq \lambda_2 \}$, $\tilde{T}_{\text{stuck}}^{(2)}=\sum_{t=0}^T  \mathbf{1}\{\tilde{W}_t^{(2)}+\tilde{X}_t^{(2)}\geq \lambda_2 \}$, and we have that $\ex{}{\tilde{W}_{T}^{(2)}}=\lambda_2\ex{}{\tilde{T}_{\text{stuck}}^{(2)}}$. Notice that 
+% \begin{align*}
+%     &\mathbb{P}\left(\left(W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2\right) \lor \left(W_t^{(2)} + X_t^{(2)} \geq \lambda_2\right)\right)\\
+%     \leq&\mathbb{P}\left(W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2\right)+\mathbb{P}\left(W_t^{(2)} + X_t^{(2)} \geq \lambda_2\right)&\\
+%     \leq&\mathbb{P}\left(W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2\right)+\mathbb{P}\left(\tilde{W}_t^{(2)} + \tilde{X}_t^{(2)} \geq \lambda_2\right)
+% \end{align*}
+% So we have that
+% \begin{align*}
+% \ex{}{W_T^{(1)}}+\ex{}{W_T^{(2)}}\leq \ex{}{W_T^{(1)}}+\ex{}{\tilde{W}_{T}^{(2)}}
+% \end{align*}
+
+% And
+% \begin{align*}
+%     &\ex{}{W_{t+1}^{(2)}}\\
+%     =&\ex{}{W_t^{(2)}}+\ex{}{X_t^{(2)}}-\lambda_2\cdot \ex{}{\mathbf{1}\left\{ \left(W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2\right) \lor \left(W_t^{(2)} + X_t^{(2)} \geq \lambda_2\right) \right\}}\\
+%     \leq&\ex{}{W_t^{(2)}}+\lambda_2-\lambda_2\cdot \ex{}{\mathbf{1}\left\{ \left(W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2\right) \lor \left(W_t^{(2)} + X_t^{(2)} \geq \lambda_2\right) \right\}}\\
+%     =& \ex{}{W_t^{(2)}}+\ex{}{\tilde{X}_t^{(2)}}-\lambda_2\cdot \ex{}{\mathbf{1}\left\{ \left(W_t^{(1)} + X_t^{(1)} \geq \lambda_1 + \lambda_2\right) \lor \left(W_t^{(2)} + X_t^{(2)} \geq \lambda_2\right) \right\}}\\
+%     \leq &\ex{}{W_t^{(2)}}+\ex{}{\tilde{X}_t^{(2)}}-\lambda_2\cdot \ex{}{\mathbf{1}\left\{W_t^{(2)} + X_t^{(2)} \geq \lambda_2\right\}}
+% \end{align*}
+
+% Consequently, using the Lemma \ref{throughput gap}, we have that the expected upper bound of the final gap is given by
+% \begin{align*}
+% &\ex{}{W_T^{(1)}}+\ex{}{W_T^{(2)}}\\
+% =& \ex{}{W_T^{(1)}}+\ex{}{W_t^{(2)}+X_t^{(2)}-\lambda_2\cdot \mathbf{1}\{W_t^{(1)}+X_t^{(1)}\geq \lambda_1+\lambda_2,\; W_t^{(2)}+X_t^{(2)}\geq \lambda_2 \}}\\
+% \leq& \ex{}{W_T^{(1)}}+\ex{}{W_t^{(2)}+X_t^{(2)}-\lambda_2\cdot \mathbf{1}\{W_t^{(1)}+X_t^{(1)}\geq \lambda_1+\lambda_2,\; W_t^{(2)}+X_t^{(2)}\geq \lambda_2 \}}
+% \end{align*}
+% \end{comment}
+
+For the first segment, the state transition rule is given by
+$$ W^{s+1}_{(1)} =  W^s_{(1)} + Y^s_{(1)} -n_1\cdot  \mathbf{1}\{ W^s_{(1)} + Y^s_{(1)}\geq n_1 \},\, Y^s_{(1)}\sim P(\Delta T_{ s\text{-th Batch} }\cdot \sum_{j=1}^m \lambda_j), $$
+where $s$ denotes the index of all batches, and $\Delta T_{s\text{-th Batch}}$ denotes the time cost of the inference of the $t$-th batch. Since $\Delta T_{s\text{-th Batch}}\leq \Delta T_{[1,\cdots,m]}(n_1,\cdots,n_m)$, where $\Delta T_{[1,\cdots,m]}(n_1,\cdots,n_m)$ is the time cost of the inference of the batch containing all $m$ types, we can obtain a dominated process.
+$$ \bar{W}^{s+1}_{(1)} =  \bar{W}^s_{(1)} + \tilde{Y}^s_{(1)} -n_1\cdot  \mathbf{1}\{ \bar{W}^s_{(1)} + \tilde{Y}^s_{(1)}\geq n_1 \},\, Y^s_{(1)}\sim P(\Delta T_{[1,\cdots,m]}(n_1,\cdots,n_m)\cdot \sum_{j=1}^m \lambda_j), $$
+Compared to process $\{W^s_{(1)}\}$, the process $\{ \bar{W}^s_{(1)} \}$ use $Y^s_{(1)}\sim P(\Delta T_{[1,\cdots,m]}(n_1,\cdots,n_m)\cdot \sum_{j=1}^m \lambda_j)$ as arrival. And this process is dominated by a Lindley process
+$$\tilde{W}^0_{(1)}=2n_1,  \tilde{W}^{s+1}_{(1)}=\max\{2n_1, \tilde{W}^s_{(1)}+\tilde{Y}^s_{(1)}-n_1\}$$
+Since $\Delta T_{[1,\cdots,m]}(n_1,\cdots,n_m)\cdot \sum_{j=1}^m \lambda_j<n_1$, the coupled process has negative drift.
+Since $\text{Var}(X^s_{(1)} - n_1) = \Delta T_{[1,\cdots,m]}(n_1,\cdots,n_m)\sum_{j=1}^m \lambda_j$ and $\left|\ex{}{X^s_{(1)} - n_1}\right| = n_1 -\Delta T_{[1,\cdots,m]}(n_1,\cdots,n_m)\sum_{j=1}^m \lambda_j$, by Kingman Inequality, we have that
+$$\ex{}{W^s_{(1)}}\leq 2n_1 + \frac{\Delta T_{ [1,\cdots,m] }\cdot \sum_{j=1}^m \lambda_j}{2\left( n_1 - \Delta T_{ [1,\cdots,m] }\cdot \sum_{j=1}^m \lambda_j\right)} $$
+
+Notice that the prompts waiting before the first segment is stored in CPU, so do not consume the GPU memory capacity, so $W^s_{(1)}$ does not affect the memory capacity.
+
+Then we consider the $k$-th segment, $2\leq k\leq m$, the arrival process is that 
+$$Y^s_{(k)} \sim \text{Binomial}\left(  n_{k-1} ,\, \frac{\lambda_{k}+\cdots+\lambda_m }{\lambda_{k-1}+\lambda_k+\cdots+\lambda_m} \right) = \text{Binomial}( n_{k-1} ,\, p_k),\,\forall s\in \mathbb{N} $$
+The $k$-th segment can be modeled as a process where the counting of steps is triggered by the process of the former segments, since the arrival of the $k$-th segment occurs if and only if the $k-1$-th segment is processed in the former batch. And the state transition rule is given by
+$$W^{s+1}_{(k)}=W^{s}_{(k)}+Y^s_{(k)} - n_{k}\cdot \mathbf{1}\{ W^{t}_{(k)}+Y^t_{(k)}\geq n_{k}  \}$$
+where $s$ denotes the $s$-th batch which contains segment $k-1$. So here the index $s$ of each segment are indeed different, but are bounded by the total number of the batches.
+
+We set $X^s_{(k)} = Y^s_{(k)} - n_{k},\,\forall s\in \mathbb{N} $, and we can construct a coupled process $\tilde{W}^s_{(k)}$ to dominate $W^s_{(k)}$.
+\begin{lemma}\label{lemma::nested coupled process}
+Define a new process $\{ \tilde{W}^s_{(k)} \}$ as a coupled version of $\{ W^s_{(k)} \}$ as follows:
+$$\tilde{W}^0_{(k)} = n_{k},\,\tilde{W}^{s+1}_{(k)}=
+\max\{ n_{k},\tilde{W}^{s}_{(k)} + X^s_{(k)}\},\,\forall s\in \mathbb{N} $$
+Then, we have that 
+$$ \tilde{W}_{(k)}^s \geq W^s_{(k)},\,\forall s\in \mathbb{N} .$$
+\end{lemma}
+Detailed proof is in the Appendix~\ref{appendix_lemma::proof of nested coupled process}, and with the help of Lemma~\ref{lemma::nested coupled process}, when estimating the upper bound corresponding to $\{W^s_{(k)}\}$, we can estimate $\tilde{W}^s_{(k)}$ instead. Note that the process $\{\tilde{W}^s_{(k)}\}$ is equivalent to
+$$\tilde{W}^0_{(k)} = n_{k},\,\tilde{W}^{s+1}_{(k)} =n_{k}+ \max\{ 0, X^1_{(k)},X^1_{(k)}+X^2_{(k)},\, X^1_{(k)}+\cdots+X^s_{(k)} \},\,\forall s\in \mathbb{N} $$
+Define 
+$$S^i_{(k)} = X^1_{(k)}+\cdots+X^i_{(k)}$$
+and we have that
+$$\tilde{W}^0_{(k)} = n_{k},\,\tilde{W}^{s+1}_{(k)} =n_{k}+ \max\{ 0, S^1_{(k)} ,\cdots,S^s_{(k)}  \},\,\forall t\geq 0,\,\text{where }S^0_{(k)}=0$$
+
+Next, we will estimate the $\ex{}{W^{s}_{(k)}}$ for $2\leq k\leq m$, since the prompts in segments $2\to m$ consume the memory of the GPU. So we consider the expectation of $\tilde{W}^s_{(k)}$, we have that 
+$$\ex{}{W^s_{(k)}}\leq \ex{}{\tilde{W}^s_{(k)}}\leq n_k+\ex{}{\max_{0\leq i\leq s-1}\{S^i_{(k)}\}} $$
+Since the expectation
+$$\ex{}{X^s_{(k)}} =  n_{k-1}\cdot p_k - n_{k}<0 ,\,\forall s\in \mathbb{N}$$
+the coupled process $\tilde{W}^s_{(k)}$ has negative drift. Since $\text{Var}(X^i_{(k)})=\text{Var}(Y^i_{(k)})=n_{k-1}\cdot p_k(1-p_k)$, and $\left|\ex{}{X^i_{(k)}}\right|= n_{k}-n_{k-1}\cdot p_k$, by Kingman Inequality, we have that
+$$\ex{}{\max_{0\leq i\leq s-1}\{S^i_{(k)}\}}  \leq  \frac{\text{Var}(X^i_{(k)})}{ 2\left|\ex{}{X^i_{(k)}}\right| }\leq   \frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)}$$
+Thus, we obtain the expected upper bound:
+$$\ex{}{W^t_{(k)}}\leq n_k +\frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)}$$
+The expectation bound derived above ensures that the expected queue length $\ex{}{W^s_{(k)}}$ of the $k$-th segment is finite and controlled, which also provides a useful estimate for the expected memory consumption of the $k$-th segment. 
+
+As we have discussed before, the index $s$ of each segment are different, but are all bounded by the total number of all the batches. So if we use the total number of all the batches $S$ as the upper bound of the index $s$ of different segments, the expected gap of the throughput $\throughput^* - \mathbb{E}[\throughput^{(\zeta S, \pi)}]$ is bounded by
+$$\frac{1}{S}\sum_{j=1}^m \ex{}{W^S_{(j)}}\leq
+\frac{2n_1}{S} +\frac{1}{S} \cdot\frac{\Delta T_{ [1,\cdots,m] }\cdot \sum_{j=1}^m \lambda_j}{2\left( n_1 - \Delta T_{ [1,\cdots,m] }\cdot \sum_{j=1}^m \lambda_j\right)} +\frac{1}{S}\sum_{j=2}^m n_k +\frac{1}{S}\sum_{j=2}^m\frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)}$$
+In \textbf{Conventional Heavy Traffic}, we have the estimation of $\throughput^* - \mathbb{E}[\throughput^{(\zeta , \pi)}]$:
+$$\frac{2n_1}{\zeta S} +\frac{1}{\zeta S} \cdot\frac{\Delta T_{ [1,\cdots,m] }\cdot \sum_{j=1}^m \lambda_j}{2\left( n_1 - \Delta T_{ [1,\cdots,m] }\cdot \sum_{j=1}^m \lambda_j\right)}+\frac{1}{\zeta S}\sum_{j=2}^m n_k +\frac{1}{\zeta S}\sum_{j=2}^m\frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)} = O((\zeta S)^{-1})$$
+With the end-to-end expected latency and TTFT:
+$$\mathbb{E}\left[ \Latency^{(\zeta , \pi)} \right]\leq \Delta T_{[1,\cdots,m]}\cdot \sum_{j=1}^m \frac{1}{\zeta S}\sum_{t=1}^T\ex{}{W_t^{(j)}} \sim O(1)$$
+$$\mathbb{E}\left[ \TTFT^{(\zeta , \pi)} \right]\leq \Delta T_{[1,\cdots,m]}\cdot \frac{1}{\zeta S}\sum_{t=1}^T\ex{}{W_t^{(1)}} \sim O(1)$$
+However, while the average is bounded, this does not prevent the queue length $W^s_{(k)}$ from exceeding this limit in specific sample paths due to stochastic fluctuations. In practical terms, there remains a positive probability of memory overflow, where $W^s_{(k)}$ grows large enough to exhaust available resources, potentially disrupting system performance. To address this, we next derive a high-probability bound to quantify the likelihood of such overflows.
+
+As a result, we need to estimate 
+$$P\left( \max\{0,S^1_{(k)},\cdots,S^{s-1}_{(k)}\} \ge c\right)=P\left( \max_{0\leq i\leq s-1}\{S^i_{(k)}\} \ge c\right), \forall c>0 ,\,\text{where }S^0_{(k)}=0$$
+We construct an exponential martingale $M^i_{(k)} = e^{\theta S^i_{(k)}}$. And to make sure it is a martingale, we first consider the moment generating function
+$$\phi_{(k)}(\theta) = \ex{}{e^{\theta X_{(k)}^i}}= e^{-\theta n_{k}}(1-p_k+p_ke^{\theta})^{n_{k-1}},$$
+and find $\theta>0$ to make the moment generating function equal $1$ to make sure the $M^i_{(k)}$ is a martingale. The following lemma shows that the solution $\theta>0$ exists. And detailed proof is in the Appendix~\ref{appendix_lemma::proof of solution to martingale exists}.
+\begin{lemma}\label{lemma::solution to martingale exists}
+Suppose \(n_{k-1} > n_k > n_{k-1} p_k\) and \(p_k \in (0, 1)\). Then there exists a unique solution \(\theta_k > 0\) to the equation
+\begin{equation}
+    e^{-\theta_k n_k} (1 - p_k + p_k e^{\theta_k})^{n_{k-1}} = 1, \label{eq::eq of theta}
+\end{equation}
+where \(\theta_k\) is strictly increasing with respect to \(D = n_k - n_{k-1} p_k\) and satisfies the lower bound
+\[
+\theta_k \geq \frac{8 (n_k - n_{k-1} p_k)}{n_{k-1}}.
+\]
+\end{lemma}
+So when $\theta_k>0$ satisfies $\phi(\theta_k)=1$, $M^i_{(k)}$ is a martingale that starts at $M^0_{(k)}= e^{\theta_k \cdot 0}=1 $.
+
+By Doob's inequality, we have that
+$$P(\max_{1\leq i
+\leq s-1}\{ e^{\theta_k S^i_{(k)}} \}\geq a)\leq \frac{\ex{}{M^i}}{a} = \frac{\ex{}{M^0}}{a}= \frac{1}{a}.$$
+So we have that
+$$P(\max_{1\leq i
+\leq s-1}\{ e^{\theta S^i_{(k)}}\} \geq e^{\theta c})\leq \frac{1}{e^{\theta c}}  \Rightarrow P(\max_{1\leq i
+\leq s-1}\{  S^i_{(k)}\} \geq c)\leq \frac{1}{e^{\theta c}} .$$
+So consider the probability, we have 
+$$P\left(  W^s_{(k)}\geq c  \right) <P\left(  \tilde{W}^s_{(k)}\geq c  \right) = P(\max_{1\leq i
+\leq s-1}\{  S^i_{(k)}\} \geq c - n_k)\leq e^{-\theta_k (c - n_k)}$$
+
+So for $2\leq k\leq m, 0\leq t\leq T$, we have that
+$$P\left(  W^t_{(k)}\geq c  \right)< e^{-\theta_k (c - n_k)}$$
+where $\theta_k>0$ is the solution to (\ref{eq::eq of theta}).
+
+To determine the memory lower bound, we need to ensure that the memory consumption does not exceed the bound at any \( s \in \{1, \dots, S\} \) with probability at least \( 1 - \delta \). For each segment \( k \in \{2, \dots, m\} \) and total batch index \( s \in \{1, \dots, S\} \), we have:
+\[ P\left( W^s_{(k)} \geq c \right) < e^{-\theta_k (c - n_k)}, \]
+There are \( m - 1 \) segments (from \( k = 2 \) to \( m \)) and \( S  \) batch counts (from \( s = 1 \) to \( S \)). We allocate the total failure probability \( \delta \) across all segments and batch counts. The total number of events is \( (m - 1) \cdot S \). Set the overflow probability for each segment and batch counts to:
+$$P\left( W^s_{(k)} \geq c_k \right) \leq \frac{\delta}{(m - 1) \cdot S}\Rightarrow e^{-\theta_k (c_k - n_k)} \leq \frac{\delta}{(m - 1) \cdot S}\Rightarrow c_k \geq n_k + \frac{\ln\left( \frac{(m - 1) \cdot S}{\delta} \right)}{\theta_k}$$
+If we choose 
+\[ c_k = n_k + \frac{\ln\left( \frac{(m - 1) \cdot S}{\delta} \right)}{\theta_k}, \]
+then we have that
+\[ P\left( W^s_{(k)} \geq c_k \right) \leq \frac{\delta}{(m - 1) \cdot S}. \]
+
+Next, we compute the joint probability of overflow across all segments and batch counts using a union bound:
+$$P\left( \bigcup_{k=2}^m \bigcup_{s=1}^S \{ W^s_{(k)} \geq c_k \} \right) \leq \sum_{k=2}^m \sum_{s=1}^S P\left( W^s_{(k)} \geq c_k \right)\leq (m - 1) \cdot S \cdot \frac{\delta}{(m - 1) \cdot S} = \delta$$
+Thus:
+$$P\bigg( W^s_{(k)} \leq c_k \text{ for all } 
+\begin{aligned}
+    &k \in \{2, \dots, m\}, \\
+    &s \in \{1, \dots, S\} 
+\end{aligned} \bigg) 
+\geq 1 - \delta.$$
+So the memory consumption is bounded:
+$$    \text{Memory Consumption}^s 
+= M^{\pi} + \sum_{j=2}^m W^s_{(j)} \cdot (l + l_{j-1}')\leq M^{\pi} + \sum_{j=2}^m c_j \cdot (l + l_{j-1}')$$
+where $M^\pi$ is the peak batch
+memory usage and is defined by threshold $\pi=[n_1,\cdots,n_m]$
+$$M^\pi = \sum_{j=1}^m n_j \left( l + \frac{l_1^\prime + \cdots +l_{j}^\prime}{2} \right)\left( l_j^\prime - l_{j-1}^\prime \right), \, l_0^\prime =0$$
+
+Substitute \(c_j = n_j + \frac{\ln\left( \frac{(m - 1) \cdot S}{\delta} \right)}{\theta_j} \), we have that
+$$    \text{Memory Consumption}^s \leq M^{\pi} + \sum_{j=2}^m \left( n_j + \frac{\ln\left( \frac{(m - 1) \cdot S}{\delta} \right)}{\theta_j} \right) \cdot (l + l_{j-1}').$$
+Define the memory bound \( \mathbf{M}^S \):
+$$\mathbf{M}^S = M^{\pi} + \sum_{j=2}^m n_j \cdot (l + l_{j-1}') + \sum_{j=2}^m \frac{\ln\left( \frac{(m - 1) \cdot S}{\delta} \right)}{\theta_j} \cdot (l + l_{j-1}').$$
+By the lower bound in Lemma~\ref{lemma::solution to martingale exists}, we can obtain the upper bound of the third term:
+$$\sum_{j=2}^m \frac{\ln\left( \frac{(m - 1) \cdot S}{\delta} \right)}{\theta_j} \cdot (l + l_{j-1}') \leq \sum_{j=2}^m \frac{n_{k-1}}{8(n_k - n_{k-1}p_k)}\ln\left( \frac{(m - 1) \cdot S}{\delta} \right)\cdot (l + l_{j-1}')$$
+And this \( \mathbf{M}^S \) ensures that with probability at least \( 1 - \delta \), the memory consumption does not exceed \( \mathbf{M}^S \) at any batch counts \( s \in \{1, \dots, S\} \).
+% \gan{This help to estimate the memory overflow. try to expalin.}
+% \gan{there the inputs may have difference prefill tokens?}
+
+% Now we consider that there are different kinds of prefill lengths, which is $l_1<l_2<\cdots<l_h$. And the prompts with $l_v$ prefill length have decode length $l_{1,v}^{\prime}<\cdots<l_{m_v,v}^{\prime}$. \gan{a bigger batch.}
+
+% \gan{Another approach to obtain high probability bound.}
+
+\section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic_time_varying}}\label{appendix:: proof of nested optimality, time varying.}
+For the first segment, the state transition rule is 
+$$ W_{(1)}^{s+1} = W_{(1)}^{s} + Y_{(1)}^s  - n_1 \cdot \mathbf{1}\{ W_{(1)}^{s} + Y_{(1)}^s \geq n_1 \},  Y_{(1)}^s \sim P( \sum_{j=1}^m \lambda_j[t(s), t(s)+ \Delta T_{s-\text{th Batch}}] )  $$
+where $s$ denotes the total batch counts, $t(s)$ denotes the start time of $s$-th batch, and $\Delta T_{s-\text{th Batch}}$ denotes the cost of the inference of the $s-th$ batch. Since $\Delta T_{s-\text{th Batch}}\leq \Delta T_{[1,\dots,m]}(n_1,\dots,n_m)$, where $\Delta T_{[1,\dots,m]}(n_1,\dots,n_m)$ is the time cost of the inference of the $s$-batch containing all $m$ types, we can obtain a dominated process $\{\bar{W}_{(1)}^{s}\}$. Also notice that when thresholds $\pi = [n_1, \cdots,n_m]$ is fixed, the time cost $\Delta T_{[1,\dots,m]}(n_1,\dots,n_m)$ is time invariant.
+$$ \bar{W}_{(1)}^{s+1} = \bar{W}_{(1)}^{s} + \bar{Y}_{(1)}^s  - n_1 \cdot \mathbf{1}\{ \bar{W}_{(1)}^{s} + \bar{Y}_{(1)}^s \geq n_1 \},  Y_{(1)}^s \sim P(  \sum_{j=1}^m \lambda_j[t(s), t(s)+\Delta T_{[1,\dots,m]}(n_1,\dots,n_m)] )  $$
+By (\ref{eq:nested_wait_thresholds_time_varying}), we have that
+$$ \sum_{j=1}^m \lambda_j[t(s), t(s)+\Delta T_{[1,\dots,m]}(n_1,\dots,n_m)] \leq \sup_{\forall s}\left\{\sum_{j=1}^m \lambda_j[t(s), t(s)+\Delta T_{[1,\dots,m]}(n_1,\dots,n_m)] \right\} < n_1$$
+We denote $\sup_{\forall s}\left\{\sum_{j=1}^m \lambda_j[t(s), t(s)+\Delta T_{[1,\dots,m]}(n_1,\dots,n_m)] \right\}$ as $\mathbf{\Lambda}^{\pi}<n_1$, and we can construct a dominate process with time invariant arrival
+$$ \tilde{W}_{(1)}^{s+1} = \tilde{W}_{(1)}^{s} + \tilde{Y}_{(1)}^s  - n_1 \cdot \mathbf{1}\{ \tilde{W}_{(1)}^{s} + \tilde{Y}_{(1)}^s \geq n_1 \},  \tilde{Y}_{(1)}^s \sim P(\mathbf{\Lambda}^{\pi})  $$
+We next define that $X_{(1)}^s = \tilde{Y}_{(1)}^s - n_1  $, and $\{ \tilde{W}_{(1)}^{s}\}$ is dominated by a Lindley process
+$$ \overline{W}_{(1)}^{0} = 2n_1,\,  \overline{W}_{(1)}^{s+1} = \max \{  2n_1, \overline{W}_{(1)}^{s} + X_{(1)}^s \},\,\forall s \in \mathbb{N} $$
+Then we have that
+$$ W_{(1)}^{s}\leq \bar{W}_{(1)}^{s} \leq \tilde{W}_{(1)}^{s} \leq \overline{W}_{(1)}^{s}, \forall s \in \mathbb{N}.$$
+Since $n_1> \mathbf{\Lambda}^{\pi}$, the process $\{\overline{W}_{(1)}^{s} \}$ has negative drift. Since 
+$$\text{Var}(X_{(1)}^s ) = \mathbf{\Lambda}^{\pi},\,\left|  \ex{}{X_{(1)}^s} \right| = n_1 - \mathbf{\Lambda}^{\pi}$$
+By Kingman Inequality, we have that
+$$  \ex{}{W_{(1)}^s}\leq  2n_1 + \frac{\mathbf{\Lambda}^{\pi}}{2\left(n_1 -\mathbf{\Lambda}^{\pi}\right)} $$
+Next we consider the $k$-th segment, $2\leq k\leq m$. The arrival for the $k$-th segment is from the last batch containing the $k-1$-th segment, so the index $s$ to the $k$-th segment denotes the batch counts of the batch containing the $k-1$-th batch. Notice that, the index $s$ to each segment are different, but are bounded by the total batch counts. 
+
+Now consider the $s$-th arrival of the $k$-th segment, it comes from the $s$-th batch containing the $k-1$-th batch and the parameter $p_k(s)$ is defined by the components of this batch. Although we do not exactly know the arrival time of these prompts, but we know that the arrival happens from $t$ to $t+\Delta t$, where $t<t+\Delta t \leq t(s,k-1)$, $t(s,k-1)$ is the starting time of the $s$-th batch containing the $k-1$-th segment. By (\ref{eq:nested_wait_thresholds_time_varying}), we define that
+$$p_k(s) = \frac{\sum_{j=k+1}^m \lambda_j[ t, t+\Delta t ]}{\sum_{j=k}^m \lambda_j[ t, t+\Delta t ]}\leq p_k^* < \frac{n_k}{n_{k-1}}, \forall s \in \mathbb{N}.$$
+So the arrival process is 
+$$Y_{(k)}^s \sim \text{Binomial}(n_{k-1},p_k(s)),\, \forall s\geq 0$$
+So the state transition rule is given by
+$$W_{(k)}^{s+1} = W_{(k)}^{s} + Y_{(k)}^{s} - n_k \cdot\mathbf{1}\{ W_{(k)}^{s} + Y_{(k)}^{s}\geq n_k \} $$
+where $s$ denotes the $s$-th batch which contains segment $s-1$, since there is new arrival to segment $s$ if and only if the segment $s-1$ is contained in the former batch.
+
+We set $X_{(k)}^s  =  Y_{(k)}^s - n_k, \forall s\in \mathbb{N}$. Although here the distribution of $Y_{(k)}^s\sim \text{Binomial}(n_{k-1},p_k(s))$ is time-varying, the coupling construction is still the same as Lemma~\ref{lemma::nested coupled process}
+\begin{lemma}\label{lemma: coupling, time varying}
+Define a new process $\{ \tilde{W}_{(k)}^s\}$ as a coupled version of $\{  W_{(k)}^s \}$ as follows:
+$$ \tilde{W}_{(k)}^0=n_k, \, \tilde{W}_{(k)}^{s+1} = \max\{ n_k, \, \tilde{W}_{(k)}^s+X_{(k)}^s\},\, \forall t\geq 0 ,\, X_{(k)}^s = Y_{(k)}^s - n_1. $$
+Then, we have that 
+$$ \tilde{W}^s_{(k)}\geq W^s_{(k)},\,\forall s\in \mathbb{N} $$
+\end{lemma}
+However, in order to use the Kingman , we should construct another coupled process with time-invariant arrival. So consider
+$$\bar{W}_{(k)}^0=n_k,\, \bar{W}_{(k)}^{s+1} = \max\{ n_k,\, \bar{W}_{(k)}^{s}+\bar{X}_{(k)}^s \}, \,\bar{X}_{(k)}^s =\bar{Y}_{(k)}^s  -n_k, \, \bar{Y}_{(k)}^s \sim \text{Binomial}(n_{k-1}, p_k^*),\,\forall s\in \mathbb{N}.  $$
+Then we have that 
+$$\bar{W}^s_{(k)}\geq \tilde{W}^s_{(k)}\geq W^s_{(k)},\,\forall s\in \mathbb{N}$$
+Note that the process $\bar{W}^s_{(k)}$ is equivalent to 
+$$ \bar{W}_{(k)}^0 = n_k,\, \bar{W}_{(k)}^{s+1} = n_k + \max_{0\leq i\leq t}\{ \bar{S}_{(k)}^i \} ,\, \text{ where }\bar{S}_{(k)}^0=0, \bar{S}_{(k)}^i = \sum_{j=1}^i \bar{X}_{(k)}^{j}, 1\leq i\leq s $$
+Since the expectation
+$$ \ex{}{\bar{X}_{(k)}^s} = n_{k-1}\cdot p_{k}^* - n_k <0,\, \forall t\in \mathbb{N} $$
+the coupled process $\{\bar{W}_{(k)}^s \}$ has a negative drift. Since 
+$$\text{Var}(\bar{X}_{(k)}^s) = n_{k-1}p_k^*(1-p_k^*),\,\left|\ex{}{\bar{X}_{(k)}^s}\right|=n_k - p_k^* n_{k-1}$$
+by Kingman, we have that
+$$\ex{}{\max_{0\leq i\leq t}\{ \bar{S}_{(k)}^i \}  }\leq  \frac{  n_{k-1}p_k^*(1-p_k^*) }{ 2(n_k - n_{k-1}p_k^*)} $$
+Thus, we obtain the expected upper bound:
+$$\ex{}{W_{(k)}^s}\leq \ex{}{\tilde{W}_{(k)}^s}\leq \ex{}{\bar{W}_{(k)}^s} \leq n_k + \frac{  n_{k-1}p_k^*(1-p_k^*) }{ 2(n_k - n_{k-1}p_k^*)}$$
+The discussion of the asymptotic optimal throughput under bounded latency and TTFT is the same as the discussion in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic}. For the high probability bound, it is also similar to the discussion in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic} considering the coupled process $\{ \bar{W}_{(k)}^s \}$. Recall the definition of $\{ \bar{W}_{(k)}^s \}$:
+$$ \bar{W}_{(k)}^0 = n_k,\, \bar{W}_{(k)}^{s+1} = n_k + \max_{0\leq i\leq t}\{ \bar{S}_{(k)}^i \} ,\, \text{ where }\bar{S}_{(k)}^0=0, \bar{S}_{(k)}^i = \sum_{j=1}^i \bar{X}_{(k)}^{j}, 1\leq i\leq s $$
+where $\bar{X}_{(k)}^{j} = \bar{Y}_{(k)}^j - n_k$, $\bar{Y}_{(k)}^j \sim \text{Binomial}(n_{k-1}, p_k^*)$ and $p_k^*<\frac{n_k}{n_{k-1}}$. The same to the discussion in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic} after the Lemma~\ref{lemma::solution to martingale exists}, the memory bound $M_S$ here is:
+$$\mathbf{M}_S = M^{\pi} + \sum_{j=2}^m n_j \cdot (l + l_{j-1}') + \sum_{j=2}^m \theta_j^{-1}\ln\left( \frac{(m - 1) \cdot S}{\delta} \right) \cdot (l + l_{j-1}')$$
+where $\theta_j, 2\leq j\leq m$ here is the solution to the equation similar to (\ref{eq::eq of theta})
+\begin{equation}
+e^{-\theta_j n_j} (1 - p_j^* + p_j^* e^{\theta_j})^{n_{j-1}} = 1\label{eq::eq of theta, time varying}
+\end{equation}
+Since 
+$$p_j^* = \arg\min_{0< p_j< 1} \{n_j - p_j n_{j-1}\},$$
+by the strictly increasing property of $\theta_j$ in Lemma~\ref{lemma::solution to martingale exists}, the corresponding $\theta_j$ is the smallest solution under different $0<p_j<1$, thus obtain the biggest term $\sum_{j=2}^m \theta_j^{-1}\ln\left( \frac{(m - 1) \cdot (S + 1)}{\delta} \right) \cdot (l + l_{j-1}')$. And the following discussion considering the lower bound of $\theta_j$ is the same in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic}.
+
+\section{Proof of Lemmas}\label{sec:pf_lemmas}
+\subsection{Proof of Lemma~\ref{lemma::throughput gap, single}}\label{appendix_lemma::proof of throughput gap, single}
+We take the expectation on both sides of the state transition equation
+$$\ex{}{W^{t+1}}=\ex{}{W^t}+\lambda - \lambda \mathbb{P}(W^t+X^t\geq \lambda)$$
+Summing from $t=0$ to $T-1$, and noting that $W_0=0$, we get the lemma
+$$\ex{}{W^T}=\lambda T - \lambda \ex{}{T-T_{\text{stuck}}}=\lambda\cdot \ex{}{T_{\text{stuck}}}$$
+
+\subsection{Proof of Lemma \ref{lem:coupled_process, single}}\label{appendix_lemma::proof of coupled_process, single}
+We prove this by induction. First, for $t = 0$, we have $\tilde{W}^0=2\lambda\geq \lambda=W^0+\lambda$. Next, assume that $\tilde{W}^t \geq W^t + \lambda$ holds for some $t \geq 0$. We now prove that $\tilde{W}^{t+1} \geq W^{t+1} + \lambda$. Consider the following two cases:
+
+1. If $W^t + X^t \geq \lambda$, then $W^{t+1} = W^t + X^t - \lambda$. In this case,
+$$\tilde{W}^{t+1}=\max\{ 2\lambda, \tilde{W}^t + X^t - \lambda \}\geq \tilde{W}^t + X^t - \lambda\geq( W^t+\lambda )+ X^t - \lambda=W^{t+1}+\lambda.$$
+
+2. If $W^t + X^t < \lambda$, then $W^{t+1} = W^t + X^t$. In this case,
+$$\tilde{W}^{t+1}=\max\{ 2\lambda, \tilde{W}^t + X^t - \lambda \}\geq 2\lambda = \lambda+\lambda>W^{t+1}+\lambda.$$
+Hence, $\tilde{W}^{t+1} \geq W^{t+1} + \lambda$. By the principle of induction, we have $\tilde{W}^t \geq W^t + \lambda$ for all $t \in \mathbb{N}$.
+
+\subsection{Proof of Lemma~\ref{lemma::multiple-type coupled dominace}}\label{appendix_lemma::proof of multiple-type coupled dominace}
+Since $\tilde{W}_{(j)}^t\geq 2n_j$, when $W^t_{(j)}< n_j$, we have $\tilde{W}_{(j)}^t\geq W^t_{(j)}$.
+
+At first, $W^0_{(j)}=0$, but $W^t_{(j)}$ will achieve $n_j$ and type $j$ starts to join the batch. And after a period of time, $W^t_{(j)}$ drops back below $n_j$, and repeats the process above.
+
+In each period $T_0\leq t\leq T_1$ when $W^t_{(j)}\geq n_j$, we set $\tau = \max\{t\leq T_0|W^t_{(j)} = n_j \}$. So $\forall t\in [T_0, T_1]$, the number of iterations of $W^t_{(j)}$ and $\tilde{W}^t_{(j)}$ from $\tau$ to $t$ is that
+$$I_{\tau\to t} \geq \lfloor\frac{t-\tau}{\Delta T_{[1,\cdots,m]}}\rfloor ,\,\tilde{I}_{\tau\to t}\leq 1+\lfloor\frac{t-\tau}{\Delta T_{[1,\cdots,m]}}\rfloor \Rightarrow \tilde{I}_{\tau\to t}\leq 1+I_{\tau\to t}.$$
+So the coupled process at most makes one more iteration than the real process after $\tau$. For example, at $\tau$, the real process is  just at a batch inference without type $j$, but the coupled process just finished a batch inference with all the types, which yields a $n_j$ drop on $\tilde{W}_{(j)}^t$. So at $\tau$, $\tilde{W}_{(j)}^t\geq n_j = W_{(j)}^t$. And for time $(\tau,t]$, since the arrival dynamic is the same between the two processes,  at the real process type $j$ joins every batch, and the batch may not contain all types compared with the coupled process. So the numbers of the finish of a batch of coupled process is at most the same as the real ones. So $\tilde{W}^t_{(j )}\geq W^t_{(j )}$ holds during $(\tau, t]$, hence $\forall t\geq 0$. 
+
+\subsection{Proof of Lemma~\ref{lemma::nested coupled process}}\label{appendix_lemma::proof of nested coupled process}
+We prove the dominance by induction. When $t = 0$, it is obvious that $ \tilde{W}_{(k)}^0 = n_{k}\geq 0=W_{(k)}^t $. Next, we assume that $\tilde{W}^t_{(k)}\geq W^t_{(k)}  $ holds for some $t\geq 0$. We now prove that $\tilde{W}^{t+1}_{(k)}\geq W^{t+1}_{(k)}  $. Consider the following two cases:
+
+1. If $ W^t_{(k)}+ Y^t_{(k)}\geq n_k $, then $W^t_{(k+1)}= W^{t}_{(k)}+Y^t_{(k)}  -  n_k $. In this case, 
+$$ \tilde{W}^{t+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{t}_{(k)} + X^t_{(k)}\} \geq \tilde{W}^{t}_{(k)} + X^t_{(k)}={W}^{t}_{(k)} + Y^t_{(k)}-n_k=W^t_{(k+1)}$$
+2. If $ W^t_{(k)}+ Y^t_{(k)}<n_k $, then $W^t_{(k+1)}= W^{t}_{(k)}+Y^t_{(k)}$. In this case, 
+$$\tilde{W}^{t+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{t}_{(k)} + X^t_{(k)}\} \geq n_{k}> W^t_{(k+1)}$$
+
+\subsection{Proof of Lemma~\ref{lemma::solution to martingale exists}}\label{appendix_lemma::proof of solution to martingale exists}
+First, we prove that the solution $\theta_k>0$ exists and is unique and for simplicity, we denote $\theta=\theta_k$ here. Define the function
+\[
+f(\theta) = e^{-\theta n_{k}} (1 - p_k + p_k e^{\theta})^{n_{k-1}}.
+\]
+We need to show that there exists \(\theta > 0\) such that \(f(\theta) = 1\). First, evaluate \(f(\theta)\) at \(\theta = 0\):
+\[
+f(0) = e^{0} (1 - p_k + p_k \cdot 1)^{n_{k-1}} = 1.
+\]
+Thus, \(\theta = 0\) is a solution, but we seek the solution \(\theta > 0\). Next, we consider the logarithm of $f(\theta)$
+$$g(\theta) = \ln f(\theta) = -\theta n_{k} + n_{k-1} \ln(1 - p_k + p_k e^{\theta}),$$
+$$ g^\prime(\theta) = -n_{k} + n_{k-1} \cdot \frac{p_k e^{\theta}}{1 - p_k + p_k e^{\theta}}.$$
+At \(\theta = 0\),
+\[
+g(0)=0,\,g^\prime(0) = -n_{k} + n_{k-1} p_k.
+\]
+Since \(\mathbb{E}[X^s_{(k)}] = n_{k-1} p_k - n_{k} < 0\), we have \(g'(0) < 0\), so \(f(\theta)\) is decreasing near \(\theta = 0\). Consider the second derivative:
+\[
+g''(\theta) = n_{k-1} \cdot \frac{p_k e^{\theta} (1 - p_k)}{(1 - p_k + p_k e^{\theta})^2} > 0 \quad \text{for} \quad \theta > 0,
+\]
+since \(p_k \in (0, 1)\) and \(n_{k-1} > 0\). Thus, \(g(\theta)\) is convex, and so is \(f(\theta)\). Now, consider the limit as \(\theta \to \infty\):
+\[
+f(\theta) \approx p_k^{n_{k-1}} e^{\theta (n_{k-1} - n_{k})}.
+\]
+By our settings, $n_{k-1}>n_k$, this ensures that $f(\theta)\to \infty, \theta\to \infty$. Thus, \(f(\theta)\) is continuous, convex, starts at \(f(0) = 1\), decreases below 1 for small \(\theta > 0\), and increases to infinity. By the intermediate value theorem, there exists only one \(\theta > 0\) such that \(f(\theta) = 1\). 
+
+Next, we prove the monotonicity of the solution $\theta>0$ with respect to \(D = n_k - n_{k-1} p_k\). Recall that \(g(0) = 0\), \(g'(0) = -D < 0\), and \(g''(\theta) > 0\) for \(\theta > 0\), so \(g(\theta)\) is strictly convex. The unique positive solution \(\theta > 0\) occurs where \(g(\theta)\) crosses zero after initially decreasing from \(g(0) = 0\). Consider two values \(D_1\) and \(D_2\) such that \(D_1 < D_2\), with corresponding functions \(g_1(\theta) = -\theta (n_{k-1} p_k + D_1) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\) and \(g_2(\theta) = -\theta (n_{k-1} p_k + D_2) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\), and solutions \(\theta_1\) and \(\theta_2\), respectively. 
+
+At \(\theta = 0\), \(g_1'(0) = -D_1 > g_2'(0) = -D_2\), meaning \(g_2(\theta)\) decreases more steeply from zero than \(g_1(\theta)\). For a fixed \(\theta > 0\), the partial derivative \(\frac{\partial g}{\partial D} = -\theta < 0\). Thus, increasing \(D\) decreases \(g(\theta)\) pointwise. Since \(g(\theta)\) is convex and approaches infinity as \(\theta \to \infty\), the zero crossing shifts to a larger \(\theta\) to restore \(g(\theta; D) = 0\). Hence, if \(D_2 > D_1\), then \(\theta_2 > \theta_1\).
+
+Finally, we provide asymptotic behavior and bounds for the solution \(\theta>0\) in terms of \(D\), \(n_{k-1}\), and \(p_k\). When \(D\) is small, \(\theta\) is also small. Expand \(g(\theta)\) around \(\theta = 0\), we have that $g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(0) \theta^2 + O(\theta^3) = 0 - D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 + O(\theta^3)$. Setting \(g(\theta) = 0\) and neglecting higher-order terms, we obtain that $-D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 \approx 0 \implies \theta \approx \frac{2D}{n_{k-1} p_k (1 - p_k)}$. Thus, for small \(D\), \(\theta = O(D)\), and specifically, $\theta \approx \frac{2 (n_k - n_{k-1} p_k)}{n_{k-1} p_k (1 - p_k)}$.
+
+Next we apply Taylor's theorem with remainder to find the general lower bound of the solution $\theta>0$.
+$$g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(c) \theta^2 = -D \theta + \frac{1}{2} g''(c) \theta^2 = 0\implies \theta = \frac{2D}{g''(c)}. \quad \text{for some } c \in (0, \theta)$$
+So we need to find an upper bound for \(g''(c)\), since $g^{\prime \prime}(x) = n_{k-1} \cdot \frac{p_k e^{x} (1 - p_k)}{(1 - p_k + p_k e^{x})^2}$, we define \(h(y) = \frac{p_k y (1 - p_k)}{(1 - p_k + p_k y)^2}\) where \(y = e^{x} \geq 1\). The function \(h(y)\) achieves a maximum of \(\frac{1}{4}\) over $y\geq 1$ and $0<p_k<1$. Thus we have that $
+g''(x) \leq n_{k-1} \cdot \frac{1}{4} = \frac{n_{k-1}}{4} \implies \theta = \frac{2D}{g''(c)} \geq \frac{2D}{n_{k-1}/4} = \frac{8D}{n_{k-1}}$. So a general lower bound is:
+\begin{align}
+    \theta \geq \frac{8 (n_k - n_{k-1} p_k)}{n_{k-1}}.\label{eq::theta lower bound}
+\end{align}
+
+% \input{checklist}
+\end{document}

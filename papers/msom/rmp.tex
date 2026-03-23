@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+
+\begin{document}
+
+\begin{center}
+    \Large\textbf{Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints}
+\end{center}
+
+\noindent\textbf{Presenting Author Name:} Gan Luo \\
+\textbf{Presenting Author Institution:} Peking University \\
+\textbf{Presenting Author Email:} luogan@stu.pku.edu.cn \\
+\textbf{List of Co-authors:} Ruicheng Ao (Massachusetts Institute of Technology), David Simchi-Levi (Massachusetts Institute of Technology), Xinshang Wang (Alibaba Group)
+
+\textbf{Abstract:} \\
+Large Language Models (LLMs) have transformed natural language processing, yet their inference phase poses significant computational hurdles due to the memory-intensive Key-Value (KV) cache. This paper tackles the optimization of LLM inference under memory constraints, focusing on online scheduling of inference tasks to maximize throughput while controlling latency.
+
+We frame the problem as a multi-stage online scheduling task with stochastic queueable requests. To set a performance benchmark, we introduce a fluid dynamics approximation, modeling prompt arrivals and processing as continuous flows. This fluid model yields an upper bound on throughput and informs the design of practical control strategies, such as batching thresholds and segmented scheduling, to optimize memory and processing efficiency.
+
+Two algorithms are developed: the \textbf{Waiting for Accumulated Inference Threshold (WAIT)} algorithm, for scenarios with known prompt output lengths, and the \textbf{Nested WAIT} algorithm, for cases where output lengths are unknown. WAIT leverages fluid-derived thresholds to batch prompts efficiently, achieving near-optimal throughput with bounded latency. Nested WAIT adapts this approach by segmenting inference based on cumulative output lengths, dynamically adjusting as lengths emerge during processing. Both algorithms are proven asymptotically optimal in heavy traffic, with throughput nearing the fluid bound and latency remaining controlled.
+
+Experiments with the Llama-7B model on an A100 GPU validate the algorithms’ efficacy. For known output lengths, WAIT boosts throughput by up to 20\% and cuts latency by 15\% compared to existing baselines like vLLM and Sarathi, which use First-Come-First-Serve scheduling. On a diverse real-world conversation dataset, Nested WAIT maintains robust throughput and manageable latency increases even at high query rates. These results underscore the practical advantages of our fluid-guided, memory-aware framework over traditional methods.
+
+This work offers a novel framework blending operations research and machine learning to enhance LLM inference. By leveraging fluid dynamics as both a benchmark and guide, it delivers scalable, near-optimal solutions for resource-constrained settings, advancing efficient LLM deployment.
+
+\textbf{Keywords:} Large Lanugage Model, Key-value cache, Memory Constraint, Online scheduling
+
+\end{document}

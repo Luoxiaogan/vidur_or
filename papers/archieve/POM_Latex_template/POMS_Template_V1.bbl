@@ -1,0 +1,30 @@
+\begin{thebibliography}{3}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{{\tt #1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \expandafter\ifx\csname doi\endcsname\relax
+  \def\doi#1{doi:\discretionary{}{}{}#1}\fi \else
+  \expandafter\ifx\csname doi\endcsname\relax
+  \def\doi{doi:\discretionary{}{}{}\begingroup \urlstyle{rm}\Url}\fi \fi
+
+\bibitem[{Doe(2014)}]{Doe2014}
+Doe, J. 2014.
+\newblock {\it I am the title of an article\/}.
+\newblock Available at \url{http://randomwebsitehereasfaof.edu} (last accessed
+  date: December 30, 2020).
+
+\bibitem[{Doe et~al.(2009)Doe, Row, and Smith}]{Doe2009}
+Doe, J.~G., R.~Row, J.~Smith. 2009.
+\newblock I am the title of a journal article.
+\newblock {\it Journal of Research in Operations and Supply Chain\/}, { 18}
+  (5), 506-515.
+
+\bibitem[{POMS(2021)}]{POMS2021}
+POMS. 2021.
+\newblock {\it Production and Operations Management Society\/}.
+\newblock Available at \url{https://poms.org} (last accessed date: December 30,
+  2020).
+
+\end{thebibliography}

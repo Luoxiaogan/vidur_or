@@ -1,0 +1,397 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%	Author Submission Template for Operations Research (OPRE)
+%%	INFORMS, <informs@informs.org>
+%%	Ver. 1.1, February 21, 2025
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Use dblanonrev for Double Anonymous Review submission
+% Use sglanonrev for Single Anonymous Review submission
+% For example, submission to INFORMS Mathematics of Operation Research, MOOR will have
+% \documentclass[deca,dblanonrev]{informs3}
+\documentclass[opre, blindrev]{informs3}
+
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage{setspace}
+% \documentclass[opre,dblanonrev]{informs4}
+% \documentclass[opre,sglanonrev]{informs4}
+\usepackage{eqndefns-left} % For checking the display equation width and equation environment definitions %
+% \usepackage{setspace}
+
+  
+\RequirePackage{tgtermes}
+\RequirePackage{newtxtext}
+\RequirePackage{newtxmath}
+\RequirePackage{bm}
+\RequirePackage{endnotes}
+%\usepackage{graphicx}     % Required for including images
+%\usepackage{caption}      % Required for customizing captions
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amssymb, mathtools}
+\allowdisplaybreaks
+\usepackage{parskip}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{caption}   % 可选，增强caption格式
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{subfigure}
+\usepackage{comment}
+
+
+
+% \usepackage{setspace}
+
+
+
+%\OneAndAHalfSpacedXI
+\OneAndAHalfSpacedXII % Current default line spacing
+%%\DoubleSpacedXI
+%%\DoubleSpacedXII
+
+% Optional LaTeX Packages
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+% Private macros here (check that there is no clash with the style)
+
+% Natbib setup for author-number style
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+
+%% Setup of the equation numbering system. Outcomment only one.
+%% Preferred default is the first option.
+\EquationsNumberedThrough    % Default: (1), (2), ...
+%\EquationsNumberedBySection % (1.1), (1.2), ...
+
+%% Setup of theorem styles. Outcomment only one.
+%% Preferred default is the first option.
+\TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+%\TheoremsNumberedByChapter  % (Theorem 1.1, Lema 1.1, Theorem 1.2)
+\ECRepeatTheorems  %  
+
+% For new submissions, leave this number blank.
+% For revisions, input the manuscript number assigned by the on-line
+% system along with a suffix ".Rx" where x is the revision number.
+\MANUSCRIPTNO{MOOR-0001-2024.00}
+
+
+\let\enotesize=\normalsize
+\def\notesname{Endnotes}%
+\def\makeenmark{$^{\theenmark}$}
+\def\enoteformat{\rightskip0pt\leftskip0pt\parindent=1.75em
+  \leavevmode\llap{\theenmark.\enskip}}
+
+% Private macros here (check that there is no clash with the style)
+
+% Natbib setup for author-year style
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ % \setlength{\bibsep}{0.8ex}
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+\newcommand{\note}[1]{{\color{blue} [Note: {#1}]}}
+
+\newcommand{\rev}{\color{black}}
+
+%% Setup of theorem styles. Outcomment only one.
+%% Preferred default is the first option.
+% \TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+%\TheoremsNumberedByChapter  % (Theorem 1.1, Lema 1.1, Theorem 1.2)
+% \ECRepeatTheorems
+\usepackage{bbm}
+% \usepackage[ruled, algo2e]{algorithm2e}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+
+\usepackage[unicode=true, bookmarks=false,
+breaklinks=false,pdfborder={0 0 1}]
+{hyperref} 
+
+
+\hypersetup{
+ colorlinks,citecolor=blue,filecolor=blue,linkcolor=blue,urlcolor=blue}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+
+\newcommand{\throughput}{\textbf{Thoughput}}
+\newcommand{\Latency}{\textbf{Latency}}
+\newcommand{\TTFT}{\textbf{TTFT}}
+
+% \setstretch{1.5}
+
+\input{command.tex}
+
+% Margins
+% \usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+% \usepackage[table]{xcolor}
+% \usepackage[table,usenames,dvipsnames]{xcolor}
+
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+\newcommand{\Hongyu}[1]{{\color{red} Hongyu: #1}}
+\newcommand{\Hengyu}[1]{{\color{green} Hengyu: #1}}
+
+% \newtheorem{proposition}{Proposition}
+% \newtheorem{definition}{Definition}
+% % \newtheorem{property}{Property}
+% % \newtheorem{corollary}{Corollary}
+% \newtheorem{remark}{Remark}
+% \newtheorem{proof}{Proof}
+% % \newtheorem{example}{Example}
+% \newtheorem{assumption}{Assumption}
+% \newtheorem{Proposition}{Proposition}
+% \newtheorem{Definition}{Definition}
+% \newtheorem{Corollary}{Corollary}
+% \newtheorem{remark}{Remark}
+% \newtheorem{assumption}{Assumption}
+% \newtheorem{Condition}{Condition}
+% \newtheorem{condition}{Condition}
+% \newtheorem{theorem}{Theorem}
+% \newtheorem{lemma}{Lemma}
+% \newtheorem{example}{Example}
+
+\newcommand*{\circled}[1]{\lower.7ex\hbox{\tikz\draw (0pt, 0pt)%
+    circle (.5em) node {\makebox[1em][c]{\small #1}};}}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} % Use Input in the format of Algorithm
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm
+\algnewcommand{\algorithmicand}{\textbf{and }}
+\algnewcommand{\algorithmicor}{\textbf{or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+  \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+      {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+      \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+      \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+      \fi
+      \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+  \end{center}
+  }
+
+\makeatletter
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\scriptsize}%
+ \def\bibsep{\smallskipamount}%
+ \setlength{\bibsep}{0ex}
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+% \renewenvironment{thebibliography}[1]
+%      {\section*{\refname}%
+%       \small % Set font size to \small (you can use \footnotesize or \scriptsize for even smaller)
+%       \setlength{\parskip}{0pt} % Remove extra space between paragraphs
+%       \setlength{\itemsep}{0pt plus 0.3pt} % Reduce space between items
+%       \begin{list}{\@biblabel{\@arabic\c@enumiv}}%
+%              {\settowidth\labelwidth{\@biblabel{#1}}%
+%               \leftmargin\labelwidth
+%               \advance\leftmargin\labelsep
+%               \@openbib@code
+%               \usecounter{enumiv}%
+%               \let\p@enumiv\@empty
+%               \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+%       \sloppy
+%       \clubpenalty4000
+%       \@clubpenalty \clubpenalty
+%       \widowpenalty4000%
+%       \sfcode`\.\@m}
+%      {\def\@noitemerr
+%        {\@latex@warning{Empty `thebibliography' environment}}%
+%       \end{list}}
+      
+\makeatother
+%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%
+
+% Outcomment only when entries are known. Otherwise leave as is and
+%   default values will be used.
+%\setcounter{page}{1}
+%\VOLUME{00}%
+%\NO{0}%
+%\MONTH{Xxxxx}% (month or a similar seasonal id)
+%\YEAR{0000}% e.g., 2005
+%\FIRSTPAGE{000}%
+%\LASTPAGE{000}%
+%\SHORTYEAR{00}% shortened year (two-digit)
+%\ISSUE{0000} %
+%\LONGFIRSTPAGE{0001} %
+%\DOI{10.1287/xxxx.0000.0000}%
+
+% Author's names for the running heads
+% Sample depending on the number of authors;
+% \RUNAUTHOR{Jones}
+% \RUNAUTHOR{Jones and Wilson}
+% \RUNAUTHOR{Jones, Miller, and Wilson}
+% \RUNAUTHOR{Jones et al.} % for four or more authors
+% Enter authors following the given pattern:
+%\RUNAUTHOR{}
+\RUNAUTHOR{Ao, Luo, Simchi-Levi, Wang}
+
+% Title or shortened title suitable for running heads. Sample:
+% \RUNTITLE{Bundling Information Goods of Decreasing Value}
+% Enter the (shortened) title:
+\RUNTITLE{Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints}
+
+% Full title. Sample:
+% \TITLE{Bundling Information Goods of Decreasing Value}
+% Enter the full title:
+
+
+\TITLE{Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints
+% \arc{do you think Confirmation or Confirmation Timing is better}
+}
+
+% \TITLE{A Simple and Optimal Multi-armed Bandit Policy Design with Safety against Heavy-tailed Risk }
+
+% Block of authors and their affiliations starts here:
+% NOTE: Authors with same affiliation, if the order of authors allows,
+%   should be entered in ONE field, separated by a comma.
+%   \EMAIL field can be repeated if more than one author
+\ARTICLEAUTHORS{%
+\AUTHOR{Ruicheng Ao}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{aorc@mit.edu}
+}
+
+\AUTHOR{Gan Luo}
+\AFF{School of Mathematical Sciences, Peking University, Beijing 100871, \EMAIL{luogan@stu.pku.edu.cn}
+}
+
+
+\AUTHOR{David Simchi-Levi}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{dslevi@mit.edu}
+}
+
+\AUTHOR{Xinshang Wang}
+\AFF{Alibaba Group, \EMAIL{xinshang.w@alibaba-inc.com}
+% Enter all authors
+} % end of the bloc
+}
+
+\ABSTRACT{%
+% \input{abstract}
+\input{abstract_nicholson}
+% Our results emphasize how  effective policies could be designed to balance mitigating resource waste and reducing overbooking losses while avoiding excessive confirmation calls in online reusable resource allocation with advance reservations.
+
+
+% Sample
+%\KEYWORDS{deterministic inventory theory; infinite linear programming duality;
+%  existence of optimal policies; semi-Markov decision process; cyclic schedule}
+}
+% Fill in data. If unknown, outcomment the field
+\KEYWORDS{Large Lanugage Model, Key-value cache, Memory Constraint, Online scheduling}
+%\HISTORY{Received: Month DD, YYYY; Accepted: Month DD, YYYY; Published Online: Month DD, YYYY}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Text of your paper here
+
+\input{introduction_nicholson}
+
+\input{model}
+
+\input{fluid}
+
+% \input{known_type}
+
+\input{unknown_type_nicholson}
+
+\input{numerical_nicholson}
+
+% \input{extension}
+
+\input{conclusion}
+
+
+%\THEEndNotes
+% \begingroup \parindent 0pt \parskip 4ex \def\enotesize{\normalsize} 
+% \theendnotes 
+% \endgroup
+
+% Appendix here
+% Options are (1) APPENDIX (with or without general title) or
+%             (2) APPENDICES (if it has more than one unrelated sections)
+% Outcomment the appropriate case if necessary
+%
+% \begin{APPENDIX}{<Title of the Appendix>}
+% \end{APPENDIX}
+%
+%   or
+%
+
+
+% Acknowledgments here
+% \ACKNOWLEDGMENT{We sincerely thank Dr. Zijie Zhou and Prof. Jing Dong for their valuable suggestions and insightful comments, which significantly helped improve the quality of this work.}
+
+
+% References here (outcomment the appropriate case)
+
+% CASE 1: BiBTeX used to constantly update the references
+%   (while the paper is being written).
+%\bibliographystyle{informs2014} % outcomment this and next line in Case 1
+%\bibliography{<your bib file(s)>} % if more than one, comma separated
+
+%\bibliographystyle{informs2014} % outcomment this and next line in Case 1
+%\bibliography{sample} % if more than one, comma separated
+
+% CASE 2: BiBTeX used to generate mypaper.bbl (to be further fine tuned)
+%\input{mypaper.bbl} % outcomment this line in Case 2
+
+%If you don't use BiBTex, you can manually itemize references as shown below.
+
+%\bibliographystyle{nonumber}
+
+\begingroup
+\small
+\singlespacing
+\bibliographystyle{plain}
+\bibliography{main.bib}
+\endgroup
+
+% \begin{APPENDICES}
+% \begingroup
+% \setlength{\baselineskip}{12pt} % Single spacing for 10pt font; adjust as needed
+% \input{Appendix}
+% \endgroup
+% \end{APPENDICES}
+%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%
+
+
+

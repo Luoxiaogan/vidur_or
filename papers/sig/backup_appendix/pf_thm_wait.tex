@@ -1,0 +1,91 @@
+% ============================================
+% Proof of Theorem 1: WAIT Algorithm Optimality
+% ============================================
+
+\section{Proof of Theorem~\ref{thm:wait_heavy_traffic}}\label{appexidx::proof of wait_heavy_traffic}
+
+\paragraph{Proof Outline.}
+This proof establishes asymptotic optimality of the WAIT algorithm when output lengths are known. The structure proceeds in two parts:
+\begin{enumerate}
+    \item \textbf{Single-type case}: We construct a coupled dominating process using the Lindley recursion and apply Kingman's bound for queue length expectations.
+    \item \textbf{Multiple-type case}: We extend to $m$ types by applying the coupling construction type-by-type, leveraging that the fixed threshold $n_j$ decouples inter-type dynamics.
+\end{enumerate}
+Key techniques include: Lindley recursion for queue length bounds \citep[Proposition 6.3]{asmussen2003applied}, coupling construction to dominate the original process, Kingman's bound for negative drift processes \citep{kingman1962queues}, and standard random walk results \citep{strait1974maximum}.
+
+Throughout this appendix, we use $b$ to denote the \emph{batch index} (the count of completed batch iterations), which is distinct from the stage index $s \in \{0, 1, \ldots, l_j'\}$ used in the main text for decode stages. We use $t$ for continuous time and $T$ (or $B$) for the total number of batches over the time horizon.
+
+We first consider the single-type case, then extend to multiple types.
+
+\subsubsection{Single-Type Case}
+
+Consider a single prompt type with threshold $n$. For general scheduling algorithms, analyzing this system in continuous time is challenging: KV cache grows dynamically during decode, arrivals are stochastic, and eviction risks complicate the dynamics.
+
+The key insight of the WAIT policy is that its \emph{threshold mechanism achieves dimensionality reduction}. By waiting until exactly $n$ prompts accumulate before initiating a batch, the algorithm enforces a fixed batch size, which ensures constant processing time $\Delta T$ per batch. This decouples the complex continuous-time dynamics into a tractable discrete-time process. This reduction---from a complex memory-constrained queueing system to a simple random walk analysis---is enabled by the algorithm design, not an inherent simplicity of the problem.
+
+Specifically, let $\tilde{\lambda}$ denote the continuous-time arrival rate. The WAIT policy's fixed batch size implies that arrivals during each batch follow $\text{Poisson}(\tilde{\lambda} \cdot \Delta T)$. Defining $\lambda = \tilde{\lambda} \cdot \Delta T$ (expected arrivals per batch), we can analyze the system as an \emph{embedded Markov chain} observed at batch completion times, indexed by $b \in \mathbb{N}$. Setting $n = \lambda$ corresponds to critical loading. The throughput loss arises from ``stuck'' iterations where insufficient prompts are available.
+
+\begin{lemma}[Queue Length and Stuck Time]\label{lemma::throughput gap, single}
+Let $W^{b+1}=W^b+X^b-\lambda\cdot \mathbf{1}\{W^b+X^b\geq \lambda\}$, where $X^b \sim \text{Poisson}(\lambda)$, $W^0=0$. Define $B_{\emph{stuck}}$ as stuck iterations. Then $\mathbb{E}[W^B]= \lambda\cdot\mathbb{E}[B_{\emph{stuck}}]$ (proof in Appendix~\ref{appendix_lemma::proof of throughput gap, single}).
+\end{lemma}
+
+\begin{lemma}[Coupled Dominating Process]\label{lem:coupled_process, single}
+Define $\tilde{W}^0 = 2\lambda$, $\tilde{W}^{b+1} = \max\{ 2\lambda, \tilde{W}^b + X^b - \lambda \}$. Then $\tilde{W}^b \geq W^b + \lambda$ for all $b\in \mathbb{N}$ (proof in Appendix~\ref{appendix_lemma::proof of coupled_process, single}).
+\end{lemma}
+
+\paragraph{Throughput gap analysis.} By Lindley recursion \citep[Proposition 6.3]{asmussen2003applied}, $\tilde{W}^B=2\lambda+\max_{1\leq k\leq B}(\sum_{r=1}^{k}(X^r-\lambda))^+$. Since $\tilde{W}^B \geq W^B + \lambda$, we bound $\mathbb{E}[W^B]$. By \cite{strait1974maximum}, $\mathbb{E}[\max_{1\leq k\leq B}(S^k)^+]=\sum_{k=1}^B \frac{1}{k}\mathbb{E}[(S^k)^+]$. Using Cauchy-Schwarz and $\text{Var}(S^k) = \lambda k$, we obtain $\mathbb{E}[(S^k)^+] \leq \sqrt{\lambda k}$, yielding $\mathbb{E}[W^B] \sim \sqrt{\lambda B}$ as $B \to \infty$.
+
+\paragraph{Asymptotic Regime.} In the asymptotic regime where the time horizon scales as $\zeta \to \infty$:
+$$\frac{1}{B^{\zeta}}\mathbb{E}[W^{B,\zeta}]= \frac{\lambda^{\zeta}}{B^{\zeta}} + \frac{(\lambda B)^{\zeta/2}}{B^{\zeta}} = \left(\frac{\lambda}{B}\right)^{\!\zeta} + \lambda^{\zeta/2} B^{-\zeta/2} \to 0 \quad \text{as } \zeta \to \infty.$$
+
+\subsubsection{Multiple-Type Case}
+
+We now extend to $m$ prompt types. Consider the WAIT policy $\pi = [n_1,\ldots,n_m]$, where $n_j$ is the threshold for type-$j$ prompts.
+
+\paragraph{Policy Class $\Pi$.} Define the processing time for a full batch (containing all $m$ types):
+\begin{equation}\label{eq:batch_time_def}
+\Delta T_{[1,\ldots,m]} =  d_0 + d_1 \cdot \sum_{j=1}^m n_j(l_j^\prime+1)\left( l_j+\frac{l_j^\prime}{2} \right).
+\end{equation}
+
+\paragraph{Approaching Load Balance.}
+The constraint $\Delta T_{[1,\ldots,m]} \leq n_j/\lambda_j$ (Equation~\ref{eq:policy_constraints}) embodies the "approaching load balance" principle. For each type $j$, expected arrivals during a full batch equal $\lambda_j \cdot \Delta T_{[1,\ldots,m]}$. The constraint ensures arrivals do not exceed batch size $n_j$, preventing queue accumulation and eviction risk. The equilibrium policy $\pi^*$ achieves equality (arrivals = completions), maximizing throughput while maintaining stability.
+
+The policy parameters must satisfy:
+\begin{equation}\label{eq:policy_constraints}
+\begin{aligned}
+&\Delta T_{[1,\ldots,m]} \leq \frac{n_j}{\lambda_j} \text{ for all } j \in [m], \\
+&M^{\pi} = \sum_{j=1}^mn_j(l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)\geq  M^{*}.
+\end{aligned}
+\end{equation}
+These constraints ensure that for any $\pi \in \Pi$: when all $m$ types are batched together, arrivals do not exceed completions for each type (i.e., $\text{Arrival}_j\leq \text{Completion}_j$). The equilibrium policy corresponds to $\pi^* = [ \frac{n_1^*}{l_1^\prime+1},\,\cdots,\,\frac{n_m^*}{l_m^\prime+1} ]$ when $M^\pi = M^*$.
+
+\paragraph{State transition.} Let $b$ denote batch index, $J^b$ types in batch $b$. Queue dynamics: $W_{(j)}^{t_e(b+1)}=W_{(j)}^{t_e(b)}+X_{(j)}+Y_{(j)}- n_j\cdot \mathbf{1}\{j\in J^{b+1}\}$, where arrivals follow Poisson processes during waiting and processing. Fixed thresholds ensure constant full-batch time $\Delta T_{[1,\ldots,m]}$ from~\eqref{eq:batch_time_def}.
+
+\paragraph{Type Decoupling.}
+Fixed thresholds $n_j$ enable type decoupling. Each type $j$ has independent arrivals during batch processing: $X^b_{(j)} \sim \text{Poisson}(\lambda_j \cdot \Delta T_{[1,\ldots,m]})$. Arrivals depend only on the type-specific rate $\lambda_j$ and batch time $\Delta T_{[1,\ldots,m]}$, not on other types' queue states. This independence allows us to analyze each type separately and sum the resulting bounds.
+
+\begin{lemma}[Multiple-Type Coupled Process]\label{lemma::multiple-type coupled dominace}
+Define a coupled process $\{\tilde{W}^b_{(j)}\}$ indexed by batch $b$:
+$$\tilde{W}_{(j)}^0=2n_j, \quad \tilde{W}_{(j)}^{b+1}= \max\{ 2n_j,\, \tilde{W}_{(j)}^b +X_{(j)}^b-n_j \},\quad X^b_{(j)} \sim \text{Poisson}(\lambda_j\cdot \Delta T_{[1,\ldots,m]}).$$
+Then $\tilde{W}^b_{(j)}\geq W^b_{(j)}$ for all $b\geq 0$ and $j=1,\ldots,m$.
+\end{lemma}
+\noindent The proof is in Appendix~\ref{appendix_lemma::proof of multiple-type coupled dominace}. Define $Y^b_{(j)} = X^b_{(j)} - n_j$. The coupled process becomes:
+$$\tilde{W}^0_{(j)} = 2n_j,\quad \tilde{W}^{b+1}_{(j)} = \max\{ 2n_j, \, \tilde{W}^b_{(j)}+Y^b_{(j)} \}.$$
+
+\paragraph{Case 1: Zero Drift ($\Delta T_{[1,\ldots,m]} = n_j/\lambda_j$).} When $\lambda_j\cdot \Delta T_{[1,\ldots,m]} = n_j$, we have $\ex{}{Y^b_{(j)}}=0$ (zero drift). By Lemma~\ref{lemma::throughput gap}:
+$$\ex{}{W^B_{(j)}}\leq \ex{}{\tilde{W}^B_{(j)}}\leq \lambda_j + \sqrt{\lambda_j B}.$$
+
+\paragraph{Case 2: Negative Drift ($\Delta T_{[1,\ldots,m]} < n_j/\lambda_j$).} When $\ex{}{Y^b_{(j)}}= \lambda_j \Delta T_{[1,\ldots,m]} - n_j <0$, the coupled process has negative drift. Since
+$$\text{Var}(Y^b_{(j)}) = \lambda_j \cdot \Delta T_{[1,\ldots,m]},\quad
+\left| \ex{}{Y^b_{(j)}} \right| = n_j - \lambda_j\cdot \Delta T_{[1,\ldots,m]},$$
+by Kingman's bound \citep{kingman1962queues}:
+$$\ex{}{W^B_{(j)}}\leq \ex{}{\tilde{W}^B_{(j)}}\leq 2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\ldots,m]}}{2\left(n_j - \lambda_j\cdot \Delta T_{[1,\ldots,m]}\right)}.$$
+
+\paragraph{Equilibrium Case ($C = M^*$).} When $\pi^* = [\frac{n_1^*}{l_1^\prime+1},\,\cdots,\, \frac{n_m^*}{l_m^\prime+1}]$, all types satisfy $\Delta T_{[1,\ldots,m]} = n_j/\lambda_j$ (zero drift). Summing over all types:
+$$\frac{1}{B}\sum_{j=1}^m \ex{}{W^B_{(j)}}\leq \frac{1}{B}\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\frac{\lambda_j}{B}} = O(B^{-1/2}).$$
+
+\paragraph{Asymptotic Regime.} As $\zeta \to \infty$:
+$$\frac{1}{\zeta B}\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\frac{\lambda_j}{\zeta B}} \to 0.$$
+The expected end-to-end latency scales as $O(B^{-1/2})$.
+
+\paragraph{Strictly Negative Drift Case.} When $\Delta T_{[1,\ldots,m]} < n_j/\lambda_j$ for all $j$, the throughput gap is $O(B^{-1})$:
+$$\frac{1}{B}\sum_{j=1}^m \ex{}{W^B_{(j)}}\leq \frac{1}{B}  \sum_{j=1}^m \left(2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\ldots,m]}}{2\left(n_j - \lambda_j\cdot \Delta T_{[1,\ldots,m]}\right)}\right) = O(B^{-1}).$$

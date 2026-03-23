@@ -1,0 +1,74 @@
+\section{Proof of Lemmas}\label{sec:pf_lemmas}
+\subsection{Proof of Lemma~\ref{lemma::throughput gap, single}}\label{appendix_lemma::proof of throughput gap, single}
+We take the expectation on both sides of the state transition equation
+$$\ex{}{W^{t+1}}=\ex{}{W^t}+\lambda - \lambda \mathbb{P}(W^t+X^t\geq \lambda)$$
+Summing from $t=0$ to $T-1$, and noting that $W_0=0$, we get the lemma
+$$\ex{}{W^T}=\lambda T - \lambda \ex{}{T-T_{\text{stuck}}}=\lambda\cdot \ex{}{T_{\text{stuck}}}$$
+
+\subsection{Proof of Lemma \ref{lem:coupled_process, single}}\label{appendix_lemma::proof of coupled_process, single}
+We prove this by induction. First, for $t = 0$, we have $\tilde{W}^0=2\lambda\geq \lambda=W^0+\lambda$. Next, assume that $\tilde{W}^t \geq W^t + \lambda$ holds for some $t \geq 0$. We now prove that $\tilde{W}^{t+1} \geq W^{t+1} + \lambda$. Consider the following two cases:
+
+1. If $W^t + X^t \geq \lambda$, then $W^{t+1} = W^t + X^t - \lambda$. In this case,
+$$\tilde{W}^{t+1}=\max\{ 2\lambda, \tilde{W}^t + X^t - \lambda \}\geq \tilde{W}^t + X^t - \lambda\geq( W^t+\lambda )+ X^t - \lambda=W^{t+1}+\lambda.$$
+
+2. If $W^t + X^t < \lambda$, then $W^{t+1} = W^t + X^t$. In this case,
+$$\tilde{W}^{t+1}=\max\{ 2\lambda, \tilde{W}^t + X^t - \lambda \}\geq 2\lambda = \lambda+\lambda>W^{t+1}+\lambda.$$
+Hence, $\tilde{W}^{t+1} \geq W^{t+1} + \lambda$. By the principle of induction, we have $\tilde{W}^t \geq W^t + \lambda$ for all $t \in \mathbb{N}$.
+
+\subsection{Proof of Lemma~\ref{lemma::multiple-type coupled dominace}}\label{appendix_lemma::proof of multiple-type coupled dominace}
+Since $\tilde{W}_{(j)}^t\geq 2n_j$, when $W^t_{(j)}< n_j$, we have $\tilde{W}_{(j)}^t\geq W^t_{(j)}$.
+
+At first, $W^0_{(j)}=0$, but $W^t_{(j)}$ will achieve $n_j$ and type $j$ starts to join the batch. And after a period of time, $W^t_{(j)}$ drops back below $n_j$, and repeats the process above.
+
+In each period $T_0\leq t\leq T_1$ when $W^t_{(j)}\geq n_j$, we set $\tau = \max\{t\leq T_0|W^t_{(j)} = n_j \}$. So $\forall t\in [T_0, T_1]$, the number of iterations of $W^t_{(j)}$ and $\tilde{W}^t_{(j)}$ from $\tau$ to $t$ is that
+$$I_{\tau\to t} \geq \lfloor\frac{t-\tau}{\Delta T_{[1,\cdots,m]}}\rfloor ,\,\tilde{I}_{\tau\to t}\leq 1+\lfloor\frac{t-\tau}{\Delta T_{[1,\cdots,m]}}\rfloor \Rightarrow \tilde{I}_{\tau\to t}\leq 1+I_{\tau\to t}.$$
+So the coupled process at most makes one more iteration than the real process after $\tau$. For example, at $\tau$, the real process is  just at a batch inference without type $j$, but the coupled process just finished a batch inference with all the types, which yields a $n_j$ drop on $\tilde{W}_{(j)}^t$. So at $\tau$, $\tilde{W}_{(j)}^t\geq n_j = W_{(j)}^t$. And for time $(\tau,t]$, since the arrival dynamic is the same between the two processes,  at the real process type $j$ joins every batch, and the batch may not contain all types compared with the coupled process. So the numbers of the finish of a batch of coupled process is at most the same as the real ones. So $\tilde{W}^t_{(j )}\geq W^t_{(j )}$ holds during $(\tau, t]$, hence $\forall t\geq 0$. 
+
+\subsection{Proof of Lemma~\ref{lemma::nested coupled process}}\label{appendix_lemma::proof of nested coupled process}
+We prove the dominance by induction. When $t = 0$, it is obvious that $ \tilde{W}_{(k)}^0 = n_{k}\geq 0=W_{(k)}^t $. Next, we assume that $\tilde{W}^t_{(k)}\geq W^t_{(k)}  $ holds for some $t\geq 0$. We now prove that $\tilde{W}^{t+1}_{(k)}\geq W^{t+1}_{(k)}  $. Consider the following two cases:
+
+1. If $ W^t_{(k)}+ Y^t_{(k)}\geq n_k $, then $W^t_{(k+1)}= W^{t}_{(k)}+Y^t_{(k)}  -  n_k $. In this case, 
+$$ \tilde{W}^{t+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{t}_{(k)} + X^t_{(k)}\} \geq \tilde{W}^{t}_{(k)} + X^t_{(k)}={W}^{t}_{(k)} + Y^t_{(k)}-n_k=W^t_{(k+1)}$$
+2. If $ W^t_{(k)}+ Y^t_{(k)}<n_k $, then $W^t_{(k+1)}= W^{t}_{(k)}+Y^t_{(k)}$. In this case, 
+$$\tilde{W}^{t+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{t}_{(k)} + X^t_{(k)}\} \geq n_{k}> W^t_{(k+1)}$$
+
+\subsection{Proof of Lemma~\ref{lemma::solution to martingale exists}}\label{appendix_lemma::proof of solution to martingale exists}
+Define the function
+\[
+f(\theta) = e^{-\theta n_{k}} (1 - p_k + p_k e^{\theta})^{n_{k-1}}.
+\]
+We need to show that there exists \(\theta > 0\) such that \(f(\theta) = 1\).
+
+First, evaluate \(f(\theta)\) at \(\theta = 0\):
+\[
+f(0) = e^{0} (1 - p_k + p_k \cdot 1)^{n_{k-1}} = 1.
+\]
+Thus, \(\theta = 0\) is a solution, but we seek \(\theta > 0\).
+
+Next, compute the derivative of \(f(\theta)\) by considering its logarithm:
+\[
+g(\theta) = \ln f(\theta) = -\theta n_{k} + n_{k-1} \ln(1 - p_k + p_k e^{\theta}),
+\]
+\[
+g'(\theta) = -n_{k} + n_{k-1} \cdot \frac{p_k e^{\theta}}{1 - p_k + p_k e^{\theta}}.
+\]
+At \(\theta = 0\),
+\[
+g'(0) = -n_{k} + n_{k-1} p_k.
+\]
+Since \(\mathbb{E}[X^t_{(k)}] = n_{k-1} p_k - n_{k} < 0\), we have \(g'(0) < 0\), so \(f(\theta)\) is decreasing near \(\theta = 0\).
+
+Compute the second derivative:
+\[
+g''(\theta) = n_{k-1} \cdot \frac{p_k e^{\theta} (1 - p_k)}{(1 - p_k + p_k e^{\theta})^2} > 0 \quad \text{for} \quad \theta > 0,
+\]
+since \(p_k \in (0, 1)\) and \(n_{k-1} > 0\). Thus, \(g(\theta)\) is convex, and so is \(f(\theta)\).
+
+Now, consider the limit as \(\theta \to \infty\):
+\[
+f(\theta) \approx p_k^{n_{k-1}} e^{\theta (n_{k-1} - n_{k})}.
+\]
+Because among the $n_{k-1}$ prompts from the $k-1$-th segment, in expectation, a fraction $1-p_k$ will complete inference and leave the system, only $n_{k-1}\cdot p_k$ prompts transition to $k$-th segment. To maintain system stability and prevent overloading deeper segments, we generally set $n_{k-1}>n_{k}$. This condition also ensures that \(f(\theta) \to \infty\) as \(\theta \to \infty\).
+
+Thus, \(f(\theta)\) is continuous, convex, starts at \(f(0) = 1\), decreases below 1 for small \(\theta > 0\) (since \(g'(0) < 0\)), and increases to infinity. By the intermediate value theorem, there exists \(\theta > 0\) such that \(f(\theta) = 1\). We finish the proof of the lemma.
+

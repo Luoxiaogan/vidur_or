@@ -1,0 +1,88 @@
+\documentclass[11pt]{article}
+
+% Page setup: 1-inch margins
+\usepackage[margin=1in]{geometry}
+
+% Standard packages
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+% Line spacing to ensure ~33 lines per page
+\usepackage{setspace}
+\setstretch{1.15}
+
+% No author names (anonymous submission)
+\title{Data-Driven Threshold Scheduling for LLM Inference: \\ Preventing Memory Eviction Cascades}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\vspace{-1.5em}
+
+\section*{Research Problem}
+
+Large Language Models (LLMs) power chatbots, search engines, and coding assistants, serving millions of queries daily. Efficient inference scheduling is critical: ChatGPT alone incurs daily costs exceeding \$700,000. Unlike traditional batch processing, LLM inference faces a unique challenge: the Key-Value (KV) cache grows dynamically during response generation, creating resource demands that change unpredictably during processing.
+
+The KV cache stores attention keys and values to avoid quadratic recomputation, but creates severe capacity challenges. When memory is exceeded, systems must evict prompts and restart them from scratch---triggering \textbf{eviction cascades} that degrade throughput by 20--30\%. Critically, this failure occurs even when memory capacity exceeds theoretical requirements: a system that \emph{should} be stable becomes unstable under naive scheduling. Classical OR approaches (Shortest Job First, FCFS) assume fixed job sizes and known processing times, making them inapplicable when KV cache grows dynamically and output lengths are unknown at arrival.
+
+We address two questions: (1) How should we schedule LLM inference to prevent eviction cascades? (2) How do we handle unknown output lengths without prediction?
+
+\section*{Methodology}
+
+We formulate LLM inference as a multi-stage online scheduling problem under memory constraints. Prompts arrive stochastically with known input lengths but unknown output lengths. Each prompt progresses through prefill (processing input) and decode (generating output token-by-token) phases, with KV cache memory growing linearly with output length.
+
+\textbf{Fluid Dynamics Benchmark.} We model iteration time as $\tau = d_0 + d_1 M$, where $M$ is total KV cache memory and $d_0, d_1$ capture compute and memory bandwidth costs. Using fluid dynamics from queueing theory, we derive equilibrium conditions where arrival rates match completion rates, establishing a tractable benchmark $\text{Throughput}^* = \sum_{j=1}^m \lambda_j l_j'$ (total tokens generated per unit time).
+
+\textbf{WAIT Algorithm (Known Output Lengths).} The \emph{Waiting for Accumulated Inference Threshold} algorithm maintains load balance through threshold-based admission. For each prompt type $j$, WAIT sets threshold $n_j$ derived from fluid equilibrium. Type-$j$ prompts enter a batch only when $n_{j0}^t \geq n_j$ (at least $n_j$ prompts waiting). This prevents eviction cascades by ensuring arrivals never exceed completions, keeping the system near equilibrium. The threshold mechanism also \emph{decouples} multi-type dynamics, enabling independent per-type analysis via coupling arguments.
+
+\textbf{Nested WAIT Algorithm (Unknown Output Lengths).} When output lengths are unknown, we exploit a key insight: \emph{prompts classify themselves on-the-fly}. Short prompts complete early; long prompts advance to later segments. Nested WAIT organizes inference into $m$ nested segments, where segment $k$ handles prompts from decode stage $l_{k-1}'+1$ to $l_k'$. Each segment operates with its own threshold $n_k$. Prompts naturally reveal their type by completing or continuing at segment boundaries---no prediction needed.
+
+A \textbf{safety buffer} with logarithmic overhead $O(\ln(T/\delta))$ provides high-probability protection against memory overflow. This addresses the fundamental lower bound we establish: when output lengths are unknown, some extra memory beyond fluid equilibrium is necessary (but logarithmic suffices).
+
+\section*{Results Summary}
+
+\textbf{Theoretical Guarantees.} We prove asymptotic optimality for both algorithms:
+\begin{itemize}
+    \item \textbf{WAIT}: Throughput gap $\text{Throughput}^* - \mathbb{E}[\text{Throughput}] = O((\zeta T)^{-1/2})$; latency and TTFT $= O((\zeta T)^{1/2})$ in the boundary case, and $O(1)$ with slack.
+    \item \textbf{Nested WAIT}: Throughput gap $= O((\zeta T)^{-1})$; latency and TTFT $= O(1)$, with memory overflow probability $\leq \delta$.
+\end{itemize}
+We also establish matching lower bounds: (i) FCFS incurs $\Omega(1)$ throughput gap even with sufficient capacity; (ii) any non-predictive policy requires extra memory beyond $M^*$ when output lengths are unknown.
+
+\textbf{Experimental Validation.} Using Microsoft Vidur simulator (NVIDIA A100 GPU) on synthetic and real-world data (LMSYS-Chat-1M, 50,000 prompts), we compare against vLLM and Sarathi (state-of-the-art FCFS-based engines):
+\begin{itemize}
+    \item \textbf{Throughput}: 12--25\% higher than baselines; 40\% higher with prefill-decode disaggregation.
+    \item \textbf{Latency}: 30\% lower end-to-end latency.
+    \item \textbf{Stability}: Baselines become unstable (latency $\to \infty$) at high arrival rates where WAIT remains stable.
+\end{itemize}
+
+\textbf{Practical Extensions.} We develop segment-wise Nested WAIT that groups $m$ types into $L \leq m$ segments, addressing robustness to varying type distributions and long decode lengths where per-stage thresholds are infeasible.
+
+\section*{Contribution and Impact}
+
+This work bridges service operations theory with AI systems. We identify the core operational challenge in LLM inference---dynamic memory growth causing eviction cascades---and develop scheduling algorithms with theoretical guarantees. The threshold mechanism provides a principled approach to maintaining load balance, directly applicable to emerging LLM-powered services.
+
+\vspace{0.5em}
+\small
+\bibliographystyle{apalike}
+\begin{thebibliography}{9}
+
+\bibitem{agrawal2023sarathi} Agrawal, A., et al. (2023). Sarathi: Efficient LLM inference by piggybacking decodes with chunked prefills. \textit{arXiv:2308.16369}.
+
+\bibitem{kwon2023efficient} Kwon, W., et al. (2023). Efficient memory management for large language model serving with PagedAttention. \textit{SOSP 2023}.
+
+\bibitem{zheng2023lmsys} Zheng, L., et al. (2023). LMSYS-Chat-1M: A large-scale real-world LLM conversation dataset. \textit{arXiv:2309.11998}.
+
+\bibitem{agrawal2024vidur} Agrawal, A., et al. (2024). Vidur: A large-scale simulation framework for LLM inference. \textit{MLSys 2024}.
+
+\bibitem{zhong2024distserve} Zhong, Y., et al. (2024). DistServe: Disaggregating prefill and decoding for goodput-optimized LLM serving. \textit{OSDI 2024}.
+
+\end{thebibliography}
+
+\end{document}

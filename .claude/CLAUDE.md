@@ -964,3 +964,29 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 - `docs/research/wait_cp_parameter_semantics.md` - 参数语义与 batch 计算量分析
 - `docs/progress/2026_03_22_flow_balanced_breakthrough.md` - flow-balanced 突破
 - `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
+- `docs/progress/2026_03_22_revision_pipeline_review.md` - **Revision pipeline 全面审查**
+
+## OR 论文 Revision 状态 (2026-03-22)
+
+### 论文目录
+- **位置**: `papers/` (从 Overleaf 同步)
+- **主文件**: `papers/LLM_or.tex`
+- **目标期刊**: Operations Research (INFORMS)
+- **Manuscript ID**: OPRE-2025-04-1885
+- **决定**: Major Revision
+
+### 审稿意见处理: 17/20 (85%)
+- 写作质量: 7/7 ✅
+- 模型合理性: 4/4 ✅
+- 理论贡献: 4/4 ✅
+- **实验: 2/5 🚧** (3 项未解决)
+
+### 未解决实验任务 (按优先级)
+1. **P0**: Mean latency vs arrival rate 图 (R3 核心要求 — 展示 stability region)
+2. **P1**: 实验参数完整表格 (B, M*, C, baselines)
+3. **P2**: Simulation vs real GPU 说明
+
+### 一致性问题待修复
+- 模型名称: Llama-7B vs Llama2-7B (abstract vs intro)
+- 5+ broken cross-references
+- 3 个符号未加入 Table 1 (ΔT, θ_k, p_k)

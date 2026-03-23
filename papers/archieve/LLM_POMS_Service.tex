@@ -1,0 +1,364 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Latex template for Production and Operations Management (POM) Journal
+%% The poms1.cls is required class file
+
+%% Authors of this template: Emre M. Demirezen, Subodha Kumar, and Rakesh Mallipeddi
+%For queries: pom.latex@gmail.com
+%% Version. 1.0, January 2021
+%We acknowledge INFORMS for allowing us to use a few portions of their template files.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\documentclass[poms,final,blindrev]{poms1_V1} % Use this for blind submissions
+\documentclass[poms,final,blindrev]{poms1_V1} % Use this for listing out authors' information submissions
+
+\OneAndAHalfSpacedXI % % default line spacing !!!!!!!!!!!!!!!!!!!!!!!
+%Manuscript length 32pages
+
+% If hyperref is used, dvi-to-ps driver of choice must be declared as
+%   an additional option to the \documentclass. For example
+%\documentclass[dvips,poms]{poms1}      % if dvips is used
+%\documentclass[dvipsone,poms]{poms1}   % if dvipsone is used, etc.
+
+%%% POMS uses footnotes. If want to use endnotes, remove a percent sign before
+%%% the \theendnotes command. This template does show how to use them.
+\usepackage{endnotes}%; manuscript no.
+\let\footnote=\endnote
+\let\enotesize=\normalsize
+\def\notesname{Endnotes}%
+\def\makeenmark{$^{\theenmark}$}
+\def\enoteformat{\rightskip0pt\leftskip0pt\parindent=1.75em
+  \leavevmode\llap{\theenmark.\enskip}}
+
+% Private macros here (check that there is no clash with the style)
+
+% Natbib setup for author-year style
+ %\usepackage[center]{caption}
+
+\usepackage{graphicx}
+\usepackage{subfigure, epsfig}
+\usepackage{natbib}
+
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
+% Additional packages from original file
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amssymb}
+\allowdisplaybreaks
+\usepackage{parskip}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{comment}
+\usepackage{bbm}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathreplacing}
+
+\usepackage[unicode=true, bookmarks=false,
+breaklinks=false,pdfborder={0 0 1}]
+{hyperref} 
+
+\hypersetup{
+ colorlinks,citecolor=blue,filecolor=blue,linkcolor=blue,urlcolor=blue}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+% Custom commands from original
+\newcommand{\zjjt}{z_{jj'}(t)}
+\newcommand{\zjzt}{z_{j0}(t)}
+\newcommand{\djjkt}{d_{jj'k}(t)}
+\newcommand{\rjj}{r_{jj'}}
+
+\newcommand{\throughput}{\textbf{Throughput}}
+\newcommand{\Latency}{\textbf{Latency}}
+\newcommand{\TTFT}{\textbf{TTFT}}
+
+\input{command.tex}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+
+\newcommand{\Hongyu}[1]{{\color{red} Hongyu: #1}}
+\newcommand{\Hengyu}[1]{{\color{green} Hengyu: #1}}
+
+\newcommand*{\circled}[1]{\lower.7ex\hbox{\tikz\draw (0pt, 0pt)%
+    circle (.5em) node {\makebox[1em][c]{\small #1}};}}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} % Use Input in the format of Algorithm
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm
+\algnewcommand{\algorithmicand}{\textbf{and }}
+\algnewcommand{\algorithmicor}{\textbf{or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+  \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+      {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+      \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+      \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+      \fi
+      \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+  \end{center}
+  }
+\makeatother
+
+%% Setup of theorem styles. Outcomment only one.
+%% Preferred default is the first option.
+\TheoremsNumberedThrough     % Preferred (Theorem 1, Lemma 1, Theorem 2)
+%\TheoremsNumberedByChapter  % (Theorem 1.1, Lema 1.1, Theorem 1.2)
+\ECRepeatTheorems
+\newtheorem{observation}{Observation}
+%\newtheorem{proposition}{Proposition}
+%% Setup of the equation numbering system. Outcomment only one.
+%% Preferred default is the first option.
+\EquationsNumberedThrough    % Default: (1), (2), ...
+%\EquationsNumberedBySection % (1.1), (1.2), ...
+
+% In the reviewing and copyediting stage enter the manuscript number.
+%\MANUSCRIPTNO{} % When the article is logged in and DOI assigned to it,
+                 %   this manuscript number is no longer necessary
+
+%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%
+
+% Outcomment only when entries are known. Otherwise leave as is and
+%   default values will be used.
+%\setcounter{page}{1}
+%\VOLUME{00}%
+%\NO{0}%
+%\MONTH{Xxxxx}% (month or a similar seasonal id)
+%\YEAR{0000}% e.g., 2005
+%\FIRSTPAGE{000}%
+%\LASTPAGE{000}%
+%\SHORTYEAR{00}% shortened year (two-digit)
+%\ISSUE{0000} %
+%\LONGFIRSTPAGE{0001} %
+%\DOI{10.1287/xxxx.0000.0000}%
+
+% Author's names for the running heads
+% Sample depending on the number of authors;
+% \RUNAUTHOR{Jones}
+% \RUNAUTHOR{Jones and Wilson}
+% \RUNAUTHOR{Jones, Miller, and Wilson}
+% \RUNAUTHOR{Jones et al.} % for four or more authors
+% Enter authors following the given pattern:
+\RUNAUTHOR{Ao et al.}
+
+% Enter the (shortened) title:
+\RUNTITLE{Resource Allocation in Computational Service Systems: A Queueing-Theoretic Framework for LLM Inference Management}
+
+% Full title. Sample:
+\TITLE{Resource Allocation in Computational Service Systems: A Queueing-Theoretic Framework for LLM Inference Management}
+
+% Block of authors and their affiliations starts here:
+% NOTE: Authors with same affiliation, if the order of authors allows,
+%   should be entered in ONE field, separated by a comma.
+%   \EMAIL field can be repeated if more than one author
+\ARTICLEAUTHORS{%
+\AUTHOR{Ruicheng Ao}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{aorc@mit.edu}}
+\AUTHOR{Gan Luo}
+\AFF{School of Mathematical Sciences, Peking University, Beijing 100871, \EMAIL{luogan@stu.pku.edu.cn}}
+\AUTHOR{David Simchi-Levi}
+\AFF{Institute for Data, Systems, and Society, Massachusetts Institute of Technology, Cambridge, MA 02139; Department of Civil and Environmental Engineering, Massachusetts Institute of Technology, Cambridge, MA 02139, \EMAIL{dslevi@mit.edu}}
+\AUTHOR{Xinshang Wang}
+\AFF{Alibaba Group, \EMAIL{xinshang.w@alibaba-inc.com}}
+% Enter all authors
+} % end of the block
+
+\ABSTRACT{%
+Modern digital service platforms—from AI-powered chatbots to real-time search engines—must manage millions of customer requests daily while maintaining service quality under strict resource constraints. These systems exemplify a new class of service operations challenges where customers arrive stochastically, service capacity is limited, and—critically—resource consumption grows dynamically and unpredictably as each request progresses through service delivery. With platforms like ChatGPT incurring daily operational costs exceeding \$700,000, effective capacity management directly impacts both service quality and operational sustainability. We study this service capacity management problem through the lens of Large Language Model (LLM) inference systems, which process customer queries through multi-stage service pipelines with a distinctive characteristic: unlike traditional service systems where resource requirements are static, each request's capacity consumption expands unpredictably during processing—analogous to work-in-process inventory that grows as jobs progress through manufacturing stages. This dynamic expansion, combined with stochastic arrivals and uncertain service requirements, renders classical service scheduling approaches inadequate. We formulate this as a multi-stage online scheduling problem under stochastic demand and capacity constraints. Using fluid approximation techniques from queueing theory—widely applied in service operations—we develop tractable performance bounds and design principles for capacity management. Building on these insights, we introduce two scheduling policies: the Waiting for Accumulated Inference Threshold (WAIT) algorithm for settings with observable service requirements, and the Nested WAIT algorithm that adaptively learns customer characteristics under uncertainty. We establish asymptotic optimality under heavy traffic conditions—providing theoretical performance guarantees analogous to classical service system results—and validate through computational experiments demonstrating 15--30\% throughput improvements over industry-standard systems while maintaining superior response times. Our framework extends service operations theory to computational service platforms, providing both theoretical foundations for the research community and practical tools for operators managing high-volume digital services. The methodology applies broadly to service systems where capacity consumption evolves dynamically during service delivery.
+}%
+
+\KEYWORDS{Large Language Model, Key-value cache, Memory Constraint, Online scheduling}
+%Use this for final submission
+%\HISTORY{This paper was first submitted on January 1, 2021 and has been with the authors for 3 months for 2 revisions.}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Samples of sectioning (and labeling) in POMS
+% NOTE: (1) \section and \subsection do NOT end with a period
+%       (2) \subsubsection and lower need end punctuation
+%       (3) capitalization is as shown (title style).
+%
+%\section{Introduction.}\label{intro} %%1.
+%\subsection{Duality and the Classical EOQ Problem.}\label{class-EOQ} %% 1.1.
+%\subsection{Outline.}\label{outline1} %% 1.2.
+%\subsubsection{Cyclic Schedules for the General Deterministic SMDP.}
+%  \label{cyclic-schedules} %% 1.2.1
+%\section{Problem Description.}\label{problemdescription} %% 2.
+
+% Text of your paper here
+
+\section{Introduction}
+
+Modern digital service platforms have fundamentally transformed how businesses deliver value to customers. From AI-powered chatbots handling customer inquiries to real-time search engines and programming assistants, these platforms must manage millions of service requests daily while maintaining service quality, controlling costs, and ensuring efficient capacity utilization. Unlike traditional brick-and-mortar or even conventional online services, these computational service systems face a distinctive operational challenge: service capacity consumption evolves dynamically and unpredictably \textit{during} service delivery, creating complex capacity management decisions that traditional service operations frameworks cannot adequately address.
+
+The operational implications are substantial. Large-scale platforms like ChatGPT incur daily costs exceeding \$700,000, with significant energy consumption contributing to operational expenses and environmental impact \citep{patel2023peeling, patterson2021carbon}. Beyond direct costs, inefficient capacity management creates cascading service quality issues: excessive customer wait times reduce satisfaction and engagement, while underutilized resources represent wasted capacity investments \citep{strubell2019energy, desislavov2021compute}. Effective service capacity management can simultaneously improve service responsiveness, reduce operational costs, and enhance sustainability—a critical challenge at the intersection of service operations management and technology operations.
+
+\subsection{Service Operations Challenges in Computational Platforms}
+
+\paragraph{The Computational Service System as Multi-Stage Queue.}
+To understand the service delivery dynamics, consider how these platforms process customer requests through multi-stage service pipelines. We use Large Language Model (LLM) inference—the computational process serving millions of users in chatbots \citep{anthropic2023claude, bai2023qwen, openai2024gpt4technicalreport, deepseekai2025deepseekr1incentivizingreasoningcapability}, search engines \citep{google2023bard, microsoft2023bing}, and programming assistants \citep{copilot, claude_3_7}—as our primary application context, though the framework applies broadly to computational service systems.
+
+Unlike traditional service systems where resource requirements are determined at service initiation, computational service platforms exhibit several characteristics that distinguish them from classical service operations models:
+
+\begin{itemize}
+    \item \textbf{Stochastic Customer Arrivals}: Requests arrive randomly throughout the day, following patterns similar to call centers or hospital emergency departments, requiring effective queue management under uncertainty.
+    
+    \item \textbf{Multi-Stage Service Delivery}: Each customer request passes through sequential processing stages, analogous to patients progressing through triage, examination, and treatment in healthcare services, or orders flowing through fulfillment centers.
+    
+    \item \textbf{Dynamic Capacity Consumption}: Critically, each request's resource consumption—the server capacity it occupies—grows unpredictably \textit{during} service delivery. This differs fundamentally from traditional services where capacity requirements are static (e.g., a hotel room occupies fixed space) or known upfront (e.g., a surgical procedure requiring predetermined operating room time).
+    
+    \item \textbf{Uncertain Service Requirements}: Service time and resource needs are not observable at arrival, requiring adaptive capacity management that learns customer characteristics during service delivery—analogous to customized service systems where requirements emerge through customer interaction.
+\end{itemize}
+
+To illustrate these dynamics concretely, consider a customer query submitted to a chatbot: ``Is apple a fruit?'' The service system processes this request through two distinct stages, illustrated in Figure~\ref{fig:intro_example}:
+
+\begin{itemize}
+    \item \textbf{Initial Service Stage (Prefill)}: Upon receiving the customer request, the system performs initial processing to understand the query context. The input is tokenized into units (``Is'', ``apple'', ``a'', ``fruit'', ``?'') and processed to create intermediate computational state—the Key-Value (KV) cache—that enables efficient subsequent processing. This stage corresponds to service preparation, similar to order intake and initial processing in fulfillment centers. The KV cache functions as \textit{work-in-process inventory} that facilitates the next stage.
+
+    \item \textbf{Response Generation Stage (Decode)}: After initial processing, the system enters sequential response generation, producing the customer response incrementally. At each step, the system generates one piece of the response (``Yes'', then ``it'', then ``is'', etc.) while maintaining the accumulated work-in-process. Critically, this work-in-process inventory \textit{grows linearly with each generation step}, consuming increasing server capacity. For a short response like ``Yes it is,'' the capacity grows by 3 tokens; for longer responses requiring hundreds of tokens, capacity consumption grows proportionally—but this is unpredictable at service initiation.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{Experiments_pdf/fig_intro.pdf}
+    \caption{Multi-stage service delivery process with dynamically expanding capacity consumption.}
+    \label{fig:intro_example}
+\end{figure}
+
+From a service operations perspective, this multi-stage structure creates several critical performance metrics analogous to traditional service system KPIs:
+\begin{itemize}
+    \item \textbf{Time-To-First-Response (TTFR)}: Customer-perceived responsiveness, measuring the time from request submission to initial response—critical for interactive service quality and customer satisfaction.
+    \item \textbf{Total Service Time}: End-to-end service completion time from request arrival to full response delivery, analogous to patient throughput time in healthcare or order-to-delivery time in e-commerce.
+    \item \textbf{System Throughput}: Service capacity utilization, measuring the number of customer requests served per unit time—the fundamental capacity management metric in service operations.
+\end{itemize}
+
+\paragraph{Why Traditional Service Operations Approaches Fail.}
+Effective capacity management in computational service platforms involves grouping customer requests into \textit{batches} served concurrently—a form of resource pooling that improves server utilization, similar to batch processing in service systems like group therapy sessions or shuttle services. However, server capacity is strictly limited, and the growing work-in-process inventory constrains how many customers can be served simultaneously. Traditional service operations scheduling methods prove inadequate for three fundamental reasons:
+
+First, classical priority scheduling rules such as Shortest Processing Time (SPT)—which minimizes mean customer wait time in traditional service systems \citep{conway1967theory}—assume that service requirements and capacity consumption are observable at customer arrival. This assumption fails in computational services where response length (and thus total service time and capacity consumption) is unknown until service completion.
+
+Second, even when service requirements can be predicted or classified, traditional approaches assume \textit{static} capacity consumption throughout service delivery. Consider two customer requests arriving at a chatbot: Request A with short input but long response (``Summarize recent AI developments''), and Request B with longer input but brief response (``Is 5 a prime number?''). Classical SPT would prioritize Request B expecting shorter service time. However, Request A's sequential response generation creates substantial work-in-process that occupies server capacity for an extended period, potentially blocking other customers and reducing overall throughput. Request B completes quickly, releasing capacity almost immediately. Prioritizing Request B might reduce initial response time for that customer, but Request A's prolonged capacity occupation could degrade service quality for subsequent arrivals.
+
+Third, traditional approaches lack mechanisms for adaptive learning under uncertainty. Service systems like call centers may classify customer types upon arrival (e.g., technical support vs. billing inquiry), but computational service platforms must often learn customer characteristics \textit{during} service delivery, requiring dynamic capacity reallocation as information emerges.
+
+These characteristics—stochastic arrivals, multi-stage processing with distinct capacity profiles, unpredictable and dynamically expanding capacity requirements, and incomplete information—render classical service scheduling approaches inadequate, necessitating new methodologies that account for dynamic capacity evolution and adaptive learning during service delivery.
+
+\paragraph{Gap in Current Research and Practice.}
+While computational service platforms have grown into major economic sectors, theoretical frameworks grounded in service operations management remain scarce. Most existing work focuses on system-level engineering optimizations—memory compression, hardware acceleration, and implementation heuristics \citep{yu2022orca, kwon2023efficient, agrawal2023sarathi, pope2023efficiently, deepseekai2024deepseekv2strongeconomicalefficient, patel2024splitwise, zhong2024distserve}—rather than developing rigorous service operations models that provide performance guarantees and design principles. These engineering approaches, while practically useful, cannot guide principled service capacity management under uncertainty or provide theoretical bounds on achievable performance.
+
+Moreover, these heuristics typically assume complete information about customer service requirements at arrival—requiring costly classification systems with fine-grained customer segmentation. When this information is unavailable or imprecise, performance degrades significantly (see Proposition \ref{prop:unknown_lower_bound} in Section \ref{sec:nested_wait}). This gap between service operations theory and computational service practice motivates our work.
+
+\paragraph{Our Contribution: A Service Operations Framework for Computational Platforms.}
+We address this gap by developing the first theoretically grounded service operations framework for computational service systems that handles realistic uncertainty about customer service requirements. Our approach integrates methodologies from queueing theory, multi-stage service systems, and capacity management to address this emerging challenge:
+
+\begin{itemize}
+\item \textbf{Fluid Approximation for Service System Analysis}: We develop a multi-stage queueing model that captures customer arrivals under strict capacity constraints (Section \ref{sec:model}). To analyze system performance and guide practical policies, we employ fluid dynamics approximation—a technique widely used in service operations to study complex stochastic systems \citep{mandelbaum1998strong,maglaras2000discrete,bauerle2002optimal,liu2011network}. Our fluid model characterizes equilibrium service rates and capacity utilization, providing both upper bounds on achievable performance and structural insights for practical capacity management (Section \ref{sec:fluid}).
+
+    \item \textbf{WAIT Algorithm for Observable Service Requirements}: Building on fluid model insights, we introduce the Waiting for Accumulated Inference Threshold (WAIT) algorithm, which maintains dynamically updated thresholds to determine optimal batching and resource pooling decisions (Section \ref{sec:wait}). WAIT optimizes capacity utilization when customer service requirements are observable upon arrival—analogous to make-to-order service systems where customer specifications are known upfront. We establish asymptotic optimality under heavy traffic conditions via novel coupling analyses from queueing theory.
+
+    \item \textbf{Nested WAIT for Uncertain Service Requirements}: Recognizing that predicting customer service requirements is often imprecise or costly in practice, we extend WAIT through a hierarchical multi-segment framework. The \textit{Nested WAIT} algorithm adaptively learns customer characteristics during service delivery—similar to how service systems update customer classifications based on observed behavior—achieving near-optimal performance even under complete uncertainty (Section \ref{sec:nested_wait}). This addresses a critical gap in computational service management approaches that assume full information.
+    
+    \item \textbf{Theoretical Guarantees and Empirical Validation}: We prove both algorithms achieve asymptotic optimality in heavy traffic regimes—the standard benchmark in service operations research—providing performance guarantees comparable to classical queueing system results. Extensive computational experiments using the Llama2-7B model on A100 GPUs demonstrate substantial throughput improvements (15-30\%) over industry-standard systems such as vLLM \citep{kwon2023efficient} and Sarathi \citep{agrawal2023sarathi}, while maintaining superior customer response times (Section \ref{sec:experiments}).
+\end{itemize}
+
+These contributions extend service operations theory to computational service platforms, addressing analytical challenges in stochastic, capacity-constrained multi-stage service delivery with applications to modern digital service systems. Our framework provides both theoretical foundations for the service operations research community and practical tools for operators managing high-volume computational service platforms.
+
+\subsection{Related Literature}
+
+Our work draws upon and contributes to several streams of literature in service operations management, queueing theory, and computational service systems.
+
+\paragraph{Multi-Stage Service Systems and Queueing Theory.} 
+Classical service systems research focuses on optimal scheduling through sequential service stages under stochastic customer arrivals. Foundational queueing studies such as \citet{devanur2009adwords,vee2010optimal,cole2014sample,balkanski2016power,lattanzi2020online} develop algorithms that learn arrival patterns to refine service strategies over time. Works like \citet{im2013online,lucier2013efficient,liu2015online,li2020online} explore simultaneous batching and scheduling in service systems, grouping similar customers to enhance capacity utilization. Within queueing theory, fluid models serve as first-order approximations enabling tractable analysis of complex stochastic service systems \citep{mandelbaum1998strong,maglaras2000discrete,bauerle2002optimal,liu2011network}, while heavy-traffic analysis provides insights into system behavior under high utilization. However, these approaches assume static or known capacity requirements—unlike computational services where capacity consumption grows dynamically during service delivery.
+
+\paragraph{Computational Service Systems and Platform Operations.} 
+Theoretical frameworks for computational service platforms remain scarce despite their economic importance. Most prior work targets system-level engineering rather than rigorous service operations modeling. System-level works like \citet{patel2023peeling} (``Splitwise'') and \citet{zhong2024distserve} (``DistServe'') partition processing across infrastructure stages, while scheduling methods such as \citet{yu2022orca}, \citet{agrawal2023sarathi}, and \citet{agrawal2024taming} use batch processing to improve throughput—similar to our approach but without theoretical foundations. Other optimizations focus on engineering efficiency rather than service operations insights \citep{deepseekai2024deepseekv2strongeconomicalefficient, fu2025efficient}.
+
+Our work addresses these gaps by developing a scheduling framework grounded in service operations theory for realistic scenarios with uncertain customer requirements, using fluid approximations and coupling techniques from queueing theory to achieve asymptotic optimality. More recently, \citet{li2025throughput} propose a stochastic processing model demonstrating that work-conserving policies achieve optimal throughput. However, their analysis does not address capacity constraints from work-in-process or explore customer wait time metrics critical for service-level agreements in interactive systems. Our work complements this by providing explicit capacity constraint analysis and service time guarantees.
+
+\subsection{Notation}
+For integer $n\ge 1,$ we denote $[n]=\{1,2,\dots,n\}$ as the set of integers from $1$ to $n$. For $x\in\mathbb{R}$, denote $\lceil x\rceil$ as the smallest integer not smaller than $x$ and $\lfloor x\rfloor$ as the largest integer not greater than $x$. Denote $x_+=\max\{x, 0\}$. For set $S$, denote $|S|$ as its cardinality. For two functions $f(T)$ and $g(T)$, we use $f(T)=O(g(T))$ if there exists constant $c_1>0$ such that $f(T)\le c_1g(T)$ as $T\to+\infty$ and $f(T)=\Omega(g(T))$ if there exists constant $c_2>0$ such that $f(T)\ge c_2g(T)$ as $T\to +\infty$.
+
+
+\input{model}
+
+\input{fluid}
+
+\input{known_type}
+
+\input{unknown_type}
+
+\input{numerical}
+
+\input{conclusion}
+
+% Display endnotes
+% \theendnotes
+
+% Acknowledgments here
+\ACKNOWLEDGMENT{We sincerely thank Dr. Zijie Zhou and Prof. Jing Dong for their valuable suggestions and insightful comments, which significantly helped improve the quality of this work.}
+
+%%REFERENCES%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This template complies references using bibtex. You will need to use pomsref.bst file for biblography style.
+%REFERENCES USING BIBTEX FILES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{pomsref}
+
+ \let\oldbibliography\thebibliography
+ \renewcommand{\thebibliography}[1]{%
+    \oldbibliography{#1}%
+    \baselineskip14pt %Change this for line spacing within the same reference
+    \setlength{\itemsep}{10pt}% %Change this for spacing between two referneces
+ }
+\bibliography{main.bib}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Here starts the e-companion (EC). Place your appendix content here.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \ECSwitch % Comment this line out if you do not need e-companion.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Main head for the e-companion
+% \ECHead{E-Companion for Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints}
+
+% \noindent This e-companion contains additional proofs, technical details, and supplementary material referenced in the main paper.
+
+% \begin{APPENDICES}
+% \small
+% \fontsize{9}{10}
+% \clearpage
+% \input{extension}
+% \input{extension}
+
+ % \input{Appendix.tex}
+% \input{pf-lemmas.tex}
+% \input{tmp.tex}
+% \end{APPENDICES}
+
+%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%

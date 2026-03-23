@@ -1,0 +1,96 @@
+\section{Proof of Lemmas}\label{sec:pf_lemmas}
+
+Throughout this section, we use $b$ for the batch index and $B$ for the total number of batches.
+
+\subsection{Proof of Lemma~\ref{lemma::throughput gap, single}}\label{appendix_lemma::proof of throughput gap, single}
+To prove this lemma, we take expectations on both sides of the state transition equation:
+$$\ex{}{W^{b+1}}=\ex{}{W^b}+\lambda - \lambda \mathbb{P}(W^b+X^b\geq \lambda).$$
+Summing from $b=0$ to $B-1$, and noting that $W^0=0$, we obtain:
+$$\ex{}{W^B}=\lambda B - \lambda \ex{}{B-B_{\text{stuck}}}=\lambda\cdot \ex{}{B_{\text{stuck}}}.$$
+
+\subsection{Proof of Lemma~\ref{lem:coupled_process, single}}\label{appendix_lemma::proof of coupled_process, single}
+We prove by induction on the batch index $b$. The coupled process $\{\tilde{W}^b\}$ starts with a safety buffer of $2\lambda$ (compared to the real process starting at 0), ensuring it remains above $W^b + \lambda$ throughout. For the inductive step, we consider two cases based on whether the system can process a batch or experiences a stuck iteration.
+
+\paragraph{Base case.} For $b = 0$: $\tilde{W}^0=2\lambda\geq \lambda=W^0+\lambda$.
+
+\paragraph{Inductive step.} Assume $\tilde{W}^b \geq W^b + \lambda$ for some $b \geq 0$. We show $\tilde{W}^{b+1} \geq W^{b+1} + \lambda$ by considering two cases:
+
+\textbf{Case 1 (Batch processed):} If $W^b + X^b \geq \lambda$, the queue has accumulated enough prompts to process a batch, so $W^{b+1} = W^b + X^b - \lambda$. Then
+$$\tilde{W}^{b+1}=\max\{ 2\lambda, \tilde{W}^b + X^b - \lambda \}\geq \tilde{W}^b + X^b - \lambda\geq( W^b+\lambda )+ X^b - \lambda=W^{b+1}+\lambda.$$
+
+\textbf{Case 2 (Stuck iteration):} If $W^b + X^b < \lambda$, insufficient prompts are available and the system cannot process a batch (stuck iteration). The queue simply accumulates arrivals: $W^{b+1} = W^b + X^b$. The safety buffer ensures dominance:
+$$\tilde{W}^{b+1}=\max\{ 2\lambda, \tilde{W}^b + X^b - \lambda \}\geq 2\lambda = \lambda+\lambda>W^{b+1}+\lambda.$$
+By induction, $\tilde{W}^b \geq W^b + \lambda$ for all $b \in \mathbb{N}$.
+
+\subsection{Proof of Lemma~\ref{lemma::multiple-type coupled dominace}}\label{appendix_lemma::proof of multiple-type coupled dominace}
+\paragraph{Proof idea.} The coupled process dominates the real process by maintaining a consistent full-batch processing schedule, while the real process may skip type $j$ in some batches when $W^b_{(j)} < n_j$. We analyze periods when type $j$ actively joins batches and show the coupled process makes at most one additional batch iteration, preserving dominance.
+
+\paragraph{Proof.} Since $\tilde{W}_{(j)}^b\geq 2n_j$, when $W^b_{(j)}< n_j$, we trivially have $\tilde{W}_{(j)}^b\geq W^b_{(j)}$.
+
+Initially, $W^0_{(j)}=0$. As arrivals accumulate, $W^b_{(j)}$ reaches $n_j$ and type $j$ joins the batch. After processing, $W^b_{(j)}$ may drop below $n_j$, and the cycle repeats.
+
+Consider a period $[b_0, b_1]$ when $W^b_{(j)}\geq n_j$, meaning type $j$ is actively joining batches in the real process. Let $\tau = \max\{b\leq b_0: W^b_{(j)} = n_j \}$ be the last time before $b_0$ when the queue length equals exactly $n_j$. We compare the number of batch iterations between the real and coupled processes over the interval $[\tau, b]$.
+
+For any $b\in [b_0, b_1]$, the elapsed time is $t(b) - t(\tau)$, where $t(b)$ denotes the time at batch $b$. Since each batch takes at most $\Delta T_{[1,\cdots,m]}$ time (the full-batch processing time), we can bound the number of batch iterations $I_{\tau\to b}$ (real process) and $\tilde{I}_{\tau\to b}$ (coupled process):
+$$I_{\tau\to b} \geq \lfloor\frac{t(b)-t(\tau)}{\Delta T_{[1,\cdots,m]}}\rfloor ,\quad \tilde{I}_{\tau\to b}\leq 1+\lfloor\frac{t(b)-t(\tau)}{\Delta T_{[1,\cdots,m]}}\rfloor \Rightarrow \tilde{I}_{\tau\to b}\leq 1+I_{\tau\to b}.$$
+Thus, the coupled process makes at most one more iteration than the real process after $\tau$.
+
+At time $\tau$, the real process may be in a batch without type $j$ (since not all batches contain all types), while the coupled process just completed a full batch containing all types. This yields the initial dominance $\tilde{W}_{(j)}^\tau\geq n_j = W_{(j)}^\tau$ at the start of the interval.
+
+For batches in the interval $(\tau, b]$, the arrival dynamics are identical for both processes (same Poisson arrivals with rate $\lambda_j$). Since type $j$ joins every batch in the real process during this period (as $W^b_{(j)}\geq n_j$), and the coupled process completes at most one additional batch, the dominance is maintained throughout. By induction, $\tilde{W}^b_{(j)}\geq W^b_{(j)}$ for all $b\geq 0$ and all types $j\in[m]$. 
+
+\subsection{Proof of Lemma~\ref{lemma::nested coupled process}}\label{appendix_lemma::proof of nested coupled process}
+We prove by induction. For $b = 0$: $\tilde{W}_{(k)}^0 = n_{k}\geq 0=W_{(k)}^0$. Assume $\tilde{W}^b_{(k)}\geq W^b_{(k)}$ for some $b\geq 0$. We show $\tilde{W}^{b+1}_{(k)}\geq W^{b+1}_{(k)}$.
+
+\textbf{Case 1:} If $W^b_{(k)}+ Y^b_{(k)}\geq n_k$, then $W^{b+1}_{(k)}= W^{b}_{(k)}+Y^b_{(k)} - n_k$, so
+$$ \tilde{W}^{b+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{b}_{(k)} + X^b_{(k)}\} \geq \tilde{W}^{b}_{(k)} + X^b_{(k)}\geq {W}^{b}_{(k)} + Y^b_{(k)}-n_k=W^{b+1}_{(k)}.$$
+
+\textbf{Case 2:} If $W^b_{(k)}+ Y^b_{(k)}<n_k$, then $W^{b+1}_{(k)}= W^{b}_{(k)}+Y^b_{(k)}$, so
+$$\tilde{W}^{b+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{b}_{(k)} + X^b_{(k)}\} \geq n_{k}> W^{b+1}_{(k)}.$$
+By induction, $\tilde{W}^b_{(k)}\geq W^b_{(k)}$ for all $b\in \mathbb{N}$.
+
+\subsection{Proof of Lemma~\ref{lemma::solution to martingale exists}}\label{appendix_lemma::proof of solution to martingale exists}
+First, we prove that the solution $\theta_k>0$ exists and is unique and for simplicity, we denote $\theta=\theta_k$ here. Define the function
+\[
+f(\theta) = e^{-\theta n_{k}} (1 - p_k + p_k e^{\theta})^{n_{k-1}}.
+\]
+We need to show that there exists \(\theta > 0\) such that \(f(\theta) = 1\). First, evaluate \(f(\theta)\) at \(\theta = 0\):
+\[
+f(0) = e^{0} (1 - p_k + p_k \cdot 1)^{n_{k-1}} = 1.
+\]
+Thus, \(\theta = 0\) is a solution, but we seek the solution \(\theta > 0\). Next, we consider the logarithm of $f(\theta)$
+$$g(\theta) = \ln f(\theta) = -\theta n_{k} + n_{k-1} \ln(1 - p_k + p_k e^{\theta}),$$
+$$ g^\prime(\theta) = -n_{k} + n_{k-1} \cdot \frac{p_k e^{\theta}}{1 - p_k + p_k e^{\theta}}.$$
+At \(\theta = 0\),
+\[
+g(0)=0,\,g^\prime(0) = -n_{k} + n_{k-1} p_k.
+\]
+Since \(\mathbb{E}[X^b_{(k)}] = n_{k-1} p_k - n_{k} < 0\), we have \(g'(0) < 0\), so \(f(\theta)\) is decreasing near \(\theta = 0\). Consider the second derivative:
+\[
+g''(\theta) = n_{k-1} \cdot \frac{p_k e^{\theta} (1 - p_k)}{(1 - p_k + p_k e^{\theta})^2} > 0 \quad \text{for} \quad \theta > 0,
+\]
+since \(p_k \in (0, 1)\) and \(n_{k-1} > 0\). Thus, \(g(\theta)\) is convex, and so is \(f(\theta)\). Now, consider the limit as \(\theta \to \infty\):
+\[
+f(\theta) \approx p_k^{n_{k-1}} e^{\theta (n_{k-1} - n_{k})}.
+\]
+By our settings, $n_{k-1}>n_k$, this ensures that $f(\theta)\to \infty, \theta\to \infty$. Thus, \(f(\theta)\) is continuous, convex, starts at \(f(0) = 1\), decreases below 1 for small \(\theta > 0\), and increases to infinity. By the intermediate value theorem, there exists only one \(\theta > 0\) such that \(f(\theta) = 1\). 
+
+Next, we prove the monotonicity of the solution $\theta>0$ with respect to \(D = n_k - n_{k-1} p_k\). Recall that \(g(0) = 0\), \(g'(0) = -D < 0\), and \(g''(\theta) > 0\) for \(\theta > 0\), so \(g(\theta)\) is strictly convex. The unique positive solution \(\theta > 0\) occurs where \(g(\theta)\) crosses zero after initially decreasing from \(g(0) = 0\).
+
+Consider two values \(D_1\) and \(D_2\) such that \(D_1 < D_2\), with corresponding functions \(g_1(\theta) = -\theta (n_{k-1} p_k + D_1) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\) and \(g_2(\theta) = -\theta (n_{k-1} p_k + D_2) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\), and solutions \(\theta_1\) and \(\theta_2\), respectively. At \(\theta = 0\), we have \(g_1'(0) = -D_1 > g_2'(0) = -D_2\), meaning \(g_2(\theta)\) decreases more steeply from zero than \(g_1(\theta)\).
+
+For a fixed \(\theta > 0\), the partial derivative \(\frac{\partial g}{\partial D} = -\theta < 0\), so increasing \(D\) decreases \(g(\theta)\) pointwise. Since \(g(\theta)\) is convex and approaches infinity as \(\theta \to \infty\), the zero crossing of \(g(\theta; D)\) shifts to a larger \(\theta\) when \(D\) increases. Hence, if \(D_2 > D_1\), then \(\theta_2 > \theta_1\).
+
+Finally, we provide asymptotic behavior and bounds for the solution \(\theta>0\) in terms of \(D\), \(n_{k-1}\), and \(p_k\). When the drift \(D = n_k - n_{k-1} p_k\) is small (i.e., the system is near critical load), the solution \(\theta\) is also small. To derive an explicit approximation, we expand \(g(\theta)\) around \(\theta = 0\) using Taylor's theorem:
+$$g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(0) \theta^2 + O(\theta^3) = 0 - D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 + O(\theta^3).$$
+Setting \(g(\theta) = 0\) and neglecting higher-order terms, we obtain the quadratic approximation
+$$-D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 \approx 0 \implies \theta \approx \frac{2D}{n_{k-1} p_k (1 - p_k)}.$$
+This shows that for small \(D\), the solution scales linearly: \(\theta = O(D)\). Specifically, we have $\theta \approx \frac{2 (n_k - n_{k-1} p_k)}{n_{k-1} p_k (1 - p_k)}$.
+
+Next we apply Taylor's theorem with remainder to find the general lower bound of the solution $\theta>0$.
+$$g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(c) \theta^2 = -D \theta + \frac{1}{2} g''(c) \theta^2 = 0\implies \theta = \frac{2D}{g''(c)}. \quad \text{for some } c \in (0, \theta)$$
+To find an upper bound for \(g''(c)\), we write $g^{\prime \prime}(x) = n_{k-1} \cdot \frac{p_k e^{x} (1 - p_k)}{(1 - p_k + p_k e^{x})^2}$ and define \(h(y) = \frac{p_k y (1 - p_k)}{(1 - p_k + p_k y)^2}\) where \(y = e^{x} \geq 1\). By differentiation, \(h(y)\) achieves a maximum of \(\frac{1}{4}\) over $y\geq 1$ and $0<p_k<1$ (attained when the numerator and denominator are balanced). Thus we have that $
+g''(x) \leq n_{k-1} \cdot \frac{1}{4} = \frac{n_{k-1}}{4} \implies \theta = \frac{2D}{g''(c)} \geq \frac{2D}{n_{k-1}/4} = \frac{8D}{n_{k-1}}$. So a general lower bound is:
+\begin{align}
+    \theta \geq \frac{8 (n_k - n_{k-1} p_k)}{n_{k-1}}.\label{eq::theta lower bound}
+\end{align}
