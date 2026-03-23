@@ -33,14 +33,33 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
             self._config.watermark_blocks_fraction * self._config.num_blocks
         )
 
-        # Workload params (用第一个 type 计算派生量，multi-type 时是近似)
-        pt = self._config.prompt_types[0] if self._config.prompt_types else {}
-        self._l0 = pt.get("prefill", 512)
-        self._l1 = pt.get("decode", 20)
+        # Workload params — 加权计算 multi-type
+        pts = self._config.prompt_types if self._config.prompt_types else [{"prefill": 512, "decode": 20, "arrival_rate": 1}]
+        total_rate = sum(pt.get("arrival_rate", 1) for pt in pts)
+        self._multi_type = len(pts) > 1
+
+        # 加权平均 pipeline depth 和 (l0+l1)
+        weighted_pipeline = 0
+        weighted_total_tokens = 0
+        for pt in pts:
+            l0_i = pt.get("prefill", 512)
+            l1_i = pt.get("decode", 20)
+            rate_i = pt.get("arrival_rate", 1)
+            K_i = max(1, ceil(l0_i / self._per_req_budget))
+            w = rate_i / total_rate
+            weighted_pipeline += w * (K_i + l1_i)
+            weighted_total_tokens += w * (l0_i + l1_i)
+
+        # 单 type 时退化为精确值
+        pt0 = pts[0]
+        self._l0 = pt0.get("prefill", 512)
+        self._l1 = pt0.get("decode", 20)
         self._K = max(1, ceil(self._l0 / self._per_req_budget))
-        self._pipeline_depth = self._K + self._l1
-        self._P = self.total_limit / self._pipeline_depth
-        self._batch_est = int(ceil(self._P * (self._l0 + self._l1)))
+
+        self._pipeline_depth_weighted = weighted_pipeline
+        self._pipeline_depth = self._K + self._l1  # 保留单 type 的
+        self._P = self.total_limit / self._pipeline_depth_weighted
+        self._batch_est = int(ceil(self._P * weighted_total_tokens))
 
         # Gate
         import os
@@ -51,14 +70,11 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         self._batch_count = 0
         self._total_decode_in_batches = 0
 
-        # 多 type 信息
-        self._multi_type = len(self._config.prompt_types) > 1
-
-        print(f"WAIT-CP: per_req={self._per_req_budget}, K={self._K}, "
+        print(f"WAIT-CP: per_req={self._per_req_budget}, "
               f"tl={self.total_limit}, P={self._P:.2f}, "
               f"batch_est={self._batch_est}, gate={'ON' if self._gate else 'OFF'}, "
               f"multi_type={self._multi_type}, n_segments={len(self.segments)}, "
-              f"pipeline={self._pipeline_depth}, l0={self._l0}, l1={self._l1}")
+              f"pipeline_w={self._pipeline_depth_weighted:.1f}")
 
     # ------------------------------------------------------------------ #
     #  Memory
