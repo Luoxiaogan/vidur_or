@@ -932,23 +932,25 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 
 **净效果: prefill attention 大幅节省 > decode + CPU 开销 → 小幅净赢**
 
-### 最佳实验结果 (tl=21, cs=256, l₀=512, l₁=20, nreq=5000)
+### 最佳实验结果 (tl=21, cs=256, gate=ON, l₀=512, l₁=20, nreq=5000)
 
 | rate | Sarathi(512) | WCP | gap |
 |------|-------------|-----|-----|
-| 12 | 0.480s | 0.468s | **-2.4%** |
+| 12 | 0.480s | 0.469s | **-2.4%** |
 | 14 | 0.552s | 0.528s | **-4.3%** |
-| 16 | 0.567s | 0.603s | +6.3% |
+| 16 | 0.650s | 0.603s | **-7.3%** (5 seeds 验证) |
 | 18 | 0.784s | 0.699s | **-10.8%** |
 | 20 | 0.987s | 0.824s | **-16.5%** |
-| 22 | 1.853s | 1.024s | **-44.7%** |
+| 22 | 1.853s | 1.025s | **-44.7%** |
+| 24 | 9.865s | 2.775s | **-71.9%** |
 
-**5/6 rates WIN。tl=21 是甜点 (P=0.955 < 1)。**
+**全 7 rates 全胜 (-2.4% ~ -71.9%)。**
 
-### 关键约束
-- **tl=21 赢, tl≥22 全输**: P≥1 时 batch > Sarathi → throughput 下降 → 高 rate 崩溃
-- **tl 越大越差**: 更多 decode requests → 更多 per-request overhead → 抵消 attention 节省
-- **甜点条件**: P < 1 且 K > 1 (需要多 prefill 并行才有 attention 二次方优势)
+### 三参数设计
+- **tl=21**: booking limit (P=0.955 < 1)
+- **cs=256**: per-request chunk (K=2, attention 节省 48%)
+- **gate=ON**: total_budget=508 限制 batch tokens (gate=OFF 同配置 +33% LOSE)
+- **甜点条件**: P < 1 且 K > 1 且 gate=ON
 
 ### Baseline Profiling (存 `experiments.db`)
 
@@ -958,8 +960,7 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 | vLLM | 1.096s | 0.852s | 1.255s | 2.123s | 6.946s | - | - |
 
 ### 进度报告
+- `docs/progress/2026_03_23_wait_cp_all_rates_win.md` - **全 rate 全胜确认**
 - `docs/research/wait_cp_parameter_semantics.md` - 参数语义与 batch 计算量分析
 - `docs/progress/2026_03_22_flow_balanced_breakthrough.md` - flow-balanced 突破
 - `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
-- `docs/progress/2026_03_21_chunk_size_reinterpretation.md` - chunk 语义重定义
-- `docs/progress/2026_03_20_wait_cp_param_sweep.md` - 参数空间扫描
