@@ -404,14 +404,17 @@ class MetricsStore:
             file_name="request_metrics"+f"_{self._scheduler_name.lower()}",
         )
 
-        for dataseries in self._request_metrics_histogram.values():
-            dataseries.plot_histogram(base_plot_path, dataseries._y_name)
+        if self._config.store_plots:
+            for dataseries in self._request_metrics_histogram.values():
+                dataseries.plot_histogram(base_plot_path, dataseries._y_name)
 
-        for dataseries in self._request_metrics_time_distributions.values():
-            dataseries.plot_cdf(base_plot_path, dataseries._y_name, TIME_STR)
+            for dataseries in self._request_metrics_time_distributions.values():
+                dataseries.plot_cdf(base_plot_path, dataseries._y_name, TIME_STR)
 
-        throughput_file_name = f"throughput_{self._scheduler_name.lower()}"
-        self._throughput_metric.plot_step(base_plot_path, throughput_file_name, TIME_STR, y_cumsum=False)
+            throughput_file_name = f"throughput_{self._scheduler_name.lower()}"
+            self._throughput_metric.plot_step(base_plot_path, throughput_file_name, TIME_STR, y_cumsum=False)
+        else:
+            throughput_file_name = f"throughput_{self._scheduler_name.lower()}"
         self._save_as_csv([self._throughput_metric], TIME_STR, self._config.output_dir, throughput_file_name)
 
         # 新增：保存原始请求数据到独立CSV
@@ -524,10 +527,11 @@ class MetricsStore:
         os.makedirs(dir_plot_path, exist_ok=True)
 
         self._store_request_metrics(dir_plot_path)
-        self._store_batch_metrics(dir_plot_path)
-        self._store_completion_metrics(dir_plot_path)
-        self._store_operation_metrics(dir_plot_path)
-        self._store_utilization_metrics(dir_plot_path)
+        if self._config.store_plots:
+            self._store_batch_metrics(dir_plot_path)
+            self._store_completion_metrics(dir_plot_path)
+            self._store_operation_metrics(dir_plot_path)
+            self._store_utilization_metrics(dir_plot_path)
 
     @if_write_metrics
     def on_request_arrival(self, time: float, request: Request) -> None:

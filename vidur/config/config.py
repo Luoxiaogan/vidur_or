@@ -813,6 +813,20 @@ class GeneralNestedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
             "help": "List of prompt types in JSON format.",
         },
     )
+    seg_margin: float = field(
+        default=0.0,
+        metadata={
+            "help": "Margin above p_k for inter-segment ratio: n_{k+1}/n_k = p_k + seg_margin. "
+                    "0.0 = boundary (paper eq 5.2 equality). Positive = more budget for later segments.",
+        },
+    )
+    wait_gate: bool = field(
+        default=True,
+        metadata={
+            "help": "Enable WAIT mechanism: segment enters batch only if seg_full OR entry_ready. "
+                    "False = always process all segments (admission-only control).",
+        },
+    )
 
     @staticmethod
     def get_type():

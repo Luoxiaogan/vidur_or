@@ -903,13 +903,13 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 
 ---
 
-## WAIT-CP 实验状态 (2026-03-23)
+## WAIT-CP 实验状态 (2026-03-24)
 
 ### 当前代码
 - **文件**: `vidur/scheduler/replica_scheduler/general_nested_chunked_replica_scheduler.py`
-- **版本**: Flow-balanced per-request chunk + booking limit
-- **Git**: `revision` 分支, commit `c1a708a`
-- **参数**: tl (booking limit) + cs (per-request prefill chunk size)
+- **版本**: seg_margin + 动态 per-stage limit + WAIT 机制
+- **Git**: `revision` 分支 (未提交)
+- **参数**: tl, cs, gate, seg_margin
 
 ### 参数语义 (详见 `docs/research/wait_cp_parameter_semantics.md`)
 
@@ -920,6 +920,20 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 | K = ceil(l₀/cs) | prefill 需要的 batch 数 |
 | P = tl/(K+l₁) | per-stage throughput |
 | pipeline = K+l₁ | 请求从 admit 到 complete 的 batch 数 |
+| seg_margin | $n_{k+1}/n_k = p_k + \text{seg\_margin}$, segment 间分配裕量 |
+
+### Multi-type 新增机制 (2026-03-24)
+- **seg_margin**: 控制 segment 间 per-stage limit 比例，$n_{k+1}/n_k = p_k + \text{sm}$
+- **Entry gate + free internal flow**: segment 入口限流，内部自由 advance
+- **WAIT (wait_gate)**: segment 需满足 "总数达标 OR 入口积累够" 才进 batch，各 seg 独立判断
+- **Rotation**: 每 batch 按 `batch_count % num_stages` 轮换 entry admission (3 or 4)
+
+### Multi-type 实验结论 (2026-03-24) — **尚未 WIN**
+- 测试 200+ 配置 (tl, cs, sm, wait_gate)，B2 workload 全部 LOSE Sarathi
+- 最优: tl=50 sm=0.3 no-WAIT → +3.1% (r=12), tl=30 sm=0.2 → +8.0% (r=20)
+- 退化到 Sarathi (tl=9999, gate=OFF): +3.7%，segment 结构有固有开销
+- 根因: 低 rate 时 in-system 只有 ~4.5 个请求，无 prefill attention 压缩空间
+- **Overnight grid 搜索进行中**: 5 workloads × 4 rates × 72 WCP configs
 
 ### Batch 计算量分解
 
@@ -960,11 +974,18 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 | vLLM | 1.096s | 0.852s | 1.255s | 2.123s | 6.946s | - | - |
 
 ### 进度报告
+- `docs/progress/2026_03_24_multi_type_seg_margin.md` - **Multi-type seg_margin + WAIT 机制** 🚧
 - `docs/progress/2026_03_23_wait_cp_all_rates_win.md` - **全 rate 全胜确认**
 - `docs/research/wait_cp_parameter_semantics.md` - 参数语义与 batch 计算量分析
 - `docs/progress/2026_03_22_flow_balanced_breakthrough.md` - flow-balanced 突破
 - `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
 - `docs/progress/2026_03_22_revision_pipeline_review.md` - **Revision pipeline 全面审查**
+
+### 实验脚本
+- `scripts/sweep_seg_margin.py` - seg_margin × tl × rate sweep (tmpdir 隔离)
+- `scripts/profile_sarathi_multitype.py` - Sarathi per-type profiling across rates
+- `scripts/overnight_grid_multitype.py` - **Overnight 3D grid: 5 workloads × 4 rates × 72 WCP**
+- `scripts/grid_search_r20.py` - r=20 focused 3D grid (cs × tl × sm)
 
 ## OR 论文 Revision 状态 (2026-03-22)
 

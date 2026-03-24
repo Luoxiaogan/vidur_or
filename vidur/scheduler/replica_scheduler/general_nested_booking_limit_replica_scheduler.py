@@ -9,6 +9,7 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         
         self._preempted_requests: List[Request] = []
         self._num_running_batches = 0
+        self._sched_batch_count = 0  # 用于 per-stage limit rotation
 
         self.total_limit = self._config.total_limit
 
@@ -89,46 +90,79 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
             seg_arrival_sum = sum(pt["arrival_rate"] for pt in self.prompt_types if pt["decode"] > unique_decodes[i-1])
             segments.append({"count": seg_count, "arrival_sum": seg_arrival_sum})
         
-        # 计算各 segment 的权重，并求总权重
-        total_weight = sum(seg["count"] * seg["arrival_sum"] for seg in segments)
-        
+        # ---- 按 paper 约束分配 per-stage limit ----
+        # n_{k+1}/n_k = p_k + seg_margin, 其中 p_k = arrival_sum_{k+1} / arrival_sum_k
+        # 从 tl 反推各 segment 的 n_k (per-stage limit)
+        seg_margin = self._config.seg_margin
+
+        num_segs = len(segments)
+        # 计算每个 segment 间的比率 q_k = p_k + seg_margin
+        # q_k 被 clamp 到 (0, 1) 以保证合理性
+        ratios = []  # q_1, q_2, ..., q_{m-1}
+        for k in range(num_segs - 1):
+            p_k = segments[k + 1]["arrival_sum"] / segments[k]["arrival_sum"] if segments[k]["arrival_sum"] > 0 else 0
+            q_k = min(p_k + seg_margin, 0.99)  # clamp < 1
+            ratios.append(q_k)
+
+        # n_k = n_1 * prod(q_1..q_{k-1})
+        # tl = sum_k (n_k * count_k) = n_1 * sum_k (count_k * prod(q_1..q_{k-1}))
+        cumulative_ratio = [1.0]  # prod(q_1..q_0) = 1 for seg 0
+        for q in ratios:
+            cumulative_ratio.append(cumulative_ratio[-1] * q)
+
+        denominator = sum(segments[k]["count"] * cumulative_ratio[k] for k in range(num_segs))
+        n_1 = self.total_limit / denominator if denominator > 0 else 0
+
+        # 各 segment 的 per-stage limit (float) 和 seg_total_limit
+        n_per_seg = [n_1 * cumulative_ratio[k] for k in range(num_segs)]
+
+        print(f"seg_margin={seg_margin}, n_per_seg={[f'{n:.3f}' for n in n_per_seg]}")
+        for k in range(num_segs - 1):
+            p_k = segments[k + 1]["arrival_sum"] / segments[k]["arrival_sum"] if segments[k]["arrival_sum"] > 0 else 0
+            print(f"  seg {k}->{k+1}: p_k={p_k:.3f}, q_k={ratios[k]:.3f}, n_{k+1}/n_{k}={n_per_seg[k+1]/n_per_seg[k]:.3f}")
+
+        # ---- 整数化分配到各 stage ----
         nested_booking_limits = {}
-        segments_info = []  # 用于记录每个 segment 在全局 stage 的起止边界及其 per_stage_limit
+        segments_info = []
         global_stage = 0
         total_limit_real = 0
-        for seg in segments:
-            seg_weight = seg["count"] * seg["arrival_sum"]
-            seg_total_limit = self.total_limit * (seg_weight / total_weight) if total_weight > 0 else 0
-            print("seg_total_limit",seg_total_limit)
-            # per_stage_limit = int(max(seg_total_limit / seg["count"],1)) if seg["count"] > 0 else 0 
 
-            #新逻辑，直接取ceil，然后用余数
-            per_stage_limit = ceil(seg_total_limit / seg["count"])
+        for k, seg in enumerate(segments):
+            seg_total_limit_float = n_per_seg[k] * seg["count"]
+            seg_total_limit_int = int(round(seg_total_limit_float))
+
+            # 整数分配: base + 余数，保证 max - min <= 1
+            base = seg_total_limit_int // seg["count"] if seg["count"] > 0 else 0
+            remainder = seg_total_limit_int % seg["count"] if seg["count"] > 0 else 0
 
             seg_start = global_stage
-            for _ in range(seg["count"]):
-                # 这里使用 int(max(,1)) 来取整，实际应用中可根据需要调整取整策略
-                nested_booking_limits[global_stage] = per_stage_limit
+            for i in range(seg["count"]):
+                nested_booking_limits[global_stage] = base + 1 if i < remainder else base
                 global_stage += 1
 
             seg_end = global_stage - 1
-            
-            ## 改成真实的取整
-            # seg_total_limit_int = (seg_end - seg_start + 1) * per_stage_limit
-
-            seg_total_limit_int = int(seg_total_limit)
+            per_stage_max = base + 1 if remainder > 0 else base
+            per_stage_min = base
 
             total_limit_real += seg_total_limit_int
 
-            segments_info.append({"start": seg_start, "end": seg_end, "per_stage_limit": per_stage_limit, "seg_total_limit": seg_total_limit_int})
-            print(f"start: {seg_start}, end: {seg_end}, per_stage_limit: {per_stage_limit}, segment_limit: {seg_total_limit_int}")
-        
-        # 输出调试信息
-        #print("Nested Booking Limits per stage:", nested_booking_limits)
-        #print("Segments info:", segments_info)
-        print("设定的总limit:", self.total_limit)
-        print("实际的总limit:", total_limit_real)
-        
+            # n_k: per-stage steady-state throughput (float)
+            # n_k_floor: WAIT 触发阈值 (>=floor 就可以开始)
+            # n_k_ceil: admission 上限 (最多 admit ceil 个)
+            n_k = n_per_seg[k]
+            n_k_floor = max(1, int(n_k))
+            n_k_ceil = int(ceil(n_k))
+
+            segments_info.append({
+                "start": seg_start, "end": seg_end,
+                "per_stage_limit": per_stage_max,
+                "seg_total_limit": seg_total_limit_int,
+                "n_k": n_k, "n_k_floor": n_k_floor, "n_k_ceil": n_k_ceil,
+            })
+            print(f"  seg {k}: stages {seg_start}-{seg_end}, per_stage: {per_stage_min}-{per_stage_max}, seg_limit: {seg_total_limit_int}, n_k={n_k:.3f} (wait>={n_k_floor}, admit<={n_k_ceil})")
+
+        print(f"设定的总limit: {self.total_limit}, 实际的总limit: {total_limit_real}")
+
         return nested_booking_limits, segments_info
 
     def _allocate_request(self, request: Request) -> None:
@@ -181,71 +215,52 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         selected_requests: List[Request] = []
         selected_num_tokens: List[int] = []
 
-        first_segment_satisfied = False 
-        first_segment = self.segments[0]
-        firts_seg_start = first_segment["start"]
-        # required 是第一个限制, 是之前严格的booking limit限制
-        required = self.nested_booking_limits.get(firts_seg_start, 0)
-        # occupied 是当前在这个segment但不在初始位置的请求的数目, 也是已经被占用的limit
-        occupied = sum(1 for req in self._request_queue 
-                   if getattr(req, 'current_stage', 0) > first_segment["start"]
-                   and getattr(req, 'current_stage', 0)<= first_segment["end"])
-        # limit_for_this_segment 是这个segment的limit 
-        limit_for_this_segment = first_segment["seg_total_limit"]
-        # remain 是剩余的limit 
-        remain = limit_for_this_segment - occupied
-        stage_0_num = len(grouped_requests.get(firts_seg_start, []))
-        #print(f"\nlimit_for_first_segment={limit_for_this_segment},  occupied={occupied},  remain={remain},  required_limit={required},  stage_0_num={stage_0_num}")
-
-        #
-        # if len(grouped_requests.get(firts_seg_start, [])) >= min(required, remain):
-        #     first_segment_satisfied = True
-
-        # 不要下限
-        first_segment_satisfied = True
-        # 根据 all_requests_arrived 标识分两种逻辑
-        # if not self.all_requests_arrived:
-        #print("\n\n\n")
-        if not self.all_requests_arrived or (self.all_requests_arrived and first_segment_satisfied):
-            # 原有逻辑：依次检查各个 segment，要求前一个 segment 必须满足条件才能启动后续 segment
-            # 现在修改成了: 要么所有请求还没有到达, 要么已经全部到达但是第一个segment满足了
-            seg_num = 0
+        # Entry gate + free internal flow + WAIT
+        if not self.all_requests_arrived or True:
             for seg in self.segments:
-                seg_num += 1
                 seg_start = seg["start"]
-                required = self.nested_booking_limits.get(seg_start, 0)
-                occupied = sum(1 for req in self._request_queue 
-                    if getattr(req, 'current_stage', 0) > seg["start"]
-                    and getattr(req, 'current_stage', 0) <= seg["end"])
-                limit_for_this_segment = seg["seg_total_limit"]
-                # print(limit_for_this_segment)
-                remain = limit_for_this_segment - occupied
-                # print(f"start={seg_start}, end={seg["end"]}, required={required}, occupied={occupied}, remain={remain}, limit_for_this_segment={limit_for_this_segment}, start_num={len(grouped_requests.get(seg_start, []))}")
-                # if seg == self.segments[-1] and len(grouped_requests.get(seg_start, [])) >= min(required, remain):
-                #     print(f"一共启动了{seg_num}个segment")
-                if len(grouped_requests.get(seg_start, [])) < min(required, remain):
-                    # 如果该 segment 的起始阶段请求数不够，则不启动后续 segment
-                    #print(f"一共启动了{seg_num-1}个segment")
-                    break
+                seg_end = seg["end"]
+                num_stages = seg_end - seg_start + 1
+                budget = seg["seg_total_limit"]
+                # Rotation: 严格按 seg_tl 分配 3 or 4
+                base_nk = budget // num_stages  # 3
+                remainder_nk = budget % num_stages  # 6
+                batch_idx = self._sched_batch_count % num_stages
+                this_limit = base_nk + 1 if batch_idx < remainder_nk else base_nk
 
-                #print("\n")
-                # 对该 segment 内每个阶段调度请求
-                for stage in range(seg["start"], seg["end"] + 1):
-                    required = self.nested_booking_limits.get(stage, 0)
-                    
-                    if stage == seg["start"]:
-                        limit = min(remain, required)
-                    else:
-                        limit = self.nested_booking_limits.get(stage, 0)
-                    #if stage == 0:
-                    #    limit -= int(limit*0.4)
-                        #print("CAUTION! STAGE 0!!!")
-                    #print(f"stage={stage}, limit={limit}, allocated_blocks = {self._config.num_blocks -  self.num_allocated_blocks}")
+                # WAIT: 两条件满足其一才放该 segment 进 batch
+                entry_count = len(grouped_requests.get(seg_start, []))
+                occupied_internal = sum(1 for req in self._request_queue
+                    if getattr(req, 'current_stage', 0) > seg_start
+                    and getattr(req, 'current_stage', 0) <= seg_end)
+                total_in_seg = entry_count + occupied_internal
+                # WAIT: 两条件满足其一才放该 segment 进 batch (各 seg 独立判断)
+                if self._config.wait_gate:
+                    seg_full = total_in_seg >= budget
+                    entry_ready = entry_count >= this_limit
+                    if not seg_full and not entry_ready:
+                        continue  # WAIT — 该 seg 冻结，不影响其他 seg
+
+                # Entry: admit this_limit, 受 seg_tl 约束
+                remain = max(0, budget - occupied_internal)
+                entry_limit = min(this_limit, remain)
+                entry_group = grouped_requests.get(seg_start, [])
+                count = 0
+                while entry_group and count < entry_limit:
+                    req = entry_group.pop(0)
+                    if req in self._request_queue:
+                        self._request_queue.remove(req)
+                    self._allocate_request(req)
+                    req.advance_stage()
+                    selected_requests.append(req)
+                    next_num = self._get_request_next_num_tokens(req)
+                    selected_num_tokens.append(next_num)
+                    count += 1
+
+                # Internal stages: ALL advance freely
+                for stage in range(seg_start + 1, seg_end + 1):
                     group = grouped_requests.get(stage, [])
-                    for _ in range(limit):
-                        if not group:
-                            break
-                        req = group.pop(0)
+                    for req in list(group):
                         if req in self._request_queue:
                             self._request_queue.remove(req)
                         self._allocate_request(req)
@@ -290,9 +305,10 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
                 return None
 
         if selected_requests:
+            self._sched_batch_count += 1
             return Batch(self._replica_id, selected_requests, selected_num_tokens)
         return None
-    
+
     def on_batch_end(self, batch: Batch) -> None:
         """
         批次执行结束后：
