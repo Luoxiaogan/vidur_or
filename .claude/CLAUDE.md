@@ -928,12 +928,12 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 - **WAIT (wait_gate)**: segment 需满足 "总数达标 OR 入口积累够" 才进 batch，各 seg 独立判断
 - **Rotation**: 每 batch 按 `batch_count % num_stages` 轮换 entry admission (3 or 4)
 
-### Multi-type 实验结论 (2026-03-24) — **尚未 WIN**
-- 测试 200+ 配置 (tl, cs, sm, wait_gate)，B2 workload 全部 LOSE Sarathi
-- 最优: tl=50 sm=0.3 no-WAIT → +3.1% (r=12), tl=30 sm=0.2 → +8.0% (r=20)
-- 退化到 Sarathi (tl=9999, gate=OFF): +3.7%，segment 结构有固有开销
-- 根因: 低 rate 时 in-system 只有 ~4.5 个请求，无 prefill attention 压缩空间
-- **Overnight grid 搜索进行中**: 5 workloads × 4 rates × 72 WCP configs
+### Multi-type 突破 (2026-03-25) — **W3 全 11 rates 全胜**
+- **Per-segment gate**: 每个 seg 独立控制 decode token budget + prefill budget
+- **W3 (p512d20+p512d50, 70/30)**: r=12-22 全胜 (-2.9% ~ -41.9%)
+- 最佳: cs=192 tl=20 (r=12-19), cs=128 tl=30 (r=21-22)
+- 高 rate (r=22) WCP=2.36s vs Sarathi=4.06s: **-41.9%**
+- r=23+ 调参进行中
 
 ### Batch 计算量分解
 

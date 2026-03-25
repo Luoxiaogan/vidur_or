@@ -60,18 +60,33 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         self._pipeline_depth = self._K + self._l1  # 保留单 type 的
         self._P = self.total_limit / self._pipeline_depth_weighted
 
-        # batch_est: 实际 batch 组成
-        # decode tokens = (tl - prefill_in_progress) × 1
-        # prefill tokens = prefill_in_progress × cs
-        # prefill_in_progress = P × K_weighted
+        # Per-segment gate: 每个 seg 控制自己的 token budget
+        # seg_k 的 steady-state batch 贡献:
+        #   decode: n_k * count_k (每 stage n_k 个请求, 各 1 token)
+        #   prefill: n_k * K_k * cs (仅 seg0 有 prefill)
+        # 总 batch = sum_k(seg_decode_k) + seg0_prefill
+        import os
+        self._gate = os.environ.get("WAIT_CP_GATE", "on") == "on"
+
+        # 全局 batch_est (用于 gate 和向后兼容)
         prefill_in_progress = self._P * weighted_K
         decode_count = self.total_limit - prefill_in_progress
         self._batch_est = int(ceil(decode_count + prefill_in_progress * self._per_req_budget))
-
-        # Gate
-        import os
-        self._gate = os.environ.get("WAIT_CP_GATE", "on") == "on"
         self._total_budget = self._batch_est if self._gate else float('inf')
+
+        # Per-segment decode budget: 每个 seg 每 batch 最多贡献多少 decode tokens
+        self._seg_decode_budgets = []
+        for seg_info in self.segments:
+            n_k = seg_info["n_k"]
+            seg_count = seg_info["end"] - seg_info["start"] + 1
+            # 该 seg steady-state decode tokens = n_k * seg_count
+            seg_decode_budget = int(ceil(n_k * seg_count))
+            self._seg_decode_budgets.append(seg_decode_budget)
+
+        # Prefill budget: prefill_in_progress * cs
+        self._prefill_budget = int(ceil(prefill_in_progress * self._per_req_budget))
+
+        print(f"Gate: batch_est={self._batch_est}, seg_decode_budgets={self._seg_decode_budgets}, prefill_budget={self._prefill_budget}")
 
         # 运行时统计
         self._batch_count = 0
@@ -140,39 +155,40 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         batch_tokens = 0
         decode_count = 0
 
-        # ---- Step 3: Decode (stage 1+) — entry gate + free internal flow + WAIT ----
-        for seg in self.segments:
+        # ---- Step 3: Decode (stage 1+) — per-segment gate + WAIT ----
+        for seg_idx, seg in enumerate(self.segments):
             seg_start = seg["start"]
             seg_end = seg["end"]
             num_stages = seg_end - seg_start + 1
             budget = seg["seg_total_limit"]
+            seg_decode_budget = self._seg_decode_budgets[seg_idx] if self._gate else float('inf')
 
-            # Rotation: 严格按 seg_tl 分配
+            # Rotation (用于 WAIT 阈值)
             base_nk = budget // num_stages
             remainder_nk = budget % num_stages
             batch_idx = self._batch_count % num_stages
             this_limit = base_nk + 1 if batch_idx < remainder_nk else base_nk
 
-            # WAIT: 两条件满足其一才放该 segment 进 batch
+            # WAIT: 各 seg 独立判断
             entry_count = len(grouped.get(seg_start, []))
             occupied_internal = sum(1 for req in self._request_queue
                 if getattr(req, 'current_stage', 0) > seg_start
                 and getattr(req, 'current_stage', 0) <= seg_end)
             total_in_seg = entry_count + occupied_internal
-            # WAIT: 两条件满足其一才放该 segment 进 batch (各 seg 独立判断)
             if self._config.wait_gate:
                 seg_full = total_in_seg >= budget
                 entry_ready = entry_count >= this_limit
                 if not seg_full and not entry_ready:
-                    continue  # WAIT — 该 seg 冻结，但不影响其他 seg
+                    continue  # WAIT
 
-            # 3a. Entry stage (segment 边界, seg_start >= 1): admit this_limit, 受 seg_tl 约束
+            seg_tokens_added = 0
+
+            # 3a. Entry stage (segment 边界, seg_start >= 1)
             if seg_start >= 1:
                 remain = max(0, budget - occupied_internal)
-                entry_limit = min(this_limit, remain)
                 entry_group = grouped.get(seg_start, [])
                 count = 0
-                while entry_group and count < entry_limit:
+                while entry_group and count < remain and seg_tokens_added < seg_decode_budget:
                     req = entry_group.pop(0)
                     if req in self._request_queue:
                         self._request_queue.remove(req)
@@ -182,12 +198,17 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                     tokens.append(1)
                     batch_tokens += 1
                     decode_count += 1
+                    seg_tokens_added += 1
                     count += 1
 
-            # 3b. Internal stages: ALWAYS free flow，不受 WAIT 影响
+            # 3b. Internal stages: free flow, 受 seg decode budget 限制
             for stage in range(max(seg_start + 1, 1), seg_end + 1):
+                if seg_tokens_added >= seg_decode_budget:
+                    break
                 group = grouped.get(stage, [])
                 for req in list(group):
+                    if seg_tokens_added >= seg_decode_budget:
+                        break
                     if req in self._request_queue:
                         self._request_queue.remove(req)
                     self._allocate_request(req)
@@ -196,6 +217,7 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                     tokens.append(1)
                     batch_tokens += 1
                     decode_count += 1
+                    seg_tokens_added += 1
 
         # ---- Step 4: Prefill (stage 0) per-request chunk ----
         stage0 = grouped.get(0, [])
@@ -204,47 +226,42 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         running_prefill = [r for r in stage0 if r.id in self._allocation_map]
         new_prefill = [r for r in stage0 if r.id not in self._allocation_map]
 
-        # 4a. Running prefill: 各 per_req_budget, 受 gate 限制
+        # 4a. Running prefill: 各 per_req_budget, 受 prefill_budget 限制
+        prefill_tokens_added = 0
         for req in running_prefill:
             remaining = req.num_prefill_tokens - req.num_processed_tokens
-            budget_left = self._total_budget - batch_tokens if self._gate else remaining
+            if self._gate:
+                budget_left = min(self._prefill_budget - prefill_tokens_added, self._total_budget - batch_tokens)
+            else:
+                budget_left = remaining
             give = min(remaining, self._per_req_budget, max(0, int(budget_left)))
             if give > 0:
                 selected.append(req)
                 tokens.append(give)
                 batch_tokens += give
+                prefill_tokens_added += give
                 if req in self._request_queue:
                     self._request_queue.remove(req)
-            # give=0 的留在 queue，下次处理
 
-        # 4b. New prefill: 严格按 rotation 分配 + seg_tl + global_tl 约束
-        seg0 = self.segments[0]
-        seg0_budget = seg0["seg_total_limit"]
-        seg0_stages = seg0["end"] - seg0["start"] + 1
-        base_nk0 = seg0_budget // seg0_stages
-        remainder_nk0 = seg0_budget % seg0_stages
-        batch_idx0 = self._batch_count % seg0_stages
-        prefill_limit = base_nk0 + 1 if batch_idx0 < remainder_nk0 else base_nk0
-
-        occupied0 = sum(1 for req in self._request_queue
-                        if getattr(req, 'current_stage', 0) > seg0["start"]
-                        and getattr(req, 'current_stage', 0) <= seg0["end"])
-        remain_seg0 = max(0, seg0_budget - occupied0)
-
+        # 4b. New prefill: 按需 admit, tl ceiling + prefill_budget 限制
         in_system = len(self._allocation_map)
         remain_global = max(0, self.total_limit - in_system)
-        remain = min(prefill_limit, remain_seg0, remain_global)
 
         admitted = 0
         for req in new_prefill:
-            if admitted >= remain:
+            if admitted >= remain_global:
+                break
+            if self._gate and prefill_tokens_added >= self._prefill_budget:
                 break
             if self._gate and batch_tokens >= self._total_budget:
                 break
             if not self._can_allocate_request(req):
                 break
             remaining = req.num_prefill_tokens - req.num_processed_tokens
-            budget_left = self._total_budget - batch_tokens if self._gate else remaining
+            if self._gate:
+                budget_left = min(self._prefill_budget - prefill_tokens_added, self._total_budget - batch_tokens)
+            else:
+                budget_left = remaining
             give = min(remaining, self._per_req_budget, max(0, int(budget_left)))
             if give <= 0:
                 break
@@ -252,16 +269,10 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
             selected.append(req)
             tokens.append(give)
             batch_tokens += give
+            prefill_tokens_added += give
             admitted += 1
             if req in self._request_queue:
                 self._request_queue.remove(req)
-
-        # 诊断: 每 500 个 batch 打一次
-        if self._batch_count % 500 == 0 and selected:
-            prefill_tokens_total = sum(t for r, t in zip(selected, tokens) if t > 1)
-            n_prefill = sum(1 for t in tokens if t > 1)
-            n_decode = sum(1 for t in tokens if t == 1)
-            print(f"  [B{self._batch_count}] decode={n_decode}({decode_count}dt) prefill={n_prefill}({prefill_tokens_total}pt) total={batch_tokens}t gate_budget={self._total_budget}")
 
         # 统计
         self._batch_count += 1
