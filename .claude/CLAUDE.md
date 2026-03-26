@@ -1000,39 +1000,50 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - **Manuscript ID**: OPRE-2025-04-1885
 - **决定**: Major Revision
 
-### 审稿意见处理: 17/20 (85%) → 实验数据已就绪
-- 写作质量: 7/7 ✅
-- 模型合理性: 4/4 ✅
-- 理论贡献: 4/4 ✅
-- **实验: 2/5 → 4/5 🚧** (1 项未解决)
+### Revision Checklist (对照 R1/R2 审稿意见)
 
-### 实验任务 Checklist
-1. **P0**: Mean latency vs arrival rate 图 ✅ **数据就绪**
-   - Single-type (p512d20): r=12-26, step=1, 3 baselines (Sarathi/vLLM/WCP), nreq=10000
-   - Multi-type W3 (p512d20+p512d50): r=12-26, step=1, 3 baselines, nreq=10000
-   - 数据: `outputs/timeseries/*.csv`, summary tables in sweep scripts
-   - **待做**: 生成论文格式的 mean latency vs rate 折线图 (非时间序列图)
-2. **P0.5**: Stability region 展示 ✅ **数据就绪**
-   - 时间序列图: `outputs/timeseries/timeseries_single.png`, `timeseries_multi.png`
-   - Stability verification (nreq scaling): r=22 Sarathi +464% vs WCP +63%
-   - Stability boundary: vLLM ~r=15, Sarathi ~r=22, WCP ~r=23-24
-   - **待做**: 选 2-3 个关键 rate 的时间序列子图放入论文
-3. **P1**: 实验参数完整表格 🚧
-   - 需整理: model (Llama-3-8B), GPU (A100), nreq, WCP 超参 (cs, tl, gate)
-   - Baselines: Sarathi(cs=512), vLLM(default), WCP(cs/tl per rate)
-4. **P2**: Simulation vs real GPU 说明 ✅
-   - Vidur 基于 profiled execution time (sklearn predictor + A100 profiling data)
+#### A. 需跑实验 (CPU) — unknown multi-type (Nested WAIT)
+1. **Mean latency vs rate (Nested WAIT)** ✅ 数据就绪
+   - Single-type (p512d20): r=12-26, step=1, Sarathi/vLLM/WCP, nreq=10000
+   - Multi-type W3 (p512d20+p512d50): r=12-26, step=1, 同上
+   - 数据: `outputs/timeseries/*.csv`
+2. **Stability region 时间序列** ✅ 数据就绪
+   - `outputs/timeseries/timeseries_{single,multi}.png`
+   - nreq scaling (r=22): Sarathi +464% vs WCP +63%
+3. **Multi-seed 验证** 🚧 未跑
+   - 关键 rate (r=22, 23) 跑 3-5 seeds 确认结果稳定
+4. ~~WAIT (known type) 实验~~ — 已有，不需重跑
 
-### 实验数据汇总 (2026-03-26)
+#### B. 需画图
+5. **Mean latency vs rate 折线图** 🚧 — 从 CSV 生成论文格式图
+6. **时间序列子图** 🚧 — 选 2-3 个关键 rate 放入论文
+
+#### C. 需写文字/表格 (R2 实验部分)
+7. **R2-4.1**: B, M\*, C 参数表 🚧 — batch_size_cap, num_blocks, capacity 具体值
+8. **R2-4.3**: Sarathi 配置 🚧 — chunk_size=512, watermark=0.01, batch_size_cap 等
+9. **R2-4.5**: Nested WAIT 参数 🚧 — n_1...n_k, B, M\*, C (Section 6.2)
+10. **R2-4.2**: Simulation fidelity 🚧 — Vidur 基于 A100 profiling data, sklearn predictor
+11. **R2-4.4**: Figure 7 "Prompt Number" 含义 🚧
+12. **R2-4.6**: output > 1000 tokens 行为讨论 🚧
+
+#### D. R1 写作/理论修复
+13. **R1**: KV cache OOM 防护机制说明
+14. **R1**: 线性假设 (Eq.1) 的适用范围讨论
+15. **R1**: 符号统一 (k 的多重含义)
+16. **R1**: π 和 Π 的正式定义前移
+17. **R1**: Typos (d→d_1, Thoughput→Throughput)
+
+#### E. 一致性修复
+18. 模型名称: Llama-7B vs Llama2-7B
+19. 5+ broken cross-references
+20. 3 个符号未加入 Table 1 (ΔT, θ_k, p_k)
+
+### 实验数据汇总 (2026-03-27)
 
 | 实验 | Workload | Rates | Baselines | nreq | 状态 |
 |------|----------|-------|-----------|------|------|
-| rate sweep | W1/W2/W3 multi-type | r=12-36 | Sarathi, WCP | 5000 | ✅ DB |
-| timeseries | Single-type | r=12-26 step=1 | Sarathi, vLLM, WCP | 10000 | ✅ CSV |
+| timeseries | Single-type (p512d20) | r=12-26 step=1 | Sarathi, vLLM, WCP | 10000 | ✅ CSV |
 | timeseries | Multi-type W3 | r=12-26 step=1 | Sarathi, vLLM, WCP | 10000 | ✅ CSV |
+| rate sweep | W1/W2/W3 multi-type | r=12-36 | Sarathi, WCP | 5000 | ✅ DB |
 | stability | W3 multi-type | r=20-24 | Sarathi, WCP | 2k/5k/10k/20k | ✅ DB |
-
-### 一致性问题待修复
-- 模型名称: Llama-7B vs Llama2-7B (abstract vs intro)
-- 5+ broken cross-references
-- 3 个符号未加入 Table 1 (ΔT, θ_k, p_k)
+| multi-seed | 关键 rates | r=22,23 | Sarathi, WCP | 10000 | 🚧 未跑 |
