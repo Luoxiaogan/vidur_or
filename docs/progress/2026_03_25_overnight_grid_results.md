@@ -179,21 +179,58 @@ WCP 的 bounded batch size (tl) 防止了 Sarathi 的 positive feedback: rate↑
 
 **r=22 是论文核心证据**: Sarathi latency 线性爆炸, WCP hold 住。
 
+### 完整时间序列 (r=12-26, step=1, nreq=10000, 3 baselines)
+
+**Single-type (p512d20):**
+
+| rate | Sarathi | vLLM | WCP (cs256 tl21) | WCP vs Sar |
+|------|---------|------|------------------|------------|
+| 12 | 0.470s | 0.599s | 0.462s | -1.6% |
+| 16 | 0.633s | 1.180s | 0.590s | -6.8% |
+| 20 | 0.963s | 3.693s | 0.799s | -17.1% |
+| 22 | 1.984s | 15.690s | 1.008s | -49.2% |
+| **23** | **8.937s** | 23.264s | **1.253s** | **-86.0%** |
+| 24 | 17.563s | 32.274s | 4.072s | -76.8% |
+| 26 | 33.558s | 48.298s | 18.531s | -44.8% |
+
+**Multi-type W3 (p512d20+p512d50, 70/30):**
+
+| rate | Sarathi | vLLM | WCP (best) | WCP vs Sar |
+|------|---------|------|------------|------------|
+| 12 | 0.645s | 0.824s | 0.608s | -5.8% |
+| 16 | 0.875s | 1.585s | 0.789s | -9.8% |
+| 20 | 1.376s | 6.160s | 1.356s | -1.5% |
+| **22** | **6.227s** | 25.661s | **2.838s** | **-54.4%** |
+| 23 | 14.848s | 34.960s | 10.377s | -30.1% |
+| 24 | 23.803s | 43.969s | 19.099s | -19.8% |
+| 26 | 39.798s | 59.993s | 35.088s | -11.8% |
+
+**Stability boundary 三级分层**: vLLM (~r=15) < Sarathi (~r=22) < WCP (~r=23-24)
+
 ## 全局总结 (2026-03-26)
 
 | Workload | Rates | WIN/LOSE | Gap 范围 | 关键 config |
 |----------|-------|----------|----------|-------------|
+| Single-type (p512d20) | 15 | 15/0 | -1.6%~-86.0% | cs256_tl21 |
 | W1 (p256d10+p512d50) | 9 | 9/0 | -4.3%~-12.7% | cs256_tl15/cs192_tl20/cs256_tl25 |
 | W2 (p256d20+p512d40) | 9 | 9/0 | -2.0%~-11.1% | cs256_tl20/cs128_tl30 |
-| W3 (p512d20+p512d50) | 25 | 25/0 | -2.9%~-41.9% | cs192_tl20/cs128_tl30 |
+| W3 (p512d20+p512d50) | 25+15 | 40/0 | -1.5%~-86.0% | cs192_tl20/cs128_tl30 |
 
-**Per-segment gate 让 WCP 在 3 种 multi-type workloads、43 个 rate 点全胜。**
+**Per-segment gate 让 WCP 在全部 workloads 全胜。**
+
+### OR Revision 实验 Checklist
+- [x] **P0**: Mean latency vs arrival rate — 数据就绪 (待生成论文图)
+- [x] **P0.5**: Stability region 展示 — 时间序列图 + nreq scaling
+- [ ] **P1**: 实验参数完整表格 — 需整理写入论文
+- [x] **P2**: Simulation vs real GPU 说明
 
 ## 下一步
 
 - [x] 完成 r=23-36 高 rate 调参 → **全胜** (2026-03-26)
 - [x] 测试其他 workload (W1/W2) per-seg gate → **全胜** (2026-03-26)
 - [x] Stability verification: **r=22 Sarathi +464% vs WCP +63%** (2026-03-26)
-- [x] Time-series latency 图: r=16/20/21/22/23/24, nreq=10k (2026-03-26)
+- [x] Time-series latency 图: r=12-26, step=1, nreq=10k (2026-03-26)
+- [x] vLLM baseline 补齐: single + multi, r=12-26 (2026-03-26)
+- [ ] 生成论文格式 mean latency vs rate 折线图
 - [ ] Multi-seed 验证关键 rate 点
 - [ ] 自动调参: rate → (cs, tl) 映射

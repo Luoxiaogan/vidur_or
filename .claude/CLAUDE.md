@@ -991,7 +991,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `experiments.db` - SQLite, 表: experiments, rate_sweep_perseg, stability_verification, grid_multitype
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
-## OR 论文 Revision 状态 (2026-03-22)
+## OR 论文 Revision 状态 (2026-03-26 updated)
 
 ### 论文目录
 - **位置**: `papers/` (从 Overleaf 同步)
@@ -1000,16 +1000,37 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - **Manuscript ID**: OPRE-2025-04-1885
 - **决定**: Major Revision
 
-### 审稿意见处理: 17/20 (85%)
+### 审稿意见处理: 17/20 (85%) → 实验数据已就绪
 - 写作质量: 7/7 ✅
 - 模型合理性: 4/4 ✅
 - 理论贡献: 4/4 ✅
-- **实验: 2/5 🚧** (3 项未解决)
+- **实验: 2/5 → 4/5 🚧** (1 项未解决)
 
-### 未解决实验任务 (按优先级)
-1. **P0**: Mean latency vs arrival rate 图 (R3 核心要求 — 展示 stability region)
-2. **P1**: 实验参数完整表格 (B, M*, C, baselines)
-3. **P2**: Simulation vs real GPU 说明
+### 实验任务 Checklist
+1. **P0**: Mean latency vs arrival rate 图 ✅ **数据就绪**
+   - Single-type (p512d20): r=12-26, step=1, 3 baselines (Sarathi/vLLM/WCP), nreq=10000
+   - Multi-type W3 (p512d20+p512d50): r=12-26, step=1, 3 baselines, nreq=10000
+   - 数据: `outputs/timeseries/*.csv`, summary tables in sweep scripts
+   - **待做**: 生成论文格式的 mean latency vs rate 折线图 (非时间序列图)
+2. **P0.5**: Stability region 展示 ✅ **数据就绪**
+   - 时间序列图: `outputs/timeseries/timeseries_single.png`, `timeseries_multi.png`
+   - Stability verification (nreq scaling): r=22 Sarathi +464% vs WCP +63%
+   - Stability boundary: vLLM ~r=15, Sarathi ~r=22, WCP ~r=23-24
+   - **待做**: 选 2-3 个关键 rate 的时间序列子图放入论文
+3. **P1**: 实验参数完整表格 🚧
+   - 需整理: model (Llama-3-8B), GPU (A100), nreq, WCP 超参 (cs, tl, gate)
+   - Baselines: Sarathi(cs=512), vLLM(default), WCP(cs/tl per rate)
+4. **P2**: Simulation vs real GPU 说明 ✅
+   - Vidur 基于 profiled execution time (sklearn predictor + A100 profiling data)
+
+### 实验数据汇总 (2026-03-26)
+
+| 实验 | Workload | Rates | Baselines | nreq | 状态 |
+|------|----------|-------|-----------|------|------|
+| rate sweep | W1/W2/W3 multi-type | r=12-36 | Sarathi, WCP | 5000 | ✅ DB |
+| timeseries | Single-type | r=12-26 step=1 | Sarathi, vLLM, WCP | 10000 | ✅ CSV |
+| timeseries | Multi-type W3 | r=12-26 step=1 | Sarathi, vLLM, WCP | 10000 | ✅ CSV |
+| stability | W3 multi-type | r=20-24 | Sarathi, WCP | 2k/5k/10k/20k | ✅ DB |
 
 ### 一致性问题待修复
 - 模型名称: Llama-7B vs Llama2-7B (abstract vs intro)
