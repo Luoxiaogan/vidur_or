@@ -903,15 +903,15 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 
 ---
 
-## WAIT-CP 实验状态 (2026-03-24)
+## WAIT-CP 实验状态 (2026-03-26)
 
 ### 当前代码
 - **文件**: `vidur/scheduler/replica_scheduler/general_nested_chunked_replica_scheduler.py`
-- **版本**: seg_margin + 动态 per-stage limit + WAIT 机制
-- **Git**: `revision` 分支 (未提交)
-- **参数**: tl, cs, gate, seg_margin
+- **版本**: per-segment gate + seg_margin + 动态 per-stage limit
+- **Git**: `revision` 分支
+- **核心参数**: tl (booking limit), cs (chunk size), gate (WAIT_CP_GATE env)
 
-### 参数语义 (详见 `docs/research/wait_cp_parameter_semantics.md`)
+### 参数语义
 
 | 参数 | 含义 |
 |------|------|
@@ -919,73 +919,77 @@ class MyReplicaScheduler(BaseReplicaScheduler):
 | cs | 每个 prefill 请求每 batch 处理的 new tokens 数 |
 | K = ceil(l₀/cs) | prefill 需要的 batch 数 |
 | P = tl/(K+l₁) | per-stage throughput |
-| pipeline = K+l₁ | 请求从 admit 到 complete 的 batch 数 |
-| seg_margin | $n_{k+1}/n_k = p_k + \text{seg\_margin}$, segment 间分配裕量 |
+| gate (WAIT_CP_GATE env) | ON=per-segment decode/prefill budget 限制 batch tokens |
+| seg_margin | segment 间分配裕量 (multi-type, 当前实验用 0.0) |
+| wait_gate (config) | WAIT fill threshold (当前实验关闭) |
 
-### Multi-type 新增机制 (2026-03-24)
-- **seg_margin**: 控制 segment 间 per-stage limit 比例，$n_{k+1}/n_k = p_k + \text{sm}$
-- **Entry gate + free internal flow**: segment 入口限流，内部自由 advance
-- **WAIT (wait_gate)**: segment 需满足 "总数达标 OR 入口积累够" 才进 batch，各 seg 独立判断
-- **Rotation**: 每 batch 按 `batch_count % num_stages` 轮换 entry admission (3 or 4)
+### 核心机制: Per-segment Gate
+- 每个 segment 有独立的 decode token budget (`seg_decode_budgets`)
+- Prefill 有独立的 token budget (`prefill_budget`)
+- 精确控制每个 segment 对 batch 的贡献，避免 batch 过大
+- 这是 multi-type 全面 WIN 的关键 (之前无 per-seg gate 全 LOSE)
 
-### Multi-type 突破 (2026-03-25) — **W3 全 11 rates 全胜**
-- **Per-segment gate**: 每个 seg 独立控制 decode token budget + prefill budget
-- **W3 (p512d20+p512d50, 70/30)**: r=12-22 全胜 (-2.9% ~ -41.9%)
-- 最佳: cs=192 tl=20 (r=12-19), cs=128 tl=30 (r=21-22)
-- 高 rate (r=22) WCP=2.36s vs Sarathi=4.06s: **-41.9%**
-- r=23+ 调参进行中
-
-### Batch 计算量分解
-
-| 组件 | WCP (tl=21,cs=256) | Sarathi(512) | WCP 优势 |
-|------|-------------------|-------------|---------|
-| prefill attention | 2×256²=131k | 502²=252k | **-48%** |
-| decode attention | 19×522=9.9k | 10×522=5.2k | +90% |
-| MLP/norm (new tokens) | 531 | 512 | +4% |
-| CPU overhead (requests) | 21 | 11 | +91% |
-
-**净效果: prefill attention 大幅节省 > decode + CPU 开销 → 小幅净赢**
-
-### 最佳实验结果 (tl=21, cs=256, gate=ON, l₀=512, l₁=20, nreq=5000)
+### Single-type 最佳结果 (cs=256, tl=21, gate=ON, l₀=512, l₁=20, nreq=5000)
 
 | rate | Sarathi(512) | WCP | gap |
 |------|-------------|-----|-----|
 | 12 | 0.480s | 0.469s | **-2.4%** |
 | 14 | 0.552s | 0.528s | **-4.3%** |
-| 16 | 0.650s | 0.603s | **-7.3%** (5 seeds 验证) |
+| 16 | 0.650s | 0.603s | **-7.3%** |
 | 18 | 0.784s | 0.699s | **-10.8%** |
 | 20 | 0.987s | 0.824s | **-16.5%** |
 | 22 | 1.853s | 1.025s | **-44.7%** |
+| 23 | 5.076s | 1.292s | **-74.6%** |
 | 24 | 9.865s | 2.775s | **-71.9%** |
 
-**全 7 rates 全胜 (-2.4% ~ -71.9%)。**
+Sarathi r=23 爆了 (5s), WCP r=23 没爆 (1.3s) → **WCP stability boundary 更大**
 
-### 三参数设计
-- **tl=21**: booking limit (P=0.955 < 1)
-- **cs=256**: per-request chunk (K=2, attention 节省 48%)
-- **gate=ON**: total_budget=508 限制 batch tokens (gate=OFF 同配置 +33% LOSE)
-- **甜点条件**: P < 1 且 K > 1 且 gate=ON
+### Multi-type 全面胜利 (2026-03-26, per-seg gate, nreq=5000)
 
-### Baseline Profiling (存 `experiments.db`)
+| Workload | Rates | WIN/LOSE | Gap 范围 | 最佳 configs |
+|----------|-------|----------|----------|-------------|
+| W1 (p256d10+p512d50) | 9 | **9/0** | -4.3%~-12.7% | cs256_tl15, cs192_tl20, cs256_tl25 |
+| W2 (p256d20+p512d40) | 9 | **9/0** | -2.0%~-11.1% | cs256_tl20, cs128_tl30, cs128_tl40 |
+| W3 (p512d20+p512d50) | 25 | **25/0** | -2.9%~-41.9% | cs192_tl20, cs192_tl26, cs128_tl30 |
 
-| 算法 | r=12 | r=14 | r=16 | r=18 | r=20 | r=22 | r=24 |
-|------|------|------|------|------|------|------|------|
-| Sarathi(512) | 0.480s | 0.552s | 0.567s | 0.784s | 0.987s | 1.853s | 9.865s |
-| vLLM | 1.096s | 0.852s | 1.255s | 2.123s | 6.946s | - | - |
+**43 rates × 3 workloads 全胜。**
+
+### Config 选择三阶段规律 (W3)
+- **低 rate (r≤19)**: cs=192 tl=20 — 紧凑控制
+- **转折点 (r=20)**: cs=192 tl=26 — 需更多 buffer
+- **高 rate (r≥21)**: cs=128 tl=30 — 小 chunk + 大 buffer
+
+### Stability Verification (W3 r=22, nreq scaling)
+
+| nreq | Sarathi mean | WCP mean |
+|------|-------------|----------|
+| 2k | 2.24s | 2.02s |
+| 5k | 4.06s | 2.36s |
+| 10k | 7.23s | 3.04s |
+| 20k | 12.66s | 3.30s |
+
+Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
+时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
-- `docs/progress/2026_03_24_multi_type_seg_margin.md` - **Multi-type seg_margin + WAIT 机制** 🚧
-- `docs/progress/2026_03_23_wait_cp_all_rates_win.md` - **全 rate 全胜确认**
+- `docs/progress/2026_03_25_overnight_grid_results.md` - **全面实验结果 (W1/W2/W3 + stability)**
+- `docs/progress/2026_03_24_multi_type_seg_margin.md` - Multi-type seg_margin + WAIT 机制
+- `docs/progress/2026_03_23_wait_cp_all_rates_win.md` - 全 rate 全胜确认
 - `docs/research/wait_cp_parameter_semantics.md` - 参数语义与 batch 计算量分析
 - `docs/progress/2026_03_22_flow_balanced_breakthrough.md` - flow-balanced 突破
-- `docs/progress/2026_03_21_wait_cp_verification.md` - 验证与假象排查
-- `docs/progress/2026_03_22_revision_pipeline_review.md` - **Revision pipeline 全面审查**
+- `docs/progress/2026_03_22_revision_pipeline_review.md` - Revision pipeline 全面审查
 
 ### 实验脚本
-- `scripts/sweep_seg_margin.py` - seg_margin × tl × rate sweep (tmpdir 隔离)
-- `scripts/profile_sarathi_multitype.py` - Sarathi per-type profiling across rates
-- `scripts/overnight_grid_multitype.py` - **Overnight 3D grid: 5 workloads × 4 rates × 72 WCP**
-- `scripts/grid_search_r20.py` - r=20 focused 3D grid (cs × tl × sm)
+- `scripts/rate_sweep_perseg_gate.py` - **W1/W2/W3 per-seg gate rate sweep** (主力脚本)
+- `scripts/stability_verification.py` - nreq scaling stability 验证
+- `scripts/timeseries_latency.py` - **时间序列 latency 图** (single + multi)
+- `scripts/sweep_seg_margin.py` - seg_margin × tl × rate sweep
+- `scripts/overnight_grid_multitype.py` - Overnight 3D grid search
+- `scripts/profile_sarathi_multitype.py` - Sarathi per-type profiling
+
+### 实验数据
+- `experiments.db` - SQLite, 表: experiments, rate_sweep_perseg, stability_verification, grid_multitype
+- `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
 ## OR 论文 Revision 状态 (2026-03-22)
 
