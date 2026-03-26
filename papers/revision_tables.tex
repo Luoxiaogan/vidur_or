@@ -1,0 +1,127 @@
+% Revision Tables — standalone file
+% Include in numerical.tex via \input{revision_tables}
+
+% ============================================================
+% Table: Experiment Setup (R2-4.1)
+% ============================================================
+\begin{table}[htbp]
+\centering
+\caption{Experiment configuration for Nested WAIT evaluation.}
+\label{tab:experiment_setup}
+\begin{tabular}{lll}
+\toprule
+\textbf{Category} & \textbf{Parameter} & \textbf{Value} \\
+\midrule
+\multicolumn{3}{l}{\textit{Hardware \& Model}} \\
+& GPU & NVIDIA A100 (80\,GB) \\
+& Model & Meta-Llama-3-8B \\
+& Tensor parallelism & 1 \\
+& Pipeline stages & 1 \\
+& Memory margin & 10\% \\
+& KV-cache block size & 16 tokens \\
+& Total KV-cache blocks ($C$) & 29{,}952 \\
+\midrule
+\multicolumn{3}{l}{\textit{Simulator}} \\
+& Engine & Microsoft Vidur \citep{agrawal2024vidur} \\
+& Execution time predictor & Random forest (profiled on A100) \\
+& Requests per run ($N$) & 10{,}000 \\
+\midrule
+\multicolumn{3}{l}{\textit{Workloads}} \\
+& Single-type & $l = 512$, $l' = 20$ \\
+& Multi-type (W3) & $l = 512$, $l' \in \{20, 50\}$, ratio $70\!:\!30$ \\
+& Arrival rates & $\lambda = 12, 13, \ldots, 26$ (step\,=\,1) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ============================================================
+% Table: Algorithm Configuration (R2-4.3, R2-4.5)
+% ============================================================
+\begin{table}[htbp]
+\centering
+\caption{Algorithm configurations. All share block size\,=\,16 and watermark\,=\,1\%.}
+\label{tab:algorithm_config}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Parameter} & \textbf{Sarathi} & \textbf{vLLM} & \textbf{Nested WAIT} \\
+\midrule
+Scheduling priority & Ongoing first & New first & Threshold-based \\
+Chunk size ($\Delta$) & 512 & --- & 256 / 128 \\
+Batch size cap ($B$) & 512 & 128 & Controlled by $n_j$ \\
+Max tokens per batch & $B \times \Delta$ & 4{,}096 & $\hat{\tau}$ (gate) \\
+Booking limit ($n$) & --- & --- & 21 / 30 \\
+Per-segment gate & --- & --- & ON \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ============================================================
+% Table: Nested WAIT Parameters per Workload (R2-4.5)
+% ============================================================
+\begin{table}[htbp]
+\centering
+\caption{Nested WAIT parameter settings. $K = \lceil l / \Delta \rceil$ denotes the number of prefill chunks.}
+\label{tab:nested_wait_params}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Workload} & $\Delta$ & $n$ & $K$ & \textbf{Pipeline} & $P = n / \text{pipeline}$ & $\hat{\tau}$ \\
+\midrule
+Single ($l\!=\!512, l'\!=\!20$) & 256 & 21 & 2 & 22 & 0.955 & 508 \\
+Multi ($l'\!\in\!\{20,50\}$, $\lambda \leq 19$) & 192 & 20 & 3 & 32 & 0.625 & --- \\
+Multi ($l'\!\in\!\{20,50\}$, $\lambda = 20$) & 192 & 26 & 3 & 32 & 0.813 & --- \\
+Multi ($l'\!\in\!\{20,50\}$, $\lambda \geq 21$) & 128 & 30 & 4 & 33 & 0.909 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ============================================================
+% Table: Multi-seed Verification (stability)
+% ============================================================
+\begin{table}[htbp]
+\centering
+\caption{Multi-seed verification at critical arrival rates (5 seeds, $N = 10{,}000$). Mean $\pm$ std of E2E latency (seconds).}
+\label{tab:multi_seed}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Workload} & $\lambda$ & \textbf{Sarathi} & \textbf{vLLM} & \textbf{Nested WAIT} \\
+\midrule
+Single-type & 22 & $1.85 \pm 0.33$ & $15.11 \pm 2.74$ & $\mathbf{1.00 \pm 0.03}$ \\
+Single-type & 23 & $8.65 \pm 1.72$ & $24.33 \pm 3.35$ & $\mathbf{1.25 \pm 0.10}$ \\
+\midrule
+Multi-type (W3) & 22 & $5.67 \pm 1.66$ & $25.54 \pm 2.22$ & $\mathbf{2.72 \pm 0.57}$ \\
+Multi-type (W3) & 23 & $14.67 \pm 1.74$ & $35.07 \pm 2.37$ & $\mathbf{10.24 \pm 1.88}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ============================================================
+% Table: Mean Latency Summary (key rates)
+% ============================================================
+\begin{table}[htbp]
+\centering
+\caption{Mean E2E latency (seconds) at selected arrival rates ($N = 10{,}000$).}
+\label{tab:mean_latency_summary}
+\begin{tabular}{cl ccc c}
+\toprule
+& $\lambda$ & \textbf{Sarathi} & \textbf{vLLM} & \textbf{Nested WAIT} & \textbf{Improvement} \\
+\midrule
+\multirow{5}{*}{\rotatebox{90}{\small Single}}
+& 16 & 0.633 & 1.180 & \textbf{0.590} & $-6.8\%$ \\
+& 20 & 0.963 & 3.693 & \textbf{0.799} & $-17.1\%$ \\
+& 22 & 1.984 & 15.690 & \textbf{1.008} & $-49.2\%$ \\
+& 23 & 8.937 & 23.264 & \textbf{1.253} & $-86.0\%$ \\
+& 24 & 17.563 & 32.274 & \textbf{4.072} & $-76.8\%$ \\
+\midrule
+\multirow{5}{*}{\rotatebox{90}{\small Multi}}
+& 16 & 0.875 & 1.585 & \textbf{0.789} & $-9.8\%$ \\
+& 20 & 1.376 & 6.160 & \textbf{1.356} & $-1.5\%$ \\
+& 22 & 6.227 & 25.661 & \textbf{2.838} & $-54.4\%$ \\
+& 23 & 14.848 & 34.960 & \textbf{10.377} & $-30.1\%$ \\
+& 24 & 23.803 & 43.969 & \textbf{19.099} & $-19.8\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
