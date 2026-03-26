@@ -852,6 +852,27 @@ class GeneralNestedChunkedSchedulerConfig(GeneralNestedBookingLimitSchedulerConf
         return ReplicaSchedulerType.GENERAL_NESTED_CHUNKED
 
 @dataclass
+class UniformSegmentChunkedSchedulerConfig(GeneralNestedChunkedSchedulerConfig):
+    """
+    Uniform Segment Chunked 调度器配置
+
+    继承 GeneralNestedChunkedSchedulerConfig，新增 segment_size 参数。
+    用于 single-type 长 decode 场景：将 decode stages 等分为若干 segment，
+    每个 segment 的 per-stage limit (n_k) 相同。
+
+    新增参数:
+        segment_size: 每个 segment 包含的 decode stages 数 (如 200)
+    """
+    segment_size: int = field(
+        default=200,
+        metadata={"help": "Number of decode stages per segment. Total segments = ceil(max_decode / segment_size)."},
+    )
+
+    @staticmethod
+    def get_type():
+        return ReplicaSchedulerType.UNIFORM_SEGMENT_CHUNKED
+
+@dataclass
 class ModifiedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
     # 如果需要其他字段，可在此处添加
     # 例如：
