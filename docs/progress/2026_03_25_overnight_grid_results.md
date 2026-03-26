@@ -164,6 +164,21 @@
 **r=22 是 stability boundary**: Sarathi queue 爆炸 (+464%), WCP 仅微增 (+63%)。
 WCP 的 bounded batch size (tl) 防止了 Sarathi 的 positive feedback: rate↑→batch大→T_batch↑→μ↓→queue更大。
 
+### Time-series Latency 图 (nreq=10000)
+
+`outputs/timeseries/timeseries_latency.png` — 6 张子图 (r=16/20/21/22/23/24):
+
+| rate | Sarathi (10k) | WCP (10k) | 时间序列特征 |
+|------|--------------|-----------|-------------|
+| 16 | 0.875s | 0.789s | 两者水平, stable |
+| 20 | 1.376s | 1.356s | 两者水平, stable |
+| 21 | 1.742s | 1.588s | 基本水平, Sar 尾部轻微上翘 |
+| **22** | **6.227s** | **2.838s** | **Sar 线性上升 2→12s, WCP 基本水平 2-4s** |
+| 23 | 14.848s | 10.377s | 两者上翘, Sar 斜率更大 |
+| 24 | 23.803s | 19.099s | 两者明显上翘, Sar 更陡 |
+
+**r=22 是论文核心证据**: Sarathi latency 线性爆炸, WCP hold 住。
+
 ## 全局总结 (2026-03-26)
 
 | Workload | Rates | WIN/LOSE | Gap 范围 | 关键 config |
@@ -179,5 +194,6 @@ WCP 的 bounded batch size (tl) 防止了 Sarathi 的 positive feedback: rate↑
 - [x] 完成 r=23-36 高 rate 调参 → **全胜** (2026-03-26)
 - [x] 测试其他 workload (W1/W2) per-seg gate → **全胜** (2026-03-26)
 - [x] Stability verification: **r=22 Sarathi +464% vs WCP +63%** (2026-03-26)
+- [x] Time-series latency 图: r=16/20/21/22/23/24, nreq=10k (2026-03-26)
 - [ ] Multi-seed 验证关键 rate 点
 - [ ] 自动调参: rate → (cs, tl) 映射
