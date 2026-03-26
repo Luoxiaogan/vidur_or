@@ -231,6 +231,32 @@ WCP 的 bounded batch size (tl) 防止了 Sarathi 的 positive feedback: rate↑
 - [x] Stability verification: **r=22 Sarathi +464% vs WCP +63%** (2026-03-26)
 - [x] Time-series latency 图: r=12-26, step=1, nreq=10k (2026-03-26)
 - [x] vLLM baseline 补齐: single + multi, r=12-26 (2026-03-26)
-- [ ] 生成论文格式 mean latency vs rate 折线图
-- [ ] Multi-seed 验证关键 rate 点
+- [x] 论文图 (CMU Serif): mean latency vs rate + 时间序列 critical rates (2026-03-27)
+- [x] Multi-seed 验证: r=22/23 × 5 seeds, WCP ±3% 方差极小 (2026-03-27)
+- [x] 参数提取: B, M*, C, Sarathi/vLLM/WCP 配置 (2026-03-27)
 - [ ] 自动调参: rate → (cs, tl) 映射
+
+### Multi-seed 结果 (5 seeds, nreq=10000)
+
+| Workload | rate | Sarathi | vLLM | WCP |
+|----------|------|---------|------|-----|
+| single | 22 | 1.85 ± 0.33s | 15.11 ± 2.74s | **1.00 ± 0.03s** |
+| single | 23 | 8.65 ± 1.72s | 24.33 ± 3.35s | **1.25 ± 0.10s** |
+| multi W3 | 22 | 5.67 ± 1.66s | 25.54 ± 2.22s | **2.72 ± 0.57s** |
+| multi W3 | 23 | 14.67 ± 1.74s | 35.07 ± 2.37s | **10.24 ± 1.88s** |
+
+### 论文图
+- `outputs/timeseries/paper_mean_latency_vs_rate.pdf` — mean latency vs rate (log scale, CMU Serif)
+- `outputs/timeseries/paper_timeseries_critical.pdf` — 关键 rate 时间序列 2x2
+
+### 实验参数 (论文用)
+
+| Parameter | Sarathi | vLLM | WCP (single) | WCP (multi r≥21) |
+|-----------|---------|------|-------------|-----------------|
+| chunk_size | 512 | - | 256 | 128 |
+| batch_size_cap | 512 | 128 | - | - |
+| total_limit | - | - | 21 | 30 |
+| block_size | 16 | 16 | 16 | 16 |
+| watermark | 0.01 | 0.01 | 0.01 | 0.01 |
+
+硬件: A100 80GB, Llama-3-8B, TP=1, PP=1, num_blocks=29952

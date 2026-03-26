@@ -1002,26 +1002,27 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 
 ### Revision Checklist (对照 R1/R2 审稿意见)
 
-#### A. 需跑实验 (CPU) — unknown multi-type (Nested WAIT)
-1. **Mean latency vs rate (Nested WAIT)** ✅ 数据就绪
+#### A. 需跑实验 (CPU) — unknown multi-type (Nested WAIT) ✅ 全部完成
+1. **Mean latency vs rate (Nested WAIT)** ✅
    - Single-type (p512d20): r=12-26, step=1, Sarathi/vLLM/WCP, nreq=10000
    - Multi-type W3 (p512d20+p512d50): r=12-26, step=1, 同上
    - 数据: `outputs/timeseries/*.csv`
-2. **Stability region 时间序列** ✅ 数据就绪
+2. **Stability region 时间序列** ✅
    - `outputs/timeseries/timeseries_{single,multi}.png`
    - nreq scaling (r=22): Sarathi +464% vs WCP +63%
-3. **Multi-seed 验证** 🚧 未跑
-   - 关键 rate (r=22, 23) 跑 3-5 seeds 确认结果稳定
+3. **Multi-seed 验证** ✅ (2026-03-27)
+   - r=22/23, single+multi, 5 seeds each, WCP 方差 ±3% (r=22 single)
+   - 数据: `experiments.db` 表 `multi_seed`
 4. ~~WAIT (known type) 实验~~ — 已有，不需重跑
 
-#### B. 需画图
-5. **Mean latency vs rate 折线图** 🚧 — 从 CSV 生成论文格式图
-6. **时间序列子图** 🚧 — 选 2-3 个关键 rate 放入论文
+#### B. 需画图 ✅ 全部完成
+5. **Mean latency vs rate 折线图** ✅ — `paper_mean_latency_vs_rate.pdf` (CMU Serif)
+6. **时间序列子图** ✅ — `paper_timeseries_critical.pdf` (2x2, ST r=22/23 + MT r=21/22)
 
-#### C. 需写文字/表格 (R2 实验部分)
-7. **R2-4.1**: B, M\*, C 参数表 🚧 — batch_size_cap, num_blocks, capacity 具体值
-8. **R2-4.3**: Sarathi 配置 🚧 — chunk_size=512, watermark=0.01, batch_size_cap 等
-9. **R2-4.5**: Nested WAIT 参数 🚧 — n_1...n_k, B, M\*, C (Section 6.2)
+#### C. 需写文字/表格 (R2 实验部分) — 参数已提取，待写入论文
+7. **R2-4.1**: B, M\*, C 参数表 🚧 — B=512, M\*=29952 blocks, C=tl(21/30)
+8. **R2-4.3**: Sarathi 配置 🚧 — cs=512, watermark=0.01, batch_cap=512
+9. **R2-4.5**: Nested WAIT 参数 🚧 — n_k, B, M\*, C 值已提取
 10. **R2-4.2**: Simulation fidelity 🚧 — Vidur 基于 A100 profiling data, sklearn predictor
 11. **R2-4.4**: Figure 7 "Prompt Number" 含义 🚧
 12. **R2-4.6**: output > 1000 tokens 行为讨论 🚧
@@ -1046,4 +1047,5 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 | timeseries | Multi-type W3 | r=12-26 step=1 | Sarathi, vLLM, WCP | 10000 | ✅ CSV |
 | rate sweep | W1/W2/W3 multi-type | r=12-36 | Sarathi, WCP | 5000 | ✅ DB |
 | stability | W3 multi-type | r=20-24 | Sarathi, WCP | 2k/5k/10k/20k | ✅ DB |
-| multi-seed | 关键 rates | r=22,23 | Sarathi, WCP | 10000 | 🚧 未跑 |
+| multi-seed | single+multi | r=22,23 | Sarathi, vLLM, WCP | 10000 × 5 seeds | ✅ DB |
+| 论文图 | - | - | - | - | ✅ PDF (CMU Serif) |
