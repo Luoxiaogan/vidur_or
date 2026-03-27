@@ -234,7 +234,23 @@ WCP 的 bounded batch size (tl) 防止了 Sarathi 的 positive feedback: rate↑
 - [x] 论文图 (CMU Serif): mean latency vs rate + 时间序列 critical rates (2026-03-27)
 - [x] Multi-seed 验证: r=22/23 × 5 seeds, WCP ±3% 方差极小 (2026-03-27)
 - [x] 参数提取: B, M*, C, Sarathi/vLLM/WCP 配置 (2026-03-27)
+- [x] Long decode (R2-4.6): p512d1000 r=3-5 WIN, p128d1000 全 LOSE (2026-03-27)
+- [x] UniformSegmentChunkedReplicaScheduler 新调度器 (2026-03-27)
 - [ ] 自动调参: rate → (cs, tl) 映射
+
+### Long Decode 结果 (p512d1000, nreq=2000)
+
+| rate | Sarathi | WCP best | config | gap |
+|------|---------|----------|--------|-----|
+| 0.5-2.5 | 11.7-17.5s | ~同 | tl=60-100 gON | ±1% (持平) |
+| **3.0** | **20.4s** | **19.7s** | **tl=92 gON** | **-3.5% WIN** |
+| **3.5** | **23.6s** | **23.3s** | **tl=110 gOFF** | **-1.3% WIN** |
+| **4.0** | **30.2s** | **26.4s** | **tl=120 gOFF** | **-12.5% WIN** |
+| **4.5** | **41.7s** | **32.3s** | **tl=120 gOFF** | **-22.4% WIN** |
+| **5.0** | **59.9s** | **50.5s** | **tl=120 gOFF** | **-15.7% WIN** |
+
+p128d1000 全 LOSE (prefill 128 太小, attention 节省不足)。
+结论: 长 decode 也能 WIN，条件是 prefill ≥ 512。
 
 ### Multi-seed 结果 (5 seeds, nreq=10000)
 

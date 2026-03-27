@@ -1025,7 +1025,10 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 9. **R2-4.5**: Nested WAIT 参数 🚧 — n_k, B, M\*, C 值已提取
 10. **R2-4.2**: Simulation fidelity 🚧 — Vidur 基于 A100 profiling data, sklearn predictor
 11. **R2-4.4**: Figure 7 "Prompt Number" 含义 🚧
-12. **R2-4.6**: output > 1000 tokens 行为讨论 🚧
+12. **R2-4.6**: output > 1000 tokens ✅ 实验完成
+    - p512d1000: r=3.0-5.0 WIN (-1.3%~-22.4%), 低 rate 持平
+    - p128d1000: 全 LOSE (prefill 太小)
+    - 结论: 长 decode 也能 WIN，条件是 prefill 够大 (≥512)
 
 #### D. R1 写作/理论修复
 13. **R1**: KV cache OOM 防护机制说明
@@ -1048,4 +1051,6 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 | rate sweep | W1/W2/W3 multi-type | r=12-36 | Sarathi, WCP | 5000 | ✅ DB |
 | stability | W3 multi-type | r=20-24 | Sarathi, WCP | 2k/5k/10k/20k | ✅ DB |
 | multi-seed | single+multi | r=22,23 | Sarathi, vLLM, WCP | 10000 × 5 seeds | ✅ DB |
+| long decode | p512d1000 | r=0.5-5.0 | Sarathi, vLLM, WCP | 2000 | ✅ DB |
+| long decode | p128d1000 | r=0.5-6.0 | Sarathi, vLLM, WCP | 2000 | ✅ DB (LOSE) |
 | 论文图 | - | - | - | - | ✅ PDF (CMU Serif) |
