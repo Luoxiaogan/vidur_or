@@ -258,6 +258,19 @@ WCP 的 bounded batch size (tl) 防止了 Sarathi 的 positive feedback: rate↑
 p128d1000 全 LOSE (prefill 128 太小)。
 结论: 长 decode 也能 WIN (r≥3.0, -1.3%~-22.4%)，条件是 prefill ≥ 512，rate 适中以上。
 
+### Memory-Constrained 实验 (C1/C2, margin=0.6, p512d1000, r=4.0)
+
+| 算法 | Latency | Restarts | 特征 |
+|------|---------|----------|------|
+| **WCP tl=120** | **30.9s** | **0** | stable, 最快, tl 显式限流 |
+| Sarathi | 33.9s | **288** | 过度 admit → eviction cascade |
+| vLLM | 34.3s | 0 | 隐式限流 (admission control), 过于保守 |
+
+**WCP 赢 Sarathi -9%, 0 eviction。** 三种 memory 策略对比:
+- WCP: tl 显式控制 → 保证 memory bounded + 最优性能
+- Sarathi: 无控制 → eviction 浪费计算
+- vLLM: 隐式控制 → 安全但保守
+
 ### Multi-seed 结果 (5 seeds, nreq=10000)
 
 | Workload | rate | Sarathi | vLLM | WCP |

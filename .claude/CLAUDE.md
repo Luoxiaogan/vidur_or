@@ -1029,6 +1029,9 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
     - p512d1000: r=3.0-5.0 WIN (-1.3%~-22.4%), 低 rate 持平
     - p128d1000: 全 LOSE (prefill 太小)
     - 结论: 长 decode 也能 WIN，条件是 prefill 够大 (≥512)
+13. **C1/C2**: Memory-constrained eviction 实验 ✅
+    - margin=0.6 p512d1000 r=4.0: WCP 30.9s/0 restarts, Sarathi 33.9s/288 restarts, vLLM 34.3s/0 restarts
+    - WCP tl 显式控制 memory → 0 eviction + 最快; Sarathi 无控制 → eviction; vLLM 隐式控制 → 保守
 
 #### D. R1 写作/理论修复
 13. **R1**: KV cache OOM 防护机制说明
