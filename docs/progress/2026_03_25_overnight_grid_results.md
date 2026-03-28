@@ -271,6 +271,16 @@ p128d1000 全 LOSE (prefill 128 太小)。
 - Sarathi: 无控制 → eviction 浪费计算
 - vLLM: 隐式控制 → 安全但保守
 
+### Stability 验证 (nreq=10000, margin=0.6, p512d1000, r=4.0)
+
+| 算法 | Mean | 1st half | 2nd half | Growth | Restarts | 状态 |
+|------|------|----------|----------|--------|----------|------|
+| **WCP tl=120** | **31.3s** | **31.2s** | **31.4s** | **+1%** | **0** | **STABLE** |
+| vLLM | 53.0s | 39.4s | 66.7s | +69% | 0 | UNSTABLE (保守) |
+| Sarathi | 78.1s | 45.1s | 111.0s | +146% | **3222** | UNSTABLE + eviction |
+
+r=4.0 margin=0.6 下 WCP 在 stable region 内，两个 baseline 都不 stable。
+
 ### Multi-seed 结果 (5 seeds, nreq=10000)
 
 | Workload | rate | Sarathi | vLLM | WCP |
