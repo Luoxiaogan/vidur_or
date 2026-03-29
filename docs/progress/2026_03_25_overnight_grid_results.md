@@ -305,3 +305,38 @@ r=4.0 margin=0.6 下 WCP 在 stable region 内，两个 baseline 都不 stable�
 | watermark | 0.01 | 0.01 | 0.01 | 0.01 |
 
 硬件: A100 80GB, Llama-3-8B, TP=1, PP=1, num_blocks=29952
+
+### Real Data 实验 (lmsys, prefill=35, decode=1-500)
+
+**调参维度**: tl(100-1000), cs(16-1024), gate(ON/OFF), wait_gate(ON/OFF), seg_margin(-0.2~+0.3), bins(2-50), segment_size(10-500), scheduler(2种), QPS(10-100), trace/binned
+
+**关键发现**: 50 bins 是突破口 (10→50 bins 从全 LOSE 到低 QPS WIN)
+
+| QPS | Sarathi | WCP best | config | gap |
+|-----|---------|----------|--------|-----|
+| **30** | 2.2s | **2.2s** | 50bins tl=400 gON | **-2.3% WIN** |
+| 40 | 2.9s | 2.9s | 50bins tl=400 | -0.9% |
+| **50** | 4.5s | **4.4s** | 50bins tl=400 gON | **-1.6% WIN** |
+| 55 | 5.6s | 5.6s | 50bins tl=600 gON | +0.4% 持平 |
+| 80 | 18.0s | 18.7s | 10bins tl=400 gON | +1.9% |
+| 100 | 25.3s | 25.5s | 50bins tl various | +3%+ |
+
+高 QPS (80+) 穷尽所有参数组合仍 LOSE — prefill=35 太小，WCP overhead 无法被覆盖。
+
+### Throughput 数据 (from existing CSVs)
+
+Single-type (p512d20) throughput (tokens/s):
+- r≤21: 三者相同 (= rate × 20)
+- r=23+: **WCP 460 > Sarathi 445 > vLLM 422** (WCP max throughput 最高)
+
+### 全实验总结
+
+| 场景 | prefill | 最大 WIN | 适用 rate | 数据来源 |
+|------|---------|---------|----------|---------|
+| Single-type (p512d20) | 512 | **-86%** | r=12-26 全胜 | synthetic |
+| Multi-type (W1/W2/W3) | 256-512 | **-42%** | 43 rates 全胜 | synthetic |
+| Long decode (p512d1000) | 512 | **-22%** | r=3-5 WIN | synthetic |
+| Memory-constrained | 512 | **-9%** + 0 eviction | r=4 | synthetic, margin=0.6 |
+| Real data (lmsys) | 35 | **-2.3%** | QPS=30-50 WIN | lmsys-chat-1m |
+
+WCP 效果与 prefill 大小正相关。prefill ≥ 512 时大幅 WIN，prefill=35 时勉强 WIN。
