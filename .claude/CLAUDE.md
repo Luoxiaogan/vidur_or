@@ -972,7 +972,8 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
-- `docs/progress/2026_03_25_overnight_grid_results.md` - **全面实验结果 (W1/W2/W3 + stability)**
+- `docs/progress/2026_03_30_real_data_experiments.md` - **Real data lmsys 全面调参 + 50 bins 突破**
+- `docs/progress/2026_03_25_overnight_grid_results.md` - **全面实验结果 (W1/W2/W3 + stability + long decode + memory)**
 - `docs/progress/2026_03_24_multi_type_seg_margin.md` - Multi-type seg_margin + WAIT 机制
 - `docs/progress/2026_03_23_wait_cp_all_rates_win.md` - 全 rate 全胜确认
 - `docs/research/wait_cp_parameter_semantics.md` - 参数语义与 batch 计算量分析
@@ -981,11 +982,16 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 
 ### 实验脚本
 - `scripts/rate_sweep_perseg_gate.py` - **W1/W2/W3 per-seg gate rate sweep** (主力脚本)
+- `scripts/real_data_finetune.py` - **Real data (lmsys) 调参**
+- `scripts/real_data_high_qps.py` - **Real data 高 QPS + segment 调参**
+- `scripts/long_decode_explore.py` - **Long decode (p512d1000) 探索**
+- `scripts/memory_throughput_experiment.py` - Memory/throughput 实验
 - `scripts/stability_verification.py` - nreq scaling stability 验证
 - `scripts/timeseries_latency.py` - **时间序列 latency 图** (single + multi)
+- `scripts/multi_seed.py` - Multi-seed 验证
+- `scripts/plot_paper_figures.py` - 论文图生成 (CMU Serif)
 - `scripts/sweep_seg_margin.py` - seg_margin × tl × rate sweep
 - `scripts/overnight_grid_multitype.py` - Overnight 3D grid search
-- `scripts/profile_sarathi_multitype.py` - Sarathi per-type profiling
 
 ### 实验数据
 - `experiments.db` - SQLite, 表: experiments, rate_sweep_perseg, stability_verification, grid_multitype
