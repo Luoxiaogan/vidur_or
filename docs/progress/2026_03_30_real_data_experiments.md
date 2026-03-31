@@ -79,9 +79,30 @@ f4b7dd4 feat: memory-constrained 实验
 3a14229 feat: UniformSegmentChunkedReplicaScheduler
 ```
 
+### PD 分离实验 (p630d20, decode-only, WCP vs vLLM_PD)
+
+WCP 适配 PD: `pd_mode=True` 跳过 prefill section, 用父类 booking limit 逻辑。
+
+| rate | vLLM_PD | WCP best | tl | vs vLLM |
+|------|---------|----------|-----|---------|
+| 100 | 0.879s | 0.260s | 300 | **-70.4%** |
+| 150 | 0.842s | 0.292s | 300 | **-65.3%** |
+| 200 | 0.710s | 0.343s | 300 | **-51.7%** |
+| 250 | 0.701s | 0.388s | 300 | **-44.7%** |
+| 300 | 1.621s | 0.569s | 400 | **-64.9%** |
+| 325 | 2.172s | 0.597s | 400 | **-72.5%** |
+| 350 | 3.045s | 0.781s | 600 | **-74.3%** |
+| 375 | 3.393s | 0.988s | 400 | **-70.9%** |
+| 400 | 3.891s | 1.272s | 500 | **-67.3%** |
+| 450 | 4.723s | 1.828s | 500 | **-61.3%** |
+| 500 | 5.392s | 2.445s | 500 | **-54.6%** |
+
+**全 11 rates 全胜 (-44.7%~-74.3%)。** PD 下无 Sarathi (chunked prefill 不适用)。
+
 ## 下一步
 
 - [x] Real data QPS=10-150 grid — 14/15 WIN vs Sar256
+- [x] PD 分离 WCP 适配 + 调参 — 全 11 rates 全胜 vs vLLM_PD
 - [ ] QPS=50 调不出来 (Sar256 sweet spot)
 - [ ] 论文写作: 整合 real data 结果到 numerical.tex
 - [ ] 可选: arxiv dataset (prefill=2588) 测试

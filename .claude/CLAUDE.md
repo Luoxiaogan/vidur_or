@@ -1039,6 +1039,11 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
     - margin=0.6 p512d1000 r=4.0: WCP 30.9s/0 restarts, Sarathi 33.9s/288 restarts, vLLM 34.3s/0 restarts
     - WCP tl 显式控制 memory → 0 eviction + 最快; Sarathi 无控制 → eviction; vLLM 隐式控制 → 保守
 
+14. **PD 分离 WCP 适配** ✅
+    - pd_mode 开关: 跳过 prefill section, 用父类 booking limit 逻辑
+    - WCP vs vLLM_PD: 全 11 rates 全胜 (-44.7%~-74.3%)
+    - p630d20, rate=100-500, tl=300-600
+
 #### D. R1 写作/理论修复
 13. **R1**: KV cache OOM 防护机制说明
 14. **R1**: 线性假设 (Eq.1) 的适用范围讨论
@@ -1062,4 +1067,5 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 | multi-seed | single+multi | r=22,23 | Sarathi, vLLM, WCP | 10000 × 5 seeds | ✅ DB |
 | long decode | p512d1000 | r=0.5-5.0 | Sarathi, vLLM, WCP | 2000 | ✅ DB |
 | long decode | p128d1000 | r=0.5-6.0 | Sarathi, vLLM, WCP | 2000 | ✅ DB (LOSE) |
+| PD separated | p630d20 | r=100-500 | vLLM_PD, WCP | 5000 | ✅ DB |
 | 论文图 | - | - | - | - | ✅ PDF (CMU Serif) |
