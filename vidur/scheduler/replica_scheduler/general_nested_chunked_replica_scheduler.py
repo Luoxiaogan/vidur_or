@@ -134,7 +134,11 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
           2. 按 stage 分组
           3. Decode (stage 1+): 按 segment per_stage_limit 处理
           4. Prefill (stage 0): per-request chunk, 受 gate + segment 0 limit 限制
+
+        PD mode: 直接用父类逻辑 (无 chunked prefill, 纯 booking limit)
         """
+        if self._pd_mode:
+            return GeneralizedNestedBookingLimitReplicaScheduler._get_next_batch(self)
         # ---- Step 1: preempted → queue ----
         for req in self._preempted_requests:
             if req not in self._request_queue:
