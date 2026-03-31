@@ -846,6 +846,10 @@ class GeneralNestedChunkedSchedulerConfig(GeneralNestedBookingLimitSchedulerConf
         default=512,
         metadata={"help": "Chunk size for chunked prefill in stage 0 (Sarathi mechanism)."},
     )
+    pd_mode: bool = field(
+        default=False,
+        metadata={"help": "PD separated mode: skip prefill, all requests enter decode directly."},
+    )
 
     @staticmethod
     def get_type():

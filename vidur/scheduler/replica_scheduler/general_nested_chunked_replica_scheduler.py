@@ -29,6 +29,7 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._per_req_budget = self._config.chunk_size
+        self._pd_mode = self._config.pd_mode
         self._watermark_blocks = int(
             self._config.watermark_blocks_fraction * self._config.num_blocks
         )
@@ -144,8 +145,8 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         grouped: Dict[int, List[Request]] = {}
         for req in self._request_queue:
             stage = getattr(req, 'current_stage', 0)
-            # 已完成 prefill 但还在 stage 0 的，推进到 stage 1
-            if stage == 0 and req.is_prefill_complete:
+            # PD mode 或已完成 prefill 但还在 stage 0 的，推进到 stage 1
+            if stage == 0 and (self._pd_mode or req.is_prefill_complete):
                 req.advance_stage()
                 stage = req.current_stage
             grouped.setdefault(stage, []).append(req)
@@ -190,6 +191,8 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                 count = 0
                 while entry_group and count < remain and seg_tokens_added < seg_decode_budget:
                     req = entry_group.pop(0)
+                    if not self._can_allocate_request(req):
+                        break
                     if req in self._request_queue:
                         self._request_queue.remove(req)
                     self._allocate_request(req)
@@ -209,6 +212,8 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                 for req in list(group):
                     if seg_tokens_added >= seg_decode_budget:
                         break
+                    if not self._can_allocate_request(req):
+                        continue
                     if req in self._request_queue:
                         self._request_queue.remove(req)
                     self._allocate_request(req)
@@ -220,69 +225,68 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                     seg_tokens_added += 1
 
         # ---- Step 4: Prefill (stage 0) per-request chunk ----
-        stage0 = grouped.get(0, [])
+        # PD mode: skip prefill entirely, all requests already completed prefill
+        if not self._pd_mode:
+            stage0 = grouped.get(0, [])
 
-        # 分为: running prefill (已分配内存) 和 new prefill (未分配)
-        running_prefill = [r for r in stage0 if r.id in self._allocation_map]
-        new_prefill = [r for r in stage0 if r.id not in self._allocation_map]
+            # 分为: running prefill (已分配内存) 和 new prefill (未分配)
+            running_prefill = [r for r in stage0 if r.id in self._allocation_map]
+            new_prefill = [r for r in stage0 if r.id not in self._allocation_map]
 
-        # 4a. Running prefill: 各 per_req_budget, 受 prefill_budget 限制
-        prefill_tokens_added = 0
-        for req in running_prefill:
-            remaining = req.num_prefill_tokens - req.num_processed_tokens
-            if self._gate:
-                budget_left = min(self._prefill_budget - prefill_tokens_added, self._total_budget - batch_tokens)
-            else:
-                budget_left = remaining
-            give = min(remaining, self._per_req_budget, max(0, int(budget_left)))
-            if give > 0:
+            # 4a. Running prefill: 各 per_req_budget, 受 prefill_budget 限制
+            prefill_tokens_added = 0
+            for req in running_prefill:
+                remaining = req.num_prefill_tokens - req.num_processed_tokens
+                if self._gate:
+                    budget_left = min(self._prefill_budget - prefill_tokens_added, self._total_budget - batch_tokens)
+                else:
+                    budget_left = remaining
+                give = min(remaining, self._per_req_budget, max(0, int(budget_left)))
+                if give > 0:
+                    selected.append(req)
+                    tokens.append(give)
+                    batch_tokens += give
+                    prefill_tokens_added += give
+                    if req in self._request_queue:
+                        self._request_queue.remove(req)
+
+            # 4b. New prefill: 按需 admit, tl ceiling + prefill_budget 限制
+            in_system = len(self._allocation_map)
+            remain_global = max(0, self.total_limit - in_system)
+
+            admitted = 0
+            for req in new_prefill:
+                if admitted >= remain_global:
+                    break
+                if self._gate and prefill_tokens_added >= self._prefill_budget:
+                    break
+                if self._gate and batch_tokens >= self._total_budget:
+                    break
+                if not self._can_allocate_request(req):
+                    break
+                remaining = req.num_prefill_tokens - req.num_processed_tokens
+                if self._gate:
+                    budget_left = min(self._prefill_budget - prefill_tokens_added, self._total_budget - batch_tokens)
+                else:
+                    budget_left = remaining
+                give = min(remaining, self._per_req_budget, max(0, int(budget_left)))
+                if give <= 0:
+                    break
+                self._allocate_request(req)
                 selected.append(req)
                 tokens.append(give)
                 batch_tokens += give
                 prefill_tokens_added += give
+                admitted += 1
                 if req in self._request_queue:
                     self._request_queue.remove(req)
-
-        # 4b. New prefill: 按需 admit, tl ceiling + prefill_budget 限制
-        in_system = len(self._allocation_map)
-        remain_global = max(0, self.total_limit - in_system)
-
-        admitted = 0
-        for req in new_prefill:
-            if admitted >= remain_global:
-                break
-            if self._gate and prefill_tokens_added >= self._prefill_budget:
-                break
-            if self._gate and batch_tokens >= self._total_budget:
-                break
-            if not self._can_allocate_request(req):
-                break
-            remaining = req.num_prefill_tokens - req.num_processed_tokens
-            if self._gate:
-                budget_left = min(self._prefill_budget - prefill_tokens_added, self._total_budget - batch_tokens)
-            else:
-                budget_left = remaining
-            give = min(remaining, self._per_req_budget, max(0, int(budget_left)))
-            if give <= 0:
-                break
-            self._allocate_request(req)
-            selected.append(req)
-            tokens.append(give)
-            batch_tokens += give
-            prefill_tokens_added += give
-            admitted += 1
-            if req in self._request_queue:
-                self._request_queue.remove(req)
 
         # 统计
         self._batch_count += 1
         self._total_decode_in_batches += decode_count
 
-        # Force clear
-        if not selected and self.all_requests_arrived:
-            for req in self._request_queue:
-                if req.id in self._allocation_map:
-                    self.free(req.id)
+        # Force clear: only when all requests arrived AND no requests in system (all completed or stuck)
+        if not selected and self.all_requests_arrived and not self._allocation_map and not self._preempted_requests:
             self._request_queue.clear()
             return None
 
