@@ -1068,4 +1068,5 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 | long decode | p512d1000 | r=0.5-5.0 | Sarathi, vLLM, WCP | 2000 | ✅ DB |
 | long decode | p128d1000 | r=0.5-6.0 | Sarathi, vLLM, WCP | 2000 | ✅ DB (LOSE) |
 | PD separated | p630d20 | r=100-500 | vLLM_PD, WCP | 5000 | ✅ DB |
+| PD stability | p630d20 | r=250-400 | vLLM_PD, WCP | 10000 | ✅ DB + CSV + PNG |
 | 论文图 | - | - | - | - | ✅ PDF (CMU Serif) |

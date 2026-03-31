@@ -99,6 +99,17 @@ WCP 适配 PD: `pd_mode=True` 跳过 prefill section, 用父类 booking limit �
 
 **全 11 rates 全胜 (-44.7%~-74.3%)。** PD 下无 Sarathi (chunked prefill 不适用)。
 
+### PD Stability 时间序列 (nreq=10000)
+
+| rate | vLLM mean | vLLM growth | WCP mean | WCP growth | 状态 |
+|------|-----------|-------------|----------|------------|------|
+| 250 | 0.759s | +16% | **0.389s** | **+1%** | 两者 stable, WCP 更低 |
+| **300** | **2.364s** | **+132%** | **0.568s** | **+3%** | **vLLM UNSTABLE, WCP STABLE** |
+| 350 | 4.660s | +165% | 0.838s | +25% | vLLM 爆, WCP near-stable |
+| 400 | 6.022s | +174% | 1.298s | +22% | 同上 |
+
+图: `outputs/timeseries_pd/timeseries_pd_stability.png`
+
 ## 下一步
 
 - [x] Real data QPS=10-150 grid — 14/15 WIN vs Sar256
