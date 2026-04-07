@@ -972,6 +972,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
+- `docs/progress/2026_04_07_gpu_validation_reviewer2.md` - **GPU 验证完成 (Reviewer 2) - 32 batch sizes including B=600**
 - `docs/progress/2026_03_30_real_data_experiments.md` - **Real data lmsys 全面调参 + 50 bins 突破**
 - `docs/progress/2026_03_25_overnight_grid_results.md` - **全面实验结果 (W1/W2/W3 + stability + long decode + memory)**
 - `docs/progress/2026_03_24_multi_type_seg_margin.md` - Multi-type seg_margin + WAIT 机制
@@ -981,6 +982,15 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `docs/progress/2026_03_22_revision_pipeline_review.md` - Revision pipeline 全面审查
 
 ### 实验脚本
+
+#### GPU 验证 (Reviewer 2)
+- `scripts/large_batch_validation.py` - **大 batch 验证 (B=70-600)**
+- `scripts/extended_batch_validation.py` - **扩展 batch 验证 (B=3-56)**
+- `scripts/generate_validation_figures.py` - **生成验证图表**
+- `scripts/regenerate_predictions.py` - **重新生成 Vidur 预测**
+- `scripts/create_validation_database.py` - **创建验证数据库**
+
+#### WAIT-CP 实验
 - `scripts/rate_sweep_perseg_gate.py` - **W1/W2/W3 per-seg gate rate sweep** (主力脚本)
 - `scripts/real_data_finetune.py` - **Real data (lmsys) 调参**
 - `scripts/real_data_high_qps.py` - **Real data 高 QPS + segment 调参**
@@ -995,6 +1005,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 
 ### 实验数据
 - `experiments.db` - SQLite, 表: experiments, rate_sweep_perseg, stability_verification, grid_multitype
+- `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
 ## OR 论文 Revision 状态 (2026-03-26 updated)
