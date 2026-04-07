@@ -1070,3 +1070,39 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 | PD separated | p630d20 | r=100-500 | vLLM_PD, WCP | 5000 | ✅ DB |
 | PD stability | p630d20 | r=250-400 | vLLM_PD, WCP | 10000 | ✅ DB + CSV + PNG |
 | 论文图 | - | - | - | - | ✅ PDF (CMU Serif) |
+
+### GPU 验证 (Reviewer 2) ✅ 全部完成 (2026-04-07)
+
+**验证目标**: 回应 Reviewer 2 关于 Vidur 在大 batch size 下准确性的质疑
+
+**测试配置**:
+- GPU: NVIDIA A100 80GB PCIe
+- Model: Llama-2-7B
+- Batch sizes: 32 configurations (B=1 to B=600)
+- Total measurements: 160+ iterations
+
+**三大区域定义**:
+
+| Region | Batch Range | Samples | MAPE | Max Error | Status |
+|--------|-------------|---------|------|-----------|--------|
+| **ACCURATE** | B = 1-64 | 20 | 1.61% | 4.12% | ✅ 已验证 |
+| **ACCURATE_PLUS** | B = 70-128 | 5 | 1.09% | 2.41% | ✅ 已验证 |
+| **EXTRAPOLATION** | B > 128 | 7 | 38.63% | 96.24% | ❌ 模型失效 |
+
+**线性模型** (fitted on B≤128):
+- τ = 276.11 + 0.01152 × M
+- R² = 0.9957
+
+**关键发现**:
+1. **Reviewer 2 的质疑部分成立**: B > 128 时线性模型失效 (MAPE=38.63%)
+2. **论文实验范围安全**: B ≤ 128 范围内 MAPE < 2%，完全验证
+3. **B ≥ 600 不可行**: 正常 prompt (256 tokens) 需要 ~83GB 内存，超出 A100 容量
+4. **小 prompt B=600 可行但误差大**: P=20, D=10 时可行，但误差 96%
+
+**输出文件**:
+- Database: `outputs/validation_database/vidur_validation.db`
+- Report: `outputs/validation_database/FINAL_REPORT.md`
+- Figures: `outputs/validation_database/figures/` (5 PDFs)
+- Scripts: `scripts/*_validation.py`, `scripts/generate_validation_figures.py`
+
+**Response Letter 段落**: 已包含在 FINAL_REPORT.md 中
