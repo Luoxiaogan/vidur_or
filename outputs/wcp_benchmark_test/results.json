@@ -1,0 +1,246 @@
+{
+  "config": {
+    "model": "models/modelscope/Llama-2-7b-ms",
+    "batch_sizes": [
+      1,
+      4,
+      8,
+      16,
+      32
+    ],
+    "prefill_lens": [
+      256,
+      512
+    ],
+    "decode_len": 20,
+    "num_iterations": 3,
+    "warmup_iterations": 2,
+    "output_dir": "outputs/wcp_benchmark_test",
+    "wcp_tl": 21,
+    "wcp_cs": 256,
+    "wcp_gate": true
+  },
+  "vllm_results": [
+    {
+      "batch_size": 1,
+      "prefill_len": 256,
+      "mean_time_ms": 290.0465120005421,
+      "std_time_ms": 3.193047357106703,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 1,
+      "prefill_len": 512,
+      "mean_time_ms": 290.33922033677396,
+      "std_time_ms": 5.86652935624379,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 4,
+      "prefill_len": 256,
+      "mean_time_ms": 302.6509370019823,
+      "std_time_ms": 6.110576065989652,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 4,
+      "prefill_len": 512,
+      "mean_time_ms": 311.9096825924774,
+      "std_time_ms": 4.779594296061356,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 8,
+      "prefill_len": 256,
+      "mean_time_ms": 311.02165903796225,
+      "std_time_ms": 3.73459243674025,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 8,
+      "prefill_len": 512,
+      "mean_time_ms": 350.1310309450868,
+      "std_time_ms": 0.8762327396668828,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 16,
+      "prefill_len": 256,
+      "mean_time_ms": 340.8404648931768,
+      "std_time_ms": 7.336204633140727,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 16,
+      "prefill_len": 512,
+      "mean_time_ms": 393.03920279135156,
+      "std_time_ms": 2.7100963489111027,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 32,
+      "prefill_len": 256,
+      "mean_time_ms": 396.3227588264067,
+      "std_time_ms": 9.942478745495958,
+      "scheduler": "vllm"
+    },
+    {
+      "batch_size": 32,
+      "prefill_len": 512,
+      "mean_time_ms": 502.1778924793045,
+      "std_time_ms": 11.228495767409619,
+      "scheduler": "vllm"
+    }
+  ],
+  "wcp_results": [
+    {
+      "batch_size": 1,
+      "prefill_len": 256,
+      "mean_time_ms": 266.97161310541395,
+      "std_time_ms": 6.094657049438793,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 1,
+      "prefill_len": 512,
+      "mean_time_ms": 271.70252372958345,
+      "std_time_ms": 4.66926687281362,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 4,
+      "prefill_len": 256,
+      "mean_time_ms": 273.2781788088278,
+      "std_time_ms": 7.5654929778497735,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 4,
+      "prefill_len": 512,
+      "mean_time_ms": 284.06128203107573,
+      "std_time_ms": 10.363680956121538,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 8,
+      "prefill_len": 256,
+      "mean_time_ms": 287.8057754980635,
+      "std_time_ms": 8.155523546566899,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 8,
+      "prefill_len": 512,
+      "mean_time_ms": 316.32325082242846,
+      "std_time_ms": 9.029556008152547,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 16,
+      "prefill_len": 256,
+      "mean_time_ms": 313.1799016215341,
+      "std_time_ms": 5.066910640385411,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 16,
+      "prefill_len": 512,
+      "mean_time_ms": 354.4900799054398,
+      "std_time_ms": 9.44735324169541,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 32,
+      "prefill_len": 256,
+      "mean_time_ms": 371.19000267059545,
+      "std_time_ms": 0.7530620690759233,
+      "scheduler": "wcp"
+    },
+    {
+      "batch_size": 32,
+      "prefill_len": 512,
+      "mean_time_ms": 454.2336529590976,
+      "std_time_ms": 8.043172896733925,
+      "scheduler": "wcp"
+    }
+  ],
+  "comparison": {
+    "comparisons": [
+      {
+        "batch_size": 1,
+        "prefill_len": 256,
+        "wcp_time_ms": 266.97161310541395,
+        "vllm_time_ms": 290.0465120005421,
+        "improvement_pct": 7.955585721742809
+      },
+      {
+        "batch_size": 1,
+        "prefill_len": 512,
+        "wcp_time_ms": 271.70252372958345,
+        "vllm_time_ms": 290.33922033677396,
+        "improvement_pct": 6.4189387109234515
+      },
+      {
+        "batch_size": 4,
+        "prefill_len": 256,
+        "wcp_time_ms": 273.2781788088278,
+        "vllm_time_ms": 302.6509370019823,
+        "improvement_pct": 9.705160170365538
+      },
+      {
+        "batch_size": 4,
+        "prefill_len": 512,
+        "wcp_time_ms": 284.06128203107573,
+        "vllm_time_ms": 311.9096825924774,
+        "improvement_pct": 8.928353980529268
+      },
+      {
+        "batch_size": 8,
+        "prefill_len": 256,
+        "wcp_time_ms": 287.8057754980635,
+        "vllm_time_ms": 311.02165903796225,
+        "improvement_pct": 7.464394477127106
+      },
+      {
+        "batch_size": 8,
+        "prefill_len": 512,
+        "wcp_time_ms": 316.32325082242846,
+        "vllm_time_ms": 350.1310309450868,
+        "improvement_pct": 9.655750886004913
+      },
+      {
+        "batch_size": 16,
+        "prefill_len": 256,
+        "wcp_time_ms": 313.1799016215341,
+        "vllm_time_ms": 340.8404648931768,
+        "improvement_pct": 8.115398880327136
+      },
+      {
+        "batch_size": 16,
+        "prefill_len": 512,
+        "wcp_time_ms": 354.4900799054398,
+        "vllm_time_ms": 393.03920279135156,
+        "improvement_pct": 9.807958751223067
+      },
+      {
+        "batch_size": 32,
+        "prefill_len": 256,
+        "wcp_time_ms": 371.19000267059545,
+        "vllm_time_ms": 396.3227588264067,
+        "improvement_pct": 6.341486981528519
+      },
+      {
+        "batch_size": 32,
+        "prefill_len": 512,
+        "wcp_time_ms": 454.2336529590976,
+        "vllm_time_ms": 502.1778924793045,
+        "improvement_pct": 9.547262083462337
+      }
+    ],
+    "overall": {
+      "mean_improvement_pct": 8.394029064323414,
+      "wcp_wins": 10,
+      "vllm_wins": 0
+    }
+  }
+}
