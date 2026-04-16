@@ -6,6 +6,10 @@ scripts/rate_sweep_perseg_gate.py, writes to the same SQL table
 (rate_sweep_perseg) so Figure C can query a uniform source.
 
 Rates: 12..36 (matches existing Sarathi / WAIT coverage).
+Per-rate nreq: 20000 — larger than the earlier Sarathi/WAIT sweeps
+(which used 5000) to give a tighter steady-state estimate. Vidur's
+built-in SimulationMemoryManager (vidur/simulator.py:49) runs every
+500 completions, so long single-rate runs stay within bounded RSS.
 
 Usage on VM:
   cd /persistent/vidur_or
@@ -23,7 +27,7 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent.parent
 DB = str(PROJECT / "experiments.db")
 
-NREQ = 5000
+NREQ = 20000
 
 COMMON = [
     "python", "-m", "vidur.main",
@@ -76,11 +80,14 @@ def run_sim(extra_args, nreq=NREQ):
         "--metrics_config_output_dir", tmpdir,
     ] + extra_args
     try:
+        # 7200s = 2h per rate. nreq=20000 with unstable r=22+ extends
+        # simulation tail; the previous 1800s budget was for nreq=5000.
         result = subprocess.run(
-            cmd, capture_output=True, cwd=str(PROJECT), timeout=1800,
+            cmd, capture_output=True, cwd=str(PROJECT), timeout=7200,
             env=env, text=True,
         )
     except subprocess.TimeoutExpired:
+        print(f"[TIMEOUT 7200s] tmpdir={tmpdir}", flush=True)
         shutil.rmtree(tmpdir, ignore_errors=True)
         return None
     if result.returncode != 0:
