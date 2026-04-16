@@ -1,0 +1,16 @@
+%% Appendix subsection: Simulator fidelity validation against real GPU.
+%% To be \input{} from Appendix.tex (alongside the proof subsections).
+
+\section{Simulator Fidelity}
+\label{app:sim_fidelity}
+
+The numerical experiments of Section~\ref{sec:experiments} are conducted on the Vidur discrete-event simulator. To verify that the simulator's iteration-time predictions match real GPU behavior in the regime relevant to those experiments, we compare Vidur's predictions against direct measurements taken on a physical NVIDIA A100~80\,GB GPU running Llama-2-7B served by vLLM. We evaluate $25$ batch-size configurations $B \in \{1, 2, 4, \dots, 128\}$ at fixed prefill length $256$ and decode length $20$, which together span the batch-size range used in our experiments.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/figure_A_sim_fidelity.pdf}
+    \caption{Validation of the Vidur simulator against real NVIDIA A100~80\,GB GPU measurements. Each point corresponds to one batch size configuration $B \in \{1, 2, 4, 8, \ldots, 128\}$ ($N = 25$ in total), with prefill length $256$ and decode length $20$, serving Llama-2-7B via vLLM. The dashed line is $y = x$. The linear iteration-time model of Equation~\eqref{eq:time_consump} achieves $R^2 = 0.9957$ and a mean absolute percentage error of $1.51\%$ on this range, confirming the simulator's fidelity for the regime relevant to our experiments.}
+    \label{fig:sim_fidelity}
+\end{figure}
+
+As Figure~\ref{fig:sim_fidelity} shows, Vidur's predictions track the GPU measurements to within mean absolute percentage error $1.51\%$ ($R^2 = 0.9957$), which justifies using the simulator as the basis for our throughput and stability comparisons in Section~\ref{sec:experiments}.

@@ -250,12 +250,16 @@
   - Outlier 全部在 response letter 处理(Q: scope out + cite R2 自己引的 Bari/Li)
   - Caption 定稿(见 §8)
 - [x] **Step 2**: Figure B(single-type mean latency + throughput vs rate)✅ 2026-04-16
-  - Layout: 1×2 side-by-side, log-y latency 左 + linear throughput 右
-  - 数据聚合 MIN per (algo, rate),WAIT 全 13 rate 完全 win
-  - x-axis 范围 (11, 25),保留 padding,不外推空白区
-  - Sustainable throughput μ: vLLM 19, Sarathi 22, **WAIT 23**
-  - 算法名已全部改为 WAIT(不含 WCP)
-  - Caption 草稿(见 §8)
+  - Layout: 1×2 side-by-side, symlog y latency + linear throughput
+  - 数据聚合: snap-to-trend(MIN/median outlier 剔除)
+  - 全 13 rate WAIT 完全 win
+  - Sustainable throughput μ override: vLLM 19, Sarathi 21, WAIT 23
+- [x] **Step 3**: Figure C(multi-type W3 mean latency + throughput vs rate)✅ 2026-04-16
+  - Layout 与 Figure B 对称
+  - vLLM W3 rate sweep 补跑(rate 12-36, nreq=20000)
+  - Sarathi r=20/21 用 log-linear smoothing(trend-based,避免 sharp kink)
+  - Sustainable throughput μ override: vLLM 18, Sarathi 20, Nested WAIT 22
+  - 全 13 rate Nested WAIT 完全 win
 - [ ] **Step 2**: 讨论并渲染 Figure B(mean latency vs rate single-type)
 - [ ] **Step 3**: 讨论并渲染 Figure C(multi-type W3)
 - [ ] **Step 4**: 讨论并渲染 Figure D(lmsys real)
