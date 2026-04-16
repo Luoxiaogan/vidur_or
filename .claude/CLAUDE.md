@@ -1117,3 +1117,49 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - Scripts: `scripts/*_validation.py`, `scripts/generate_validation_figures.py`
 
 **Response Letter 段落**: 已包含在 FINAL_REPORT.md 中
+
+## Wait vs No-Wait 进展 (2026-04-16)
+
+### 目标
+- 回应 reviewer 关于 "threshold without waiting" 的问题。
+- 对比 WCP `wait_gate=on` 与 `wait_gate=off`。
+- 将代表性 scenario 和结果固定进 SQLite，便于复现和继续扩展。
+
+### 已完成
+- 新增脚本: `scripts/wait_vs_nowait_scenarios.py`
+- 新增 SQL 表:
+  - `wait_vs_nowait_scenarios`
+  - `wait_vs_nowait_runs`
+  - `wait_vs_nowait_summary`
+- 已记录 6 个代表性 scenario:
+  - `single_shortdecode_r18`
+  - `single_longdecode_r4`
+  - `memory_limited_r3`
+  - `balanced_multitype_r20`
+  - `hetero_multitype_r20`
+  - `same_prefill_diff_decode_r20`
+
+### 当前结论
+- `wait_on` 在更规整的场景里更有优势:
+  - single-type short decode
+  - balanced multi-type
+  - same-prefill / mixed-decode
+- `wait_off` 在更极端或更异质的场景里更有优势:
+  - very long decode
+  - memory-limited
+  - highly heterogeneous multi-type
+- Paper / response letter 可采用的表述:
+  - `wait_on` improves batch formation in regular settings;
+  - `wait_off` is preferable when additional waiting mostly creates blocking.
+
+### 复现
+```bash
+python scripts/wait_vs_nowait_scenarios.py
+```
+
+### 查询
+```sql
+SELECT scenario_name, ROUND(mean_off,3), ROUND(mean_on,3), ROUND(delta_pct,2), preferred_variant
+FROM wait_vs_nowait_summary
+ORDER BY scenario_name;
+```
