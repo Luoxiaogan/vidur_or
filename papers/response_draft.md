@@ -298,7 +298,7 @@ We have strengthened the Introduction to clearly articulate the eviction challen
 | Item | Description | Status |
 |------|-------------|--------|
 | 公式核实 | Page 9 line 50: d→d_1; Page 12 line 19: d_0→d_1 等 | [x] (见3.7) |
-| Wait vs No-Wait | 讨论threshold without waiting的tradeoff | [ ] |
+| Wait vs No-Wait | 讨论threshold without waiting的tradeoff | [x] (见3.21) |
 | 实验参数 | 完整列出B, M*, C, n_j等参数 | [ ] |
 | 真实GPU验证 | 在H100/A100上运行验证实验 | [ ] |
 
@@ -342,6 +342,46 @@ The original text incorrectly stated that the total processing time for KV cache
 | Appendix简化 | 引用标准结果，保留non-trivial部分 | [x] (见3.6) |
 
 ---
+
+### 3.21 Wait vs No-Wait Numerical Comparison (2026-04-16)
+
+**Original Comment (Reviewer 2 / alternative algorithms)**:
+> What if one uses thresholds without waiting? Please discuss the tradeoff of threshold-without-waiting.
+
+**Our Response**:
+
+We added a targeted numerical comparison between WCP with waiting and WCP without waiting. The results support a **scenario-dependent tradeoff** rather than uniform dominance.
+
+**Main Finding**:
+- `wait_on` performs better in more regular operating regimes, where waiting helps form cleaner and more balanced batches.
+- `wait_off` performs better in more extreme regimes, where additional waiting mainly creates blocking rather than coordination gains.
+
+**Scenario Summary**:
+- `wait_on` is preferable for:
+  - single-type short decode workloads,
+  - balanced multi-type workloads,
+  - workloads with similar prefills and moderate heterogeneity.
+- `wait_off` is preferable for:
+  - very long decode workloads,
+  - memory-limited workloads,
+  - highly heterogeneous multi-type workloads.
+
+**Intuition Added to the Response**:
+- Waiting trades a small amount of admission delay for better batch formation and more stable memory usage.
+- This tradeoff is valuable when the system is regular enough that accumulating prompts improves batching efficiency.
+- In contrast, when workloads are long-tailed or strongly heterogeneous, waiting can delay requests that are already ready to progress, so thresholding without waiting can be preferable.
+
+**Reproducibility**:
+- Added `scripts/wait_vs_nowait_scenarios.py`
+- Stored representative scenarios and outcomes in `experiments.db`:
+  - `wait_vs_nowait_scenarios`
+  - `wait_vs_nowait_runs`
+  - `wait_vs_nowait_summary`
+
+**Files Modified**:
+- `scripts/wait_vs_nowait_scenarios.py`: added SQL-backed scenario runner
+- `Agent.md`: added progress note and SQL queries
+- `.claude/CLAUDE.md`: added revision progress summary
 
 ### 3.6 Appendix重组与模块化
 
@@ -1465,4 +1505,3 @@ Reviewers can now understand not just THAT the algorithms work mathematically, b
 **Document Version**: v2.8
 **Last Updated**: 2025-12-19
 **Status**: Appendix comprehensive enhancement completed (intuition + writing quality)
-

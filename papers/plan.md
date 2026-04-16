@@ -84,7 +84,7 @@
 - [ ] 实验参数补充
 - [ ] Figure 7 caption clarification
 - [ ] Underloaded实验（可选）
-- [ ] **Wait vs No-Wait (Threshold without waiting) 数值比较** - Reviewer可能指threshold without waiting，待数值实验验证
+- [x] **Wait vs No-Wait (Threshold without waiting) 数值比较** - 已补代表性scenario比较、SQL记录与response wording
 - [x] extension.tex Line ~90: 删除多余句号 ".." ✅
 - [x] M5: 移除known_type.tex Wait vs No-Wait Remark（记录为待办数值实验）
 

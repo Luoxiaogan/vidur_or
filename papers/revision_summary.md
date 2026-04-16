@@ -918,9 +918,9 @@ Section 2: Model
 
 | 问题 | 描述 | 状态 |
 |------|------|------|
-| Alternative algorithms | 如果不wait但仍用threshold n_j会怎样？讨论理论和实践影响 | [ ] **待数值实验** - Remark已移除，reviewer意思可能是threshold without waiting |
+| Alternative algorithms | 如果不wait但仍用threshold n_j会怎样？讨论理论和实践影响 | [x] 已补wait-on vs wait-off数值比较，结论为scenario-dependent tradeoff |
 | Output > 1000 tokens | 讨论算法在超长output情况下的行为 | [x] extension.tex有segment design处理 |
-| Threshold without waiting | 是否可作为alternative来缓解memory constraints | [ ] **待数值实验** - 见上述Alternative algorithms |
+| Threshold without waiting | 是否可作为alternative来缓解memory constraints | [x] 可以，在long-decode / memory-limited / highly heterogeneous场景更有优势 |
 
 #### Appendix证明问题
 
@@ -1006,34 +1006,30 @@ Section 2: Model
 
 #### 9.2 Wait vs No-Wait Tradeoff讨论
 
-**Tradeoff**:
-- Highly underloaded → Wait带来额外latency
-- Near overloaded → Wait更有价值，原因有二：
-  1. **避免eviction cascade**：threshold控制admission，防止memory overflow
-  2. **Exploit memory to improve throughput**：等待积累足够prompts形成larger batch → 更高memory utilization → throughput ∝ batch size（见核心论点#12）
+**Updated conclusion from SQL-backed experiments**:
+- The comparison now has dedicated scenario runs stored in `experiments.db` (`wait_vs_nowait_*` tables).
+- The correct framing is **not uniform dominance**, but a **scenario-dependent tradeoff**.
 
-**Near overloaded regime的关键insight**:
-- 不waiting的话：小batch频繁发出 → memory利用率低 → throughput受限
-- Waiting到threshold：大batch充分利用memory → 接近equilibrium throughput
-- 这也是"approaching load balance"的含义：让每个batch尽可能接近M*
+**Observed pattern**:
+- `wait_on` is better in more regular regimes:
+  - single-type short decode,
+  - balanced multi-type workloads,
+  - settings with similar prefills and moderate heterogeneity.
+- `wait_off` is better in more extreme regimes:
+  - very long decode,
+  - memory-limited settings,
+  - highly heterogeneous multi-type workloads.
 
-**在Paper中添加** (Section 4 或 Numerical):
-- 1-2段文字讨论这个tradeoff
-- 展示对算法nuanced的理解
-- 说明算法不是blindly optimal，在不同regime有不同表现
+**Interpretation**:
+- Waiting trades admission delay for cleaner batch formation and steadier memory usage.
+- This helps when batching structure is predictable enough that accumulating requests improves service efficiency.
+- Without waiting, the scheduler remains more flexible in long-tail regimes where extra waiting mostly delays requests that are already ready to progress.
 
-**在Response Letter中**:
-- 回应Reviewer 2关于"alternative algorithms"的问题
-- 详细解释为什么near-overloaded regime waiting更有价值
-
-**实验补充** (如果时间允许):
-- 画图：x轴arrival rate，y轴latency/throughput
-- 对比WAIT vs threshold-without-waiting
-- 清晰展示：light load时WAIT略有latency penalty，near capacity时WAIT显著优势
-
-**如果时间不够**:
-- Paper中加文字讨论即可
-- Response letter中详细解释reasoning
+**Response-letter angle**:
+- We can answer the reviewer with a nuanced statement:
+  - threshold-without-waiting is a meaningful alternative,
+  - but its advantage depends on the operating regime,
+  - while WAIT is preferable when structured batching gains dominate.
 
 #### 9.3 超长Output处理
 
