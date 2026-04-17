@@ -260,6 +260,17 @@
   - Sarathi r=20/21 用 log-linear smoothing(trend-based,避免 sharp kink)
   - Sustainable throughput μ override: vLLM 18, Sarathi 20, Nested WAIT 22
   - 全 13 rate Nested WAIT 完全 win
+- [x] **Step 4**: Figure D(lmsys real workload mean latency + throughput vs QPS)✅ 2026-04-16
+  - 数据从 production grid 转录(50 bins, prefill~35, decode 1-500)
+  - QPS 网格 step=5 in [30, 70] transition region,step=10 elsewhere(19 点)
+  - μ 全部落在数据点上:vLLM 35, Sarathi 55, Nested WAIT 65
+  - 全 19 QPS 全胜,gap 10.3% – 59.4%
+  - "Transition points" textbox + 3 colored arrows(同步 Figure B/C 风格)
+- [x] **Step 5**: Figure E(finite-horizon scaling at stability boundary)✅ 2026-04-16
+  - Layout: 1×2 panel,左 r=22(WAIT stable, Sar unstable),右 r=23(both diverging, WAIT slower)
+  - 数据来自 stability_verification table,multi-type W3, nreq=2k/5k/10k/20k
+  - Y linear, X log scale
+  - 直接对应 R3 "infinite-or-long-enough horizon" 诉求,证明 divergence 不是 finite-horizon artifact
 - [ ] **Step 2**: 讨论并渲染 Figure B(mean latency vs rate single-type)
 - [ ] **Step 3**: 讨论并渲染 Figure C(multi-type W3)
 - [ ] **Step 4**: 讨论并渲染 Figure D(lmsys real)
@@ -375,7 +386,7 @@
 
 ---
 
-**下一步**: Step 3 —— Figure C(mean latency + throughput vs rate, multi-type W3, 3 policies, log-y latency)。
+**下一步**: Step 6 —— Table 1(参数总表)+ §6.1/§6.2 tex 集成所有完成的图。
 
 ---
 
@@ -395,22 +406,15 @@ to our experiments.}
 \label{fig:sim_fidelity}
 ```
 
-### Figure B (Section 6.2) — Single-type Mean Latency + Throughput
+### Figure B/C/D/E captions
 
-```latex
-\caption{Single-type workload (prefill $=512$, decode $=20$, Poisson
-arrivals): mean end-to-end latency (left, log scale) and effective
-throughput (right) as a function of arrival rate $\lambda$. Left: as
-$\lambda$ increases, each policy eventually enters an unstable regime
-where mean latency diverges; the divergence point delineates its
-stability region. WAIT sustains bounded latency up to $\lambda \approx
-23$, whereas Sarathi and vLLM lose stability near $\lambda \approx 22$
-and $\lambda \approx 19$, respectively. Right: the same ordering in terms
-of effective throughput (estimated from the last $\lambda$ at which each
-policy remains stable), with the dotted line indicating the ideal
-$\lambda = $~completion rate.}
-\label{fig:single_type_rate}
-```
+Already integrated into `papers/numerical_v2.tex` (Section~\ref{sec:exp_stability}).
+Captions reflect the final figure designs:
+
+- Figure B (single-type): symlog y, transition arrows mark μ at WAIT data points
+- Figure C (multi W3): same layout, μ at smoothed Sarathi data points
+- Figure D (lmsys real, QPS 10–150): dense step=5 grid in [30,70], μ on real points
+- Figure E (nreq scaling at λ=22 and 23): 1×2, log x, linear y, no growth annotations
 
 **分工原则(对未来所有图适用)**:
 - 图内 annotation / legend: 只放读图本身必需的 info(summary stat, reference line 含义)

@@ -47,8 +47,8 @@ OUT.mkdir(parents=True, exist_ok=True)
 COLORS = {"vLLM": "#ff8c2b", "Sarathi": "#c0392b", "WAIT": "#1f6db5"}
 LINESTYLES = {"vLLM": "--", "Sarathi": "--", "WAIT": "-"}
 MARKERS = {"vLLM": "^", "Sarathi": "s", "WAIT": "o"}
-LW = {"vLLM": 1.6, "Sarathi": 1.6, "WAIT": 2.6}
-MS = {"vLLM": 5.5, "Sarathi": 5.5, "WAIT": 7.0}
+LW = {"vLLM": 1.7, "Sarathi": 1.7, "WAIT": 2.7}
+MS = {"vLLM": 7.5, "Sarathi": 7.5, "WAIT": 8.5}
 
 # --- Data load ------------------------------------------------------------
 # Aggregation: snap-to-trend (robust outlier removal).
@@ -189,6 +189,29 @@ axL.grid(True, which="major", linestyle=":", linewidth=0.4, alpha=0.35,
 axL.legend(loc="upper left", frameon=False, handlelength=2.5,
            borderpad=0.4)
 
+# --- Transition-points callout (latency panel) ---------------------------
+# Textbox placed at (18, 6): clear of the upper-left legend on the left
+# (legend ends at axes x ~ 0.25; text starts at axes x ~ 0.46) and well
+# above the stable-region curves on the right.
+TRANSITION_LATENCY_L = {algo: raw[algo][mu[algo]] for algo in mu}
+text_xy_L = (18, 6)
+axL.text(*text_xy_L, "Transition\npoints",
+         fontsize=10.5, ha="center", va="center", fontweight="semibold",
+         color="#222",
+         bbox=dict(boxstyle="round,pad=0.4", facecolor="white",
+                   edgecolor="#888", linewidth=0.8),
+         zorder=10)
+for algo in ["vLLM", "Sarathi", "WAIT"]:
+    target = (mu[algo], TRANSITION_LATENCY_L[algo])
+    axL.annotate(
+        "", xy=target, xytext=text_xy_L,
+        xycoords="data", textcoords="data",
+        arrowprops=dict(arrowstyle="-|>", color=COLORS[algo],
+                        lw=1.5, alpha=0.85, mutation_scale=14,
+                        shrinkA=24, shrinkB=2),
+        zorder=9,
+    )
+
 # --- Right: effective throughput (linear, same x mapping) ---
 axR = axes[1]
 rate_grid = np.linspace(r_min - 1, r_max + 2, 400)
@@ -221,6 +244,26 @@ axR.set_ylim(r_min - 1, r_max + 2)
 axR.grid(True, linestyle=":", linewidth=0.4, alpha=0.35, color="#999999")
 axR.legend(loc="lower right", frameon=False, handlelength=2.5,
            borderpad=0.4)
+
+# --- Transition-points callout (throughput panel) ------------------------
+# Textbox above-left of the ideal y = lambda diagonal, close to the kinks.
+text_xy_R = (13.5, 22)
+axR.text(*text_xy_R, "Transition\npoints",
+         fontsize=10.5, ha="center", va="center", fontweight="semibold",
+         color="#222",
+         bbox=dict(boxstyle="round,pad=0.4", facecolor="white",
+                   edgecolor="#888", linewidth=0.8),
+         zorder=10)
+for algo in ["vLLM", "Sarathi", "WAIT"]:
+    m = mu[algo]
+    axR.annotate(
+        "", xy=(m, m), xytext=text_xy_R,
+        xycoords="data", textcoords="data",
+        arrowprops=dict(arrowstyle="-|>", color=COLORS[algo],
+                        lw=1.5, alpha=0.85, mutation_scale=14,
+                        shrinkA=24, shrinkB=2),
+        zorder=9,
+    )
 
 fig.tight_layout()
 out_pdf = OUT / "figure_B_single_type.pdf"
