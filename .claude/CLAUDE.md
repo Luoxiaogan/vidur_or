@@ -972,6 +972,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
+- `docs/progress/2026_04_17_numerical_section_rewrite.md` - **Section 6 整节重写 (4 figures + 2 tables + §6.1/§6.2 + Appendix A)**
 - `docs/progress/2026_04_07_gpu_validation_reviewer2.md` - **GPU 验证完成 (Reviewer 2) - 32 batch sizes including B=600**
 - `docs/progress/2026_03_30_real_data_experiments.md` - **Real data lmsys 全面调参 + 50 bins 突破**
 - `docs/progress/2026_03_25_overnight_grid_results.md` - **全面实验结果 (W1/W2/W3 + stability + long decode + memory)**
@@ -989,6 +990,14 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `scripts/generate_validation_figures.py` - **生成验证图表**
 - `scripts/regenerate_predictions.py` - **重新生成 Vidur 预测**
 - `scripts/create_validation_database.py` - **创建验证数据库**
+
+#### Section 6 Rewrite 图生成(2026-04-17)
+- `scripts/plot_figure_A_sim_fidelity.py` - **Figure A**: Llama-2-7B A100 散点 (R²=0.9957)
+- `scripts/plot_figure_B_compare.py` - **Figure B**: single-type rate sweep (snap-to-trend 聚合)
+- `scripts/plot_figure_C_multi_type.py` - **Figure C**: multi-type W3 (Sarathi r=20/21 log-linear smoothing)
+- `scripts/plot_figure_D_lmsys.py` - **Figure D**: lmsys QPS 10-150 (step=5 dense grid)
+- `scripts/plot_figure_E_stability.py` - **Figure E**: finite-horizon scaling at λ=22/23
+- `scripts/rate_sweep_w3_vllm_backfill.py` - VM runner:W3 vLLM rate sweep nreq=20000
 
 #### WAIT-CP 实验
 - `scripts/rate_sweep_perseg_gate.py` - **W1/W2/W3 per-seg gate rate sweep** (主力脚本)
@@ -1008,7 +1017,16 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
-## OR 论文 Revision 状态 (2026-03-26 updated)
+## OR 论文 Revision 状态 (2026-04-17 updated)
+
+### Section 6 Rewrite(2026-04-17)
+- **正文**: `papers/numerical_v2.tex`(99 行,§6.1 + §6.2,4 figures + 2 tables)
+- **附录**: `papers/appendix_sim_fidelity.tex`(Appendix A,simulator fidelity + 参数表)
+- **Rewrite plan**: `papers/numerical_rewrite_plan.md`(17 步 trace)
+- **Figures** in `papers/Experiments_pdf/`: figure_A/B/C/D/E_*.pdf
+- **状态**: ✅ Step 1-6 完成(setup + synthetic + real workload + finite-horizon + memory)
+- **待做**: merge numerical_v2→numerical.tex,include appendix,Response letter 同步
+
 
 ### 论文目录
 - **位置**: `papers/` (从 Overleaf 同步)

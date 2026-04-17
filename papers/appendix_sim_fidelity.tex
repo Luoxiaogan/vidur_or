@@ -1,16 +1,52 @@
-%% Appendix subsection: Simulator fidelity validation against real GPU.
-%% To be \input{} from Appendix.tex (alongside the proof subsections).
+%% Appendix subsection for Section 6 details:
+%%   - Simulator vs real-GPU validation (Figure A)
+%%   - Full parameter tables and per-scheduler hyperparameters
+%% To be \input{} from Appendix.tex.
 
-\section{Simulator Fidelity}
+\section{Simulator and Experimental Configuration}
 \label{app:sim_fidelity}
 
-The numerical experiments of Section~\ref{sec:experiments} are conducted on the Vidur discrete-event simulator. To verify that the simulator's iteration-time predictions match real GPU behavior in the regime relevant to those experiments, we compare Vidur's predictions against direct measurements taken on a physical NVIDIA A100~80\,GB GPU running Llama-2-7B served by vLLM. We evaluate $25$ batch-size configurations $B \in \{1, 2, 4, \dots, 128\}$ at fixed prefill length $256$ and decode length $20$, which together span the batch-size range used in our experiments.
+This appendix supplies the detailed configuration omitted from Section~\ref{sec:experiments}: the simulator-versus-real-GPU validation, the full parameter table for each workload, and the precise hyperparameter settings of each scheduler.
+
+\subsection{Simulator validation against real GPU}
+
+The numerical experiments of Section~\ref{sec:experiments} are conducted on the Vidur discrete-event simulator. To verify that the simulator's iteration-time predictions match real GPU behavior in the regime relevant to those experiments, we compare Vidur's predictions against direct measurements taken on a physical NVIDIA A100~80\,GB GPU running Llama-2-7B served by vLLM. We evaluate $25$ batch-size configurations $B \in \{1, 2, 4, \ldots, 128\}$ at fixed prefill length $256$ and decode length $20$, which together span the batch-size range used in our experiments.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.6\textwidth]{Experiments_pdf/figure_A_sim_fidelity.pdf}
-    \caption{Validation of the Vidur simulator against real NVIDIA A100~80\,GB GPU measurements. Each point corresponds to one batch size configuration $B \in \{1, 2, 4, 8, \ldots, 128\}$ ($N = 25$ in total), with prefill length $256$ and decode length $20$, serving Llama-2-7B via vLLM. The dashed line is $y = x$. The linear iteration-time model of Equation~\eqref{eq:time_consump} achieves $R^2 = 0.9957$ and a mean absolute percentage error of $1.51\%$ on this range, confirming the simulator's fidelity for the regime relevant to our experiments.}
+    \caption{Validation of the Vidur simulator against real NVIDIA A100~80\,GB GPU measurements. Each point is one batch-size configuration $B \in \{1, 2, 4, \ldots, 128\}$ ($N = 25$), with prefill $256$ and decode $20$, serving Llama-2-7B via vLLM. The dashed line is $y = x$. The linear iteration-time model of Equation~\eqref{eq:time_consump} achieves $R^2 = 0.9957$ and mean absolute percentage error $1.51\%$, confirming the simulator's fidelity for the regime relevant to our experiments.}
     \label{fig:sim_fidelity}
 \end{figure}
 
-As Figure~\ref{fig:sim_fidelity} shows, Vidur's predictions track the GPU measurements to within mean absolute percentage error $1.51\%$ ($R^2 = 0.9957$), which justifies using the simulator as the basis for our throughput and stability comparisons in Section~\ref{sec:experiments}.
+As Figure~\ref{fig:sim_fidelity} shows, Vidur's predictions track the GPU measurements to within mean absolute percentage error $1.51\%$ ($R^2 = 0.9957$), which justifies using the simulator as the basis for our throughput and stability comparisons in Section~\ref{sec:experiments}. The fitted iteration-time intercept and slope are $d_0 \approx 276$\,ms and $d_1 \approx 0.0115$\,ms per KV-cache token, in line with the linear time model of Equation~\eqref{eq:time_consump}.
+
+\subsection{Per-workload parameters}
+
+Table~\ref{tab:exp_setup} summarizes the per-workload values of the per-iteration batch budget $B$, the equilibrium memory $M^*$ (an upper bound, derived from the threshold $\sum_k n_k$ and the largest single-request KV-cache footprint $M^*_{\max}$ across the workload's active types), the capacity $C$ (in KV-cache blocks), and the threshold $\sum_k n_k$ used by WAIT and Nested WAIT.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Workload & $B$ & $M^*$ (blocks) & $C$ (blocks) & $\sum_k n_k$ \\
+\midrule
+Single-type \texttt{p512d20} & 512 & $\leq 23 \cdot 33 = 759$ & 29\,952 & 21 \\
+Multi-type W3                & 512 & $\leq 22 \cdot 35 = 770$ & 29\,952 & 22 \\
+Real (lmsys-chat-1m)         & 512 & $\leq 65 \cdot 34 = 2{,}210$ & 29\,952 & varies per QPS \\
+\bottomrule
+\end{tabular}
+\caption{Per-workload parameter values. The capacity $C = 29\,952$ blocks corresponds to the A100~80\,GB pool with KV-cache block size $16$~tokens. $M^*$ is an upper bound enforced by construction through $\sum_k n_k$.}
+\label{tab:exp_setup}
+\end{table}
+
+\subsection{Scheduler hyperparameters}
+
+\textbf{vLLM.} We use vLLM's default scheduler, which serves new arrivals first under FCFS. The KV-cache pool is configured with the default watermark fraction $0.01$ (i.e.\ $1\%$ of the pool is reserved as a safety margin to absorb growth from in-flight decodes).
+
+\textbf{Sarathi.} We use chunked prefill with chunk size $512$ tokens per iteration and an admission cap of $512$ requests. Other settings follow the defaults of \citet{agrawal2023sarathi}.
+
+\textbf{WAIT.} We use chunk size $256$ and total threshold $\sum_k n_k = 21$. The same configuration is used at every $\lambda$ in the single-type sweep.
+
+\textbf{Nested WAIT.} We use chunk size $256$ and total threshold $\sum_k n_k = 22$ on the multi-type W3 workload. On the real lmsys workload we tune $(\mathrm{cs}, \sum_k n_k)$ per QPS to minimize mean latency, drawing from $\mathrm{cs} \in \{96, 128, 192, 256, 384\}$ and $\sum_k n_k \in \{20, 26, 30, 35, 40\}$; the tuned configuration at each QPS is recorded in our open-sourced experiment artifacts.
