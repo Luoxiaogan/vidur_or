@@ -1,0 +1,24 @@
+\begin{table}[h]
+\centering
+\scalebox{0.9}{
+\begin{tabular}{c|cc|ccc} \hline
+\multirow{2}{*}{Scenario} & \multicolumn{2}{|c|}{Time} & \multicolumn{3}{|c}{Cost(\$)} \\
+&  Act &  Sim  & Act  & Sim & Savings  \\
+\hline
+7B-Chat1M & 4K hrs & 31 min & 20K & 5 & 3837x \\
+7B-Arxiv & 10K hrs & 47 min & 52K & 8 & 6708x \\
+7B-BWB & 18K hrs & 136 min & 97K & 22 & 4324x \\
+20B-Chat1M & 6K hrs & 21 min & 33K & 3 & 9518x \\
+20B-Arxiv & 14K hrs & 25 min & 73K & 4 & 17746x \\
+20B-BWB & 16K hrs & 52 min & 84K & 9 & 9805x \\
+70B-Chat1M & 12K hrs & 21 min & 64K & 4 & 18151x \\
+70B-Arxiv & 15K hrs & 16 min & 78K & 3 & 30187x \\
+70B-BWB & 15K hrs & 27 min & 77K & 4 & 17333x \\
+72B-Chat1M & 14K hrs & 43 min & 76K & 7 & 10726x \\
+72B-Arxiv & 17K hrs & 16 min & 88K & 3 & 33354x \\
+72B-BWB & 18K hrs & 25 min & 93K & 4 & 22102x \\
+\bottomrule
+\end{tabular}}
+\caption{Cost of finding the optimal deployment configuration.}
+\label{table:tbl-eval-whatif}
+\end{table}

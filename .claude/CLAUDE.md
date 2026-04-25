@@ -974,6 +974,11 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 ### 进度报告
 - `docs/progress/2026_04_28_qps10_gate_on_tuning.md` - **QPS=10 gate-on Nested WAIT 调参** (old-metric verify strict win: `auto6seg_tl290_cs52_gp1p01_wgON`, mean 1.696853360 vs Sarathi 1.696868151)
 - `docs/progress/2026_04_26_real_data_provenance_grid.md` - **Real-data provenance rerun 窄网格 (tl<=300, 3 tl/QPS, m=5/10/20/50)**
+- `docs/progress/2026_04_25_section6_real_data_provenance.md` - **Section 6 real-data provenance audit + figure/table polish commit state**
+- `docs/progress/2026_04_25_vm_real_data_tuning_investigation_prompt.md` - **VM-side lmsys tuning provenance investigation prompt**
+- `docs/progress/2026_04_25_real_data_parameter_audit.md` - **Real-data lmsys parameter/source-chain audit**
+- `docs/progress/2026_04_25_long_decode_figure_polish.md` - **Long-decode figure/table 口径统一 + Figure G 美化心得（page-scale、留白、transition markers、数据诚实性）**
+- `docs/progress/2026_04_23_section6_editorial_polish.md` - **Section 6 段落级精修 (`tl` 机制、baseline 口径、paper state 同步)**
 - `docs/progress/2026_04_17_numerical_section_rewrite.md` - **Section 6 整节重写 (4 figures + 2 tables + §6.1/§6.2 + Appendix A)**
 - `docs/progress/2026_04_07_gpu_validation_reviewer2.md` - **GPU 验证完成 (Reviewer 2) - 32 batch sizes including B=600**
 - `docs/progress/2026_03_30_real_data_experiments.md` - **Real data lmsys 全面调参 + 50 bins 突破**
@@ -997,6 +1002,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `scripts/plot_figure_A_sim_fidelity.py` - **Figure A**: Llama-2-7B A100 散点 (R²=0.9957)
 - `scripts/plot_figure_B_compare.py` - **Figure B**: single-type rate sweep (snap-to-trend 聚合)
 - `scripts/plot_figure_C_multi_type.py` - **Figure C**: multi-type W3 (Sarathi r=20/21 log-linear smoothing)
+- `scripts/plot_figure_G_long_decode.py` - **Figure G**: long-decode 双栏主文图（latency + effective throughput，含 transition-point callouts）
 - `scripts/plot_figure_D_lmsys.py` - **Figure D**: lmsys QPS 10-150 (step=5 dense grid)
 - `scripts/plot_figure_E_stability.py` - **Figure E**: finite-horizon scaling at λ=22/23
 - `scripts/rate_sweep_w3_vllm_backfill.py` - VM runner:W3 vLLM rate sweep nreq=20000
@@ -1020,15 +1026,49 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
-## OR 论文 Revision 状态 (2026-04-17 updated)
+## OR 论文 Revision 状态 (2026-04-25 updated)
+
+### Real-data Provenance Audit(2026-04-25)
+- **主记录文件**: `docs/progress/2026_04_25_real_data_parameter_audit.md`
+- **VM 调查 prompt**: `docs/progress/2026_04_25_vm_real_data_tuning_investigation_prompt.md`
+- **本轮锁定点**:
+  - paper-facing Vidur tuning scripts use `meta-llama/Meta-Llama-3-8B`
+  - GPU validation / Figure A uses Llama-2-7B, so Section 6 model wording must distinguish the two tracks unless rerun
+  - local `experiments.db.real_data` does not preserve the full lmsys QPS 10--150 winning-config grid
+  - `50 bins` is workload discretization, not by itself a documented independent segment-count parameter
+- **状态**: 🚧 provenance unresolved; VM logs/SQL must be inspected before final lmsys claims are locked
+- **待做**: run the VM investigation prompt, recover per-QPS winning configs if possible, otherwise rerun with SQL logging
+
+### Long-decode Figure/Table Polish(2026-04-25)
+- **主编辑文件**: `papers/numerical.tex`, `scripts/plot_figure_G_long_decode.py`
+- **生成文件**: `papers/Experiments_pdf/figure_G_long_decode.pdf`
+- **本轮锁定点**:
+  - long-decode 主文 latency 比较与 Figure G 统一为 baseline-memory `30.2`\,s vs `26.4`\,s
+  - eviction 只保留为同一 `\lambda=4.0` 下的补充 near-capacity 诊断
+  - 表格指标统一写作 `eviction-induced restart rate`，机制层面继续写 `eviction`
+  - Figure G 页宽下的 legend / callout / transition-marker overlap 已清理
+- **状态**: ✅ figure/table consistency 与页面级可读性已收敛
+- **待做**: 继续逐段 polish Section 6 其余正文；如后续 caption 再变动，需重新检查 page-scale figure layout
+
+### Section 6 Editorial Polish(2026-04-23)
+- **主编辑文件**: `papers/numerical.tex`（当前 active Section 6）
+- **同步文件**: `papers/model.tex`, `papers/appendix_sim_fidelity.tex`
+- **状态文档**: `docs/paper_state/opre_revision/`
+- **本轮锁定点**:
+  - `KV cache` 无连字符统一
+  - setup 段中 `\mathrm{tl}` 明确为 global in-system cap
+  - WAIT / Nested WAIT admission rule 统一写成 `threshold reached, or fill to tl`
+  - real-workload grid 统一写作 `\{20,25,\ldots,40\}`
+- **状态**: 🚧 paragraph-by-paragraph polish 进行中
+- **待做**: 继续逐段打磨 Section 6 其余段落，并在合适时机重新编译 main paper 检查排版
 
 ### Section 6 Rewrite(2026-04-17)
-- **正文**: `papers/numerical_v2.tex`(99 行,§6.1 + §6.2,4 figures + 2 tables)
-- **附录**: `papers/appendix_sim_fidelity.tex`(Appendix A,simulator fidelity + 参数表)
+- **历史重写草稿**: `papers/numerical_v2.tex`(99 行,§6.1 + §6.2,4 figures + 2 tables)
+- **现行附录文件**: `papers/appendix_sim_fidelity.tex`(Appendix A,simulator fidelity + 参数表)
 - **Rewrite plan**: `papers/numerical_rewrite_plan.md`(17 步 trace)
 - **Figures** in `papers/Experiments_pdf/`: figure_A/B/C/D/E_*.pdf
-- **状态**: ✅ Step 1-6 完成(setup + synthetic + real workload + finite-horizon + memory)
-- **待做**: merge numerical_v2→numerical.tex,include appendix,Response letter 同步
+- **状态**: ✅ Step 1-6 完成，主要内容已迁移到 active `papers/numerical.tex`
+- **待做**: Response letter 同步；其余 paragraph-level polish 见上面的 `Section 6 Editorial Polish`
 
 
 ### 论文目录
@@ -1184,3 +1224,14 @@ SELECT scenario_name, ROUND(mean_off,3), ROUND(mean_on,3), ROUND(delta_pct,2), p
 FROM wait_vs_nowait_summary
 ORDER BY scenario_name;
 ```
+
+## Paper Figure Refinement Rules (2026-04-25)
+
+Long-decode Figure G 的迭代沉淀出一组今后应默认遵守的 paper-figure 规则。详细说明见 `docs/research/paper_figure_style_rules.md`。
+
+- **先看 page-scale，再看 standalone**: 只有编译进主文后的页宽缩放，才能暴露 legend / callout / marker 的真实冲突。
+- **不能为了好看改结果**: 优先改轴、布局、留白、标注位置和轻微 marker dodge，不改 underlying data。
+- **优先重设计主轴，不要默认加 inset**: 如果 low-load 和 near-boundary 都重要，应先尝试让主轴同时承载这两段信息。
+- **transition points 要显式，但必须服从留白**: 标注系统不能压住 legend 或关键曲线。
+- **secondary panel 必须和主面板语义一致**: stylized throughput / stability panel 的 knee 必须对齐 latency takeoff。
+- **caption 只压缩结论，不负责补救视觉失败**。

@@ -1,0 +1,28 @@
+\newpage
+\columnbreak
+\columnbreak
+\clearpage
+
+\section{Appendix}
+\label{sec-appendix}
+
+
+\subsection{Impact of Request Arrival Rate on Fidelity for Dynamic Workloads}
+
+We present additional fidelity results for \sysname at different request arrival rates in \autoref{fig:fidelty-dynamic-trace-95}. We find that \sysname retains high fidelity even at 95\% of maximum system capacity for larger models, however, for \llamaS, where we have slightly higher error due to CPU overheads, the errors cascade and we see up to 12.65\% maximum error. We also provide  the error trends in \autoref{fig:fidelty-dynamic-trace-trends}.
+
+\input{figures-tex/fig-fidelity-dynamic-trace-95}
+\input{figures-tex/fig-fidelity-dynamic-trace-trends}
+
+\subsection{Cost Breakdown of What-if Analysis}
+
+\sysname's ability to efficiently and accurate simulated complex deployment scenarios allows us to explore search configuration spaces at cheap negligible cost. The what-if analysis presented in \autoref{fig:intro:optimal-configs}, required a total of 35,565 runs, with a total projected GPU duration of 1,139,865 dollars. The same search completes takes only $\sim12.5$ hours on a 96-core CPU machine costing just \$125. The breakdown of each task is presented in \autoref{table:tbl-eval-whatif}.
+
+\input{tables/tbl-eval-whatif}
+
+
+
+
+
+
+

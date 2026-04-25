@@ -1,0 +1,23 @@
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}{0.55\linewidth}
+        \includegraphics[scale=0.37]{graphs/parallel_coord.pdf}
+        \caption{\small
+            \textbf{Optimal configurations:} Color bands correspond to the optimal config for each of the 12 model-trace pairs with corresponding throughput achieved per dollar. %
+            }
+        \label{fig:intro:optimal-configs}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.40\linewidth}
+        \centering
+        \includegraphics[scale=0.50]{graphs/confusion_matrix_Llama-2-70b-hf.pdf}
+        \caption{\small
+            \textbf{Cost of mis-configuration}: the optimal config on one trace used for another results in up to 2\myx cost difference (\llamaL).
+        }
+        \label{fig:intro:cost-of-misconfig}
+    \end{subfigure}
+    \caption{\small
+        \textbf{Both the model and workload matter for the optimal deployment configuration}. Optimal configurations for each model-trace pair is shown in (a). Throughput/cost can differ significantly for the same model if the workload is changed as shown in (b).
+    }
+    \label{fig:intro:best-cofig}
+\end{figure*}

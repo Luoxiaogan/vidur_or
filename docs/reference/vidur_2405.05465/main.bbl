@@ -1,0 +1,217 @@
+\begin{thebibliography}{41}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[arx()]{arxiv}
+arxiv.org e-print archive.
+\newblock \url{https://arxiv.org/}.
+
+\bibitem[cup()]{cupti}
+Cupti: Cuda toolkit documentation.
+\newblock \url{https://docs.nvidia.com/cuda/cupti/index.html}.
+
+\bibitem[fas()]{fastertransformer}
+{Faster Transformer}.
+\newblock \url{https://github.com/NVIDIA/FasterTransformer}.
+
+\bibitem[goo()]{googleduetai}
+Google duet ai.
+\newblock \url{https://workspace.google.com/solutions/ai/}.
+
+\bibitem[mic()]{microsoftcopilot}
+Microsoft copilot.
+\newblock \url{https://www.microsoft.com/en-us/microsoft-copilot}.
+
+\bibitem[vLL()]{vLLM:github}
+vllm: Easy, fast, and cheap llm serving for everyone.
+\newblock \url{https://github.com/vllm-project/vllm}.
+
+\bibitem[lig(2023)]{lightllm}
+{LightLLM: A python-based large language model inference and serving framework}.
+\newblock \url{https://github.com/ModelTC/lightllm}, 2023.
+
+\bibitem[Agrawal et~al.(2023)Agrawal, Panwar, Mohan, Kwatra, Gulavani, and Ramjee]{sarathi}
+Agrawal, A., Panwar, A., Mohan, J., Kwatra, N., Gulavani, B.~S., and Ramjee, R.
+\newblock Sarathi: Efficient llm inference by piggybacking decodes with chunked prefills, 2023.
+
+\bibitem[Agrawal et~al.(2024)Agrawal, Kedia, Panwar, Mohan, Kwatra, Gulavani, Tumanov, and Ramjee]{sarathi-serve}
+Agrawal, A., Kedia, N., Panwar, A., Mohan, J., Kwatra, N., Gulavani, B.~S., Tumanov, A., and Ramjee, R.
+\newblock Taming throughput-latency tradeoff in llm inference with sarathi-serve.
+\newblock 2024.
+
+\bibitem[Bai et~al.(2023)Bai, Bai, Chu, Cui, Dang, Deng, Fan, Ge, Han, Huang, Hui, Ji, Li, Lin, Lin, Liu, Liu, Lu, Lu, Ma, Men, Ren, Ren, Tan, Tan, Tu, Wang, Wang, Wang, Wu, Xu, Xu, Yang, Yang, Yang, Yang, Yao, Yu, Yuan, Yuan, Zhang, Zhang, Zhang, Zhang, Zhou, Zhou, Zhou, and Zhu]{qwen}
+Bai, J., Bai, S., Chu, Y., Cui, Z., Dang, K., Deng, X., Fan, Y., Ge, W., Han, Y., Huang, F., Hui, B., Ji, L., Li, M., Lin, J., Lin, R., Liu, D., Liu, G., Lu, C., Lu, K., Ma, J., Men, R., Ren, X., Ren, X., Tan, C., Tan, S., Tu, J., Wang, P., Wang, S., Wang, W., Wu, S., Xu, B., Xu, J., Yang, A., Yang, H., Yang, J., Yang, S., Yao, Y., Yu, B., Yuan, H., Yuan, Z., Zhang, J., Zhang, X., Zhang, Y., Zhang, Z., Zhou, C., Zhou, J., Zhou, X., and Zhu, T.
+\newblock Qwen technical report.
+\newblock \emph{arXiv preprint arXiv:2309.16609}, 2023.
+
+\bibitem[Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal, Neelakantan, Shyam, Sastry, Askell, et~al.]{gpt3-brown2020language}
+Brown, T., Mann, B., Ryder, N., Subbiah, M., Kaplan, J.~D., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A., et~al.
+\newblock Language models are few-shot learners.
+\newblock \emph{Advances in neural information processing systems}, 33:\penalty0 1877--1901, 2020.
+
+\bibitem[Bubeck et~al.(2023)Bubeck, Chandrasekaran, Eldan, Gehrke, Horvitz, Kamar, Lee, Lee, Li, Lundberg, Nori, Palangi, Ribeiro, and Zhang]{sparksofagi}
+Bubeck, S., Chandrasekaran, V., Eldan, R., Gehrke, J., Horvitz, E., Kamar, E., Lee, P., Lee, Y.~T., Li, Y., Lundberg, S., Nori, H., Palangi, H., Ribeiro, M.~T., and Zhang, Y.
+\newblock Sparks of artificial general intelligence: Early experiments with gpt-4, 2023.
+
+\bibitem[Chetlur et~al.(2014)Chetlur, Woolley, Vandermersch, Cohen, Tran, Catanzaro, and Shelhamer]{cudnn}
+Chetlur, S., Woolley, C., Vandermersch, P., Cohen, J., Tran, J., Catanzaro, B., and Shelhamer, E.
+\newblock cudnn: Efficient primitives for deep learning, 2014.
+
+\bibitem[Cohan et~al.(2018)Cohan, Dernoncourt, Kim, Bui, Kim, Chang, and Goharian]{cohan-etal-2018-discourse}
+Cohan, A., Dernoncourt, F., Kim, D.~S., Bui, T., Kim, S., Chang, W., and Goharian, N.
+\newblock A discourse-aware attention model for abstractive summarization of long documents.
+\newblock In \emph{Proceedings of the 2018 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 2 (Short Papers)}, pp.\  615--621, New Orleans, Louisiana, June 2018. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/N18-2097}.
+\newblock URL \url{https://aclanthology.org/N18-2097}.
+
+\bibitem[Dao et~al.(2022)Dao, Fu, Ermon, Rudra, and Ré]{flashattention}
+Dao, T., Fu, D.~Y., Ermon, S., Rudra, A., and Ré, C.
+\newblock Flashattention: Fast and memory-efficient exact attention with io-awareness, 2022.
+
+\bibitem[Dao et~al.(2023)Dao, Haziza, Massa, and Sizov]{flashdecoding}
+Dao, T., Haziza, D., Massa, F., and Sizov, G.
+\newblock Flash-decoding for long-context inference, 2023.
+
+\bibitem[Duan et~al.(2023)Duan, Li, Xu, Zhang, Yan, Liang, and Lin]{proteus}
+Duan, J., Li, X., Xu, P., Zhang, X., Yan, S., Liang, Y., and Lin, D.
+\newblock Proteus: Simulating the performance of distributed {DNN} training.
+\newblock \emph{CoRR}, abs/2306.02267, 2023.
+\newblock \doi{10.48550/arXiv.2306.02267}.
+\newblock URL \url{https://doi.org/10.48550/arXiv.2306.02267}.
+
+\bibitem[Hooper et~al.(2023)Hooper, Kim, Mohammadzadeh, Genc, Keutzer, Gholami, and Shao]{speed}
+Hooper, C., Kim, S., Mohammadzadeh, H., Genc, H., Keutzer, K., Gholami, A., and Shao, S.
+\newblock Speed: Speculative pipelined execution for efficient decoding, 2023.
+
+\bibitem[Jiang et~al.(2023)Jiang, Liu, Ma, Zhang, Cotterell, and Sachan]{jiang-etal-2023-discourse}
+Jiang, Y.~E., Liu, T., Ma, S., Zhang, D., Cotterell, R., and Sachan, M.
+\newblock Discourse centric evaluation of machine translation with a densely annotated parallel corpus.
+\newblock In \emph{Proceedings of the 2023 Conference of the Association for Computational Linguistics: Human Language Technologies}, pp.\  1550--1565, Toronto, Canada, July 2023. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2023.main.111}.
+\newblock URL \url{https://aclanthology.org/2023.acl-main.111}.
+
+\bibitem[Kwon et~al.(2023)Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang, and Stoica]{vllmpaper}
+Kwon, W., Li, Z., Zhuang, S., Sheng, Y., Zheng, L., Yu, C.~H., Gonzalez, J., Zhang, H., and Stoica, I.
+\newblock Efficient memory management for large language model serving with pagedattention.
+\newblock In Flinn, J., Seltzer, M.~I., Druschel, P., Kaufmann, A., and Mace, J. (eds.), \emph{Proceedings of the 29th Symposium on Operating Systems Principles, {SOSP} 2023, Koblenz, Germany, October 23-26, 2023}, pp.\  611--626. {ACM}, 2023.
+\newblock \doi{10.1145/3600006.3613165}.
+\newblock URL \url{https://doi.org/10.1145/3600006.3613165}.
+
+\bibitem[Li et~al.(2023)Li, Bubeck, Eldan, Giorno, Gunasekar, and Lee]{li2023textbooks}
+Li, Y., Bubeck, S., Eldan, R., Giorno, A.~D., Gunasekar, S., and Lee, Y.~T.
+\newblock Textbooks are all you need ii: phi-1.5 technical report.
+\newblock September 2023.
+\newblock URL \url{https://www.microsoft.com/en-us/research/publication/textbooks-are-all-you-need-ii-phi-1-5-technical-report/}.
+
+\bibitem[Li et~al.(2021)Li, Zhuang, Guo, Zhuo, Zhang, Song, and Stoica]{terapipe}
+Li, Z., Zhuang, S., Guo, S., Zhuo, D., Zhang, H., Song, D., and Stoica, I.
+\newblock Terapipe: Token-level pipeline parallelism for training large-scale language models, 2021.
+
+\bibitem[Lin et~al.(2022)Lin, Feng, Ardestani, Lee, Lundell, Kim, Kejariwal, and Owens]{recommender_modeling}
+Lin, Z., Feng, L., Ardestani, E.~K., Lee, J., Lundell, J., Kim, C., Kejariwal, A., and Owens, J.~D.
+\newblock Building a performance model for deep learning recommendation model training on gpus.
+\newblock In \emph{29th {IEEE} International Conference on High Performance Computing, Data, and Analytics, HiPC 2022, Bengaluru, India, December 18-21, 2022}, pp.\  48--58. {IEEE}, 2022.
+\newblock \doi{10.1109/HiPC56025.2022.00019}.
+\newblock URL \url{https://doi.org/10.1109/HiPC56025.2022.00019}.
+
+\bibitem[{NVIDIA Corporation}({\natexlab{a}})]{cublas}
+{NVIDIA Corporation}.
+\newblock {CUBLAS} library.
+\newblock \url{https://docs.nvidia.com/cuda/cublas/index.html}, {\natexlab{a}}.
+
+\bibitem[{NVIDIA Corporation}({\natexlab{b}})]{tilewavequantization}
+{NVIDIA Corporation}.
+\newblock Matrix multiplication background user's guide.
+\newblock \url{https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html}, {\natexlab{b}}.
+
+\bibitem[Patel \& Ahmed(2023)Patel and Ahmed]{semi}
+Patel, D. and Ahmed, A.
+\newblock The inference cost of search disruption – large language model cost analysis, 2023.
+
+\bibitem[Patel et~al.(2023)Patel, Choukse, Zhang, Goiri, Shah, Maleki, and Bianchini]{splitwise}
+Patel, P., Choukse, E., Zhang, C., Goiri, {\'I}., Shah, A., Maleki, S., and Bianchini, R.
+\newblock Splitwise: Efficient generative llm inference using phase splitting.
+\newblock \emph{arXiv preprint arXiv:2311.18677}, 2023.
+
+\bibitem[Pope et~al.(2022)Pope, Douglas, Chowdhery, Devlin, Bradbury, Levskaya, Heek, Xiao, Agrawal, and Dean]{efficiently-scaling-transformer-inference}
+Pope, R., Douglas, S., Chowdhery, A., Devlin, J., Bradbury, J., Levskaya, A., Heek, J., Xiao, K., Agrawal, S., and Dean, J.
+\newblock Efficiently scaling transformer inference, 2022.
+
+\bibitem[Shoeybi et~al.(2019)Shoeybi, Patwary, Puri, LeGresley, Casper, and Catanzaro]{megatron}
+Shoeybi, M., Patwary, M., Puri, R., LeGresley, P., Casper, J., and Catanzaro, B.
+\newblock Megatron-lm: Training multi-billion parameter language models using gpu model parallelism.
+\newblock \emph{arXiv preprint arXiv:1909.08053}, 2019.
+
+\bibitem[Sivathanu et~al.(2019)Sivathanu, Chugh, Singapuram, and Zhou]{astra}
+Sivathanu, M., Chugh, T., Singapuram, S.~S., and Zhou, L.
+\newblock Astra: Exploiting predictability to optimize deep learning.
+\newblock In \emph{Proceedings of the Twenty-Fourth International Conference on Architectural Support for Programming Languages and Operating Systems}, ASPLOS '19, pp.\  909–923, New York, NY, USA, 2019. Association for Computing Machinery.
+\newblock ISBN 9781450362405.
+\newblock \doi{10.1145/3297858.3304072}.
+\newblock URL \url{https://doi.org/10.1145/3297858.3304072}.
+
+\bibitem[Team(2023)]{internlm}
+Team, I.
+\newblock Internlm: A multilingual language model with progressively enhanced capabilities, 2023.
+
+\bibitem[Touvron et~al.(2023{\natexlab{a}})Touvron, Lavril, Izacard, Martinet, Lachaux, Lacroix, Rozière, Goyal, Hambro, Azhar, Rodriguez, Joulin, Grave, and Lample]{llamaarxiv}
+Touvron, H., Lavril, T., Izacard, G., Martinet, X., Lachaux, M.-A., Lacroix, T., Rozière, B., Goyal, N., Hambro, E., Azhar, F., Rodriguez, A., Joulin, A., Grave, E., and Lample, G.
+\newblock Llama: Open and efficient foundation language models, 2023{\natexlab{a}}.
+
+\bibitem[Touvron et~al.(2023{\natexlab{b}})Touvron, Martin, Stone, Albert, Almahairi, Babaei, Bashlykov, Batra, Bhargava, Bhosale, Bikel, Blecher, Ferrer, Chen, Cucurull, Esiobu, Fernandes, Fu, Fu, Fuller, Gao, Goswami, Goyal, Hartshorn, Hosseini, Hou, Inan, Kardas, Kerkez, Khabsa, Kloumann, Korenev, Koura, Lachaux, Lavril, Lee, Liskovich, Lu, Mao, Martinet, Mihaylov, Mishra, Molybog, Nie, Poulton, Reizenstein, Rungta, Saladi, Schelten, Silva, Smith, Subramanian, Tan, Tang, Taylor, Williams, Kuan, Xu, Yan, Zarov, Zhang, Fan, Kambadur, Narang, Rodriguez, Stojnic, Edunov, and Scialom]{touvron2023llama}
+Touvron, H., Martin, L., Stone, K., Albert, P., Almahairi, A., Babaei, Y., Bashlykov, N., Batra, S., Bhargava, P., Bhosale, S., Bikel, D., Blecher, L., Ferrer, C.~C., Chen, M., Cucurull, G., Esiobu, D., Fernandes, J., Fu, J., Fu, W., Fuller, B., Gao, C., Goswami, V., Goyal, N., Hartshorn, A., Hosseini, S., Hou, R., Inan, H., Kardas, M., Kerkez, V., Khabsa, M., Kloumann, I., Korenev, A., Koura, P.~S., Lachaux, M.-A., Lavril, T., Lee, J., Liskovich, D., Lu, Y., Mao, Y., Martinet, X., Mihaylov, T., Mishra, P., Molybog, I., Nie, Y., Poulton, A., Reizenstein, J., Rungta, R., Saladi, K., Schelten, A., Silva, R., Smith, E.~M., Subramanian, R., Tan, X.~E., Tang, B., Taylor, R., Williams, A., Kuan, J.~X., Xu, P., Yan, Z., Zarov, I., Zhang, Y., Fan, A., Kambadur, M., Narang, S., Rodriguez, A., Stojnic, R., Edunov, S., and Scialom, T.
+\newblock Llama 2: Open foundation and fine-tuned chat models, 2023{\natexlab{b}}.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin]{paper:attention}
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N., Kaiser, L.~u., and Polosukhin, I.
+\newblock Attention is all you need.
+\newblock In Guyon, I., Luxburg, U.~V., Bengio, S., Wallach, H., Fergus, R., Vishwanathan, S., and Garnett, R. (eds.), \emph{Advances in Neural Information Processing Systems}, volume~30. Curran Associates, Inc., 2017.
+\newblock URL \url{https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf}.
+
+\bibitem[Williams et~al.(2009)Williams, Waterman, and Patterson]{roofline}
+Williams, S., Waterman, A., and Patterson, D.
+\newblock Roofline: An insightful visual performance model for multicore architectures.
+\newblock \emph{Commun. ACM}, 52\penalty0 (4):\penalty0 65–76, apr 2009.
+\newblock ISSN 0001-0782.
+\newblock \doi{10.1145/1498765.1498785}.
+\newblock URL \url{https://doi.org/10.1145/1498765.1498785}.
+
+\bibitem[Xiao et~al.(2018)Xiao, Bhardwaj, Ramjee, Sivathanu, Kwatra, Han, Patel, Peng, Zhao, Zhang, Yang, and Zhou]{gandiva}
+Xiao, W., Bhardwaj, R., Ramjee, R., Sivathanu, M., Kwatra, N., Han, Z., Patel, P., Peng, X., Zhao, H., Zhang, Q., Yang, F., and Zhou, L.
+\newblock Gandiva: Introspective cluster scheduling for deep learning.
+\newblock In \emph{13th USENIX Symposium on Operating Systems Design and Implementation (OSDI 18)}, pp.\  595--610, Carlsbad, CA, October 2018. USENIX Association.
+\newblock ISBN 978-1-939133-08-3.
+\newblock URL \url{https://www.usenix.org/conference/osdi18/presentation/xiao}.
+
+\bibitem[Yu et~al.(2022)Yu, Jeong, Kim, Kim, and Chun]{orca}
+Yu, G.-I., Jeong, J.~S., Kim, G.-W., Kim, S., and Chun, B.-G.
+\newblock Orca: A distributed serving system for {Transformer-Based} generative models.
+\newblock In \emph{16th USENIX Symposium on Operating Systems Design and Implementation (OSDI 22)}, pp.\  521--538, Carlsbad, CA, July 2022. USENIX Association.
+\newblock ISBN 978-1-939133-28-1.
+\newblock URL \url{https://www.usenix.org/conference/osdi22/presentation/yu}.
+
+\bibitem[Yu et~al.(2021)Yu, Gao, Golikov, and Pekhimenko]{habitat}
+Yu, G.~X., Gao, Y., Golikov, P., and Pekhimenko, G.
+\newblock Habitat: {A} runtime-based computational performance predictor for deep neural network training.
+\newblock In Calciu, I. and Kuenning, G. (eds.), \emph{2021 {USENIX} Annual Technical Conference, {USENIX} {ATC} 2021, July 14-16, 2021}, pp.\  503--521. {USENIX} Association, 2021.
+\newblock URL \url{https://www.usenix.org/conference/atc21/presentation/yu}.
+
+\bibitem[Zheng et~al.(2023)Zheng, Chiang, Sheng, Li, Zhuang, Wu, Zhuang, Li, Lin, Xing, Gonzalez, Stoica, and Zhang]{lmsyschat1m}
+Zheng, L., Chiang, W.-L., Sheng, Y., Li, T., Zhuang, S., Wu, Z., Zhuang, Y., Li, Z., Lin, Z., Xing, E.~P., Gonzalez, J.~E., Stoica, I., and Zhang, H.
+\newblock Lmsys-chat-1m: A large-scale real-world llm conversation dataset, 2023.
+
+\bibitem[Zhong et~al.(2024)Zhong, Liu, Chen, Hu, Zhu, Liu, Jin, and Zhang]{distserve}
+Zhong, Y., Liu, S., Chen, J., Hu, J., Zhu, Y., Liu, X., Jin, X., and Zhang, H.
+\newblock Distserve: Disaggregating prefill and decoding for goodput-optimized large language model serving.
+\newblock \emph{arXiv preprint arXiv:2401.09670}, 2024.
+
+\bibitem[Zhu et~al.(2020)Zhu, Phanishayee, and Pekhimenko]{daydream}
+Zhu, H., Phanishayee, A., and Pekhimenko, G.
+\newblock Daydream: Accurately estimating the efficacy of optimizations for {DNN} training.
+\newblock In Gavrilovska, A. and Zadok, E. (eds.), \emph{2020 {USENIX} Annual Technical Conference, {USENIX} {ATC} 2020, July 15-17, 2020}, pp.\  337--352. {USENIX} Association, 2020.
+\newblock URL \url{https://www.usenix.org/conference/atc20/presentation/zhu-hongyu}.
+
+\end{thebibliography}

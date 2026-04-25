@@ -1,0 +1,17 @@
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{graphs/static_fidelity_v12_request_execution_plus_preemption_time_normalized_p50.pdf}
+        \caption{\small Median Normalized Execution Latency}
+        \label{fig:fidelty-static-trace-p50}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[trim={0 0 0 17.8}, clip, width=0.9\linewidth]{graphs/static_fidelity_v12_request_execution_plus_preemption_time_normalized_p95.pdf}
+        \caption{\small P95 Normalized Execution Latency}
+        \label{fig:fidelty-static-trace-p95}
+    \end{subfigure}
+    \caption{Fidelity of \sysname's request execution time prediction for four models and three \textit{static} traces.}
+    \label{fig:fidelity-static-trace}
+\end{figure*}

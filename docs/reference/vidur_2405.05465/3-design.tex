@@ -1,0 +1,83 @@
+\section{\sysname}
+\label{sec-design}
+
+
+\input{figures-tex/fig-hld}
+
+\sysname leverages domain knowledge to provide high-fidelity performance estimations of LLM inference. It emulates the behavior of all layers of the inference stack, including both the model execution and the various tiers of request scheduling, at both replica as well as the cluster level.
+
+\subsection{Key Insights}
+\vheading{LLMs Share Key Architectural Properties.} The large majority of LLMs share fundamentally similar architectures with small differences in the choice of activation functions, normalization layers, residual connections, etc. This allows us to use a common declarative model specification format that captures the essential architectural choices of various models. Another consequence of this architectural uniformity is that \sysname only needs to model a small number of compute operators that are shared across all model families.
+
+
+\vheading{Operation Triaging for Runtime Prediction.} In a running batch, each request may be associated with varying numbers of \kvcache and \textit{query} tokens, leading to a vast combinatorial input space. Consequently, profiling every possible combination to predict operation runtimes is not feasible. Instead, we observe that LLM operators can be classified into different categories. For instance, execution time of some operations depend on the total context length of all the requests in the batch whereas for others, it depends only on the number of tokens in the current iteration. This classification allows us to design tailored runtime prediction strategies for each operator type.
+
+For example, we observe that apart from the attention kernel, all other operations are independent of request history. During the decode phase, the MLP layer would take the same amount of compute irrespective of the number of input or output tokens processed previously. Profiling the attention kernel requires modeling history of each request. However, since the attention operation during decode is largely a memory-bound operation \cite{flashattention, sarathi}, we find that it is sufficient to model the total amount of \kvcache to be fetched in a batch of requests to determine the kernel runtime (\sref{sec:profiler}).
+
+
+
+\vheading{Automatic Profiling for Parallelism Strategies.} 
+Each model parallel configuration has different memory, compute, and network communication characteristics. A naive profile and replay approach would require a separate profiling run for each parallelism configuration, which can be expensive. In contrast, \sysname incorporates the domain knowledge about LLM parallelism strategies, which allows it to identify the subset of computation that is performed on each device. During the profiling phase, we automatically identify the tensor sharding configurations for each operator from a declarative specification of the model. Consequently, \sysname can simulate various parallelization schemes with minimal profiling performed on a single GPU.
+
+
+
+
+
+
+
+
+
+\subsection{System Overview}
+
+\sysname primarily has two phases of processing. First is the model onboarding phase wherein the model specification is used to generate a set of compute operators to be profiled. The \sysname profiler (\sref{sec:profiler}) collects the runtime characteristics for the identified operators and feeds them to the runtime estimator. To minimize the cost barrier of adding new models to the system, we collect minimal data during the profiling phase and then train small machine-learning models to generate predictions over a large range of parameters that these operation could be triggered on during simulation. This phase is handled by \sysname's runtime estimator (\sref{sec:re}), which produces operation-wise runtime lookup tables that can be later used during simulation.
+
+Once the model is onboarded, the user can perform simulations using various scheduling policies, and parallelism strategies, across a wide range of workloads supported by \sysbench (\sref{sec-benchmark}). At the core of our event-driven simulator is a pluggable \hScheduler (\sref{sec:scheduler}), which supports several popular batching strategies alongside memory planning and management capabilities. The simulator provides detailed metrics that capture both the request (normalized latency, time-to-first-token, time-between-tokens, etc.) and cluster (Model FLOPs utilization, \kvcache utilization, etc.) performance metrics. The end-to-end process flow in \sysname is illustrated in~\autoref{fig:hld}. %
+
+\subsection{\profiler}
+\label{sec:profiler}
+
+To efficiently profile the runtime characteristics of LLMs, we leverage the insight that the large majority of LLMs share fundamentally similar architectures with small differences in the choice of activation functions, normalization layers, residual connections, etc. %
+
+\input{tables/eval_ops}
+
+\vheading{Operator Triaging.} The profiler analyzes different operators to identify their input dependencies. We find that all the operators can be placed on one of the three buckets:
+
+\begin{itemize}
+    \item \textit{Token-level Operators:} The operand dimensions for operations like linear, and activation functions depend on model architecture, however, their runtime only depends on the total number of tokens being processed (prefill plus decode) in the batch.
+    \item \textit{Sequence-level Operators:} The attention operation depends not only on the number of tokens in the current batch but also the context length of each request.
+    \item \textit{Communication Operators:} The runtime of communication operations like \textit{all-reduce} and \textit{all-gather} depend only on the amount of data to be transferred, independently of the model architecture.
+\end{itemize}
+
+\vheading{Profiling Token-level Operators.} There are two broad categories of token-level operators - matrix multiplications and simple point-wise apply or reduction operations, like addition, normalization, and activation functions. Based on the model specification, we generate all the different tensor parallel sharding configurations and profile each combination. This approach allows us to obtain traces for different parallelism configurations while profiling on a single GPU. We use standard PyTorch kernels for profiling these operations and measure their performance using CUPTI \cite{cupti}.
+
+\vheading{Profiling Sequence-level Operators.} \label{heading:profiling-seq-level-ops} Batching sequence-level operators such as the attention kernels is sensitive to the context length of the requests in the batch, thereby exploding the state space of inputs  to profile.%
+We use several techniques to address this problem. First, we separately profile the attention kernels for prefill and decode phases due to their difference in compute characteristics. 
+
+While processing the prefill attention, we observe that the attention time for each prefill is quadratic in its length. Suppose we have a batch of $P$ prefills of length $p_i$, where $i$ varies from $1$ to $P$. The cost of prefill attention for the whole batch is therefore proportional to \(\Sigma_{i=1}^P p_i^2\). To approximate the runtime of this batch we predict the runtime of an \textit{equivalent} batch of a single prefill of length \(\sqrt{\Sigma_{i=1}^P p_i^2}\). 
+
+
+In contrast to prefill, we notice that the attention decode operation is largely memory-bound~\cite{flashattention, sarathi}. %
+As a result, the runtime of this operation is mainly determined by the total data volume that needs to be fetched from the \kvcache and not the exact split of context lengths between different requests in the batch. In practice, the attention kernel might not be able to effectively parallelize \kvcache fetch operation when there is a large skew between the context length of different requests in a batch. However, we observe that sequence parallel attention kernels such as PagedAttention v2 \cite{vllmpaper}, and FlashDecoding \cite{flashdecoding} can effectively handle such skews, and thus it is sufficient to model decode based on total \kvcache reads. %
+
+\vheading{Profiling Communication Operators.}  There are three collective operations that are frequently used in LLM inference, namely, \textit{all-reduce}, \textit{all-gather} (used for tensor parallelism) and \textit{send-recv} (used for pipeline parallelism). %
+Since these operations don't depend on model-specific characteristics, we independently profile these kernels ahead of time in a model-agnostic manner for different topologies.
+
+
+
+
+
+\subsection{\RE}
+\label{sec:re}
+
+Collecting profiling data for every possible input combination across all the operators is prohibitively expensive. Therefore, we collect a limited set of data points and rely on small machine-learning models to interpolate the runtimes. \RE first trains these models using the profiled data, and then generates runtime estimates for a large range of input tensor dimensions which it encounters in end-to-end simulation.
+
+Prior DL training simulators \cite{habitat,recommender_modeling} train Multi-layer Perceptron (MLP) models for opaque operations like matrix multiplications which are provided by closed-source third-party libraries like CUBLAS \cite{cublas} and cuDNN \cite{cudnn}. However, training MLPs requires a large amount of data and results. On the other hand, simple polynomial regression does not capture the non-linear runtime characteristics of CUDA kernels due to phenomenons like tile and wave quantization~\cite{tilewavequantization}. For our scenario, we find that random forest (RF) regression models achieve the right balance between data frugality and fidelity. %
+
+\subsection{\hScheduler}
+\label{sec:scheduler}
+
+In \sysname we adopt a three-tier hierarchical scheduler architecture, that provides a powerful and extensible interface. First is the global scheduler, that is responsible for request routing in \sysname. In addition to standard load balancing policies like round-robin and least outstanding requests, we also support stateful scheduling policies, where routing decisions can be deferred to a later point in time, which can be helpful under busty workloads where early binding routing decisions can hurt performance. 
+
+Second is the replica scheduler that encapsulates two key responsibilities; batching and memory management. The replica scheduler contains a memory planner, which uses the model specification and parallelism configuration to compute the memory available for \kvcache. This information is then used by the memory manager to provide high-level management APIs that are used to implement custom batching policies. \sysname currently supports five batching policies, FasterTransformers \cite{fastertransformer}, Orca \cite{orca}, Sarathi-Serve \cite{sarathi-serve}, vLLM \cite{vllmpaper} and LightLLM \cite{lightllm}. The high-level API support provided by \sysname makes it extremely simple to implement new batching policies; all the aforementioned policies have been implemented each in less than 150 lines of Python code in our simulator %
+
+The final component of our scheduling stack is the replica stage scheduler, which handles the scheduling of microbatches within a pipeline stage. While we currently only support synchronous pipeline parallel scheduling policy, in the future, we aim to extend the replica stage scheduler to emulate various optimizations like asynchronous communication, sequence parallelism \cite{terapipe} and speculative pipelined decoding \cite{speed}. %

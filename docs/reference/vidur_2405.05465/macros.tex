@@ -1,0 +1,71 @@
+\newcommand{\sysname}{Vidur\xspace}
+\newcommand{\sysbench}{Vidur-Bench\xspace}
+\newcommand{\syssearch}{Vidur-Search\xspace}
+\newcommand{\chunking}{\textit{chunked-prefills}\xspace}
+\newcommand{\Chunking}{\textit{Chunked-prefills}\xspace}
+\newcommand{\hbatch}{\textit{decode-maximal batching}\xspace}
+\newcommand{\Hbatch}{\textit{Decode-maximal batching}\xspace}
+\newcommand{\hbatches}{\textit{decode-maximal batches}\xspace}
+\newcommand{\mycaption}[2]{\caption{\textbf{#1} {#2}}}
+\newcommand{\myx}{$\times$\xspace}
+\newcommand{\llamaL}{LLaMA2-70B\xspace}
+\newcommand{\llamaS}{LLaMA2-7B\xspace}
+\newcommand{\llamaM}{CodeLLaMA-34B\xspace}
+\newcommand{\internlmM}{InternLM-20B\xspace}
+\newcommand{\qwenL}{Qwen-72B\xspace}
+\newcommand{\chat}{LMSys-Chat-1M\xspace}
+\newcommand{\arxivL}{Arxiv-Summarization\xspace}
+\newcommand{\bwbL}{Bilingual-Web-Book\xspace}
+\newcommand{\arxivS}{Arxiv-Summarization-4K\xspace}
+\newcommand{\bwbS}{Bilingual-Web-Book-4K\xspace}
+\newcommand{\chatshort}{Chat-1M\xspace}
+\newcommand{\arxivSshort}{Arxiv-4K\xspace}
+\newcommand{\bwbSshort}{BWB-4K\xspace}
+\newcommand{\vllm}{vLLM\xspace}
+\newcommand{\orcaplus}{Orca+\xspace}
+\newcommand{\sarathi}{Sarathi-Serve\xspace}
+
+
+\newcommand{\ie}{\textit{i.e.,}\xspace}
+\newcommand{\eg}{\textit{e.g.,}\xspace}
+\newcommand{\vheading}[1]{\vspace{0.05in}\noindent\textbf{#1}}
+\newcommand{\sref}[1]{\S\ref{#1}}
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+
+\newcommand{\attnpreproj}{\textit{preproj}\xspace}
+\newcommand{\attn}{\textit{attn}\xspace}
+\newcommand{\attnpostproj}{\textit{postproj}\xspace}
+\newcommand{\ffnlnfirst}{\textit{ffn\_ln1}\xspace}
+\newcommand{\ffnlnsecond}{\textit{ffn\_ln2}\xspace}
+\newcommand{\ffn}{\textit{ffn}\xspace}
+
+\newcommand{\profiler}{\textit{Profiler}\xspace}
+\newcommand{\RE}{\textit{Runtime Estimator}\xspace}
+\newcommand{\hScheduler}{\textit{Hierarchical Scheduler}\xspace}
+\newcommand{\kvcache}{\textit{KV-Cache}\xspace}
+
+
+
+\ifthenelse{
+\boolean{publicversion}}{
+	\newcommand{\grumbler}[3]{}
+        \newcommand{\jm}[1]{}
+        \newcommand{\ap}[1]{}
+        \newcommand{\nk}[1]{}
+        \newcommand{\rr}[1]{}
+        \newcommand{\amey}[1]{}
+        \newcommand{\alexey}[1]{}
+        \newcommand{\nitin}[1]{}
+}
+{%
+\newcommand{\grumbler}[3]{\xspace\textcolor{#3}{\bf #1: #2}}
+\newcommand{\jm}[1]{\grumbler{Jayashree}{#1}{magenta}}
+\newcommand{\ap}[1]{\grumbler{Ashish}{#1}{violet}}
+\newcommand{\nk}[1]{\grumbler{Nipun}{#1}{teal}}
+\newcommand{\rr}[1]{\grumbler{Ram}{#1}{cyan}}
+\newcommand{\bg}[1]{\grumbler{Bhargav}{#1}{blue}}
+\newcommand{\amey}[1]{\grumbler{Amey}{#1}{teal}}
+\newcommand{\alexey}[1]{\grumbler{Alexey}{#1}{teal}}
+\newcommand{\alexey}[1]{\grumbler{Nitin}{#1}{orange}}
+\newcommand{\todo}[1]{\grumbler{XXX}{#1}{red}}
+}

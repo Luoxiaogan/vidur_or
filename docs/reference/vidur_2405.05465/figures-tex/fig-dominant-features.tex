@@ -1,0 +1,10 @@
+\begin{figure*}[t]
+    \centering
+    \includegraphics[scale=0.4]{graphs/70b_chat_dominant_features.pdf}
+    \caption{\small
+        Spider chart illustrating the role of individual configuration parameters in optimizing latency metrics. Analysis on \llamaL for \chat workload. Each hexagon represents a specific metric we are interested (e.g. TTFT-P50). Each corner in the hexagon represents a parameter in the deployment configuration, eg., TP dimension, batch size, etc. 
+    Each parameter is plotted on the spider chart with distance from center and size proportional to the frequency of the feature in points on or near the Pareto frontier. Points futher away from the center represent the dominant choices that are made most frequently. A clustering of small points close to the center indicates relative insignifiance of the configuration choice. 
+    }
+    \vspace{-0.2in}
+    \label{fig-dom-feat}
+\end{figure*}

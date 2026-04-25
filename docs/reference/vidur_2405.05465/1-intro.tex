@@ -1,0 +1,61 @@
+\section{Introduction}
+\label{sec-intro}
+
+Large language models (LLMs) can learn from and generate natural language texts on a massive scale. LLMs such as GPT-3/4~\cite{gpt3-brown2020language, sparksofagi}, LLaMA~\cite{llamaarxiv}, and Phi~\cite{li2023textbooks} have demonstrated impressive performance on various natural language processing (NLP) tasks. However, LLM inference -- the process of using an LLM to produce natural language outputs based on some input -- is expensive. For example, the cost of serving ChatGPT is estimated to be $\$694$K per day~\cite{semi}. 
+
+An LLM inference provider faces several challenges in optimizing LLM deployment. 
+First, the provider has to choose a model parallelization strategy such as the number of tensor parallel dimensions, number of pipeline stages, number of replicas, etc. Second, the operator has to choose between different scheduling algorithms (e.g., Orca~\cite{orca}, vLLM~\cite{vllmpaper}, Sarathi-Serve~\cite{sarathi-serve}). 
+Third, the provider has to determine several configuration parameters, such as maximum batch size (BS),  wait time for batching, as well as algorithm specific parameters (e.g., chunk size in Sarathi, watermark fraction in vLLM) to satisfy the desired throughput and latency constraints. 
+Finally, they have to generate representative workload traffic to test out each of their models on an experimental testbed with each of the different combinations above. {\it Systematically optimizing deployment of tens of models with hundreds of configuration options is expensive and impractical.}
+
+This cost is further exacerbated by our observation that optimal configuration is a function of a model-trace pair, i.e., optimal configuration also depends on application workload characteristics (\autoref{fig:intro:optimal-configs}). In fact, an optimal config obtained on one trace could be sub-optimal by a factor of up to 2\myx (\autoref{fig:intro:cost-of-misconfig}) when applied to the same model on a different trace. With both new models and new traces being released almost daily, the cost of identifying the optimal deployment configuration becomes prohibitively expensive. 
+
+
+
+To tackle this challenge, we present \sysname{} -- a large-scale, high-fidelity and extensible LLM inference performance simulator, and \syssearch{} -- a configuration search tool. Together, they enable \textit{fast} and \textit{inexpensive} exploration of LLM inference performance under a variety of deployment scenarios.
+
+\input{figures-tex/fig-best-configs}
+
+
+Simulating LLM inference poses several unique challenges that are not addressed in prior work that simulate the performance of deep neural network (DNN) training~\cite{daydream, habitat, recommender_modeling}. 
+First, LLM inference predictions have to be accurate at much finer time granularity  compared to training jobs where each iteration runs for hundreds of milliseconds. Second, unlike training where batch sizes are typically fixed, the input sizes during inference can vary drastically. The difference in input sizes stems from varying sequences lengths of different requests, as well as the interleaving of prefill and decode stages depending on the scheduling strategy, resulting in significant variations in iteration latency. Since it is infeasible to experimentally profile the performance of the model for all possible input sizes,  the simulator has to rely on a mixture of careful profiling and a prediction strategy for unprofiled input sizes.  Third, small errors in predictions lead to cascading effect due to the dynamic and stateful nature of inference workloads, thus inference simulators need to provide extremely accurate per-iteration predictions to get good fidelity at high request arrival rates.
+
+
+\vheading{\sysname}. To address these challenges, \sysname{} uses the key insight that the large majority of LLMs share similar architectures that can be decomposed into a small set of {\it token-level, sequence-level and communication operators}. Thus, \sysname{} takes in a model specification and first identifies various operators and a minimal set of input sizes that need to be profiled experimentally. \sysname then builds a fine-grained runtime estimator that accurately predicts kernel performance on input sizes that might not have been profiled. Using the estimator, \sysname takes a specification of deployment configuration and workload, and predicts a variety of request-level metrics such as Time to First Token (TTFT), Time Between Tokens (TBT), latency, throughput, as well as cluster-level metrics such as Model Flops Utilization (MFU) and memory utilization.
+
+We demonstrate the fidelity of \sysname across a range of models, hardware and cluster configurations. \sysname accurately predicts request-level LLM inference performance with under 9\% error rate, and mimics overall cluster metrics for large-scale workloads and traces with high fidelity.
+
+
+\vheading{\sysbench}. We find that the workload has a considerable impact on output metrics of interest in LLM inference. For example, variations in the number of input tokens, number of decode tokens and batch size can impact performance dramatically~\cite{sarathi}. We observe that there is no standardized benchmark suite available today to comprehensively evaluate LLM inference performance. Thus, we introduce \sysbench to address this gap. \sysbench is an easily extensible collection of workload traces along with several existing batching and scheduling policies such as vLLM~\cite{vllmpaper}, Orca ~\cite{orca}, FasterTransformer~\cite{fastertransformer} and Sarathi-Serve~\cite{sarathi-serve}.
+
+
+\vheading{\syssearch}. Finally, we present \syssearch{} to help LLM inference providers optimize their deployment. \syssearch{} uses \sysname{} to automatically search over hundreds of deployment configurations to identify the highest throughput/cost configuration for a given model, workload pair. For example, for \llamaL,  across a pool of A100 / H100 GPUs, \syssearch{} is able to identify the best configuration about one hour on a 96-core CPU cores that costs \$9.93 per hour on Microsoft Azure, as opposed to an actual deployment-based exploration that would have taken 42K GPU hours, costing approximately \$218K.
+
+In summary, this paper makes the following contributions.
+\begin{itemize}
+    \itemsep0em 
+    \item  \sysname: an LLM inference simulator that predicts key performance metrics of interest with high-fidelity (\sref{sec-design})
+    \item  \sysbench: a benchmark suite comprising of various workload patterns, schedulers and serving frameworks, along with profiling information for popular hardware like A100 and H100 GPUs (\sref{sec-benchmark}).
+    \item \syssearch: a configuration search tool that helps optimize deployment by identifying the highest throughput per dollar configuration (\sref{sec-syssearch}).
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+

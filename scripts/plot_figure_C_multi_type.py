@@ -101,9 +101,9 @@ X_TICK_RATES = [12, 14, 16, 18, 20, 22, 24]
 # with the absolute knee position visible in the latency panel so the
 # throughput panel displays the same stability ordering:
 #   vLLM: latency crosses 4 s at r=19 -> mu = 18
-#   Sarathi: knee begins at r=21 (l=2.7 s) -> mu = 20
+#   Sarathi: knee begins at r=21->22 (1.76 -> 4.06) -> mu = 21
 #   Nested WAIT: still <2.5 s at r=22, only diverges at r=23 -> mu = 22
-mu = {"vLLM": 18, "Sarathi": 20, "Nested WAIT": 22}
+mu = {"vLLM": 18, "Sarathi": 21, "Nested WAIT": 22}
 print(f"Sustainable throughput mu (override): {mu}")
 
 

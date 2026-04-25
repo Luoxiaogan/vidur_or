@@ -1,52 +1,41 @@
-%% Appendix subsection for Section 6 details:
-%%   - Simulator vs real-GPU validation (Figure A)
-%%   - Full parameter tables and per-scheduler hyperparameters
-%% To be \input{} from Appendix.tex.
+%% Appendix A: Per-workload parameter values and scheduler hyperparameters used
+%% in Section 6. The simulator-vs-GPU validation has been moved into the
+%% Real-GPU validation subsection of Appendix B (see app:gpu_validation).
 
-\section{Simulator and Experimental Configuration}
-\label{app:sim_fidelity}
+\section{Experimental Configuration}
+\label{app:experimental_config}
 
-This appendix supplies the detailed configuration omitted from Section~\ref{sec:experiments}: the simulator-versus-real-GPU validation, the full parameter table for each workload, and the precise hyperparameter settings of each scheduler.
-
-\subsection{Simulator validation against real GPU}
-
-The numerical experiments of Section~\ref{sec:experiments} are conducted on the Vidur discrete-event simulator. To verify that the simulator's iteration-time predictions match real GPU behavior in the regime relevant to those experiments, we compare Vidur's predictions against direct measurements taken on a physical NVIDIA A100~80\,GB GPU running Llama-2-7B served by vLLM. We evaluate $25$ batch-size configurations $B \in \{1, 2, 4, \ldots, 128\}$ at fixed prefill length $256$ and decode length $20$, which together span the batch-size range used in our experiments.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.6\textwidth]{Experiments_pdf/figure_A_sim_fidelity.pdf}
-    \caption{Validation of the Vidur simulator against real NVIDIA A100~80\,GB GPU measurements. Each point is one batch-size configuration $B \in \{1, 2, 4, \ldots, 128\}$ ($N = 25$), with prefill $256$ and decode $20$, serving Llama-2-7B via vLLM. The dashed line is $y = x$. The linear iteration-time model of Equation~\eqref{eq:time_consump} achieves $R^2 = 0.9957$ and mean absolute percentage error $1.51\%$, confirming the simulator's fidelity for the regime relevant to our experiments.}
-    \label{fig:sim_fidelity}
-\end{figure}
-
-As Figure~\ref{fig:sim_fidelity} shows, Vidur's predictions track the GPU measurements to within mean absolute percentage error $1.51\%$ ($R^2 = 0.9957$), which justifies using the simulator as the basis for our throughput and stability comparisons in Section~\ref{sec:experiments}. The fitted iteration-time intercept and slope are $d_0 \approx 276$\,ms and $d_1 \approx 0.0115$\,ms per KV-cache token, in line with the linear time model of Equation~\eqref{eq:time_consump}.
+This appendix supplies the per-workload parameter values and the per-scheduler hyperparameters used in Section~\ref{sec:experiments}. The end-to-end real-GPU validation, including the iteration-time comparison against the Vidur simulator, is reported separately in Appendix~\ref{app:gpu_validation}.
 
 \subsection{Per-workload parameters}
 
-Table~\ref{tab:exp_setup} summarizes the per-workload values of the per-iteration batch budget $B$, the equilibrium memory $M^*$ (an upper bound, derived from the threshold $\sum_k n_k$ and the largest single-request KV-cache footprint $M^*_{\max}$ across the workload's active types), the capacity $C$ (in KV-cache blocks), and the threshold $\sum_k n_k$ used by WAIT and Nested WAIT.
+Table~\ref{tab:exp_setup} summarizes the per-workload settings used in Section~\ref{sec:experiments}: the total in-flight limit $\mathrm{tl}$ for WAIT and Nested WAIT, and the KV cache capacity $C$ of the simulated pool. Throughout, one KV cache block holds $16$ tokens, so $C = 29{,}952$ blocks corresponds to roughly $479{,}000$ tokens of KV cache on an A100~80\,GB.
 
 \begin{table}[ht]
 \centering
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lccc}
 \toprule
-Workload & $B$ & $M^*$ (blocks) & $C$ (blocks) & $\sum_k n_k$ \\
+Workload & Algorithm & $\mathrm{tl}$ & $C$ (blocks) \\
 \midrule
-Single-type \texttt{p512d20} & 512 & $\leq 23 \cdot 33 = 759$ & 29\,952 & 21 \\
-Multi-type W3                & 512 & $\leq 22 \cdot 35 = 770$ & 29\,952 & 22 \\
-Real (lmsys-chat-1m)         & 512 & $\leq 65 \cdot 34 = 2{,}210$ & 29\,952 & varies per QPS \\
+Single-type \texttt{p512d20}  & WAIT         & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
+Long-decode \texttt{p512d1000} & WAIT         & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
+Two-type $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$ & Nested WAIT  & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
+Real (lmsys-chat-1m)          & Nested WAIT  & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
 \bottomrule
 \end{tabular}
-\caption{Per-workload parameter values. The capacity $C = 29\,952$ blocks corresponds to the A100~80\,GB pool with KV-cache block size $16$~tokens. $M^*$ is an upper bound enforced by construction through $\sum_k n_k$.}
+\caption{Per-workload settings for WAIT and Nested WAIT in Section~\ref{sec:experiments}. In the experiments, we do not set the thresholds directly. Instead, we specify a total in-flight limit $\mathrm{tl}$ and derive the per-type thresholds $n_j$ of WAIT and the per-segment thresholds $n_k$ of Nested WAIT so as to satisfy Equations~\eqref{eq:wait_thresholds} and~\eqref{eq:nested_wait_thresholds}, respectively. Thus $\mathrm{tl}$ determines the overall scale of the threshold vector, while the equations determine its relative ratios across types or segments. On the lmsys workload, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$ at each arrival rate.}
 \label{tab:exp_setup}
 \end{table}
 
 \subsection{Scheduler hyperparameters}
 
-\textbf{vLLM.} We use vLLM's default scheduler, which serves new arrivals first under FCFS. The KV-cache pool is configured with the default watermark fraction $0.01$ (i.e.\ $1\%$ of the pool is reserved as a safety margin to absorb growth from in-flight decodes).
+\textbf{vLLM.} We use vLLM's default Vidur configuration, which admits new arrivals first-come-first-served and reserves a KV cache watermark fraction of $0.01$ (i.e.\ $1\%$ of the pool) as a safety margin against concurrent growth of in-flight decodes.
 
-\textbf{Sarathi.} We use chunked prefill with chunk size $512$ tokens per iteration and an admission cap of $512$ requests. Other settings follow the defaults of \citet{agrawal2023sarathi}.
+\textbf{Sarathi.} We use Sarathi's default Vidur configuration, which combines chunked prefill with an admission cap of $512$ requests per iteration.
 
-\textbf{WAIT.} We use chunk size $256$ and total threshold $\sum_k n_k = 21$. The same configuration is used at every $\lambda$ in the single-type sweep.
+\textbf{WAIT (single-type workloads).} For each arrival rate, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$. We use WAIT for both \texttt{p512d20} and the long-decode workload \texttt{p512d1000}; in each case, the per-type threshold $n_1$ is then computed so as to satisfy Equation~\eqref{eq:wait_thresholds}.
 
-\textbf{Nested WAIT.} We use chunk size $256$ and total threshold $\sum_k n_k = 22$ on the multi-type W3 workload. On the real lmsys workload we tune $(\mathrm{cs}, \sum_k n_k)$ per QPS to minimize mean latency, drawing from $\mathrm{cs} \in \{96, 128, 192, 256, 384\}$ and $\sum_k n_k \in \{20, 26, 30, 35, 40\}$; the tuned configuration at each QPS is recorded in our open-sourced experiment artifacts.
+\textbf{Nested WAIT (two-type synthetic workload).} Under Nested WAIT, $m$ denotes the number of decode-stage segments. For each arrival rate, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$. For the two-type synthetic workload $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$, meaning that each arrival is \texttt{p512d20} with probability $0.7$ and \texttt{p512d50} with probability $0.3$, we use $m=2$ with decode-stage segments $1$--$20$ and $21$--$50$, and compute the per-segment thresholds $(n_1, n_2)$ so as to satisfy Equation~\eqref{eq:nested_wait_thresholds}. For example, with $\mathrm{tl}=30$, a consistent choice is $(n_1,n_2)\approx(1,1/3)$, which yields segment in-flight limits of about $20$ and $10$ after integerization.
+
+\textbf{Nested WAIT (real lmsys workload).} For the real lmsys workload, Nested WAIT again uses a finite partition of the decode stages, and Section~\ref{sec:exp_real} reports the corresponding sensitivity to the segment count $m$. For each arrival rate, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$, and the per-segment thresholds $n_k$ are then computed so as to satisfy Equation~\eqref{eq:nested_wait_thresholds}.

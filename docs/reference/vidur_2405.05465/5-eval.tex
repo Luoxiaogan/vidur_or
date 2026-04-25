@@ -1,0 +1,107 @@
+
+\input{figures-tex/fig-fidelity-dynamic-trace}
+
+\section{Evaluation}
+\label{sec-eval}
+
+In this section, we demonstrate the fidelity and usefulness of \sysname across a wide range of models, hardware configurations and workloads. We perform all our evaluations on an optimized version of the vLLM codebase, with support for different scheduling policies and CUDA graphs, which eliminates unnecessary CPU overheads. Our evaluation seeks to answer the following questions:
+
+\vspace{-1.25em}
+
+\begin{enumerate}
+    \item Can \sysname accurately predict the end-to-end performance metrics across models of different sizes, parallelization strategies and workload traces with varying request lengths and arrival patterns (\sref{sec-eval-e2e})?
+    \item Can \sysname answer what-if questions related to LLM deployment challenges for a given hardware configuration (\sref{sec-eval-whatif})?
+\end{enumerate}
+
+
+\vspace{-1.25em}
+
+\subsection{Evaluation Setup}
+\label{sec-eval-setup}
+\vheading{Implementation.} As baseline, we use a fork of the open-source implementation of \vllm \cite{vllmpaper, vLLM:github}. %
+We extend the base vLLM codebase to support various scheduling policies, chunked prefills \cite{sarathi-serve}, and an extensive telemetry system. %
+
+
+\vheading{Models and Environment.} We evaluate \sysname across four models: LLaMA2 7/70B \cite{touvron2023llama}, \internlmM \cite{internlm}, and \qwenL \cite{qwen}. We use Azure \textit{Standard\_NC96ads\_A100\_v4} VMs, each equipped with 4 NVIDIA 80GB A100 GPUs, connected with pairwise NVLink. Our H100 VMs have 4 NVIDIA H100s each with 80GB memory and connected with pairwise NVLink.
+
+\vheading{Workloads.} In order to emulate the real-world serving scenarios, we generate traces by using the request length characteristics from \chat, \arxivL and \bwbL. \chat contains one million real-world conversations with many state-of-the-art LLMs. A conversation may contain multiple rounds of interactions between the user and chatbot. Each such interaction round is performed as a separate request to the system. This multi-round nature leads to high relative variance in the prompt lengths. \arxivL is a collection of scientific publications and their summaries (abstracts) on arXiv.org \cite{arxiv}. This dataset contains large prompts and lower variance in the number of output tokens, and is representative of LLM workloads such as Microsoft M365 Copilot \cite{microsoftcopilot} and Google Duet AI \cite{googleduetai}. \bwbL is a document-level Chinese--English parallel dataset. It consists of Chinese online novels across multiple genres and their corresponding English translations. The number of output tokens outweighs the number of prompt tokens in this dataset. This dataset also has a lower variance in number of prompt and decode tokens across requests. We restrict the total request length to 4096 tokens based on the maximum context supported by the LLaMA2 family of models. We call these shortened traces \chatshort, \arxivSshort and \bwbSshort respectively. Together, these traces represent varying workload characteristics, e.g., \bwbSshort has 10\myx longer decodes and 2\myx longer prefills compared to \chatshort; and a Prefill:Decode (P:D) ratio of 0.65 compared to 2.3. Further details for these workloads are present in \autoref{table:workloads}.
+
+
+\subsection{Simulator Fidelity}
+\label{sec-eval-e2e}
+
+In this section, we demonstrate \sysname's fidelity on end-to-end request-level predictions across the four models and three workloads detailed in \autoref{sec-eval-setup}. We use tensor parallel for \internlmM (TP2), \llamaL (TP4), and \qwenL (TP4). We use the default vLLM scheduler for all these experiments.
+We first evaluate \sysname using static (offline) workloads where all requests are assumed to have arrived before the system starts. We then evaluate \sysname using a dynamic (online) workload in which we assume requests arrive based on a Poisson distribution, with the arrival rate corresponding to the throughput of the system.
+
+
+\vheading{Evaluation Metric.} For dynamic workloads, we compare the percentage error of \sysname predictions for normalized end-to-end latency, which captures the request’s end-to-end latency divided by its output length \cite{orca, vllmpaper}. We augment this metric slightly for static workload, and measure only the request execution time, excluding the scheduling delay -- which would otherwise dominate the latency measurement. This allows us to perform more fine-grained analysis of \sysname's capability.
+
+
+
+
+
+
+
+
+
+\vheading{Static Workloads.} We present the request latency fidelity evaluation in~\autoref{fig:fidelity-static-trace}. We observe that \sysname predicts even the tail latency (P95) with upto 3.33\% error across the four models and three datasets. Note that we observe slightly higher average error rates for the 7B model, we attribute this to the higher CPU overhead for smaller models. \amey{Explain the anomalous cases -- a) arxiv-70B - NOT DONE b) chat-P95-72B - DONE}
+
+
+\vheading{Dynamic Workloads.} Next we present the evaluation of \sysname on dynamic workloads. In order to perform this evaluation, first we need to determine the request arrival rate at which we should perform this comparison. If the chosen arrival rate is too low, the system would have high idle time which is not an interesting scenario. On the other hand, if the request arrival rate is too high, the system would be overloaded where scheduling delay grows rapidly. Therefore, we evaluate \sysname's fidelity near the \textit{capacity point}, which represents the maximum arrival rate the system can sustain without overloading (\autoref{sec-syssearch}).
+
+As shown in \autoref{fig:fidelty-dynamic-trace}, \sysname achieves high fidelity ($< 5\%$ error) in almost all scenarios with request rate set to 85\% of the system capacity -- which is reflective of real production scenarios. Note that, as we approach capacity point, any small deltas in prediction can lead to significant blow up of the errors. This is because at capacity, the system is at a tipping point -- where even slight increase in the arrival rate or request processing time leads to a sharp increase in the request latency due to uncontrolled queue delays. If either the actual or simulated system runs into overload condition, the latency numbers become hard to reconcile due to large scheduling delay. However, production systems are provisioned with a buffer so that they don't tip over the critical point due to sudden bursts. Since \sysname achieves high fidelity even at high arrival rates of up to 85\% of capacity -- making it valuable in QPS range of importance. We provide additional results at different arrival rates in \autoref{sec-appendix}. 
+
+
+
+
+
+
+
+
+
+
+\subsection{What-if Analysis}
+\label{sec-eval-whatif}
+
+We leverage \syssearch for an extensive \textit{what-if} analysis to understand how the performance of a configuration changes with the workload, and how the cost of serving is impacted by Service Level Objective (SLO) requirements.
+
+
+\vheading{Inputs.} We find the optimal deployment configuration (one that maximizes QPS per dollar) for four models on three (dynamic) workloads described in \autoref{sec-eval-setup}. We allow choosing between the GPU SKUs of A100 and H100. The maximum number of GPUs available across replicas is set to 16. %
+
+\input{figures-tex/fig-parto-slo}
+
+\vheading{SLOs.} We put the following SLO constraints on the latency metrics: TTFT P90 $<$ 2s and TBT P99 $<$ 200ms. We use a more relaxed constraint of P90 for TTFT since it is a one time delay experienced by the user, as opposed to TBT which is recurrent for each output token.
+
+
+
+\vheading{Deployment Configurations.} We experiment with TP and PP dimensions of 1, 2 and 4 for each, with three iteration-level schedulers \vllm, \orcaplus and \sarathi that dynamically allocate memory for \kvcache using paged attention. \vllm is a throughput-oriented scheduler that maximizes batch size by eagerly scheduling prefills while pausing on-going decodes. \orcaplus is Orca~\cite{orca} implemented over \vllm's paged attention. \sarathi creates hybrid batches with partial prefills to avoid pausing decodes while keeping GPU utilization high. We try these schedulers with batch size 32, 64, 128, 256 and 512. Note that the batch size gets divided by number of microbatches with PP. \vllm and \orcaplus have a limit of maximum 4096 tokens per iteration while \sarathi has max 512, 1K and 2K tokens per iteration (also known as chunk size).
+
+\autoref{fig:intro:optimal-configs} shows the optimal configuration for the three models for each of the workloads, and ~\autoref{fig-cap-per-dol} shows the QPS per dollar for the optimal configuration. We summarize the key takeaways below.
+
+First, the \textit{change in workload can drastically change the optimal configuration}. For example, for the LLama2-70B model, the optimal configuration for LMSys-Chat-1M uses batch size of 256, while for BWB it is 64. This is a consequence of the high \kvcache load in BWB workload due to large decode sequences. Even the optimal GPU SKU changes from H100 for Chat-1M to A100 for BWB. 
+
+Second, even models with similar sizes can have very different performance characteristics due to variation in architectural details. For instance, \llamaL uses Group Query Attention (GQA), where as \qwenL employs Multi Head Attention (MHA) -- which translates to 8\myx higher \kvcache load. As a result, \qwenL is almost 2\myx more costly to serve and requires a different deployment configuration.
+
+
+
+Finally, from \autoref{fig-cap-per-dol} it is clear that the capacity per dollar follows the expected trend. For example, larger models have lower capacity compared to smaller models. Also, Chat-1M has the least cost due to fewer prefill and decode tokens, while BWB has the highest cost due to larger number of tokens, especially decode tokens which are more expensive to compute compared to prefill. This complete exploration costs only 125 US dollars in simulation as opposed to actual execution which would have required 1.14 million dollars. We provide a detailed cost comparison in~\autoref{table:tbl-eval-whatif}.
+
+
+\vheading{Configuration Stability.} \autoref{fig:intro:cost-of-misconfig} shows the overhead factor of using the optimal configuration for one workload, to serve a different workload on the \llamaL model. As shown, such a misconfiguration can result in a very high overhead, e.g., running \chat workload with the optimal configuration of \arxivS workload results in a 2\myx overhead! This shows that even for the same model, the cost of using a homogeneous deployment configuration can result in huge overheads, as the optimal configuration for one workload can be far from optimal for another workload.
+
+\vheading{Pareto Frontier Analysis.}  We next analyze the Pareto frontier produced by \sysname for \llamaL-\chat and \qwenL-\bwbS workloads.~\autoref{fig:pareto-curves} shows the best QPS per dollar for different configurations and the corresponding TTFT-P90 (left), TBT-P99 metrics (middle) along with the SLO complient regions. The figures on the right plot both the latency metrics for these configuration, and visualize the QPS per dollar via a temperature colormap. We summarize the key takeaways.
+
+First, \textit{configurations which are optimal on
+one metric may not satisfy the SLO constraint on the
+other metric} (these are the blue points on the Pareto curve). Second, \textit{small changes in latency SLOs can result in a significant cost overhead}. For example, for the \llamaL-\chat workload, if the TBT SLO is changed from 0.12 seconds to 0.14 seconds (a difference of only 20ms), the Pareto curve point moves from approximately $0.07$ to $0.13$, $\sim 1.85\times$ reduction in cost!
+
+
+\input{figures-tex/fig-qps-per-dollar}
+
+
+
+
+
+
+
+

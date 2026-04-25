@@ -1,0 +1,23 @@
+
+ 
+
+
+
+\begin{table*}[]
+\center
+\scalebox{0.85}{
+\begin{tabular}{c|ccc|ccc|ccc|clll} \hline
+\multirow{2}{*}{Dataset}   & \multicolumn{9}{|c|}{Request execution time (s)}  & \multicolumn{3}{|c}{Exp time (min)} \\ \cline{2-13}
+
+ & \multicolumn{3}{|c|}{Median} & \multicolumn{3}{|c|}{p75} & \multicolumn{3}{|c|}{p90} \\ \cline{2-12}
+ & \sysname & Dep & Error & \sysname & Dep & Error & \sysname & Dep & Error & \sysname & Dep \\ \hline
+ 
+LLaMA2-7B (TP-1) & 1.78	& 1.74 & +2.30\% & 4.04 & 3.95 & +2.28\% & 6.28 & 6.16 & +1.95\% & 0.5 & 12.5   \\ 
+LLaMA2-34B (TP-2) & 5.47 & 5.6 & -2.32\% & 12.25 & 12.64 & -3.09\% & 18.78 & 19.29 & -2.64\% & 0.5 & 13.1 \\
+LLaMA2-70B (TP-4) & 22.97 &	22.86 & +0.48\% & 50.84 & 51.11 & -0.53\% & 77.77 & 78.44 & -0.85\% & 0.5 & 14.5 \\
+\hline
+
+\end{tabular}}
+\caption{Comparing large scale deployment runs across 32 A100 GPUs with \sysname}
+\label{tbl-eval-e2e-stats}
+\end{table*}

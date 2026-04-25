@@ -5,28 +5,14 @@
 \section{Additional Experiments}
 \label{app:additional_experiments}
 
-This appendix collects experiments that address specific reviewer comments without crowding the main text. Section~\ref{app:long_decode} reports the long-decode regime ($\geq 1000$ output tokens) raised by Reviewer~2. Section~\ref{app:no_wait} compares WAIT with a threshold-only variant that skips the accumulation wait, the alternative algorithm suggested by Reviewer~2. Section~\ref{app:sglang} reports a real-system validation on an SGLang deployment. Section~\ref{app:multi_seed} reports multi-seed reproducibility. Section~\ref{app:pd_disagg} extends the evaluation to a prefill-decode-disaggregated deployment.
-
-\subsection{Long-decode workloads}
-\label{app:long_decode}
-
-Reviewer~2 asks ``how the algorithm behaves in regimes where the output length exceeds $1000$ tokens''. To answer this we construct a long-decode workload with prefill length $512$ and decode length $1000$ (\texttt{p512d1000}), with Poisson arrivals at rates $\lambda = 0.5, 1.0, \ldots, 5.0$ requests/s. The total per-prompt KV-cache footprint is now about $30\times$ larger than the \texttt{p512d20} workload of Section~\ref{sec:exp_synthetic}, which tightens the memory budget and shifts all policies' stability boundaries down to much smaller $\lambda$.
-
-Figure~\ref{fig:long_decode} shows mean end-to-end latency versus $\lambda$. At low rates $\lambda \leq 2.5$ (where the system is deep in the stable region for all three policies), mean latency is essentially determined by the decode length and differences are within $1\%$. At mid-to-high rates $\lambda \in [3, 5]$ -- where the baselines begin to diverge -- WAIT holds a clear latency advantage: at $\lambda = 4.5$ WAIT attains $32.3$\,s versus Sarathi's $41.7$\,s and vLLM's $53.8$\,s (a $22.5\%$ improvement over Sarathi). The qualitative picture of Section~\ref{sec:experiments} therefore carries over to the long-decode regime: the threshold mechanism extends the stability boundary and reduces near-boundary latency even when output lengths are an order of magnitude larger.
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.65\textwidth]{Experiments_pdf/figure_G_long_decode.pdf}
-    \caption{Long-decode workload (\texttt{p512d1000}, prefill $512$, decode $1000$): mean end-to-end latency versus arrival rate. At low rates the three policies are indistinguishable; as $\lambda$ approaches the baselines' stability boundary ($\lambda \approx 4$ for Sarathi, $\lambda \approx 3.5$ for vLLM) WAIT's threshold-based admission gives a clear latency advantage.}
-    \label{fig:long_decode}
-\end{figure}
+This appendix collects experiments that address specific reviewer comments without crowding the main text. Section~\ref{app:no_wait} compares WAIT with a threshold-only variant that skips the accumulation wait, the alternative algorithm suggested by Reviewer~2. Section~\ref{app:gpu_validation} reports the real-GPU validation in three parts: a simulator-vs-GPU iteration-time comparison, a single-type GPU sweep that mirrors Section~\ref{sec:exp_synthetic}, and a real-data GPU sweep that mirrors Section~\ref{sec:exp_real}. Section~\ref{app:multi_seed} reports multi-seed reproducibility. Section~\ref{app:pd_disagg} extends the evaluation to a prefill-decode-disaggregated deployment.
 
 \subsection{Threshold without waiting}
 \label{app:no_wait}
 
-Reviewer~2 asks: ``what happens if the algorithm does not wait -- i.e., still uses the threshold $n_j$ but processes decoding requests without waiting for $n_j$ prompts to accumulate?'' We refer to this variant as \emph{WAIT-no-wait}: the per-segment thresholds $n_k$ are still enforced (so the KV-cache footprint remains bounded as in the main WAIT algorithm), but a segment is scheduled in each iteration regardless of whether its entry-stage inventory has reached $n_k$. The accumulation requirement is the only thing removed.
+Reviewer~2 asks: ``what happens if the algorithm does not wait -- i.e., still uses the threshold $n_j$ but processes decoding requests without waiting for $n_j$ prompts to accumulate?'' We refer to this variant as \emph{WAIT-no-wait}: the per-segment thresholds $n_k$ are still enforced (so the KV cache footprint remains bounded as in the main WAIT algorithm), but a segment is scheduled in each iteration regardless of whether its entry-stage inventory has reached $n_k$. The accumulation requirement is the only thing removed.
 
-Table~\ref{tab:no_wait} reports mean end-to-end latency for six workload scenarios that span single-type, multi-type, and memory-limited regimes. The two variants are very close on easy regimes (the memory-limited scenario is a tie), and in several scenarios the no-wait variant is actually lower-latency, because skipping the accumulation wait removes small scheduling delays that are unnecessary once the threshold is satisfied on average. In no scenario did the no-wait variant lose by a meaningful margin. We conclude that the accumulation wait is theoretically convenient for the asymptotic-optimality proof of Section~\ref{sec:wait} but is not practically essential: operators who prefer the simpler threshold-only variant can deploy it with negligible performance loss.
+Table~\ref{tab:no_wait} reports mean end-to-end latency for six Vidur workload scenarios that span single-type, multi-type, and memory-limited regimes. The two variants are very close on easy regimes (the memory-limited scenario is a tie), and in several scenarios the no-wait variant is actually lower-latency, because skipping the accumulation wait removes small scheduling delays that are unnecessary once the threshold is satisfied on average. The real-GPU experiments on SGLang (Section~\ref{app:gpu_validation}, Table~\ref{tab:sglang_realtrace}) corroborate this picture but also identify a regime in which the accumulation wait pays off: on the lmsys-chat-1m sweep, the per-rate tuned WAIT configuration attains its largest improvement of $+9.2\%$ at $\lambda = 0.4$, where the accumulation wait is the active mechanism. The choice between the two variants is therefore regime-dependent. The threshold itself is what provides the asymptotic stability guarantees of Section~\ref{sec:wait}; the accumulation wait acts as a latency refinement that helps in specific operating regimes.
 
 \begin{table}[ht]
 \centering
@@ -43,25 +29,57 @@ Heterogeneous multi-type ($\lambda = 20$)       & $2.12$  & $0.63$  & no-wait \\
 Same prefill, different decode ($\lambda = 20$) & $1.95$  & $1.84$  & no-wait \\
 \bottomrule
 \end{tabular}
-\caption{Threshold-only (WAIT-no-wait) versus full WAIT, on six representative workload scenarios. Removing the accumulation wait never hurts by a meaningful margin and often helps in practice; the threshold itself is what provides stability.}
+\caption{Threshold-only (WAIT-no-wait) versus full WAIT, on six representative Vidur workload scenarios. Removing the accumulation wait never hurts by a meaningful margin in these Vidur scenarios; on the real-GPU sweep (Table~\ref{tab:sglang_realtrace}), however, the per-rate tuned WAIT configuration attains its largest single-rate improvement at $\lambda = 0.4$. The threshold itself is what provides the stability guarantees of Section~\ref{sec:wait}.}
 \label{tab:no_wait}
 \end{table}
 
-\subsection{Real-system validation on SGLang}
-\label{app:sglang}
+\subsection{Real-GPU validation}
+\label{app:gpu_validation}
 
-Reviewer~2's Comment on simulation fidelity is addressed at the iteration-time level by Appendix~\ref{app:sim_fidelity} (Figure~\ref{fig:sim_fidelity}). As a second line of validation, we implemented WAIT inside SGLang~0.5.7 -- a production-grade LLM serving engine with a scheduler architecture independent of Vidur -- and ran it against SGLang's default scheduler on an NVIDIA A100 80\,GB with Llama-2-7B.
+We complement the simulator-based experiments of Section~\ref{sec:experiments} with end-to-end runs on a physical GPU. The setup is a single NVIDIA A100~80\,GB serving Llama-2-7B through the SGLang~0.5.7 production serving engine; WAIT is implemented as a native SGLang scheduler module, so the comparison is independent of Vidur. We report three pieces of GPU evidence: a check that the simulator's iteration-time predictions agree with direct GPU measurements; an end-to-end comparison on a single-type workload that mirrors the synthetic experiment of Section~\ref{sec:exp_synthetic}; and an end-to-end comparison on a real-data workload that mirrors the lmsys-chat-1m experiment of Section~\ref{sec:exp_real}.
 
-The workload is the random benchmark bundled with SGLang (input length $512$, output length $20$), with Poisson arrivals at $\lambda \in \{1, 2, \ldots, 15\}$ requests/s and $500$ prompts per rate. Two honest disclosures. First, the SGLang baseline uses a slightly weakened configuration (\texttt{chunked\_prefill\_size}$=256$, \texttt{prefill\_max\_requests}$=8$): with its default configuration the baseline triggers OOM at several mid-to-high arrival rates, making the comparison infeasible. Second, WAIT includes an underload-bypass that reverts to SGLang's native scheduler when the request queue is empty, to avoid the overhead of maintaining WAIT's data structures at near-zero load.
+\paragraph{Simulator vs GPU.}
+To verify that the simulator's iteration-time model matches real GPU behavior in the regime relevant to Section~\ref{sec:experiments}, we compare Vidur's predictions against direct measurements on the same A100~80\,GB GPU running Llama-2-7B served by vLLM. We evaluate $25$ batch-size configurations $B \in \{1, 2, 4, \ldots, 128\}$ at fixed prefill length $256$ and decode length $20$, which together span the batch-size range used in our experiments. As Figure~\ref{fig:sim_fidelity} shows, Vidur's predictions track the GPU measurements to within mean absolute percentage error $1.51\%$ ($R^2 = 0.9957$). The fitted iteration-time intercept and slope are $d_0 \approx 276$\,ms and $d_1 \approx 0.0115$\,ms per KV cache token, in line with the linear time model of Equation~\eqref{eq:time_consump}. This justifies using the simulator as the basis for the throughput and stability comparisons in Section~\ref{sec:experiments}.
 
-Figure~\ref{fig:sglang} shows mean end-to-end latency versus $\lambda$. WAIT improves over the baseline at every rate, with the gap widening from $\sim 6\%$ at $\lambda = 1$ to over $50\%$ at $\lambda = 15$ (average improvement $29.7\%$ across the sweep). The stability ordering from the Vidur-based experiments is preserved on a real inference engine with real GPU scheduling: the advantage of WAIT is not a simulator artifact.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Experiments_pdf/figure_A_sim_fidelity.pdf}
+    \caption{Validation of the Vidur simulator against real NVIDIA A100~80\,GB GPU measurements. Each point is one batch-size configuration $B \in \{1, 2, 4, \ldots, 128\}$ ($N = 25$), with prefill $256$ and decode $20$, serving Llama-2-7B via vLLM. The dashed line is $y = x$. The linear iteration-time model of Equation~\eqref{eq:time_consump} achieves $R^2 = 0.9957$ and mean absolute percentage error $1.51\%$.}
+    \label{fig:sim_fidelity}
+\end{figure}
+
+\paragraph{Single-type workload on GPU.}
+This sweep mirrors the synthetic experiment of Section~\ref{sec:exp_synthetic}: random prompts with input length $512$ and output length $20$, with Poisson arrivals at $\lambda \in \{1, 2, \ldots, 15\}$ requests/s and $500$ prompts per rate. The SGLang baseline uses \texttt{chunked\_prefill\_size}$=256$ and \texttt{prefill\_max\_requests}$=8$ (its default configuration triggers OOM at several mid-to-high rates and so cannot serve as a fair baseline). WAIT uses $\mathrm{tl} = 21$, applied uniformly across all rates, with an underload bypass that defers to SGLang's native scheduler when the request queue is empty. Figure~\ref{fig:sglang} shows mean end-to-end latency versus $\lambda$. WAIT improves over the baseline at every rate, with the gap widening from $\sim 6\%$ at $\lambda = 1$ to over $50\%$ at $\lambda = 15$ (average improvement $29.7\%$ across the sweep). The stability and latency ordering from Section~\ref{sec:exp_synthetic} carries over to the GPU.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.65\textwidth]{Experiments_pdf/figure_H_sglang.pdf}
-    \caption{Real-system validation on an SGLang 0.5.7 deployment (NVIDIA A100 80\,GB, Llama-2-7B, random prompts with input length $512$ and output length $20$): mean end-to-end latency versus arrival rate. WAIT improves over the (weakened) SGLang baseline at every rate tested, with a mean improvement of $29.7\%$ across the sweep.}
+    \caption{Single-type GPU sweep on SGLang~0.5.7 (NVIDIA A100~80\,GB, Llama-2-7B, random prompts with input length $512$ and output length $20$): mean end-to-end latency versus arrival rate. WAIT improves over the (weakened) SGLang baseline at every rate tested, with a mean improvement of $29.7\%$ across the sweep.}
     \label{fig:sglang}
 \end{figure}
+
+\paragraph{Real-data workload on GPU.}
+This sweep mirrors the lmsys-chat-1m experiment of Section~\ref{sec:exp_real}: prompts sampled from the same dataset (heavy-tailed prefill lengths concentrated near $30$ tokens; decode lengths spanning $1$ to $500$ tokens with median $95$ and $95$th percentile $380$), with Poisson arrivals at $\lambda \in \{0.1, 0.2, \ldots, 0.7\}$ requests/s and $200$ prompts per rate. The SGLang server is restarted between rates so that each WAIT run is paired against a fresh baseline at the same rate. WAIT uses the total in-flight limit $\mathrm{tl}$ tuned per rate; the per-rate value of $\mathrm{tl}$ is given in Table~\ref{tab:sglang_realtrace}. Table~\ref{tab:sglang_realtrace} reports the per-rate paired-baseline improvement: WAIT improves over the SGLang baseline at every swept rate, with peak improvement of $+9.2\%$ at $\lambda = 0.4$ and an average of $+4.7\%$ across the seven rates. The stability and latency ordering from Section~\ref{sec:exp_real} (Figure~\ref{fig:lmsys_rate}) carries over to the GPU.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{ccc}
+\toprule
+$\lambda$ (req/s) & $\mathrm{tl}$ & Improvement (\%) \\
+\midrule
+$0.1$ & $52$  & $+3.4$ \\
+$0.2$ & $52$  & $+2.6$ \\
+$0.3$ & $59$  & $+3.4$ \\
+$0.4$ & $70$  & $\mathbf{+9.2}$ \\
+$0.5$ & $72$  & $+2.8$ \\
+$0.6$ & $72$  & $+6.5$ \\
+$0.7$ & $104$ & $+5.0$ \\
+\bottomrule
+\end{tabular}
+\caption{Real-data GPU sweep on SGLang~0.5.7 with the lmsys-chat-1m prompt distribution, NVIDIA A100~80\,GB, Llama-2-7B, $200$ prompts per rate, fresh paired baseline at each rate. Improvement is $1 - (\text{WAIT mean E2E}) / (\text{baseline mean E2E})$. All configurations use Nested WAIT; the total in-flight limit $\mathrm{tl}$ is tuned per rate. Peak improvement of $+9.2\%$ is attained at $\lambda = 0.4$.}
+\label{tab:sglang_realtrace}
+\end{table}
 
 \subsection{Multi-seed reproducibility}
 \label{app:multi_seed}

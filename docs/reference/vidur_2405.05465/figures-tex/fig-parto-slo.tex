@@ -1,0 +1,22 @@
+
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{graphs/llama70b_Chat1M_ttft_tbt_90_99_2.0_0.2.pdf}
+        \caption{\small \llamaL -- \chat}
+        \label{fig:pareto-slo-chat}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.9\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{graphs/qwen_ArxivSum_ttft_tbt_90_99_2.0_0.2.pdf}
+        \caption{\small \qwenL -- \arxivSshort}
+        \label{fig:pareto-slo-bwb}
+    \end{subfigure}
+    \caption{
+   Capacity per dollar for different deployment configurations vs corresponding TTFT-P90 (left) and  TBT-P99 (middle). Also show is the Pareto curve for these configurations. Shaded area corresponds to region where the corresponding SLO is satisfied. (right) Both latency metrics for these configuration, with capacity per dollar visualized via a temperature colormap. In the left and middle plots, green points correspond to configurations which satisfy SLOs for both metrics. Note that blue points on a Pareto curve show that, even Pareto curve points for one metric may not satisfy SLO for the other metric.
+   }
+    \label{fig:pareto-curves}
+\end{figure*}

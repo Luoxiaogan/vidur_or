@@ -1,0 +1,54 @@
+\section{\sysbench}
+\label{sec-benchmark}
+\sysbench is a benchmark suite for easy evaluation performance evaluation of LLM inference systems that comprises of plug-and-play support for a variety of (a) workload patterns, (b) scheduling, batching, and routing policies, and (c) serving frameworks.
+
+\input{tables/bench_workloads}
+
+\subsection{Datasets and workloads}
+The overall performance of LLM inference is highly sensitive to the type of workloads such as the number of input and output tokens in a given query e.g., the decode phase can be as high as $200\times$ more expensive than the prefill phase~\cite{sarathi}. Different workload patterns can therefore influence system performance in complex ways. For instance, vLLM incrementally allocates physical memory for the \kvcache in order to fit a large batch size on the GPU. This works well when the number of decode tokens is high e.g., in chat applications~\cite{lmsyschat1m}. In contrast, incremental memory allocation is less useful if the prompt length is much higher than the number of output tokens as in summarization tasks.
+
+\sysbench provides a set of workloads curated from publicly available datasets (see \autoref{table:workloads}). These can be used to evaluate system performance for varying request types, arrival rates etc. or to tune the performance sensitive parameters of various components in the serving system. 
+
+\subsection{Performance metrics}
+\sysbench provides a comprehensive set of system-level performance metrics as discussed below:
+
+\noindent\textbf{Operator-level metrics.} This includes each operator's input size and execution time which can be used to identify and optimize the heavy-duty operators eg. \textit{attn\_prefill}, \textit{mlp\_up\_proj} etc. \\
+\noindent\textbf{Request-level metrics.} These include per-request metrics such as the scheduling delay, prefill completion time, time-to-first-token (TTFT), and time-between-tokens (TBT). Furthermore, any additional metrics of interest can be easily added, e.g., we added support to track how many times vLLM preempts or restarts each request when it runs out of GPU memory for \kvcache. \\
+\noindent\textbf{Replica-level metrics.} These include metrics such as the batch size, the number of tokens processed in each iteration, busy and idle times as well as the memory and compute utilization of each replica. \\
+\noindent\textbf{Hardware metrics.} These capture cluster-wide GPU FLOPs and memory utilization. We plan to extend these to also capture the cluster's energy consumption.
+
+
+
+\input{figures-tex/fig-opt}
+
+\section{\syssearch}
+\label{sec-syssearch}
+When deploying an inference system, the system operator needs to take into account various aspects. For example, there may be SLOs on latency metrics such as TTFT and TBT or minimum QPS that needs to be supported. At the same time, the operator can try multiple configurations such as the GPU SKU (e.g. A100 vs H100) to use for deployment, the parallelization strategy (TP vs PP), scheduling policy (Orca, vLLM, Sarathi-Serve, etc.), replication degree, etc. \syssearch is a tool which helps find the optimal cost configurations to deploy an inference system while satisfying the desired SLO constraints. \syssearch leverages our simulator to compute the optimal configuration in an efficient manner. Along with the optimal configuration, \syssearch also gives detailed visualizations of how changes in configurations impact cost, TTFT, TBT, etc.
+
+
+\input{figures-tex/fig-fidelity-static-trace}
+
+
+\noindent\syssearch has the following main components:
+
+\vheading{Input.} The input to the search tool consists of the LLM model, the workload (request characteristics can significantly affect inference performance), available GPU SKUs, and maximum number of GPUs in a replica.
+
+\vheading{Constraints.} SLOs on metrics such as TTFT and TBT.
+
+\vheading{Search space.} The search tool has the freedom to configure the parallelism strategy (TP vs PP), parallelism degree, scheduling policy, scheduler specific parameters (e.g. chunk size in Sarathi), batch size, choice of GPU, SKU, etc.
+
+
+\vheading{Optimization objective.} \syssearch helps the operator maximize QPS per dollar. Consider a deployment with 16 A100 GPUs. \textit{Capacity} of the system is defined as the maximum queries per second that it can support without the queuing delay blowing up. Specifically we constrain the P99 scheduling delay to be under 5 seconds. This QPS value is divided by the cost of renting 16 A100 GPUs per hour to get the QPS per dollar value.
+
+Given the above, \syssearch needs to solve a constrained optimization problem to find the optimal configuration in the search space. \syssearch starts with first enumerating all possible deployment configurations of the system. For each configuration, we can run our simulator on the input workload at a specified QPS and predict the metrics such as TTFT and TBT. Note, however, that the possible QPS values to pass to the simulator can be infinite. To get around this, we instead target to find the maximum QPS that a given configuration can support. We do this by tracking the scheduling delay of requests for a given configuration and QPS. Note that any system configuration will have a maximum QPS capacity for a given workload at which it can process the input requests without accumulating the request queue. We use this property to find the maximum QPS supported by a system via a simple binary search which searches for the maximum QPS which does not increase the scheduling delay beyond a threshold. Each step of this binary search involves running our simulator for the corresponding configuration and QPS. We parallelize these runs by running each search on a separate core. After this search, we have for each configuration, the maximum QPS which is supported by the system. Finally, \syssearch analyzes this data to output the optimal configuration and also generates visualizations of how changes in configurations impact the various metrics.
+
+
+Since the number of configurations that need to be evaluated can be very large (in 1000s), doing a na\"ive search on actual hardware will be extremely costly. At the same time, a suboptimal choice of configuration can be very costly in the long run. Moreover, since the optimal configuration depends on the input workload, and the workload can change over time; it may be prudent to repeat this search whenever the workload characteristics have diverged from the original workload. The use of simulator in \syssearch makes this practical, by reducing this search cost by many orders of magnitude. We leverage \syssearch for our \textit{what-if} analysis in ~\autoref{sec-eval-whatif}.
+
+Note that while \syssearch is primarily designed for configuration optimization of online serving systems, it can be repurposed for offline inference scenarios by changing the objective function from QPS per Dollar to an alternate objective like the makespan metric.
+
+
+
+
+
+

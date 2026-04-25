@@ -1,0 +1,59 @@
+\section{Background and Motivation}
+\label{sec-bgk}
+\label{sec:back}
+
+\subsection{Overview of LLMs}
+\label{sec:back:overview}
+LLMs utilize the transformer architecture based on the self-attention mechanism~\cite{paper:attention} as their core building block. The self-attention mechanism helps a language model learn the relationship between different elements of an input sequence and subsequently produce the output sequence. An LLM consists of two dominant sub-modules, self-attention and multilayer perceptron (MLP). Various LLMs have been developed in recent years using a variation of these modules (e.g., GPTs, LLaMAs, Falcons). Primarily, these models differ only in terms of the embedding size, the number of transformer blocks, and the attention mechanism used by the model.
+
+\subsection{LLM Inference Efficiency Optimizations}
+\label{sec:back:efficiency}
+LLM inference request processing consists of two distinct phases -- prefill and decode. The prefill phase processes the entire user input prompt and produces the first output token. Subsequently, output tokens are generated one at a time in an autoregressive manner. During this decode phase, the token generated in the previous step is passed through the model to generate the next token until a special \textit{end-of-sequence} token is generated at which point the request processing completes. The decode process requires access to the key and value activations of the previously processed tokens to perform the attention operation. To avoid repeated computation, contemporary LLM inference systems store them in \kvcache.
+
+
+Given the immense cost of LLM inference, LLM inference efficiency has become an active area of systems research. To this end, multiple optimization mechanisms have been proposed recently. Each of these techniques make different tradeoffs. For cost effective inference, right set of optimizations should be used be composed based on the specific application requirements. For example, Tensor Parallelism (TP) is a common strategy to parallelize LLM inference~\cite{megatron,efficiently-scaling-transformer-inference}. 
+TP shards each layer across the participating GPUs by splitting the model weights and \kvcache equally across GPU workers. TP 
+(1) improves inference throughput with higher batch sizes, 
+(2) lowers the latency of inference by splitting each operator across multiple GPUs. However, TP involves frequent blocking communication between workers, and thus requires expensive hardware with specialized high bandwidth interconnects like NVLINK. Alternatively, Pipeline Parallelism (PP) is another parallelization strategy in which the model is partitioned into stages of consecutive transformer blocks. Each GPU is responsible for computing a stage and output activations are transferred across GPU boundaries via send/recv operations. PP has a much more favorable compute-communication ratio compared to TP, but can suffer from pipeline bubbles (stalls due to imbalance between stages). 
+
+Recently, \citealt{sarathi-serve} identified an inherent tradeoff in LLM inference scheduler design and proposed classification of existing LLM inference schedulers into two categories -- prefill prioritizing \cite{orca, vllmpaper} and decode prioritizing \cite{fastertransformer}. Prefill prioritizing schedules achieve higher throughput, by generating schedules with higher batch sizes, but suffer higher latency cost. Decode prioritizing schedulers can achieve low latency but at the cost of lower throughput \cite{vllmpaper}. Sarathi-Serve \cite{sarathi-serve} tries to mitigate this tradeoff by utilizing the computational slack in decode phase. Another set of recent works, Splitwise \cite{splitwise} and DistServe \cite{distserve} tackle this latency-throughput tradeoff by splitting the computation of prefill and decodes on separate devices. 
+
+
+\noindent{\bf Takeaway:} \textit{Various systems optimizations provide a rich cost-latency tradoff. The right techniques to use depend on the application requirements and hardware availability.} 
+
+\subsection{LLM Inference Configuration Space}
+Control knobs like parallelism strategy, choice of scheduler, chunk size, batch size, SKU, etc. induce a large configuration space (\autoref{fig:intro:optimal-configs}) for LLM deployment. Furthermore,
+we make an important observation (\autoref{fig:intro:best-cofig}) that the optimal configuration (defined as a combination of specific choices for each control knob) is not simply a function of a specific model. But rather, the optimal configuration varies as a function of both the model $m$ and the trace $t$ evaluated on that model. Thus the complexity of configuration search is $O(|M|\cdot |T|)$, where $M$ is a set of all models of interest and $T$ is a set of workloads. With a rapid increase in both the number of models and downstream applications, the cost of optimal configuration search simply doesn't scale. And yet, misconfiguration is prohibitively expensive. For example, ~\autoref{fig:intro:cost-of-misconfig} shows that using the optimal configuration of one trace can have up to 2\myx
+cost differential on a different trace.
+
+\noindent{\bf Takeaway:} \textit{There is no single best deployment configuration for a model -- rather the choice of configuration should be made in a workload-aware fashion.}
+
+
+
+
+With the cost of obtaining a single point in~\autoref{fig:intro:best-cofig} as high as \$97k,  the high cost of misconfiguration, and the size of the search space growing with both models and traces, this begs a fundamental research question: \textit{is it possible to find a performant configuration without requiring access to expensive experimental resources at a fraction of the cost?}
+We explore this question in depth by proposing a simulation-based approach for LLM configuration search with \sysname, reducing the cost by several orders of magnitude.
+
+
+
+
+
+
+\section{Challenges in Simulating LLM Inference}
+State-of-the-art DNN simulation frameworks (Daydream~\cite{daydream}, Habitat~\cite{habitat} and Proteus~\cite{proteus}) focus on training jobs. Building a large-scale inference simulator, especially for LLMs, involves multiple challenges that are not addressed by the existing simulators. We enumerate them in detail below.
+
+\vheading{Time Scale.} Conventional DNN training workloads are typically compute-bound workload where each iteration  executes for 100s of milliseconds~\cite{daydream}. In comparison, LLM inference is a far more latency-sensitive task where iterations can be much shorter (a few milliseconds each)~\cite{orca, vllmpaper}. Therefore, simulating LLM inference requires predicting iteration times at a much finer granularity. %
+
+\vheading{Varying Iteration Times.} Compared to traditional DL workloads where each iteration performs the same amount of compute and has predictable minibatch latency~\cite{gandiva}, latency of different iterations can vary significantly during LLM inference. The variation in inference runtimes come from multiple sources. First, LLM inference consists of different phases -- prefill and decode, each with a different compute characteristic and runtime. Second, the requests being processed may have a large variation in their sequence length (due to varying prompt lengths or number of decode tokens generated), resulting in varying runtimes. Third, the batch size during online inference keeps varying depending on the system load and workload characteristics. Moreover, the composition of a batch can accommodate requests from both prefill and/or decode phases, again adding to the runtime variation.
+
+\vheading{Cascading Errors.} In training workloads, the batch composition is uniform across all batches, and the execution of each batch is independent. However, during inference, requests arrive in the system dynamically, and if the runtime prediction of any batch has significant errors, that can change in the batching pattern. Thus small errors in individual batch predictions cascade over time and lead to aggregate errors.
+
+
+
+
+
+
+
+
+
+

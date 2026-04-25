@@ -6,7 +6,7 @@ First, we extend Nested WAIT to handle time-varying arrival rates $\lambda_j^t$ 
 
 \subsection{Time-Varying Arrival Rates}\label{sec:time_varying}
 
-Time-varying arrival rates capture daily patterns in real LLM services: morning traffic surges, afternoon lulls, evening peaks. The key insight is that our threshold mechanism remains valid as long as the \textbf{accumulated arrivals} during each iteration window stay below the completion capacity. Formally, we replace constant rates $\lambda_j$ with time-dependent rates $\lambda_j^t$, assumed continuous and uniformly bounded by $\lambda_{\max} < \infty$ to prevent unbounded bursts.
+Time-varying arrival rates capture daily patterns in real LLM services: morning traffic surges, afternoon lulls, evening peaks. The threshold mechanism remains valid as long as the accumulated arrivals during each iteration window stay below the completion capacity. Formally, we replace constant rates $\lambda_j$ with time-dependent rates $\lambda_j^t$, assumed continuous and uniformly bounded by $\lambda_{\max} < \infty$ to prevent unbounded bursts.
 
 We analyze the asymptotic optimality of the Nested WAIT algorithm under time-varying arrival rates, denoted $\lambda_j^t$ for prompt type $j \in [m]$ at time $t \in [0, T]$.
 
@@ -56,7 +56,7 @@ Additionally, the memory usage remains below $M^{\zeta,\pi}$ with probability at
 
 The extension to time-varying rates preserves the dimensionality reduction structure from Theorem~\ref{thm:nested_wait_heavy_traffic}. The key adaptation is that threshold conditions~\eqref{eq:nested_wait_thresholds_time_varying} must hold at every time instant $t \in [0,T]$, replacing constant rates $\lambda_j$ with accumulated arrivals $\lambda_j[t, t+\Delta t]$ over each iteration window. Because arrival rates are continuous and bounded, the coupling construction remains valid: prompts transitioning from segment $k$ to $k+1$ still couple to a Poisson process, now with time-varying rate $\sum_{j=k+1}^m \lambda_j^t$. The Lindley recursion and Doob's maximal inequality apply identically, bounding queue lengths with the same logarithmic overhead. Appendix~\ref{appendix:: proof of nested optimality, time varying.} provides the detailed proof.
 
-\subsection{Segment Design}
+\subsection{Segment Design}\label{sec:segment_design}
 
 When LLM systems handle hundreds of distinct output lengths (e.g., $m=500$ in the LMSYS dataset~\cite{zheng2023lmsys}), maintaining individual thresholds for each type becomes impractical: the algorithm must track queue lengths separately for every output length, increasing memory overhead and implementation complexity. The \textbf{segment-wise design} addresses this by grouping similar output lengths into $L \leq m$ segments, where each segment $k$ aggregates types with comparable decode lengths. This reduces algorithmic complexity from $O(m)$ to $O(L)$ while preserving asymptotic optimality—prompts still classify themselves on-the-fly, but now at segment boundaries rather than individual type boundaries.
 
@@ -112,7 +112,7 @@ We validate the segment-wise design numerically using the LMSYS dataset~\cite{zh
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{Experiments_pdf/lambda_list.pdf}
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/lambda_list.pdf}
     \caption{Arrival rate construction from real data, with rates proportional to normalized frequencies.}
     \label{fig:lambda_list}
 \end{figure}
@@ -123,26 +123,26 @@ Figures \ref{fig:fixed_T_200_rate_50_delta_0.1_1e-5}, \ref{fig:fixed_T_200_rate_
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{Experiments_pdf/total_rate=50,T=200.pdf}
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=50,T=200.pdf}
     \caption{Memory usage proportions under low arrival rate (total rate = 50, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
     \label{fig:fixed_T_200_rate_50_delta_0.1_1e-5}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{Experiments_pdf/total_rate=500,T=200.pdf}
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=500,T=200.pdf}
     \caption{Memory usage proportions under high arrival rate (total rate = 500, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
     \label{fig:fixed_T_200_rate_500_delta_0.1_1e-5}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{Experiments_pdf/total_rate=50,delta=0.001,T=20or2000.pdf}
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=50,delta=0.001,T=20or2000.pdf}
     \caption{Memory usage proportions with varying time horizons (total rate = 50, $\delta = 0.001$). Left: $T = 20$; Right: $T = 2000$.}
     \label{fig:fixed_delta_0.001_rate_50_T_20_2000}
 \end{figure}
 
-These extensions demonstrate that the core threshold-based design—eviction prevention through controlled admission—remains robust to realistic deployment conditions. Time-varying arrival rates and segment-wise grouping introduce no fundamental barrier; the coupling-based analysis extends naturally with logarithmic overhead. Section~\ref{sec:numerical} validates these theoretical guarantees through experiments on real workloads, showing that Nested WAIT with $L=10$ segments matches the performance of the full $m$-type algorithm while significantly reducing implementation complexity.
+These extensions demonstrate that the core threshold-based design, eviction prevention through controlled admission, remains robust to realistic deployment conditions. Time-varying arrival rates and segment-wise grouping introduce no fundamental barrier; the coupling-based analysis extends naturally with logarithmic overhead. Section~\ref{sec:experiments} validates these theoretical guarantees through experiments on real workloads, showing that Nested WAIT with $L=10$ segments matches the performance of the full $m$-type algorithm while significantly reducing implementation complexity.
 
 % \subsection{Different prefill length}
 % For the analysis of Nested WAIT, we assume that the prefill lengths of different prompts are all $l$.
@@ -151,4 +151,3 @@ These extensions demonstrate that the core threshold-based design—eviction pre
 
 % \subsection{Optimality under arbitrary segments}
 % \gan{Maybe this subsection should be put later.}
-

@@ -102,7 +102,9 @@
 \newskip\spgetwdeqskip%
 
 \newif\ifEquationvalidate%
-\Equationvalidatetrue
+% Disable intrusive equation-width warning boxes by default.
+% Re-enable manually with \Equationvalidatetrue when layout checking is needed.
+\Equationvalidatefalse
 
 \renewenvironment{equation}{%
 \ifEquationvalidate

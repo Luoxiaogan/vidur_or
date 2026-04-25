@@ -1,0 +1,29 @@
+\begin{figure*}
+    \centering
+        \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{graphs/dynamic_fidelity_v8_request_e2e_time_normalized_75_p50.pdf}
+        \caption{\small Median normalized end-to-end  latency at 75\% of Maximum Capacity}
+        \label{fig:fidelty-dynamic-trace-75-p50}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{graphs/dynamic_fidelity_v8_request_e2e_time_normalized_75_p95.pdf}
+        \caption{\small P95 normalized end-to-end  latency at 75\% of maximum capacity}
+        \label{fig:fidelty-dynamic-trace-75-p95}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[trim={0 0 0 17.8}, clip, width=0.9\linewidth]{graphs/dynamic_fidelity_v8_request_e2e_time_normalized_95_p50.pdf}
+        \caption{\small Median normalized end-to-end  latency at 95\% of maximum capacity}
+        \label{fig:fidelty-dynamic-trace-95-p50}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{graphs/dynamic_fidelity_v8_request_e2e_time_normalized_95_p95.pdf}
+        \caption{\small P95 normalized end-to-end  latency at 95\% of Maximum Capacity}
+        \label{fig:fidelty-dynamic-trace-95-p95}
+    \end{subfigure}
+    \caption{\small Fidelity of \sysname's execution time predictions across four models and three \textit{dynamic} workload traces at different arrival rates.}
+    \label{fig:fidelty-dynamic-trace-95}
+\end{figure*}

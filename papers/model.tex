@@ -64,7 +64,7 @@ During the inference process, each prompt is divided into discrete units known a
 
 \textbf{Prompt Characteristics}: Prompts arrive stochastically and are classified into \( m \) distinct types according to their input / output lengths, indexed by \( j \in \{1, \dots, m\} \). We assume that prompts of type \( j \) arrive according to a Poisson process with rate \( \lambda_j \).
 % (however, our algorithms and analysis can be extended to more general cases with varying arrival rates, which is left in Appendix \ref{sec:extension}).
-Each prompt's memory footprint depends on its processing stage. A prompt of type \( j \) has the following properties:
+Each prompt's memory consumption depends on its processing stage. A prompt of type \( j \) has the following properties:
 \begin{equation*}
     \left\{
     \begin{aligned}
@@ -97,7 +97,7 @@ In general, consider a batch composed of:
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.6\linewidth]{Experiments_pdf/fig_batching1.pdf}
+    \includegraphics[width=0.55\linewidth]{Experiments_pdf/fig_batching1.pdf}
     \caption{Example of batching and scheduling.}
     \label{fig:batching_example}
 \end{figure}
@@ -107,29 +107,29 @@ Experiments in \cite{agrawal2023sarathi,kwon2023efficient,zhong2024distserve} sh
 \label{eq:time_consump}
     \tau = d_0 + d_1 \cdot \underbrace{\left( \sum_{i=1}^{n_1} l_{j(i)} + \sum_{i'=1}^{n_2} (l_{j(i')} + s_{i'}) \right)}_{\text{Total KV cache size in batch}},
 \end{equation}
-where \( d_0 \) denotes the fixed overhead time associated with processing a batch, and \( d_1 \) represents the time cost per unit of KV cache memory. Equation~\eqref{eq:time_consump} shows that iteration time scales linearly with total KV cache size. The fixed overhead $d_0$ has an important implication: \textit{to maximize throughput, we should use memory as fully as possible}. Larger batches amortize the fixed cost $d_0$ across more prompts, improving efficiency. However, this must be balanced against the memory constraint~\eqref{eq:memory_constraint} to avoid eviction. Figure \ref{fig:inference time} provides a numerical validation of this modeling. We deploy Llama-7B and Llama-13B on a single L20 GPU to test time cost per iteration, using batches consisting of different number of tokens repeated 20 times. The result is highly consistent with our model.
+where \( d_0 \) is the fixed per-batch overhead and \( d_1 \) is the marginal time cost per unit of KV cache memory. This form makes the throughput trade-off explicit: larger batches amortize \( d_0 \) over more prompts, but the resulting increase in KV cache load pushes the system toward the memory constraint~\eqref{eq:memory_constraint} and raises eviction risk. Figure~\ref{fig:inference time} validates this linear approximation on a single L20 GPU using Llama-2-7B and Llama-2-13B. For the A100-based experiments in Section~\ref{sec:experiments}, Appendix~\ref{app:gpu_validation} reports a separate calibration of the same model against direct A100 measurements, yielding \( d_0 \approx 276 \)\,ms and \( d_1 \approx 0.0115 \)\,ms per KV cache token over the batch-size range used there.
 
-The linear model~\eqref{eq:time_consump} is most accurate when: (i) batches are decode-dominated, as each decode iteration processes one token per prompt and the computational cost is dominated by KV cache memory access; (ii) the system employs prefill-decode disaggregation \citep{zhong2024distserve,patel2024splitwise}, where the decode server handles only decode operations, making Eq.~\eqref{eq:time_consump} exact. In mixed prefill-decode batches, the linear model provides a good approximation when prefill lengths are similar across prompts.
+The linear model~\eqref{eq:time_consump} is most accurate in decode-dominated regimes, where each iteration processes one token per prompt and the computational cost is dominated by KV cache memory access. It is exact under prefill-decode disaggregation \citep{zhong2024distserve,patel2024splitwise}, where prefill and decode are processed on different devices and the decode-side server handles only decode operations. In mixed prefill-decode batches, it remains a good approximation when prefill lengths are similar across prompts.
 
-More generally, iteration time can exhibit piecewise linear behavior across different operating regimes. For example, \cite{li2025throughput} models iteration time as $\tau(b') = c + a \cdot \max\{0, b' - b_0\}$, where iteration time is constant for small batch sizes and grows linearly beyond a threshold $b_0$. This captures the transition between compute-bound and memory-bound regimes: when batches are small, GPU cores are the bottleneck; when batches are large, memory bandwidth dominates. Our algorithms and analysis extend naturally to such piecewise linear models. The threshold mechanism in WAIT (Section~\ref{sec:wait}) and Nested WAIT (Section~\ref{sec:nested_wait}) controls the number of prompts in each decode stage, ensuring the system operates within safe memory limits regardless of whether iteration time is strictly linear or piecewise linear. The key insight—balancing arrivals and completions to approach the fluid equilibrium—remains valid as long as iteration time scales predictably with batch composition. We adopt the simplified linear model~\eqref{eq:time_consump} for tractability in our theoretical analysis, while noting that the empirical validation in Figure~\ref{fig:inference time} confirms this approximation is accurate in the decode-dominated regime where our algorithms operate.
+More generally, iteration time can be piecewise linear across operating regimes. For example, \cite{li2025throughput} models it as $\tau(b') = c + a \cdot \max\{0, b' - b_0\}$, so iteration time is constant for small batches and grows linearly once the batch size exceeds a threshold $b_0$. This form captures the transition from compute-bound to memory-bound operation. Our algorithms and analysis extend naturally to such models: the threshold mechanism in WAIT (Section~\ref{sec:wait}) and Nested WAIT (Section~\ref{sec:nested_wait}) still controls the number of prompts in each decode stage, and the design principle of balancing arrivals and completions to approach the fluid equilibrium remains unchanged as long as iteration time scales predictably with batch composition. We adopt the simplified linear model~\eqref{eq:time_consump} for tractability, and Figure~\ref{fig:inference time} shows that it is accurate in the decode-dominated regime where our algorithms operate.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.6\linewidth]{Experiments_pdf/inference_time_comparison.pdf}
-    \caption{Inference time of Llama-7B and Llama-13B with different number of tokens in the batch on a single L20 GPU}
+    \includegraphics[width=0.55\linewidth]{Experiments_pdf/inference_time_comparison.pdf}
+    \caption{Inference time of Llama-2-7B and Llama-2-13B with varying number of tokens per batch on a single L20 GPU.}
     \label{fig:inference time}
 \end{figure}
 
 \subsection{Memory Constraint and Challenges}
 
-Unlike traditional scheduling where job sizes are fixed, LLM inference faces a unique challenge: prompts occupy memory that \textbf{grows during decode}. Each generated token adds one unit to the prompt's KV cache, causing the memory footprint to expand continuously until completion. This dynamic growth creates eviction risks even when total capacity appears sufficient.
+Unlike traditional scheduling where job sizes are fixed, LLM inference faces a unique challenge: prompts occupy memory that \textbf{grows during decode}. Each generated token adds one unit to the prompt's KV cache, causing its memory consumption to grow continuously until completion. This dynamic growth creates eviction risks even when total capacity appears sufficient.
 
 \textbf{Memory Constraint}: At all times $t$, the total KV cache stored on GPU must not exceed capacity $C$:
 \begin{equation}
 \label{eq:memory_constraint}
 \sum_{i \in \mathcal{G}^t} (l_{j(i)} + s^t_i) \le C,
 \end{equation}
-where $\mathcal{G}^t$ denotes the set of prompts whose KV caches are stored on GPU at time $t$. This includes both prompts actively processed in the current batch $B^t \subseteq \mathcal{G}^t$ and prompts that are preempted but retain their KV caches on GPU. Here $j(i)$ is the type of prompt $i$, and $s^t_i \in \{0, 1, \dots, l_{j(i)}'\}$ is its current stage. Unlike traditional scheduling where job sizes are fixed, the memory footprint $l_{j(i)} + s^t_i$ \textit{grows dynamically} as decode progresses ($s^t_i$ increases each iteration). This dynamic growth creates the risk of \textit{eviction}: if memory becomes insufficient to satisfy the constraint~\eqref{eq:memory_constraint}, ongoing prompts must be removed from the GPU and their KV caches discarded. When eviction is necessary, prompts are removed in \textbf{LIFO order} (most recently admitted prompts are evicted first) until sufficient memory is freed. Evicted prompts lose all accumulated computation and must restart from the prefill phase (stage $s=0$), re-entering the scheduling queue as new arrivals. This creates a vicious cycle: eviction temporarily frees memory, but restarted prompts compete for resources again, potentially triggering further evictions---a phenomenon we call \textit{cascading failure}. The following example illustrates this mechanism.
+where $\mathcal{G}^t$ denotes the set of prompts whose KV caches are stored on GPU at time $t$. This includes both prompts actively processed in the current batch $B^t \subseteq \mathcal{G}^t$ and prompts that are preempted but retain their KV caches on GPU. Here $j(i)$ is the type of prompt $i$, and $s^t_i \in \{0, 1, \dots, l_{j(i)}'\}$ is its current stage. Unlike traditional scheduling where job sizes are fixed, the per-prompt memory consumption $l_{j(i)} + s^t_i$ \textit{grows dynamically} as decode progresses ($s^t_i$ increases each iteration). This dynamic growth creates the risk of \textit{eviction}: if memory becomes insufficient to satisfy the constraint~\eqref{eq:memory_constraint}, ongoing prompts must be removed from the GPU and their KV caches discarded. When eviction is necessary, prompts are removed in \textbf{LIFO order} (most recently admitted prompts are evicted first) until sufficient memory is freed. Evicted prompts lose all accumulated computation and must restart from the prefill phase (stage $s=0$), re-entering the scheduling queue as new arrivals. This creates a vicious cycle: eviction temporarily frees memory, but restarted prompts compete for resources again and can trigger further evictions, a phenomenon we call \textit{cascading failure}. The following example illustrates this mechanism.
 
 \begin{example}[Dynamic Memory Growth and Eviction]
 \label{ex:memory_growth}
@@ -145,13 +145,13 @@ Suppose the GPU has capacity $C=12$ units. A batch processes 4 prompts at prefil
 Now consider a scenario where 6 new prompts arrive simultaneously while 3 prompts are already decoding:
 \begin{enumerate}
     \item \textbf{Current state}: 3 prompts in decode occupy $3 \times 2 = 6$ units.
-    \item \textbf{Admit all 6 for prefill}: After prefill, these 6 prompts advance to decode. The 3 existing decode prompts complete. System now has 6 prompts in decode, occupying $6 \times 2 = 12$ units---\textbf{memory is full}.
+    \item \emph{Admit all 6 for prefill.} After prefill, these 6 prompts advance to decode. The 3 existing decode prompts complete. The system now has 6 prompts in decode, occupying $6 \times 2 = 12$ units, so memory is full.
     \item \textbf{Next batch}: 4 new prompts arrive. To prefill them (needing $4 \times 1 = 4$ units), we must \textbf{evict} 2 decode prompts to free space.
     \item \textbf{Evicted prompts restart}: The 2 evicted prompts lose their KV caches and return to stage $s=0$, re-entering the queue as new arrivals.
     \item \textbf{Cascade}: These restarted prompts compete with new arrivals. The imbalance persists, triggering repeated evictions.
 \end{enumerate}
 
-This example reveals the \textbf{cascading eviction problem} our algorithms target. Even with $C \geq M^*$ (the equilibrium memory from our fluid analysis, Section~\ref{sec:fluid}), poor admission control triggers this cascade, making the system unstable. The eviction-restart cycle can persist indefinitely, degrading throughput significantly (Example~\ref{ex:fcfs_cascade} quantifies this for FCFS, showing 12-25\% throughput loss).
+This example reveals the \textbf{cascading eviction problem} our algorithms target. Even with $C \geq M^*$ (the equilibrium memory from our fluid analysis, Section~\ref{sec:fluid}), poor admission control triggers this cascade, destabilizing a system whose capacity is theoretically sufficient for stability. The eviction-restart cycle can persist indefinitely, reducing the effective throughput, the completion rate net of evictions, by as much as $20\%$ (Example~\ref{ex:fcfs_cascade} quantifies this for FCFS).
 \end{example}
 
 \paragraph{Core Challenge.}

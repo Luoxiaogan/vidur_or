@@ -7,7 +7,7 @@ The WAIT algorithm achieves near-optimal throughput when we know prompt types at
 \label{ex:unknown_output}
 Continuing Example~\ref{ex:fcfs_cascade}, suppose output lengths are now \emph{unknown} at arrival: each ``Hello'' prompt receives either ``Hi'' (1 token) or ``Hi there!'' (2 tokens). The scheduler faces a dilemma. If it optimistically assumes all outputs are short (1 token each), it admits 6 prompts with capacity $C=12$, requiring $6 \times 2 = 12$ units after decode. But if some outputs turn out to be 2 tokens (requiring 3 units each), memory overflows and eviction cascades begin. Conversely, if the scheduler conservatively assumes all outputs are long, it admits only 4 prompts to stay safe, wasting 25\% of capacity when most outputs are actually short.
 
-This dilemma---optimism leads to eviction, pessimism wastes capacity---leads to our design principles: (i) \emph{avoid eviction} by not over-committing memory; (ii) \emph{classify on-the-fly} by letting prompts reveal their type as they decode; (iii) \emph{don't waste throughput} by exploiting available capacity; (iv) \emph{let shorter prompts finish first} so they free memory without being blocked by longer ones.
+This dilemma (optimism leads to eviction, pessimism wastes capacity) leads to our design principles: (i) \emph{avoid eviction} by not over-committing memory; (ii) \emph{classify on-the-fly} by letting prompts reveal their type as they decode; (iii) \emph{don't waste throughput} by exploiting available capacity; (iv) \emph{let shorter prompts finish first} so they free memory without being blocked by longer ones.
 \end{example}
 
 \subsection{Algorithm Overview}
@@ -27,7 +27,7 @@ We assume identical prefill lengths $l_1 = l_2 = \dots = l_m$ for clarity, thoug
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\linewidth]{Experiments_pdf/fig_nestedWAIT.pdf}
+    \includegraphics[width=0.85\linewidth]{Experiments_pdf/fig_nestedWAIT.pdf}
     \caption{Pipeline of the Nested WAIT Algorithm}
     \label{fig:nested_wait}
 \end{figure}
@@ -38,7 +38,7 @@ Figure~\ref{fig:nested_wait_example} visualizes the algorithm in action. At time
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\linewidth]{Experiments_pdf/fig_nestedWAIT_example.pdf}
+    \includegraphics[width=0.85\linewidth]{Experiments_pdf/fig_nestedWAIT_example.pdf}
     \caption{Example of the Nested WAIT Algorithm}
     \label{fig:nested_wait_example}
 \end{figure}
@@ -152,13 +152,13 @@ This coupling reveals why the safety buffer is necessary. When segment $k$ has f
 The memory requirement in Equation~\eqref{eq:nested_wait_memory_total} consists of two components with clear operational interpretations:
 
 \begin{enumerate}
-    \item \textbf{Base memory $M^\pi$}: This is the equilibrium memory from the fluid model---the memory needed when exactly $n_k$ prompts occupy each stage in segment $k$. This represents the ``steady-state'' memory consumption.
+    \item \emph{Base memory $M^\pi$.} This is the equilibrium memory from the fluid model, the memory needed when exactly $n_k$ prompts occupy each stage in segment $k$. It represents the steady-state memory consumption.
 
     \item \textbf{Safety buffer} $\sum_{k=2}^m (l + l_{k-1}')(n_k + \theta_k^{-1}\ln(m\zeta B/\delta))$: This additional memory hedges against stochastic fluctuations when output lengths are unknown. It has three components:
     \begin{itemize}
         \item $n_k$: Accounts for prompts queueing at segment $k$ boundaries, waiting for thresholds.
         \item $\theta_k^{-1}\ln(m\zeta B/\delta)$: High-probability protection against queue buildup (overflow occurs with probability $\leq \delta$).
-        \item $(l + l_{k-1}')$: Memory footprint of prompts at the boundary between segments $k-1$ and $k$.
+        \item $(l + l_{k-1}')$: Memory consumption of prompts at the boundary between segments $k-1$ and $k$.
     \end{itemize}
 \end{enumerate}
 
@@ -166,7 +166,7 @@ This safety buffer is \emph{logarithmic} in the time horizon $T$ (via $B$) and c
 
 \textbf{Number of types:} The algorithm's performance depends primarily on arrival rates and output lengths, not the number of types $m$. Even for large $m$ (e.g., output lengths $\{1, 2, \dots, m\}$), descending thresholds $n_1 > n_2 > \dots > n_m$ remain effective when arrival rates satisfy condition~\eqref{eq:nested_wait_thresholds}.
 
-\textbf{Safety buffer overhead:} The memory requirement in~\eqref{eq:nested_wait_memory_total} is typically dominated by the base term $M^\pi$. The safety buffer (second term) grows only logarithmically in the time horizon and is modest in practice. Section~\ref{sec:numerical} provides numerical validation.
+\textbf{Safety buffer overhead:} The memory requirement in~\eqref{eq:nested_wait_memory_total} is typically dominated by the base term $M^\pi$. The safety buffer (second term) grows only logarithmically in the time horizon and is modest in practice. Section~\ref{sec:experiments} provides numerical validation.
 
-\textbf{Segment-wise generalization:} In practice, we use a \textbf{segment-wise variant} that groups $m$ types into $L \leq m$ segments (Section~\ref{sec:extension}). This design addresses two concerns: (i) robustness to varying or uncertain type distributions; (ii) for long decode lengths, maintaining separate thresholds for every type may be infeasible. Grouping into segments provides stable scheduling with similar guarantees. Having established theoretical foundations for both known and unknown output lengths, we now validate our algorithms experimentally (Section~\ref{sec:numerical}).
+\textbf{Segment-wise generalization:} In practice, we use a \textbf{segment-wise variant} that groups $m$ types into $L \leq m$ segments (Section~\ref{sec:extension}). This design addresses two concerns: (i) robustness to varying or uncertain type distributions; (ii) for long decode lengths, maintaining separate thresholds for every type may be infeasible. Grouping into segments provides stable scheduling with similar guarantees. Having established theoretical foundations for both known and unknown output lengths, we now validate our algorithms experimentally (Section~\ref{sec:experiments}).
 % Additional discussion on this generalization is presented in Appendix~\ref{sec:extension}.

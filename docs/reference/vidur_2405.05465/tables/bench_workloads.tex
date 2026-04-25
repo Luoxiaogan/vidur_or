@@ -1,0 +1,18 @@
+\begin{table*}[]
+\center
+\scalebox{0.65}{
+\begin{tabular}{c|c|c|cll|cll|cll} \hline
+\multirow{2}{*}{Dataset} & \multirow{2}{*}{Content} & \multirow{2}{*}{\# queries} & \multicolumn{3}{|c}{\# prefill tokens} & \multicolumn{3}{|c|}{\# decode tokens} & \multicolumn{2}{c}{P:D Ratio} \\ \cline{4-11}
+ & &  & mean & median & p90 & mean & median & p90 & median & std dev\\ \hline
+\chat[~\citealt{lmsyschat1m}] & Natural language conversations & 2M & 786 & 417 & 1678 & 215 & 141 & 491 & 2.3 & 236 \\
+(\chatshort) & \chat with max 4k total tokens & 2M & 686 & 417 & 1678 & 197 & 139 & 484 & 2.3 & 228 \\
+\arxivL[~\citealt{cohan-etal-2018-discourse}] & Summarization of arxiv papers & 203k & 9882 & 7827 & 18549 & 411 & 228 & 475 & 35.4 & 81 \\
+(\arxivSshort) & \arxivL with max 4k total tokens & 28k & 2588 & 2730 & 3702 & 291 & 167 & 372 & 15.7 & 16 \\
+\bwbL[~\citealt{jiang-etal-2023-discourse}] & Document-level English--Chinese parallel dataset & 195k & 2418 & 2396 & 3441 & 3654 & 3589 & 5090 & 0.66 & 0.23 \\
+(\bwbSshort) & \bwbL with max 4k total tokens & 33k & 1067 & 1037 & 1453 & 1612 & 1601 & 2149 & 0.65 & 0.37 \\
+\hline
+\end{tabular}
+}
+\caption{Details of the workloads curated from open-source datasets.}
+\label{table:workloads}
+\end{table*}

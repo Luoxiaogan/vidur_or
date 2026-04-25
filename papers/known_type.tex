@@ -1,7 +1,7 @@
 \section{Scheduling with Known Arrival Types: The WAIT Algorithm}
 \label{sec:wait}
 
-This section introduces the \textit{Waiting for Accumulated Inference Threshold} (WAIT) algorithm, a scheduling policy that maximizes throughput under known prompt arrival types. Using the fluid dynamics established in Section \ref{sec:fluid}, WAIT optimizes batch formation and scheduling by accumulating prompts until specific thresholds are met. This approach uses resources efficiently in stochastic environments by maintaining the system near equilibrium while respecting memory constraints and optimizing latency and time-to-first-token (TTFT). We assume that the memory capacity $C\ge M^*,$ the equilibrium memory capacity given in \eqref{eq:memory_multi2} (otherwise the throughput can never approach the optimal fluid throughput \eqref{throughput_fluid_multiple} by Proposition \ref{prop::online policy expected throughput upper bound, multiple type}).
+This section introduces the \textit{Waiting for Accumulated Inference Threshold} (WAIT) algorithm, a scheduling policy that achieves asymptotically optimal effective throughput under known prompt arrival types. Using the fluid model established in Section~\ref{sec:fluid}, WAIT forms each batch by accumulating prompts until specific thresholds are met. This approach uses resources efficiently in stochastic environments by maintaining the system near equilibrium while respecting memory constraints and optimizing latency and time-to-first-token (TTFT). We assume that the memory capacity $C\ge M^*,$ the equilibrium memory capacity given in \eqref{eq:memory_multi2} (otherwise the throughput can never approach the optimal fluid throughput \eqref{throughput_fluid_multiple} by Proposition \ref{prop::online policy expected throughput upper bound, multiple type}).
 
 \begin{remark}[On the Assumption $C \geq M^*$]
 \label{remark:memory_assumption}
@@ -13,7 +13,7 @@ Our theoretical analysis assumes $C \geq M^*$, as this is the necessary conditio
 
 We first demonstrate why naive scheduling policies fail even when memory capacity is sufficient, motivating the design of WAIT.
 
-Consider what happens under a First-Come-First-Serve (FCFS) policy that processes prompts immediately upon arrival. Even when the memory capacity $C$ equals the equilibrium memory $M^*$---seemingly sufficient to handle the workload---FCFS can trigger catastrophic failure. The following proposition formalizes this observation.
+Consider what happens under a First-Come-First-Serve (FCFS) policy that processes prompts immediately upon arrival. Even when the memory capacity $C$ equals the equilibrium memory $M^*$ (a capacity theoretically sufficient to handle the workload), FCFS can trigger catastrophic failure. The following proposition formalizes this observation.
 
 \begin{proposition}\label{prop:lower_bound_FCFS}
 When the memory capacity \(C\) equals the equilibrium memory \(M^*\), there exists an instance where the First-Come-First-Serve (FCFS) policy incurs a throughput gap of \(\throughput^* - \mathbb{E}[\throughput^T] = \Omega(1)\) as \(T \to \infty\).
@@ -23,27 +23,27 @@ The proof is provided in Appendix. To illustrate the mechanism behind this failu
 
 \begin{example}[Eviction Cascade under FCFS]
 \label{ex:fcfs_cascade}
-Consider a single prompt type where each prompt is a simple query such as ``Hello'' with a 1-token response ``Hi''---prefill length $l=1$ and decode length $l'=1$. Each prompt occupies 1 unit of memory after prefill and 2 units after decode. Let the memory capacity be $C=12$ and arrival rate $\lambda=4$. The fluid equilibrium has 4 prompts at each stage (prefill and decode), using exactly $4 \times 1 + 4 \times 2 = 12$ units of memory with 4 completions per iteration.
+Consider a single prompt type where each prompt is a simple query such as ``Hello'' with a 1-token response ``Hi'' (prefill length $l=1$ and decode length $l'=1$). Each prompt occupies 1 unit of memory after prefill and 2 units after decode. Let the memory capacity be $C=12$ and arrival rate $\lambda=4$. The fluid equilibrium has 4 prompts at each stage (prefill and decode), using exactly $4 \times 1 + 4 \times 2 = 12$ units of memory with 4 completions per iteration.
 
 Now suppose the system starts slightly imbalanced with 6 prompts at stage 0 (awaiting prefill) and 3 prompts at stage 1 (in decode). Under FCFS:
 \begin{enumerate}
     \item \textbf{Iteration 1}: Process all 9 prompts. The 3 decode prompts complete, but the 6 prefill prompts advance to decode, requiring $6 \times 2 = 12$ units. Memory is exactly full with only 3 completions.
     \item \textbf{Iteration 2}: During iteration 1, approximately 4 new prompts arrive. To admit them for prefill ($4 \times 1 = 4$ units needed), we must evict 2 decode prompts (freeing $2 \times 2 = 4$ units). Now we have 4 prefill + 4 decode = $4 + 8 = 12$ units.
-    \item \textbf{Iteration 3}: The 4 decode prompts complete (4 completions). The 2 previously evicted prompts, having lost their KV caches, must now restart from the prefill phase (stage $s=0$)---they re-enter the queue as new arrivals, competing for resources alongside genuinely new prompts. This restart mechanism perpetuates the imbalance.
+    \item \textbf{Iteration 3}: The 4 decode prompts complete (4 completions). The 2 previously evicted prompts, having lost their KV caches, must now restart from the prefill phase (stage $s=0$), re-entering the queue as new arrivals and competing for resources alongside genuinely new prompts. This restart mechanism perpetuates the imbalance.
 \end{enumerate}
-This eviction-restart cycle persists, yielding approximately 3-3.5 completions per iteration instead of the optimal 4. \textbf{Even though $C = M^* = 12$ (theoretically sufficient capacity), FCFS causes cascading failures that reduce throughput by 12-25\%.}
+This eviction-restart cycle persists, yielding approximately 3--3.5 completions per iteration instead of the 4 sustained at the fluid equilibrium. Even though $C = M^* = 12$ (theoretically sufficient capacity for stability), FCFS triggers cascading evictions that reduce the effective throughput, the completion rate net of evictions, by as much as $25\%$.
 \end{example}
 
-This example demonstrates a fundamental insight: \emph{memory sufficiency alone does not guarantee stability}---a system that should be stable can become unstable under poor scheduling. The root cause is that FCFS does not maintain \emph{load balance}: it admits prompts greedily, causing the system to deviate from the fluid equilibrium and triggering the eviction-restart cycle.
+This example shows that \emph{memory sufficiency alone does not guarantee stability}: a system whose capacity is theoretically sufficient for stability can become unstable under poor scheduling. The root cause is that FCFS does not maintain \emph{load balance}: it admits prompts greedily, causing the system to deviate from the fluid equilibrium and triggering the eviction-restart cycle.
 
 \subsection{The WAIT Algorithm}
 \label{subsec:wait_algorithm}
 
-The WAIT algorithm prevents eviction cascades by maintaining load balance through a threshold mechanism. The core idea is to control admission at each decode stage, ensuring that the rate of new arrivals matches the rate of completions. This keeps the system close to the fluid equilibrium derived in Section~\ref{sec:fluid}, \emph{approaching load balance} where arrival and completion rates match. This principle---maintaining the system near equilibrium through controlled admission---is central to preventing the cascading failures illustrated in Example~\ref{ex:fcfs_cascade}.
+The WAIT algorithm prevents eviction cascades by maintaining load balance through a threshold mechanism. The core idea is to control admission at each decode stage so that the rate of new arrivals matches the rate of completions. This keeps the system close to the fluid equilibrium derived in Section~\ref{sec:fluid}, \emph{approaching load balance} where arrival and completion rates match. This principle of maintaining the system near equilibrium through controlled admission is central to preventing the cascading failures illustrated in Example~\ref{ex:fcfs_cascade}.
 
-The threshold-and-wait mechanism achieves three goals. First, it prevents \emph{eviction cascades} by controlling admission. Second, it \emph{decouples the complex multi-stage, multi-type dynamics}, transforming the system into $m$ independent single-type analyses. Third, by waiting until thresholds are met, the batch approaches the fluid equilibrium size, \emph{using memory capacity fully to maximize throughput}. The decoupling is crucial: without thresholds, delays in one type would affect memory availability for others through shared capacity constraints, creating feedback loops that resist standard queueing analysis. The threshold mechanism breaks these inter-type dependencies through algorithm design, not inherent problem simplicity. The third goal reflects a key insight: memory is not just a constraint to satisfy, but a resource to exploit---larger batches process more prompts per iteration, and waiting for the threshold ensures we form batches large enough to use memory efficiently while staying within safe limits.
+The threshold-and-wait mechanism achieves three goals. First, it prevents \emph{eviction cascades} by controlling admission. Second, it \emph{decouples the complex multi-stage, multi-type dynamics}, transforming the system into $m$ independent single-type analyses. Third, by waiting until thresholds are met, the batch approaches the fluid equilibrium size, \emph{using memory capacity fully to maximize throughput}. The decoupling is crucial: without thresholds, delays in one type would affect memory availability for others through shared capacity constraints, creating feedback loops that resist classical drift analysis. The threshold mechanism breaks these inter-type dependencies, enabling tractable per-type analysis. The third goal reflects a complementary principle: memory is a resource to exploit rather than merely a constraint, since larger batches amortize the fixed overhead $d_0$ across more prompts per iteration, and waiting until the threshold is met ensures each batch approaches the equilibrium size that maximizes this amortization while staying within safe limits.
 
-\paragraph{Algorithm Description.} For each prompt type $j \in [m]$, WAIT sets a threshold $n_j$ derived from the fluid dynamics. At time $t$, the algorithm monitors the inventory $n_{js}^t$---the number of waiting prompts of type $j$ at stage $s$. Type $j$ prompts are included in a batch only when:
+\paragraph{Algorithm Description.} For each prompt type $j \in [m]$, WAIT sets a threshold $n_j$ derived from the fluid model. At time $t$, the algorithm monitors the inventory $n_{js}^t$, the number of waiting prompts of type $j$ at stage $s$. Type $j$ prompts are included in a batch only when:
 \[
 n_{j0}^t \geq n_j.
 \]
@@ -51,7 +51,7 @@ When this condition is met, WAIT constructs a batch by selecting $\min\{n_j, n_{
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{Experiments_pdf/fig_WAIT.pdf}
+    \includegraphics[width=0.85\linewidth]{Experiments_pdf/fig_WAIT.pdf}
     \caption{Pipeline of Algorithm \ref{alg:wait}}
     \label{fig:wait}
 \end{figure}
@@ -169,7 +169,7 @@ The WAIT algorithm prevents eviction cascades through a simple but powerful prin
 
 The threshold mechanism simultaneously achieves three design goals: (1) \emph{eviction prevention} by controlling when prompts enter batches; (2) \emph{approaching load balance} by maintaining the system near the fluid equilibrium where arrivals match completions; and (3) \emph{memory exploitation} by waiting until batches can be formed close to the equilibrium size $M^*$, maximizing throughput.
 
-From an analytical perspective, the threshold decouples the $m$ prompt types: we can analyze each type independently, as if it were the only type in the system. Without this decoupling, delays in one type would affect memory availability for others through the shared capacity constraint, creating feedback loops that resist standard queueing analysis. With types decoupled, we apply standard techniques---constructing dominating processes and using drift analysis---to establish the asymptotic optimality bounds. The key insight: it is the algorithm design, not inherent problem simplicity, that makes this tractable. The complete proof is in Appendix~\ref{appexidx::proof of wait_heavy_traffic}.
+From an analytical perspective, the threshold decouples the $m$ prompt types: we can analyze each type independently, as if it were the only type in the system. Without this decoupling, delays in one type would affect memory availability for others through the shared capacity constraint, creating feedback loops that resist classical drift analysis. With the types decoupled, we construct a dominating process per type and apply Lindley-style drift analysis to establish the asymptotic-optimality bounds. The decoupling itself is what makes the analysis tractable; the complete proof is in Appendix~\ref{appexidx::proof of wait_heavy_traffic}.
 
 Theorem \ref{thm:wait_heavy_traffic} provides performance bounds that match the worst-case lower bounds for latency and Time to First Token (TTFT). The following proposition establishes these lower bounds.
 \begin{proposition}\label{prop::simple random walk, tight bound}

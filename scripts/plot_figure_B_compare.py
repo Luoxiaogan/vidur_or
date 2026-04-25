@@ -137,9 +137,9 @@ X_TICK_RATES = [12, 14, 16, 18, 20, 22, 24]
 # the latency panel, giving a consistent stability ordering across the
 # two panels of Figure B.
 #   vLLM: latency jumps at r=20 (6.95 s) -> mu = 19
-#   Sarathi: knee at r=22->23 (1.85 -> 5.08) -> mu = 21
+#   Sarathi: knee at r=22->23 (1.85 -> 5.08) -> mu = 22
 #   WAIT: stays <1.3 s through r=23, only spikes at r=24 -> mu = 23
-mu = {"vLLM": 19, "Sarathi": 21, "WAIT": 23}
+mu = {"vLLM": 19, "Sarathi": 22, "WAIT": 23}
 print(f"Sustainable throughput mu (override): {mu}")
 
 

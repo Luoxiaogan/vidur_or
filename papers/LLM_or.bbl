@@ -1,70 +1,125 @@
-\begin{thebibliography}{60}
+\begin{thebibliography}{63}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \providecommand{\urlprefix}{URL }
 
-\bibitem[{Agrawal et~al.(2024{\natexlab{a}})Agrawal, Kedia, Mohan, Panwar, Kwatra, Gulavani, Ramjee, \protect\BIBand{} Tumanov}]{agrawal2024vidur}
-Agrawal A, Kedia N, Mohan J, Panwar A, Kwatra N, Gulavani B, Ramjee R, Tumanov A (2024{\natexlab{a}}) Vidur: A large-scale simulation framework for llm inference. \emph{Proceedings of Machine Learning and Systems} 6:351--366.
+\bibitem[{Agrawal et~al.(2024{\natexlab{a}})Agrawal, Kedia, Mohan, Panwar,
+  Kwatra, Gulavani, Ramjee, \protect\BIBand{} Tumanov}]{agrawal2024vidur}
+Agrawal A, Kedia N, Mohan J, Panwar A, Kwatra N, Gulavani B, Ramjee R, Tumanov
+  A (2024{\natexlab{a}}) Vidur: A large-scale simulation framework for llm
+  inference. \emph{Proceedings of Machine Learning and Systems} 6:351--366.
 
-\bibitem[{Agrawal et~al.(2024{\natexlab{b}})Agrawal, Kedia, Panwar, Mohan, Kwatra, Gulavani, Tumanov, \protect\BIBand{} Ramjee}]{agrawal2024taming}
-Agrawal A, Kedia N, Panwar A, Mohan J, Kwatra N, Gulavani B, Tumanov A, Ramjee R (2024{\natexlab{b}}) Taming $\{$Throughput-Latency$\}$ tradeoff in $\{$LLM$\}$ inference with $\{$Sarathi-Serve$\}$. \emph{18th USENIX Symposium on Operating Systems Design and Implementation (OSDI 24)}, 117--134.
+\bibitem[{Agrawal et~al.(2024{\natexlab{b}})Agrawal, Kedia, Panwar, Mohan,
+  Kwatra, Gulavani, Tumanov, \protect\BIBand{} Ramjee}]{agrawal2024taming}
+Agrawal A, Kedia N, Panwar A, Mohan J, Kwatra N, Gulavani B, Tumanov A, Ramjee
+  R (2024{\natexlab{b}}) Taming $\{$Throughput-Latency$\}$ tradeoff in
+  $\{$LLM$\}$ inference with $\{$Sarathi-Serve$\}$. \emph{18th USENIX Symposium
+  on Operating Systems Design and Implementation (OSDI 24)}, 117--134.
 
-\bibitem[{Agrawal et~al.(2023)Agrawal, Panwar, Mohan, Kwatra, Gulavani, \protect\BIBand{} Ramjee}]{agrawal2023sarathi}
-Agrawal A, Panwar A, Mohan J, Kwatra N, Gulavani BS, Ramjee R (2023) Sarathi: Efficient llm inference by piggybacking decodes with chunked prefills. \emph{arXiv preprint arXiv:2308.16369} .
+\bibitem[{Agrawal et~al.(2023)Agrawal, Panwar, Mohan, Kwatra, Gulavani,
+  \protect\BIBand{} Ramjee}]{agrawal2023sarathi}
+Agrawal A, Panwar A, Mohan J, Kwatra N, Gulavani BS, Ramjee R (2023) Sarathi:
+  Efficient llm inference by piggybacking decodes with chunked prefills.
+  \emph{arXiv preprint arXiv:2308.16369} .
 
-\bibitem[{Aminabadi et~al.(2022)Aminabadi, Rajbhandari, Awan, Li, Li, Zheng, Ruwase, Smith, Zhang, Rasley, \protect\BIBand{} He}]{aminabadi2022deepspeed}
-Aminabadi RY, Rajbhandari S, Awan AA, Li C, Li D, Zheng E, Ruwase O, Smith S, Zhang M, Rasley J, He Y (2022) Deepspeed-inference: Enabling efficient inference of transformer models at unprecedented scale. \emph{SC22: International Conference for High Performance Computing, Networking, Storage and Analysis}, 1--15 (IEEE).
+\bibitem[{Aminabadi et~al.(2022)Aminabadi, Rajbhandari, Awan, Li, Li, Zheng,
+  Ruwase, Smith, Zhang, Rasley, \protect\BIBand{} He}]{aminabadi2022deepspeed}
+Aminabadi RY, Rajbhandari S, Awan AA, Li C, Li D, Zheng E, Ruwase O, Smith S,
+  Zhang M, Rasley J, He Y (2022) Deepspeed-inference: Enabling efficient
+  inference of transformer models at unprecedented scale. \emph{SC22:
+  International Conference for High Performance Computing, Networking, Storage
+  and Analysis}, 1--15 (IEEE).
 
 \bibitem[{Anthropic(2023)}]{anthropic2023claude}
 Anthropic (2023) Claude. \url{https://claude.ai}.
 
 \bibitem[{Anthropic(2025)}]{claude_3_7}
-Anthropic (2025) Claude 3.7 sonnet. \urlprefix\url{https://www.anthropic.com/claude/sonnet}.
+Anthropic (2025) Claude 3.7 sonnet.
+  \urlprefix\url{https://www.anthropic.com/claude/sonnet}.
 
 \bibitem[{Asmussen(2003)}]{asmussen2003applied}
 Asmussen S (2003) \emph{Applied probability and queues}, volume~2 (Springer).
 
-\bibitem[{Bai et~al.(2023)Bai, Bai, Chu, Cui, Dang, Deng, Fan, Ge, Han, Huang et~al.}]{bai2023qwen}
-Bai J, Bai S, Chu Y, Cui Z, Dang K, Deng X, Fan Y, Ge W, Han Y, Huang F, et~al. (2023) Qwen technical report. \emph{arXiv preprint arXiv:2309.16609} .
+\bibitem[{Bai et~al.(2023)Bai, Bai, Chu, Cui, Dang, Deng, Fan, Ge, Han, Huang
+  et~al.}]{bai2023qwen}
+Bai J, Bai S, Chu Y, Cui Z, Dang K, Deng X, Fan Y, Ge W, Han Y, Huang F, et~al.
+  (2023) Qwen technical report. \emph{arXiv preprint arXiv:2309.16609} .
 
-\bibitem[{Balkanski et~al.(2016)Balkanski, Rubinstein, \protect\BIBand{} Singer}]{balkanski2016power}
-Balkanski E, Rubinstein A, Singer Y (2016) The power of optimization from samples. \emph{Advances in Neural Information Processing Systems} 29.
+\bibitem[{Balkanski et~al.(2016)Balkanski, Rubinstein, \protect\BIBand{}
+  Singer}]{balkanski2016power}
+Balkanski E, Rubinstein A, Singer Y (2016) The power of optimization from
+  samples. \emph{Advances in Neural Information Processing Systems} 29.
 
 \bibitem[{B{\"a}uerle(2002)}]{bauerle2002optimal}
-B{\"a}uerle N (2002) Optimal control of queueing networks: An approach via fluid models. \emph{Advances in Applied Probability} 34(2):313--328.
+B{\"a}uerle N (2002) Optimal control of queueing networks: An approach via
+  fluid models. \emph{Advances in Applied Probability} 34(2):313--328.
 
-\bibitem[{Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal, Neelakantan, Shyam, Sastry, Askell et~al.}]{brown2020language}
-Brown T, Mann B, Ryder N, Subbiah M, Kaplan JD, Dhariwal P, Neelakantan A, Shyam P, Sastry G, Askell A, et~al. (2020) Language models are few-shot learners. \emph{Advances in neural information processing systems} 33:1877--1901.
+\bibitem[{Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal,
+  Neelakantan, Shyam, Sastry, Askell et~al.}]{brown2020language}
+Brown T, Mann B, Ryder N, Subbiah M, Kaplan JD, Dhariwal P, Neelakantan A,
+  Shyam P, Sastry G, Askell A, et~al. (2020) Language models are few-shot
+  learners. \emph{Advances in neural information processing systems}
+  33:1877--1901.
 
-\bibitem[{Chen et~al.(2025)Chen, Ye, \protect\BIBand{} Zhou}]{chen2025adaptively}
-Chen Z, Ye Y, Zhou Z (2025) Adaptively robust llm inference optimization under prediction uncertainty. \emph{arXiv preprint arXiv:2508.14544} .
+\bibitem[{Chen et~al.(2025)Chen, Ye, \protect\BIBand{}
+  Zhou}]{chen2025adaptively}
+Chen Z, Ye Y, Zhou Z (2025) Adaptively robust llm inference optimization under
+  prediction uncertainty. \emph{arXiv preprint arXiv:2508.14544} .
 
 \bibitem[{Cole \protect\BIBand{} Roughgarden(2014)}]{cole2014sample}
-Cole R, Roughgarden T (2014) The sample complexity of revenue maximization. \emph{Proceedings of the forty-sixth annual ACM symposium on Theory of computing}, 243--252.
+Cole R, Roughgarden T (2014) The sample complexity of revenue maximization.
+  \emph{Proceedings of the forty-sixth annual ACM symposium on Theory of
+  computing}, 243--252.
 
 \bibitem[{DeepSeek-AI(2024)}]{deepseekai2024deepseekv2strongeconomicalefficient}
-DeepSeek-AI (2024) Deepseek-v2: A strong, economical, and efficient mixture-of-experts language model. \urlprefix\url{https://arxiv.org/abs/2405.04434}.
+DeepSeek-AI (2024) Deepseek-v2: A strong, economical, and efficient
+  mixture-of-experts language model.
+  \urlprefix\url{https://arxiv.org/abs/2405.04434}.
 
 \bibitem[{DeepSeek-AI(2025)}]{deepseekai2025deepseekr1incentivizingreasoningcapability}
-DeepSeek-AI (2025) Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning. \urlprefix\url{https://arxiv.org/abs/2501.12948}.
+DeepSeek-AI (2025) Deepseek-r1: Incentivizing reasoning capability in llms via
+  reinforcement learning. \urlprefix\url{https://arxiv.org/abs/2501.12948}.
 
-\bibitem[{Desislavov et~al.(2021)Desislavov, Mart{\'i}nez-Fern{\'a}ndez, \protect\BIBand{} Franch}]{desislavov2021compute}
-Desislavov R, Mart{\'i}nez-Fern{\'a}ndez S, Franch X (2021) Compute and energy consumption trends in deep learning inference. \emph{arXiv preprint arXiv:2109.02132} .
+\bibitem[{Desislavov et~al.(2021)Desislavov, Mart{\'i}nez-Fern{\'a}ndez,
+  \protect\BIBand{} Franch}]{desislavov2021compute}
+Desislavov R, Mart{\'i}nez-Fern{\'a}ndez S, Franch X (2021) Compute and energy
+  consumption trends in deep learning inference. \emph{arXiv preprint
+  arXiv:2109.02132} .
 
 \bibitem[{Devanur \protect\BIBand{} Hayes(2009)}]{devanur2009adwords}
-Devanur NR, Hayes TP (2009) The adwords problem: online keyword matching with budgeted bidders under random permutations. \emph{Proceedings of the 10th ACM conference on Electronic commerce}, 71--78.
+Devanur NR, Hayes TP (2009) The adwords problem: online keyword matching with
+  budgeted bidders under random permutations. \emph{Proceedings of the 10th ACM
+  conference on Electronic commerce}, 71--78.
 
-\bibitem[{Devlin et~al.(2019)Devlin, Chang, Lee, \protect\BIBand{} Toutanova}]{devlin2019bert}
-Devlin J, Chang MW, Lee K, Toutanova K (2019) Bert: Pre-training of deep bidirectional transformers for language understanding. \emph{Proceedings of the 2019 conference of the North American chapter of the association for computational linguistics: human language technologies, volume 1 (long and short papers)}, 4171--4186.
+\bibitem[{Devlin et~al.(2019)Devlin, Chang, Lee, \protect\BIBand{}
+  Toutanova}]{devlin2019bert}
+Devlin J, Chang MW, Lee K, Toutanova K (2019) Bert: Pre-training of deep
+  bidirectional transformers for language understanding. \emph{Proceedings of
+  the 2019 conference of the North American chapter of the association for
+  computational linguistics: human language technologies, volume 1 (long and
+  short papers)}, 4171--4186.
 
 \bibitem[{Durrett(2019)}]{durrett2019probability}
-Durrett R (2019) \emph{Probability: theory and examples}, volume~49 (Cambridge university press).
+Durrett R (2019) \emph{Probability: theory and examples}, volume~49 (Cambridge
+  university press).
 
-\bibitem[{Fu et~al.(2025)Fu, Zhu, Su, Qiao, Stoica, \protect\BIBand{} Zhang}]{fu2025efficient}
-Fu Y, Zhu S, Su R, Qiao A, Stoica I, Zhang H (2025) Efficient llm scheduling by learning to rank. \emph{Advances in Neural Information Processing Systems} 37:59006--59029.
+\bibitem[{Fedus et~al.(2022)Fedus, Zoph, \protect\BIBand{}
+  Shazeer}]{fedus2022switch}
+Fedus W, Zoph B, Shazeer N (2022) Switch transformers: Scaling to trillion
+  parameter models with simple and efficient sparsity. \emph{Journal of Machine
+  Learning Research} 23(120):1--39.
 
-\bibitem[{Garc{\'i}a-Mart{\'i}n et~al.(2019)Garc{\'i}a-Mart{\'i}n, Rodrigues, Riley, \protect\BIBand{} Grahn}]{garcia2019estimation}
-Garc{\'i}a-Mart{\'i}n E, Rodrigues CF, Riley G, Grahn H (2019) Estimation of energy consumption in machine learning. \emph{Journal of Parallel and Distributed Computing} 134:75--88.
+\bibitem[{Fu et~al.(2025)Fu, Zhu, Su, Qiao, Stoica, \protect\BIBand{}
+  Zhang}]{fu2025efficient}
+Fu Y, Zhu S, Su R, Qiao A, Stoica I, Zhang H (2025) Efficient llm scheduling by
+  learning to rank. \emph{Advances in Neural Information Processing Systems}
+  37:59006--59029.
+
+\bibitem[{Garc{\'i}a-Mart{\'i}n et~al.(2019)Garc{\'i}a-Mart{\'i}n, Rodrigues,
+  Riley, \protect\BIBand{} Grahn}]{garcia2019estimation}
+Garc{\'i}a-Mart{\'i}n E, Rodrigues CF, Riley G, Grahn H (2019) Estimation of
+  energy consumption in machine learning. \emph{Journal of Parallel and
+  Distributed Computing} 134:75--88.
 
 \bibitem[{GitHub(2022)}]{copilot}
 GitHub (2022) Copilot. \urlprefix\url{https://github.com/features/copilot}.
@@ -72,115 +127,227 @@ GitHub (2022) Copilot. \urlprefix\url{https://github.com/features/copilot}.
 \bibitem[{Google(2023)}]{google2023bard}
 Google (2023) Bard. \url{https://bard.google.com}.
 
-\bibitem[{Hooper et~al.(2025)Hooper, Kim, Mohammadzadeh, Mahoney, Shao, Keutzer, \protect\BIBand{} Gholami}]{hooper2025kvquant}
-Hooper C, Kim S, Mohammadzadeh H, Mahoney MW, Shao S, Keutzer K, Gholami A (2025) Kvquant: Towards 10 million context length llm inference with kv cache quantization. \emph{Advances in Neural Information Processing Systems} 37:1270--1303.
+\bibitem[{Hooper et~al.(2025)Hooper, Kim, Mohammadzadeh, Mahoney, Shao,
+  Keutzer, \protect\BIBand{} Gholami}]{hooper2025kvquant}
+Hooper C, Kim S, Mohammadzadeh H, Mahoney MW, Shao S, Keutzer K, Gholami A
+  (2025) Kvquant: Towards 10 million context length llm inference with kv cache
+  quantization. \emph{Advances in Neural Information Processing Systems}
+  37:1270--1303.
 
 \bibitem[{Im \protect\BIBand{} Moseley(2013)}]{im2013online}
-Im S, Moseley B (2013) Online batch scheduling for flow objectives. \emph{Proceedings of the twenty-fifth annual ACM symposium on Parallelism in algorithms and architectures}, 102--104.
+Im S, Moseley B (2013) Online batch scheduling for flow objectives.
+  \emph{Proceedings of the twenty-fifth annual ACM symposium on Parallelism in
+  algorithms and architectures}, 102--104.
 
-\bibitem[{Jaillet et~al.(2025)Jaillet, Jiang, Mellou, Molinaro, Podimata, \protect\BIBand{} Zhou}]{jaillet2025onlineschedulingllminference}
-Jaillet P, Jiang J, Mellou K, Molinaro M, Podimata C, Zhou Z (2025) Online scheduling for llm inference with kv cache constraints. \urlprefix\url{https://arxiv.org/abs/2502.07115}.
+\bibitem[{Jaillet et~al.(2025)Jaillet, Jiang, Mellou, Molinaro, Podimata,
+  \protect\BIBand{} Zhou}]{jaillet2025onlineschedulingllminference}
+Jaillet P, Jiang J, Mellou K, Molinaro M, Podimata C, Zhou Z (2025) Online
+  scheduling for llm inference with kv cache constraints.
+  \urlprefix\url{https://arxiv.org/abs/2502.07115}.
 
-\bibitem[{Kang et~al.(2024)Kang, Zhang, Kundu, Jeong, Liu, Krishna, \protect\BIBand{} Zhao}]{kang2024gear}
-Kang H, Zhang Q, Kundu S, Jeong G, Liu Z, Krishna T, Zhao T (2024) Gear: An efficient kv cache compression recipefor near-lossless generative inference of llm. \emph{arXiv e-prints} arXiv--2403.
+\bibitem[{Jiang et~al.(2024)Jiang, Sablayrolles, Roux, Mensch, Savary, Bamford,
+  Chaplot, Casas, Hanna, Bressand et~al.}]{jiang2024mixtral}
+Jiang AQ, Sablayrolles A, Roux A, Mensch A, Savary B, Bamford C, Chaplot DS,
+  Casas Ddl, Hanna EB, Bressand F, et~al. (2024) Mixtral of experts.
+  \urlprefix\url{https://arxiv.org/abs/2401.04088}.
 
-\bibitem[{Kaplan et~al.(2020)Kaplan, McCandlish, Henighan, Brown, Chess, Child, Gray, Radford, Wu, \protect\BIBand{} Amodei}]{kaplan2020scaling}
-Kaplan J, McCandlish S, Henighan T, Brown TB, Chess B, Child R, Gray S, Radford A, Wu J, Amodei D (2020) Scaling laws for neural language models. \emph{arXiv preprint arXiv:2001.08361} .
+\bibitem[{Kang et~al.(2024)Kang, Zhang, Kundu, Jeong, Liu, Krishna,
+  \protect\BIBand{} Zhao}]{kang2024gear}
+Kang H, Zhang Q, Kundu S, Jeong G, Liu Z, Krishna T, Zhao T (2024) Gear: An
+  efficient kv cache compression recipefor near-lossless generative inference
+  of llm. \emph{arXiv e-prints} arXiv--2403.
+
+\bibitem[{Kaplan et~al.(2020)Kaplan, McCandlish, Henighan, Brown, Chess, Child,
+  Gray, Radford, Wu, \protect\BIBand{} Amodei}]{kaplan2020scaling}
+Kaplan J, McCandlish S, Henighan T, Brown TB, Chess B, Child R, Gray S, Radford
+  A, Wu J, Amodei D (2020) Scaling laws for neural language models. \emph{arXiv
+  preprint arXiv:2001.08361} .
 
 \bibitem[{Kingman(1962)}]{kingman1962queues}
-Kingman JFC (1962) On queues in heavy traffic. \emph{Journal of the Royal Statistical Society: Series B (Methodological)} 24(2):383--392.
+Kingman JFC (1962) On queues in heavy traffic. \emph{Journal of the Royal
+  Statistical Society: Series B (Methodological)} 24(2):383--392.
 
-\bibitem[{Kwon et~al.(2023)Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang, \protect\BIBand{} Stoica}]{kwon2023efficient}
-Kwon W, Li Z, Zhuang S, Sheng Y, Zheng L, Yu CH, Gonzalez J, Zhang H, Stoica I (2023) Efficient memory management for large language model serving with pagedattention. \emph{Proceedings of the 29th Symposium on Operating Systems Principles}, 611--626.
+\bibitem[{Kwon et~al.(2023)Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang,
+  \protect\BIBand{} Stoica}]{kwon2023efficient}
+Kwon W, Li Z, Zhuang S, Sheng Y, Zheng L, Yu CH, Gonzalez J, Zhang H, Stoica I
+  (2023) Efficient memory management for large language model serving with
+  pagedattention. \emph{Proceedings of the 29th Symposium on Operating Systems
+  Principles}, 611--626.
 
-\bibitem[{Lattanzi et~al.(2020)Lattanzi, Lavastida, Moseley, \protect\BIBand{} Vassilvitskii}]{lattanzi2020online}
-Lattanzi S, Lavastida T, Moseley B, Vassilvitskii S (2020) Online scheduling via learned weights. \emph{Proceedings of the Fourteenth Annual ACM-SIAM Symposium on Discrete Algorithms}, 1859--1877 (SIAM).
+\bibitem[{Lattanzi et~al.(2020)Lattanzi, Lavastida, Moseley, \protect\BIBand{}
+  Vassilvitskii}]{lattanzi2020online}
+Lattanzi S, Lavastida T, Moseley B, Vassilvitskii S (2020) Online scheduling
+  via learned weights. \emph{Proceedings of the Fourteenth Annual ACM-SIAM
+  Symposium on Discrete Algorithms}, 1859--1877 (SIAM).
 
-\bibitem[{Li et~al.(2025{\natexlab{a}})Li, Pal, Pullu, Ryoo, John, \protect\BIBand{} Yadwadkar}]{li2025mirage}
-Li R, Pal S, Pullu VN, Ryoo JH, John LK, Yadwadkar NJ (2025{\natexlab{a}}) Oneiros: Kv cache optimization through parameter remapping for multi-tenant llm serving. \emph{arXiv preprint arXiv:2507.11507} To appear in ACM SoCC 2025.
+\bibitem[{Li et~al.(2025{\natexlab{a}})Li, Pal, Pullu, Ryoo, John,
+  \protect\BIBand{} Yadwadkar}]{li2025mirage}
+Li R, Pal S, Pullu VN, Ryoo JH, John LK, Yadwadkar NJ (2025{\natexlab{a}})
+  Oneiros: Kv cache optimization through parameter remapping for multi-tenant
+  llm serving. \emph{arXiv preprint arXiv:2507.11507} To appear in ACM SoCC
+  2025.
 
 \bibitem[{Li et~al.(2020)Li, Wang, Chai, \protect\BIBand{} Yuan}]{li2020online}
-Li W, Wang L, Chai X, Yuan H (2020) Online batch scheduling of simple linear deteriorating jobs with incompatible families. \emph{Mathematics} 8(2):170.
+Li W, Wang L, Chai X, Yuan H (2020) Online batch scheduling of simple linear
+  deteriorating jobs with incompatible families. \emph{Mathematics} 8(2):170.
 
-\bibitem[{Li et~al.(2025{\natexlab{b}})Li, Dai, \protect\BIBand{} Peng}]{li2025throughput}
-Li Y, Dai J, Peng T (2025{\natexlab{b}}) Throughput-optimal scheduling algorithms for llm inference and ai agents. \urlprefix\url{https://arxiv.org/abs/2504.07347}, accessed: 2025-04-11.
+\bibitem[{Li et~al.(2025{\natexlab{b}})Li, Dai, \protect\BIBand{}
+  Peng}]{li2025throughput}
+Li Y, Dai J, Peng T (2025{\natexlab{b}}) Throughput-optimal scheduling
+  algorithms for llm inference and ai agents.
+  \urlprefix\url{https://arxiv.org/abs/2504.07347}, accessed: 2025-04-11.
 
 \bibitem[{Liu \protect\BIBand{} Lu(2015)}]{liu2015online}
-Liu P, Lu X (2015) Online unbounded batch scheduling on parallel machines with delivery times. \emph{Journal of Combinatorial Optimization} 29:228--236.
+Liu P, Lu X (2015) Online unbounded batch scheduling on parallel machines with
+  delivery times. \emph{Journal of Combinatorial Optimization} 29:228--236.
 
 \bibitem[{Liu \protect\BIBand{} Whitt(2011)}]{liu2011network}
-Liu Y, Whitt W (2011) A network of time-varying many-server fluid queues with customer abandonment. \emph{Operations research} 59(4):835--846.
+Liu Y, Whitt W (2011) A network of time-varying many-server fluid queues with
+  customer abandonment. \emph{Operations research} 59(4):835--846.
 
-\bibitem[{Lucier et~al.(2013)Lucier, Menache, Naor, \protect\BIBand{} Yaniv}]{lucier2013efficient}
-Lucier B, Menache I, Naor J, Yaniv J (2013) Efficient online scheduling for deadline-sensitive jobs. \emph{Proceedings of the twenty-fifth annual ACM symposium on Parallelism in algorithms and architectures}, 305--314.
+\bibitem[{Lucier et~al.(2013)Lucier, Menache, Naor, \protect\BIBand{}
+  Yaniv}]{lucier2013efficient}
+Lucier B, Menache I, Naor J, Yaniv J (2013) Efficient online scheduling for
+  deadline-sensitive jobs. \emph{Proceedings of the twenty-fifth annual ACM
+  symposium on Parallelism in algorithms and architectures}, 305--314.
 
 \bibitem[{Maglaras(2000)}]{maglaras2000discrete}
-Maglaras C (2000) Discrete-review policies for scheduling stochastic networks: Trajectory tracking and fluid-scale asymptotic optimality. \emph{The Annals of Applied Probability} 10(3):897--929.
+Maglaras C (2000) Discrete-review policies for scheduling stochastic networks:
+  Trajectory tracking and fluid-scale asymptotic optimality. \emph{The Annals
+  of Applied Probability} 10(3):897--929.
 
-\bibitem[{Mandelbaum et~al.(1998)Mandelbaum, Massey, \protect\BIBand{} Reiman}]{mandelbaum1998strong}
-Mandelbaum A, Massey WA, Reiman MI (1998) Strong approximations for markovian service networks. \emph{Queueing Systems} 30(1):149--201.
+\bibitem[{Mandelbaum et~al.(1998)Mandelbaum, Massey, \protect\BIBand{}
+  Reiman}]{mandelbaum1998strong}
+Mandelbaum A, Massey WA, Reiman MI (1998) Strong approximations for markovian
+  service networks. \emph{Queueing Systems} 30(1):149--201.
 
 \bibitem[{Microsoft(2023)}]{microsoft2023bing}
 Microsoft (2023) Bing ai. \url{https://www.bing.com/chat}.
 
 \bibitem[{OpenAI(2024)}]{openai2024gpt4technicalreport}
-OpenAI (2024) Gpt-4 technical report. \urlprefix\url{https://arxiv.org/abs/2303.08774}.
+OpenAI (2024) Gpt-4 technical report.
+  \urlprefix\url{https://arxiv.org/abs/2303.08774}.
 
-\bibitem[{Ouyang et~al.(2022)Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin, Zhang, Agarwal, Slama, Ray et~al.}]{ouyang2022training}
-Ouyang L, Wu J, Jiang X, Almeida D, Wainwright C, Mishkin P, Zhang C, Agarwal S, Slama K, Ray A, et~al. (2022) Training language models to follow instructions with human feedback. \emph{Advances in neural information processing systems} 35:27730--27744.
+\bibitem[{Ouyang et~al.(2022)Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin,
+  Zhang, Agarwal, Slama, Ray et~al.}]{ouyang2022training}
+Ouyang L, Wu J, Jiang X, Almeida D, Wainwright C, Mishkin P, Zhang C, Agarwal
+  S, Slama K, Ray A, et~al. (2022) Training language models to follow
+  instructions with human feedback. \emph{Advances in neural information
+  processing systems} 35:27730--27744.
 
 \bibitem[{Patel(2023)}]{patel2023peeling}
-Patel D (2023) {Peeling The Onion’s Layers: Large Language Models’ Cost, Context, and Feature Breakdown}. Semianalysis blog, \urlprefix\url{https://semianalysis.com/2023/02/13/peeling-the-onions-layers-large-language/}, accessed: [Insert Date Here].
+Patel D (2023) {Peeling The Onion’s Layers: Large Language Models’ Cost,
+  Context, and Feature Breakdown}. Semianalysis blog,
+  \urlprefix\url{https://semianalysis.com/2023/02/13/peeling-the-onions-layers-large-language/},
+  accessed: [Insert Date Here].
 
-\bibitem[{Patel et~al.(2024)Patel, Choukse, Zhang, Shah, Goiri, Maleki, \protect\BIBand{} Bianchini}]{patel2024splitwise}
-Patel P, Choukse E, Zhang C, Shah A, Goiri {\'I}, Maleki S, Bianchini R (2024) Splitwise: Efficient generative llm inference using phase splitting. in 2024 acm/ieee 51st annual international symposium on computer architecture (isca). \emph{IEEE Computer Society, Los Alamitos, CA, USA} 118--132.
+\bibitem[{Patel et~al.(2024)Patel, Choukse, Zhang, Shah, Goiri, Maleki,
+  \protect\BIBand{} Bianchini}]{patel2024splitwise}
+Patel P, Choukse E, Zhang C, Shah A, Goiri {\'I}, Maleki S, Bianchini R (2024)
+  Splitwise: Efficient generative llm inference using phase splitting. in 2024
+  acm/ieee 51st annual international symposium on computer architecture (isca).
+  \emph{IEEE Computer Society, Los Alamitos, CA, USA} 118--132.
 
-\bibitem[{Patterson et~al.(2021)Patterson, Gonzalez, Le, Liang, Munguia, Rothchild, So, Texier, \protect\BIBand{} Dean}]{patterson2021carbon}
-Patterson D, Gonzalez J, Le Q, Liang C, Munguia LM, Rothchild D, So D, Texier M, Dean J (2021) Carbon emissions and large neural network training. \emph{arXiv preprint arXiv:2104.10350} .
+\bibitem[{Patterson et~al.(2021)Patterson, Gonzalez, Le, Liang, Munguia,
+  Rothchild, So, Texier, \protect\BIBand{} Dean}]{patterson2021carbon}
+Patterson D, Gonzalez J, Le Q, Liang C, Munguia LM, Rothchild D, So D, Texier
+  M, Dean J (2021) Carbon emissions and large neural network training.
+  \emph{arXiv preprint arXiv:2104.10350} .
 
-\bibitem[{Pope et~al.(2023)Pope, Douglas, Chowdhery, Devlin, Bradbury, Heek, Xiao, Agrawal, \protect\BIBand{} Dean}]{pope2023efficiently}
-Pope R, Douglas S, Chowdhery A, Devlin J, Bradbury J, Heek J, Xiao K, Agrawal S, Dean J (2023) Efficiently scaling transformer inference. \emph{Proceedings of Machine Learning and Systems} 5:606--624.
+\bibitem[{Pope et~al.(2023)Pope, Douglas, Chowdhery, Devlin, Bradbury, Heek,
+  Xiao, Agrawal, \protect\BIBand{} Dean}]{pope2023efficiently}
+Pope R, Douglas S, Chowdhery A, Devlin J, Bradbury J, Heek J, Xiao K, Agrawal
+  S, Dean J (2023) Efficiently scaling transformer inference. \emph{Proceedings
+  of Machine Learning and Systems} 5:606--624.
 
-\bibitem[{Sheng et~al.(2023)Sheng, Zheng, Yuan, Li, Ryabinin, Chen, Liang, R{\'e}, Stoica, \protect\BIBand{} Zhang}]{sheng2023flexgen}
-Sheng Y, Zheng L, Yuan B, Li Z, Ryabinin M, Chen B, Liang P, R{\'e} C, Stoica I, Zhang C (2023) Flexgen: High-throughput generative inference of large language models with a single gpu. \emph{International Conference on Machine Learning}, 31094--31116 (PMLR).
+\bibitem[{Shazeer et~al.(2017)Shazeer, Mirhoseini, Maziarz, Davis, Le, Hinton,
+  \protect\BIBand{} Dean}]{shazeer2017outrageously}
+Shazeer N, Mirhoseini A, Maziarz K, Davis A, Le Q, Hinton G, Dean J (2017)
+  Outrageously large neural networks: The sparsely-gated mixture-of-experts
+  layer. \emph{International Conference on Learning Representations (ICLR)}.
+
+\bibitem[{Sheng et~al.(2023)Sheng, Zheng, Yuan, Li, Ryabinin, Chen, Liang,
+  R{\'e}, Stoica, \protect\BIBand{} Zhang}]{sheng2023flexgen}
+Sheng Y, Zheng L, Yuan B, Li Z, Ryabinin M, Chen B, Liang P, R{\'e} C, Stoica
+  I, Zhang C (2023) Flexgen: High-throughput generative inference of large
+  language models with a single gpu. \emph{International Conference on Machine
+  Learning}, 31094--31116 (PMLR).
 
 \bibitem[{Strait(1974)}]{strait1974maximum}
-Strait P (1974) On the maximum and minimum of partial sums of random variables. \emph{Pacific Journal of Mathematics} 52(2):585--593.
+Strait P (1974) On the maximum and minimum of partial sums of random variables.
+  \emph{Pacific Journal of Mathematics} 52(2):585--593.
 
-\bibitem[{Strubell et~al.(2019)Strubell, Ganesh, \protect\BIBand{} McCallum}]{strubell2019energy}
-Strubell E, Ganesh A, McCallum A (2019) Energy and policy considerations for deep learning in nlp. \emph{arXiv preprint arXiv:1906.02243} .
+\bibitem[{Strubell et~al.(2019)Strubell, Ganesh, \protect\BIBand{}
+  McCallum}]{strubell2019energy}
+Strubell E, Ganesh A, McCallum A (2019) Energy and policy considerations for
+  deep learning in nlp. \emph{arXiv preprint arXiv:1906.02243} .
 
-\bibitem[{Tay et~al.(2022)Tay, Dehghani, Bahri, \protect\BIBand{} Metzler}]{tay2022efficient}
-Tay Y, Dehghani M, Bahri D, Metzler D (2022) Efficient transformers: A survey. \emph{ACM Computing Surveys} 55(6):1--28.
+\bibitem[{Tay et~al.(2022)Tay, Dehghani, Bahri, \protect\BIBand{}
+  Metzler}]{tay2022efficient}
+Tay Y, Dehghani M, Bahri D, Metzler D (2022) Efficient transformers: A survey.
+  \emph{ACM Computing Surveys} 55(6):1--28.
 
-\bibitem[{Touvron et~al.(2023)Touvron, Lavril, Izacard, Martinet, Lachaux, Lacroix, Rozi{\`e}re, Goyal, Hambro, Azhar et~al.}]{touvron2023llama}
-Touvron H, Lavril T, Izacard G, Martinet X, Lachaux MA, Lacroix T, Rozi{\`e}re B, Goyal N, Hambro E, Azhar F, et~al. (2023) Llama: Open and efficient foundation language models. \emph{arXiv preprint arXiv:2302.13971} .
+\bibitem[{Touvron et~al.(2023)Touvron, Lavril, Izacard, Martinet, Lachaux,
+  Lacroix, Rozi{\`e}re, Goyal, Hambro, Azhar et~al.}]{touvron2023llama}
+Touvron H, Lavril T, Izacard G, Martinet X, Lachaux MA, Lacroix T, Rozi{\`e}re
+  B, Goyal N, Hambro E, Azhar F, et~al. (2023) Llama: Open and efficient
+  foundation language models. \emph{arXiv preprint arXiv:2302.13971} .
 
-\bibitem[{Vee et~al.(2010)Vee, Vassilvitskii, \protect\BIBand{} Shanmugasundaram}]{vee2010optimal}
-Vee E, Vassilvitskii S, Shanmugasundaram J (2010) Optimal online assignment with forecasts. \emph{Proceedings of the 11th ACM conference on Electronic commerce}, 109--118.
+\bibitem[{Vee et~al.(2010)Vee, Vassilvitskii, \protect\BIBand{}
+  Shanmugasundaram}]{vee2010optimal}
+Vee E, Vassilvitskii S, Shanmugasundaram J (2010) Optimal online assignment
+  with forecasts. \emph{Proceedings of the 11th ACM conference on Electronic
+  commerce}, 109--118.
 
 \bibitem[{{vLLM Team}(2025)}]{vllm-v1-2025}
-{vLLM Team} (2025) vllm v1: A major upgrade to vllm's core architecture. \url{https://docs.vllm.ai/en/latest/getting_started/v1_user_guide.html}, blog post, January 27, 2025. "In vLLM V1, the default preemption mode is RECOMPUTE rather than SWAP, as recomputation has lower overhead in the V1 architecture".
+{vLLM Team} (2025) vllm v1: A major upgrade to vllm's core architecture.
+  \url{https://docs.vllm.ai/en/latest/getting_started/v1_user_guide.html}, blog
+  post, January 27, 2025. "In vLLM V1, the default preemption mode is RECOMPUTE
+  rather than SWAP, as recomputation has lower overhead in the V1
+  architecture".
 
 \bibitem[{Wang et~al.(2025)Wang, Ye, \protect\BIBand{} Zhou}]{wang2025llm}
-Wang M, Ye Y, Zhou Z (2025) Llm serving optimization with variable prefill and decode lengths. \emph{arXiv preprint arXiv:2508.06133} .
+Wang M, Ye Y, Zhou Z (2025) Llm serving optimization with variable prefill and
+  decode lengths. \emph{arXiv preprint arXiv:2508.06133} .
 
-\bibitem[{Wei et~al.(2022{\natexlab{a}})Wei, Tay, Bommasani, Raffel, Zoph, Borgeaud, Yogatama, Bosma, Zhou, Metzler et~al.}]{wei2022emergent}
-Wei J, Tay Y, Bommasani R, Raffel C, Zoph B, Borgeaud S, Yogatama D, Bosma M, Zhou D, Metzler D, et~al. (2022{\natexlab{a}}) Emergent abilities of large language models. \emph{arXiv preprint arXiv:2206.07682} .
+\bibitem[{Wei et~al.(2022{\natexlab{a}})Wei, Tay, Bommasani, Raffel, Zoph,
+  Borgeaud, Yogatama, Bosma, Zhou, Metzler et~al.}]{wei2022emergent}
+Wei J, Tay Y, Bommasani R, Raffel C, Zoph B, Borgeaud S, Yogatama D, Bosma M,
+  Zhou D, Metzler D, et~al. (2022{\natexlab{a}}) Emergent abilities of large
+  language models. \emph{arXiv preprint arXiv:2206.07682} .
 
-\bibitem[{Wei et~al.(2022{\natexlab{b}})Wei, Wang, Schuurmans, Bosma, Xia, Chi, Le, Zhou et~al.}]{wei2022chain}
-Wei J, Wang X, Schuurmans D, Bosma M, Xia F, Chi E, Le QV, Zhou D, et~al. (2022{\natexlab{b}}) Chain-of-thought prompting elicits reasoning in large language models. \emph{Advances in neural information processing systems} 35:24824--24837.
+\bibitem[{Wei et~al.(2022{\natexlab{b}})Wei, Wang, Schuurmans, Bosma, Xia, Chi,
+  Le, Zhou et~al.}]{wei2022chain}
+Wei J, Wang X, Schuurmans D, Bosma M, Xia F, Chi E, Le QV, Zhou D, et~al.
+  (2022{\natexlab{b}}) Chain-of-thought prompting elicits reasoning in large
+  language models. \emph{Advances in neural information processing systems}
+  35:24824--24837.
 
-\bibitem[{Wu et~al.(2022)Wu, Raghavendra, Gupta, Acun, Ardalani, Maeng, Chang, Aga, Huang, Bai et~al.}]{wu2022sustainable}
-Wu CJ, Raghavendra R, Gupta U, Acun B, Ardalani N, Maeng K, Chang G, Aga F, Huang J, Bai C, et~al. (2022) Sustainable ai: Environmental implications, challenges and opportunities. \emph{Proceedings of Machine Learning and Systems} 4:795--813.
+\bibitem[{Wu et~al.(2022)Wu, Raghavendra, Gupta, Acun, Ardalani, Maeng, Chang,
+  Aga, Huang, Bai et~al.}]{wu2022sustainable}
+Wu CJ, Raghavendra R, Gupta U, Acun B, Ardalani N, Maeng K, Chang G, Aga F,
+  Huang J, Bai C, et~al. (2022) Sustainable ai: Environmental implications,
+  challenges and opportunities. \emph{Proceedings of Machine Learning and
+  Systems} 4:795--813.
 
-\bibitem[{Yu et~al.(2022)Yu, Jeong, Kim, Kim, \protect\BIBand{} Chun}]{yu2022orca}
-Yu GI, Jeong JS, Kim GW, Kim S, Chun BG (2022) Orca: A distributed serving system for $\{$Transformer-Based$\}$ generative models. \emph{16th USENIX Symposium on Operating Systems Design and Implementation (OSDI 22)}, 521--538.
+\bibitem[{Yu et~al.(2022)Yu, Jeong, Kim, Kim, \protect\BIBand{}
+  Chun}]{yu2022orca}
+Yu GI, Jeong JS, Kim GW, Kim S, Chun BG (2022) Orca: A distributed serving
+  system for $\{$Transformer-Based$\}$ generative models. \emph{16th USENIX
+  Symposium on Operating Systems Design and Implementation (OSDI 22)},
+  521--538.
 
-\bibitem[{Zheng et~al.(2023)Zheng, Chiang, Sheng, Li, Zhuang, Wu, Zhuang, Li, Lin, Xing et~al.}]{zheng2023lmsys}
-Zheng L, Chiang WL, Sheng Y, Li T, Zhuang S, Wu Z, Zhuang Y, Li Z, Lin Z, Xing EP, et~al. (2023) Lmsys-chat-1m: A large-scale real-world llm conversation dataset. \emph{arXiv preprint arXiv:2309.11998} .
+\bibitem[{Zheng et~al.(2023)Zheng, Chiang, Sheng, Li, Zhuang, Wu, Zhuang, Li,
+  Lin, Xing et~al.}]{zheng2023lmsys}
+Zheng L, Chiang WL, Sheng Y, Li T, Zhuang S, Wu Z, Zhuang Y, Li Z, Lin Z, Xing
+  EP, et~al. (2023) Lmsys-chat-1m: A large-scale real-world llm conversation
+  dataset. \emph{arXiv preprint arXiv:2309.11998} .
 
-\bibitem[{Zhong et~al.(2024)Zhong, Liu, Chen, Hu, Zhu, Liu, Jin, \protect\BIBand{} Zhang}]{zhong2024distserve}
-Zhong Y, Liu S, Chen J, Hu J, Zhu Y, Liu X, Jin X, Zhang H (2024) $\{$DistServe$\}$: Disaggregating prefill and decoding for goodput-optimized large language model serving. \emph{18th USENIX Symposium on Operating Systems Design and Implementation (OSDI 24)}, 193--210.
+\bibitem[{Zhong et~al.(2024)Zhong, Liu, Chen, Hu, Zhu, Liu, Jin,
+  \protect\BIBand{} Zhang}]{zhong2024distserve}
+Zhong Y, Liu S, Chen J, Hu J, Zhu Y, Liu X, Jin X, Zhang H (2024)
+  $\{$DistServe$\}$: Disaggregating prefill and decoding for goodput-optimized
+  large language model serving. \emph{18th USENIX Symposium on Operating
+  Systems Design and Implementation (OSDI 24)}, 193--210.
 
 \end{thebibliography}

@@ -1,0 +1,77 @@
+
+\documentclass{article}
+
+\input{packages}
+
+\newboolean{publicversion}
+\setboolean{publicversion}{true}
+
+\input{macros}
+
+
+\setlength{\intextsep}{5pt} %
+\setlength{\floatsep}{5pt} %
+\setlength{\textfloatsep}{10pt} %
+\setlist[itemize]{noitemsep, topsep=0pt}
+
+\usepackage[accepted]{mlsys2024}
+
+
+\mlsystitlerunning{\sysname: A Large-Scale Simulation Framework for LLM Inference}
+
+\begin{document}
+
+\twocolumn[
+\mlsystitle{\sysname: A Large-Scale Simulation Framework for LLM Inference}
+
+
+\begin{mlsysauthorlist}
+\mlsysauthor{Amey Agrawal}{gt,int}
+\mlsysauthor{Nitin Kedia}{msr}
+\mlsysauthor{Jayashree Mohan}{msr}
+\mlsysauthor{Ashish Panwar}{msr} 
+\mlsysauthor{Nipun Kwatra}{msr} \\
+\mlsysauthor{Bhargav S. Gulavani}{msr}
+\mlsysauthor{Ramachandran Ramjee}{msr}
+\mlsysauthor{Alexey Tumanov}{gt}
+\end{mlsysauthorlist}
+
+\mlsysaffiliation{gt}{Georgia Institute of Technology, USA.}
+\mlsysaffiliation{msr}{Microsoft Research India}
+\mlsysaffiliation{int}{Part of work done as an intern at Microsoft Research India.}
+
+\mlsyscorrespondingauthor{Amey Agrawal}{ameyagrawal@gatech.edu}
+
+\mlsyskeywords{Machine Learning, MLSys}
+
+\vskip 0.3in
+
+\input{0-abstract}
+]
+
+
+
+\printAffiliationsAndNotice{}  %
+
+
+\input{1-intro}
+\input{2-background}
+\input{3-design}
+\input{4-benchmark}
+\input{5-eval}
+\input{6-discussion}
+\input{7-related}
+\input{8-conc}
+
+
+
+\bibliography{all}
+\bibliographystyle{mlsys2024}
+
+
+\appendix
+\input{9-appendix}
+
+
+
+\end{document}
