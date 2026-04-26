@@ -972,6 +972,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
+- `docs/progress/2026_04_26_real_data_provenance_grid.md` - **Real-data provenance rerun 窄网格 (tl<=300, 3 tl/QPS, m=5/10/20/50)**
 - `docs/progress/2026_04_17_numerical_section_rewrite.md` - **Section 6 整节重写 (4 figures + 2 tables + §6.1/§6.2 + Appendix A)**
 - `docs/progress/2026_04_07_gpu_validation_reviewer2.md` - **GPU 验证完成 (Reviewer 2) - 32 batch sizes including B=600**
 - `docs/progress/2026_03_30_real_data_experiments.md` - **Real data lmsys 全面调参 + 50 bins 突破**
@@ -1000,6 +1001,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `scripts/rate_sweep_w3_vllm_backfill.py` - VM runner:W3 vLLM rate sweep nreq=20000
 
 #### WAIT-CP 实验
+- `scripts/real_data_provenance_rerun.py` - **Real data LMSYS durable provenance rerun** (SQLite resume, adaptive 3-point tl grid, stale grid pruning)
 - `scripts/rate_sweep_perseg_gate.py` - **W1/W2/W3 per-seg gate rate sweep** (主力脚本)
 - `scripts/real_data_finetune.py` - **Real data (lmsys) 调参**
 - `scripts/real_data_high_qps.py` - **Real data 高 QPS + segment 调参**

@@ -79,7 +79,7 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         segments = []
         # Segment1：所有请求至少需要 prefill 阶段（计1个 stage）加上最小 decode 次数
         #seg1_count = self.prefill_stage_count + unique_decodes[0]
-        seg1_count = unique_decodes[0] # 这里修改了, 例如decode10次, 那么是从 stage0 到 stage9
+        seg1_count = unique_decodes[0] if unique_decodes else 1  # 这里修改了, 例如decode10次, 那么是从 stage0 到 stage9
         seg1_arrival_sum = sum(pt["arrival_rate"] for pt in self.prompt_types)
         segments.append({"count": seg1_count, "arrival_sum": seg1_arrival_sum})
         
