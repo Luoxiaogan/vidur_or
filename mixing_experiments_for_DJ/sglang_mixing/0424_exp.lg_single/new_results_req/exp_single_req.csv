@@ -1,0 +1,2 @@
+rid,seqlen,extend_input_len,cached_tokens,finished_reason,finished_len,lb_entry_time,lb_entry_time_perf,decode_prealloc_queue_entry_time,decode_transfer_queue_entry_time,wait_queue_entry_time,forward_entry_time,completion_time,retraction_count,is_retracted,retracted_stain,kv_committed_len,kv_allocated_len,input_len,output_len,disagg_mode
+a96cfdc667874bd8ab9b811ab50b1c05,12,5,0,"{""type"": ""length"", ""length"": 8}",8,1776967115.9455774,8233455.159948749,8233455.160645347,8233455.161415582,8233455.161733299,8233455.161793542,8233455.506743553,0,False,False,12,12,4,8,decode
