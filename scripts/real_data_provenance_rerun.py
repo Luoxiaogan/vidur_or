@@ -98,6 +98,18 @@ class RunSpec:
 class SearchStrategy:
     include_vllm: bool
     include_sarathi512: bool
+    include_auto50: bool
+    chunk_sizes: list[int]
+    seg_margins: list[float]
+    nested_segment_counts: list[int]
+    nested_boundary_sets: list[list[int]]
+    nested_segment_limit_sets: list[list[int]]
+    gate_budget_scales: list[float]
+    gate_total_budget_scales: list[float]
+    gate_prefill_budget_scales: list[float]
+    wait_entry_min_counts: list[int]
+    drain_wait_gate_after_all_arrived: bool
+    decode_priority_orders: list[str]
     wait_gate_values: list[str]
     default_tl_values: list[int]
     low_qps_values: set[int]
@@ -119,6 +131,81 @@ def parse_qps_list(raw: str) -> list[int]:
 def parse_int_list(raw: str) -> list[int]:
     items = [x.strip() for x in raw.split(",") if x.strip()]
     return [int(x) for x in items]
+
+
+def parse_float_list(raw: str) -> list[float]:
+    items = [x.strip() for x in raw.split(",") if x.strip()]
+    return [float(x) for x in items]
+
+
+def parse_boundary_sets(raw: str, max_decode: int = 500) -> list[list[int]]:
+    if not raw.strip():
+        return []
+    boundary_sets: list[list[int]] = []
+    for item in raw.split(";"):
+        item = item.strip()
+        if not item:
+            continue
+        boundaries = [int(x.strip()) for x in item.replace(":", ",").split(",") if x.strip()]
+        if not boundaries or boundaries[-1] != max_decode:
+            boundaries.append(max_decode)
+        if boundaries != sorted(set(boundaries)):
+            raise ValueError(f"boundaries must be strictly increasing: {item}")
+        if boundaries[0] <= 0 or boundaries[-1] > max_decode:
+            raise ValueError(f"boundaries must lie in 1..{max_decode}: {item}")
+        boundary_sets.append(boundaries)
+    return boundary_sets
+
+
+def parse_int_sets(raw: str) -> list[list[int]]:
+    if not raw.strip():
+        return []
+    parsed: list[list[int]] = []
+    for item in raw.split(";"):
+        item = item.strip()
+        if not item:
+            continue
+        values = [int(x.strip()) for x in item.replace(":", ",").split(",") if x.strip()]
+        if not values:
+            continue
+        parsed.append(values)
+    return parsed
+
+
+def seg_margin_label(seg_margin: float) -> str:
+    if seg_margin == 0:
+        return ""
+    return f"_sm{str(seg_margin).replace('.', 'p')}"
+
+
+def gate_budget_label(scale: float) -> str:
+    if scale == 1.0:
+        return ""
+    return f"_gb{str(scale).replace('.', 'p')}"
+
+
+def gate_total_budget_label(scale: float) -> str:
+    if scale == 1.0:
+        return ""
+    return f"_gt{str(scale).replace('.', 'p')}"
+
+
+def gate_prefill_budget_label(scale: float) -> str:
+    if scale == 1.0:
+        return ""
+    return f"_gp{str(scale).replace('.', 'p')}"
+
+
+def wait_entry_label(count: int) -> str:
+    if count == 1:
+        return ""
+    return f"_we{count}"
+
+
+def decode_priority_label(order: str) -> str:
+    if order == "stage":
+        return ""
+    return f"_dp{order}"
 
 
 def segment_size_for_count(segment_count: int, max_decode: int = 500) -> int:
@@ -168,6 +255,9 @@ def ensure_schema(conn: sqlite3.Connection, table: str) -> None:
             mean_latency REAL,
             p99_latency REAL,
             n_steady INT,
+            n_completed INT,
+            metric_trim_head_frac REAL,
+            metric_trim_tail_frac REAL,
             restarts INT,
             output_dir TEXT,
             csv_path TEXT,
@@ -189,6 +279,12 @@ def ensure_schema(conn: sqlite3.Connection, table: str) -> None:
         conn.execute(f"ALTER TABLE {table} ADD COLUMN n_k_json TEXT")
     if "segments_json" not in existing:
         conn.execute(f"ALTER TABLE {table} ADD COLUMN segments_json TEXT")
+    if "n_completed" not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN n_completed INT")
+    if "metric_trim_head_frac" not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN metric_trim_head_frac REAL")
+    if "metric_trim_tail_frac" not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN metric_trim_tail_frac REAL")
     conn.commit()
 
 
@@ -224,8 +320,68 @@ def build_bins(df: pd.DataFrame, qps: int, nbins: int) -> list[dict]:
     return prompt_types
 
 
+def build_nested_scheduler_prompt_types(
+    prompt_types: list[dict], segment_count: int, max_decode: int = 500
+) -> list[dict]:
+    """Group fixed request bins into nested-WCP scheduler segments.
+
+    The request generator still uses the original bins. This only controls the
+    segment boundaries and tail-rate estimates used by the scheduler.
+    """
+    if segment_count <= 0:
+        raise ValueError("segment_count must be positive")
+    segment_size = max(1, max_decode // segment_count)
+    boundaries = [
+        max_decode if idx == segment_count - 1 else min(max_decode, (idx + 1) * segment_size)
+        for idx in range(segment_count)
+    ]
+    return build_nested_scheduler_prompt_types_from_boundaries(prompt_types, boundaries)
+
+
+def build_nested_scheduler_prompt_types_from_boundaries(
+    prompt_types: list[dict], boundaries: list[int]
+) -> list[dict]:
+    if not boundaries:
+        raise ValueError("boundaries must be non-empty")
+    grouped: list[dict] = []
+    prev = 0
+    for hi in boundaries:
+        members = [pt for pt in prompt_types if prev < int(pt["decode"]) <= hi]
+        arrival_rate = sum(float(pt["arrival_rate"]) for pt in members)
+        if arrival_rate > 0:
+            prefill = int(round(
+                sum(float(pt["arrival_rate"]) * int(pt["prefill"]) for pt in members)
+                / arrival_rate
+            ))
+        else:
+            prefill = max(1, int(round(
+                sum(int(pt["prefill"]) for pt in prompt_types) / max(1, len(prompt_types))
+            )))
+        grouped.append(
+            {
+                "type": f"g{hi}",
+                "prefill": max(1, prefill),
+                "decode": int(hi),
+                "arrival_rate": round(arrival_rate, 4),
+            }
+        )
+        prev = hi
+    return grouped
+
+
+def boundary_label(boundaries: list[int]) -> str:
+    return "b" + "-".join(str(item) for item in boundaries)
+
+
+def limit_set_label(limits: list[int]) -> str:
+    return "lim" + "-".join(str(item) for item in limits)
+
+
 def compute_general_nested_segments(
-    prompt_types: list[dict], total_limit: int, seg_margin: float
+    prompt_types: list[dict],
+    total_limit: int,
+    seg_margin: float,
+    segment_total_limits: list[int] | None = None,
 ) -> list[dict]:
     unique_decodes = sorted({int(pt["decode"]) for pt in prompt_types})
     if not unique_decodes:
@@ -262,17 +418,34 @@ def compute_general_nested_segments(
     for ratio in ratios:
         cumulative_ratio.append(cumulative_ratio[-1] * ratio)
 
-    denominator = sum(
-        raw_segments[idx]["count"] * cumulative_ratio[idx]
-        for idx in range(len(raw_segments))
-    )
-    n_1 = total_limit / denominator if denominator > 0 else 0.0
-    n_per_seg = [n_1 * cumulative_ratio[idx] for idx in range(len(raw_segments))]
+    if segment_total_limits is not None:
+        if len(segment_total_limits) != len(raw_segments):
+            raise ValueError(
+                f"segment_total_limits length {len(segment_total_limits)} "
+                f"does not match segment count {len(raw_segments)}"
+            )
+        n_per_seg = [
+            segment_total_limits[idx] / raw_segments[idx]["count"]
+            if raw_segments[idx]["count"] > 0 else 0.0
+            for idx in range(len(raw_segments))
+        ]
+    else:
+        denominator = sum(
+            raw_segments[idx]["count"] * cumulative_ratio[idx]
+            for idx in range(len(raw_segments))
+        )
+        n_1 = total_limit / denominator if denominator > 0 else 0.0
+        n_per_seg = [n_1 * cumulative_ratio[idx] for idx in range(len(raw_segments))]
 
     segments_info = []
     global_stage = 0
     for idx, raw_seg in enumerate(raw_segments):
-        seg_total_limit = int(round(n_per_seg[idx] * raw_seg["count"]))
+        if segment_total_limits is not None:
+            seg_total_limit = int(segment_total_limits[idx])
+        else:
+            seg_total_limit = int(round(n_per_seg[idx] * raw_seg["count"]))
+        if raw_seg["arrival_sum"] > 0 and seg_total_limit == 0:
+            seg_total_limit = 1
         base = seg_total_limit // raw_seg["count"] if raw_seg["count"] > 0 else 0
         remainder = seg_total_limit % raw_seg["count"] if raw_seg["count"] > 0 else 0
         seg_start = global_stage
@@ -428,124 +601,209 @@ def build_wcp_specs(
     wait_gate_values: list[str],
     tl_values: list[int],
     segment_counts: list[int],
+    include_auto50: bool,
+    chunk_sizes: list[int],
+    seg_margins: list[float],
+    nested_segment_counts: list[int],
+    nested_boundary_sets: list[list[int]],
+    nested_segment_limit_sets: list[list[int]],
+    gate_budget_scales: list[float],
+    gate_total_budget_scales: list[float],
+    gate_prefill_budget_scales: list[float],
+    wait_entry_min_counts: list[int],
+    drain_wait_gate_after_all_arrived: bool,
+    decode_priority_orders: list[str],
 ) -> list[RunSpec]:
     specs: list[RunSpec] = []
     prompt_types = json.loads(prompt_types_json)
-    seg_margin = 0.0
-    chunk_size = 32
     wait_cp_gate = "on"
 
     for wait_gate in wait_gate_values:
         wait_gate_flag = "ON" if wait_gate == "on" else "OFF"
-        for tl in tl_values:
-            segments_info = compute_general_nested_segments(prompt_types, tl, seg_margin)
-            if tl < len(segments_info):
-                continue
-            cmd = COMMON + [
-                "--custom_request_generator_config_prompt_types",
-                prompt_types_json,
-                "--custom_request_generator_config_max_tokens",
-                str(max_tokens),
-                "--custom_request_generator_config_num_requests",
-                str(nreq),
-                "--replica_scheduler_config_type",
-                "general_nested_chunked",
-                "--general_nested_chunked_scheduler_config_prompt_types",
-                prompt_types_json,
-                "--general_nested_chunked_scheduler_config_total_limit",
-                str(tl),
-                "--general_nested_chunked_scheduler_config_total_num_requests",
-                str(nreq),
-                "--general_nested_chunked_scheduler_config_chunk_size",
-                str(chunk_size),
-                "--general_nested_chunked_scheduler_config_seg_margin",
-                str(seg_margin),
-                "--general_nested_chunked_scheduler_config_force_clear",
-            ]
-            if wait_gate != "on":
-                cmd.append("--no-general_nested_chunked_scheduler_config_wait_gate")
-
-            specs.append(
-                RunSpec(
-                    qps=qps,
-                    algorithm="wcp_real",
-                    config_name=f"auto50seg_tl{tl}_cs{chunk_size}_wg{wait_gate_flag}",
-                    scheduler_type="general_nested_chunked",
-                    baseline_variant=None,
-                    nbins=50,
-                    total_limit=tl,
-                    chunk_size=chunk_size,
-                    segment_size=None,
-                    seg_margin=seg_margin,
-                    wait_cp_gate=wait_cp_gate,
-                    wait_gate=wait_gate,
-                    m=len(segments_info),
-                    n_k_json=json.dumps([seg["n_k"] for seg in segments_info]),
-                    segments_json=json.dumps(segments_info),
-                    nreq=nreq,
-                    max_tokens=max_tokens,
-                    prompt_types_json=prompt_types_json,
-                    command_json=json.dumps(cmd),
-                    source_note="paper_grid_wcp_auto50",
-                )
-            )
-
-        for segment_count in segment_counts:
-            seg_size = segment_size_for_count(segment_count)
-            for tl in tl_values:
-                segments_info = compute_uniform_segments(prompt_types, tl, seg_size)
-                if tl < len(segments_info):
-                    continue
-                cmd = COMMON + [
-                    "--custom_request_generator_config_prompt_types",
-                    prompt_types_json,
-                    "--custom_request_generator_config_max_tokens",
-                    str(max_tokens),
-                    "--custom_request_generator_config_num_requests",
-                    str(nreq),
-                    "--replica_scheduler_config_type",
-                    "uniform_segment_chunked",
-                    "--uniform_segment_chunked_scheduler_config_prompt_types",
-                    prompt_types_json,
-                    "--uniform_segment_chunked_scheduler_config_total_limit",
-                    str(tl),
-                    "--uniform_segment_chunked_scheduler_config_total_num_requests",
-                    str(nreq),
-                    "--uniform_segment_chunked_scheduler_config_chunk_size",
-                    str(chunk_size),
-                    "--uniform_segment_chunked_scheduler_config_segment_size",
-                    str(seg_size),
-                    "--uniform_segment_chunked_scheduler_config_seg_margin",
-                    str(seg_margin),
-                    "--uniform_segment_chunked_scheduler_config_force_clear",
-                ]
-                if wait_gate != "on":
-                    cmd.append("--no-uniform_segment_chunked_scheduler_config_wait_gate")
-
-                specs.append(
-                    RunSpec(
-                        qps=qps,
-                        algorithm="wcp_real",
-                        config_name=f"uniform_m{segment_count}_tl{tl}_cs{chunk_size}_wg{wait_gate_flag}",
-                        scheduler_type="uniform_segment_chunked",
-                        baseline_variant=None,
-                        nbins=50,
-                        total_limit=tl,
-                        chunk_size=chunk_size,
-                        segment_size=seg_size,
-                        seg_margin=seg_margin,
-                        wait_cp_gate=wait_cp_gate,
-                        wait_gate=wait_gate,
-                        m=len(segments_info),
-                        n_k_json=json.dumps([seg["n_k"] for seg in segments_info]),
-                        segments_json=json.dumps(segments_info),
-                        nreq=nreq,
-                        max_tokens=max_tokens,
-                        prompt_types_json=prompt_types_json,
-                        command_json=json.dumps(cmd),
-                        source_note="paper_grid_wcp_uniform50",
+        for seg_margin in seg_margins:
+            margin_label = seg_margin_label(seg_margin)
+            for chunk_size in chunk_sizes:
+                scale_candidates = gate_budget_scales if wait_gate == "on" else [1.0]
+                total_scale_candidates = gate_total_budget_scales if wait_gate == "on" else [1.0]
+                prefill_scale_candidates = gate_prefill_budget_scales if wait_gate == "on" else [1.0]
+                wait_entry_candidates = wait_entry_min_counts if wait_gate == "on" else [1]
+                decode_priority_candidates = decode_priority_orders or ["stage"]
+                if include_auto50:
+                    nested_candidates: list[tuple[str, list[dict]]] = [
+                        (
+                            f"auto{nested_segment_count}seg",
+                            build_nested_scheduler_prompt_types(prompt_types, nested_segment_count),
+                        )
+                        for nested_segment_count in nested_segment_counts
+                    ]
+                    nested_candidates.extend(
+                        (
+                            f"auto{len(boundaries)}seg_{boundary_label(boundaries)}",
+                            build_nested_scheduler_prompt_types_from_boundaries(prompt_types, boundaries),
+                        )
+                        for boundaries in nested_boundary_sets
                     )
-                )
+                    for nested_label, scheduler_prompt_types in nested_candidates:
+                        scheduler_prompt_types_json = json.dumps(scheduler_prompt_types)
+                        limit_candidates: list[tuple[str, int, list[int] | None]] = [
+                            ("", tl, None) for tl in tl_values
+                        ]
+                        explicit_tls = tl_values if tl_values else []
+                        for limit_set in nested_segment_limit_sets:
+                            if len(limit_set) != len(scheduler_prompt_types):
+                                continue
+                            for explicit_tl in (explicit_tls or [sum(limit_set)]):
+                                limit_candidates.append(
+                                    (
+                                        f"_{limit_set_label(limit_set)}",
+                                        explicit_tl,
+                                        limit_set,
+                                    )
+                                )
+                        for limit_label, tl, segment_total_limits in limit_candidates:
+                            segments_info = compute_general_nested_segments(
+                                scheduler_prompt_types,
+                                tl,
+                                seg_margin,
+                                segment_total_limits=segment_total_limits,
+                            )
+                            if tl < len(segments_info):
+                                continue
+                            for gate_budget_scale in scale_candidates:
+                                scale_label = gate_budget_label(gate_budget_scale)
+                                for gate_total_budget_scale in total_scale_candidates:
+                                  for gate_prefill_budget_scale in prefill_scale_candidates:
+                                    total_scale_label = gate_total_budget_label(gate_total_budget_scale)
+                                    prefill_scale_label = gate_prefill_budget_label(gate_prefill_budget_scale)
+                                    for wait_entry_min_count in wait_entry_candidates:
+                                      for decode_priority in decode_priority_candidates:
+                                        wait_entry_suffix = wait_entry_label(wait_entry_min_count)
+                                        drain_suffix = (
+                                            "_drain"
+                                            if drain_wait_gate_after_all_arrived and wait_gate == "on"
+                                            else ""
+                                        )
+                                        decode_priority_suffix = decode_priority_label(decode_priority)
+                                        cmd = COMMON + [
+                                        "--custom_request_generator_config_prompt_types",
+                                        prompt_types_json,
+                                        "--custom_request_generator_config_max_tokens",
+                                        str(max_tokens),
+                                        "--custom_request_generator_config_num_requests",
+                                        str(nreq),
+                                        "--replica_scheduler_config_type",
+                                        "general_nested_chunked",
+                                        "--general_nested_chunked_scheduler_config_prompt_types",
+                                        scheduler_prompt_types_json,
+                                        "--general_nested_chunked_scheduler_config_total_limit",
+                                        str(tl),
+                                        "--general_nested_chunked_scheduler_config_total_num_requests",
+                                        str(nreq),
+                                        "--general_nested_chunked_scheduler_config_chunk_size",
+                                        str(chunk_size),
+                                        "--general_nested_chunked_scheduler_config_seg_margin",
+                                        str(seg_margin),
+                                        "--general_nested_chunked_scheduler_config_gate_budget_scale",
+                                        str(gate_budget_scale),
+                                        "--general_nested_chunked_scheduler_config_gate_total_budget_scale",
+                                        str(gate_total_budget_scale),
+                                        "--general_nested_chunked_scheduler_config_gate_prefill_budget_scale",
+                                        str(gate_prefill_budget_scale),
+                                        "--general_nested_chunked_scheduler_config_wait_entry_min_count",
+                                        str(wait_entry_min_count),
+                                        "--general_nested_chunked_scheduler_config_decode_priority",
+                                        decode_priority,
+                                        "--general_nested_chunked_scheduler_config_force_clear",
+                                        ]
+                                        if drain_wait_gate_after_all_arrived and wait_gate == "on":
+                                            cmd.append("--general_nested_chunked_scheduler_config_drain_wait_gate_after_all_arrived")
+                                        if segment_total_limits is not None:
+                                            cmd.append("--general_nested_chunked_scheduler_config_segment_total_limits")
+                                            cmd.extend(str(item) for item in segment_total_limits)
+                                        if wait_gate != "on":
+                                            cmd.append("--no-general_nested_chunked_scheduler_config_wait_gate")
+
+                                        specs.append(
+                                            RunSpec(
+                                                qps=qps,
+                                                algorithm="wcp_real",
+                                                config_name=f"{nested_label}{limit_label}_tl{tl}_cs{chunk_size}{margin_label}{scale_label}{total_scale_label}{prefill_scale_label}{wait_entry_suffix}{drain_suffix}{decode_priority_suffix}_wg{wait_gate_flag}",
+                                                scheduler_type="general_nested_chunked",
+                                                baseline_variant=None,
+                                                nbins=50,
+                                                total_limit=tl,
+                                                chunk_size=chunk_size,
+                                                segment_size=None,
+                                                seg_margin=seg_margin,
+                                                wait_cp_gate=wait_cp_gate,
+                                                wait_gate=wait_gate,
+                                                m=len(segments_info),
+                                                n_k_json=json.dumps([seg["n_k"] for seg in segments_info]),
+                                                segments_json=json.dumps(segments_info),
+                                                nreq=nreq,
+                                                max_tokens=max_tokens,
+                                                prompt_types_json=prompt_types_json,
+                                                command_json=json.dumps(cmd),
+                                                source_note=f"paper_grid_wcp_{nested_label}",
+                                            )
+                                        )
+
+                for segment_count in segment_counts:
+                    seg_size = segment_size_for_count(segment_count)
+                    for tl in tl_values:
+                        segments_info = compute_uniform_segments(prompt_types, tl, seg_size)
+                        if tl < len(segments_info):
+                            continue
+                        cmd = COMMON + [
+                            "--custom_request_generator_config_prompt_types",
+                            prompt_types_json,
+                            "--custom_request_generator_config_max_tokens",
+                            str(max_tokens),
+                            "--custom_request_generator_config_num_requests",
+                            str(nreq),
+                            "--replica_scheduler_config_type",
+                            "uniform_segment_chunked",
+                            "--uniform_segment_chunked_scheduler_config_prompt_types",
+                            prompt_types_json,
+                            "--uniform_segment_chunked_scheduler_config_total_limit",
+                            str(tl),
+                            "--uniform_segment_chunked_scheduler_config_total_num_requests",
+                            str(nreq),
+                            "--uniform_segment_chunked_scheduler_config_chunk_size",
+                            str(chunk_size),
+                            "--uniform_segment_chunked_scheduler_config_segment_size",
+                            str(seg_size),
+                            "--uniform_segment_chunked_scheduler_config_seg_margin",
+                            str(seg_margin),
+                            "--uniform_segment_chunked_scheduler_config_force_clear",
+                        ]
+                        if wait_gate != "on":
+                            cmd.append("--no-uniform_segment_chunked_scheduler_config_wait_gate")
+
+                        specs.append(
+                            RunSpec(
+                                qps=qps,
+                                algorithm="wcp_real",
+                                config_name=f"uniform_m{len(segments_info)}_tl{tl}_cs{chunk_size}{margin_label}_wg{wait_gate_flag}",
+                                scheduler_type="uniform_segment_chunked",
+                                baseline_variant=None,
+                                nbins=50,
+                                total_limit=tl,
+                                chunk_size=chunk_size,
+                                segment_size=seg_size,
+                                seg_margin=seg_margin,
+                                wait_cp_gate=wait_cp_gate,
+                                wait_gate=wait_gate,
+                                m=len(segments_info),
+                                n_k_json=json.dumps([seg["n_k"] for seg in segments_info]),
+                                segments_json=json.dumps(segments_info),
+                                nreq=nreq,
+                                max_tokens=max_tokens,
+                                prompt_types_json=prompt_types_json,
+                                command_json=json.dumps(cmd),
+                                source_note="paper_grid_wcp_uniform50",
+                            )
+                        )
 
     return specs
 
@@ -583,6 +841,18 @@ def build_run_specs(
                     strategy.wait_gate_values,
                     tl_values,
                     strategy.segment_counts,
+                    strategy.include_auto50,
+                    strategy.chunk_sizes,
+                    strategy.seg_margins,
+                    strategy.nested_segment_counts,
+                    strategy.nested_boundary_sets,
+                    strategy.nested_segment_limit_sets,
+                    strategy.gate_budget_scales,
+                    strategy.gate_total_budget_scales,
+                    strategy.gate_prefill_budget_scales,
+                    strategy.wait_entry_min_counts,
+                    strategy.drain_wait_gate_after_all_arrived,
+                    strategy.decode_priority_orders,
                 )
             )
     return specs
@@ -667,6 +937,20 @@ def build_search_strategy(args: argparse.Namespace) -> SearchStrategy:
     return SearchStrategy(
         include_vllm=args.include_vllm,
         include_sarathi512=args.include_sarathi512,
+        include_auto50=args.include_auto50,
+        chunk_sizes=parse_int_list(args.chunk_sizes),
+        seg_margins=parse_float_list(args.seg_margins),
+        nested_segment_counts=parse_int_list(args.nested_segment_counts),
+        nested_boundary_sets=parse_boundary_sets(args.nested_boundary_sets),
+        nested_segment_limit_sets=parse_int_sets(args.nested_segment_limit_sets),
+        gate_budget_scales=parse_float_list(args.gate_budget_scales),
+        gate_total_budget_scales=parse_float_list(args.gate_total_budget_scales),
+        gate_prefill_budget_scales=parse_float_list(args.gate_prefill_budget_scales),
+        wait_entry_min_counts=parse_int_list(args.wait_entry_min_counts),
+        drain_wait_gate_after_all_arrived=args.drain_wait_gate_after_all_arrived,
+        decode_priority_orders=[
+            item.strip() for item in args.decode_priority_orders.split(",") if item.strip()
+        ],
         wait_gate_values=wait_gate_values,
         default_tl_values=default_tl_values,
         low_qps_values=low_qps_values,
@@ -786,6 +1070,9 @@ def persist_metrics(
     mean_latency: float | None,
     p99_latency: float | None,
     n_steady: int | None,
+    n_completed: int | None,
+    metric_trim_head_frac: float,
+    metric_trim_tail_frac: float,
     restarts: int | None,
     output_dir: Path,
     csv_path: Path | None,
@@ -818,6 +1105,9 @@ def persist_metrics(
             mean_latency,
             p99_latency,
             n_steady,
+            n_completed,
+            metric_trim_head_frac,
+            metric_trim_tail_frac,
             restarts,
             output_dir,
             csv_path,
@@ -828,7 +1118,7 @@ def persist_metrics(
             n_k_json,
             segments_json
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """,
         (
@@ -855,6 +1145,9 @@ def persist_metrics(
             mean_latency,
             p99_latency,
             n_steady,
+            n_completed,
+            metric_trim_head_frac,
+            metric_trim_tail_frac,
             restarts,
             str(output_dir),
             str(csv_path) if csv_path else None,
@@ -869,26 +1162,44 @@ def persist_metrics(
     conn.commit()
 
 
-def collect_metrics(output_dir: Path) -> tuple[float | None, float | None, int | None, int | None, Path | None]:
+def collect_metrics(
+    output_dir: Path,
+    trim_head_frac: float,
+    trim_tail_frac: float,
+    expected_nreq: int | None = None,
+) -> tuple[float | None, float | None, int | None, int | None, int | None, Path | None]:
     csvs = sorted(glob.glob(str(output_dir / "**" / "request_metrics_*.csv"), recursive=True))
     if not csvs:
-        return None, None, None, None, None
+        return None, None, None, None, None, None
     csv_path = Path(csvs[0])
     df = pd.read_csv(csv_path)
     if "request_e2e_time" not in df:
-        return None, None, None, None, csv_path
+        return None, None, None, None, None, csv_path
     completed = df[df["request_e2e_time"].notna()]
+    n_completed = int(len(completed))
     if completed.empty:
-        return None, None, None, None, csv_path
-    start = len(completed) // 4
-    steady = completed.iloc[start:]
+        return None, None, None, n_completed, None, csv_path
+    if expected_nreq is not None and n_completed < expected_nreq:
+        return None, None, None, n_completed, None, csv_path
+    if "Request Id" in completed.columns:
+        completed = completed.sort_values("Request Id")
+    n_completed = int(len(completed))
+    start = int(n_completed * trim_head_frac)
+    tail = int(n_completed * trim_tail_frac)
+    end = n_completed - tail if tail > 0 else n_completed
+    if end <= start:
+        return None, None, None, n_completed, None, csv_path
+    steady = completed.iloc[start:end]
     restarts = None
-    if "num_restarts" in steady:
+    if "request_num_restarts" in steady:
+        restarts = int(steady["request_num_restarts"].fillna(0).sum())
+    elif "num_restarts" in steady:
         restarts = int(steady["num_restarts"].fillna(0).sum())
     return (
         float(steady["request_e2e_time"].mean()),
         float(steady["request_e2e_time"].quantile(0.99)),
         int(len(steady)),
+        n_completed,
         restarts,
         csv_path,
     )
@@ -903,6 +1214,8 @@ def run_one(
     spec: RunSpec,
     timeout: int,
     force: bool,
+    trim_head_frac: float,
+    trim_tail_frac: float,
 ) -> tuple[bool, str]:
     if not force and already_logged(conn, table, run_tag, spec):
         return False, f"skip cached qps={spec.qps} {spec.config_name}"
@@ -930,7 +1243,12 @@ def run_one(
     stdout_path.write_text(result.stdout, encoding="utf-8", errors="replace")
     stderr_path.write_text(result.stderr, encoding="utf-8", errors="replace")
 
-    mean_latency, p99_latency, n_steady, restarts, csv_path = collect_metrics(run_dir)
+    mean_latency, p99_latency, n_steady, n_completed, restarts, csv_path = collect_metrics(
+        run_dir,
+        trim_head_frac=trim_head_frac,
+        trim_tail_frac=trim_tail_frac,
+        expected_nreq=spec.nreq,
+    )
     persist_metrics(
         conn=conn,
         table=table,
@@ -941,6 +1259,9 @@ def run_one(
         mean_latency=mean_latency,
         p99_latency=p99_latency,
         n_steady=n_steady,
+        n_completed=n_completed,
+        metric_trim_head_frac=trim_head_frac,
+        metric_trim_tail_frac=trim_tail_frac,
         restarts=restarts,
         output_dir=run_dir,
         csv_path=csv_path,
@@ -951,7 +1272,7 @@ def run_one(
     if result.returncode != 0:
         return True, f"FAIL qps={spec.qps} {spec.config_name} rc={result.returncode}"
     if mean_latency is None:
-        return True, f"MISS qps={spec.qps} {spec.config_name} no_csv_or_metric"
+        return True, f"MISS qps={spec.qps} {spec.config_name} no_complete_metric n_completed={n_completed}"
     return True, f"OK qps={spec.qps} {spec.config_name} mean={mean_latency:.3f}s p99={p99_latency:.3f}s"
 
 
@@ -1028,6 +1349,59 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--mode", choices=["all", "baselines", "wcp"], default="all")
     parser.add_argument("--include-vllm", action="store_true", help="Also run vLLM as a secondary baseline.")
     parser.add_argument("--include-sarathi512", action="store_true", help="Also run Sarathi512 as a secondary baseline.")
+    parser.add_argument(
+        "--include-auto50",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Include general_nested_chunked auto50seg WCP candidates.",
+    )
+    parser.add_argument("--chunk-sizes", default="32", help="Comma-separated WCP chunk sizes to sweep.")
+    parser.add_argument("--seg-margins", default="0.0", help="Comma-separated WCP segment margins to sweep.")
+    parser.add_argument(
+        "--nested-segment-counts",
+        default="50",
+        help="Comma-separated nested scheduler segment counts. Request bins remain fixed at 50.",
+    )
+    parser.add_argument(
+        "--nested-boundary-sets",
+        default="",
+        help="Semicolon-separated custom nested decode boundaries, e.g. '60:120:200:320:500;80:160:260:500'. Request bins remain fixed at 50.",
+    )
+    parser.add_argument(
+        "--nested-segment-limit-sets",
+        default="",
+        help="Semicolon-separated explicit integer segment booking limits, e.g. '75:44:31:18:8:3;74:45:31:18:8:3'.",
+    )
+    parser.add_argument(
+        "--gate-budget-scales",
+        default="1.0",
+        help="Comma-separated multipliers for the gate-on total/prefill token budgets.",
+    )
+    parser.add_argument(
+        "--gate-total-budget-scales",
+        default="1.0",
+        help="Comma-separated additional multipliers for the gate-on total token budget.",
+    )
+    parser.add_argument(
+        "--gate-prefill-budget-scales",
+        default="1.0",
+        help="Comma-separated additional multipliers for the gate-on prefill token budget.",
+    )
+    parser.add_argument(
+        "--wait-entry-min-counts",
+        default="1",
+        help="Comma-separated minimum segment-boundary queue sizes before wait_gate opens.",
+    )
+    parser.add_argument(
+        "--drain-wait-gate-after-all-arrived",
+        action="store_true",
+        help="Relax segment WAIT entry gating after all requests have arrived to prevent finite-horizon tail stalls.",
+    )
+    parser.add_argument(
+        "--decode-priority-orders",
+        default="stage",
+        help="Comma-separated decode priorities for general_nested_chunked: stage or fifo.",
+    )
     parser.add_argument("--wait-gate-values", default="on", help="Comma-separated wait_gate values to sweep, e.g. on or on,off.")
     parser.add_argument("--tl-values", default="300", help="Fallback tl grid used when adaptive tl is disabled.")
     parser.add_argument("--low-qps", default="", help="Comma-separated low-QPS values that should receive an expanded tl grid.")
@@ -1050,6 +1424,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--adaptive-tl-max", type=int, default=300, help="Maximum tl in the adaptive grid.")
     parser.add_argument("--segment-counts", default="5,10,20,50", help="Comma-separated segment-count choices m for uniform_segment_chunked.")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
+    parser.add_argument("--trim-head-frac", type=float, default=0.25, help="Drop this fraction of completed requests from the beginning before computing latency.")
+    parser.add_argument("--trim-tail-frac", type=float, default=0.10, help="Drop this fraction of completed requests from the end before computing latency.")
     parser.add_argument("--limit", type=int, default=None, help="Run only the first N generated specs.")
     parser.add_argument("--force", action="store_true", help="Ignore cached rows for the same run-tag and rerun.")
     parser.add_argument("--prune-stale", action="store_true", help="Delete cached WCP rows for this run-tag that are outside the generated grid.")
@@ -1081,11 +1457,24 @@ def main() -> int:
     print(f"mode={args.mode}")
     print(f"qps={qps_list}")
     print(f"wait_gate_values={strategy.wait_gate_values}")
+    print(f"include_auto50={strategy.include_auto50}")
+    print(f"chunk_sizes={strategy.chunk_sizes}")
+    print(f"seg_margins={strategy.seg_margins}")
+    print(f"nested_segment_counts={strategy.nested_segment_counts}")
+    print(f"nested_boundary_sets={strategy.nested_boundary_sets}")
+    print(f"nested_segment_limit_sets={strategy.nested_segment_limit_sets}")
+    print(f"gate_budget_scales={strategy.gate_budget_scales}")
+    print(f"gate_total_budget_scales={strategy.gate_total_budget_scales}")
+    print(f"gate_prefill_budget_scales={strategy.gate_prefill_budget_scales}")
+    print(f"wait_entry_min_counts={strategy.wait_entry_min_counts}")
+    print(f"drain_wait_gate_after_all_arrived={strategy.drain_wait_gate_after_all_arrived}")
+    print(f"decode_priority_orders={strategy.decode_priority_orders}")
     print(f"default_tl_values={strategy.default_tl_values}")
     print(f"low_qps_values={sorted(strategy.low_qps_values)}")
     print(f"extra_low_qps_tl_values={strategy.extra_low_qps_tl_values}")
     print(f"segment_counts={strategy.segment_counts}")
     print(f"adaptive_tl_grid={strategy.adaptive_tl_grid}")
+    print(f"latency_trim=head{args.trim_head_frac},tail{args.trim_tail_frac}")
     if strategy.adaptive_tl_grid:
         print(
             f"adaptive_tl_params=step{strategy.adaptive_tl_step},"
@@ -1122,6 +1511,8 @@ def main() -> int:
                 spec=spec,
                 timeout=args.timeout,
                 force=args.force,
+                trim_head_frac=args.trim_head_frac,
+                trim_tail_frac=args.trim_tail_frac,
             )
             prefix = f"[{idx:03d}/{len(specs):03d}]"
             print(prefix, message, flush=True)

@@ -30,6 +30,15 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         super().__init__(*args, **kwargs)
         self._per_req_budget = self._config.chunk_size
         self._pd_mode = self._config.pd_mode
+        self._wait_entry_min_count = max(
+            1, int(getattr(self._config, "wait_entry_min_count", 1))
+        )
+        self._drain_wait_gate_after_all_arrived = bool(
+            getattr(self._config, "drain_wait_gate_after_all_arrived", False)
+        )
+        self._decode_priority = getattr(self._config, "decode_priority", "stage")
+        if self._decode_priority not in {"stage", "fifo"}:
+            raise ValueError(f"Unsupported decode_priority: {self._decode_priority}")
         self._watermark_blocks = int(
             self._config.watermark_blocks_fraction * self._config.num_blocks
         )
@@ -73,21 +82,30 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         prefill_in_progress = self._P * weighted_K
         decode_count = self.total_limit - prefill_in_progress
         self._batch_est = int(ceil(decode_count + prefill_in_progress * self._per_req_budget))
-        self._total_budget = self._batch_est if self._gate else float('inf')
-
-        # Per-segment decode budget: 每个 seg 每 batch 最多贡献多少 decode tokens
-        self._seg_decode_budgets = []
-        for seg_info in self.segments:
-            n_k = seg_info["n_k"]
-            seg_count = seg_info["end"] - seg_info["start"] + 1
-            # 该 seg steady-state decode tokens = n_k * seg_count
-            seg_decode_budget = int(ceil(n_k * seg_count))
-            self._seg_decode_budgets.append(seg_decode_budget)
+        self._gate_budget_scale = max(0.0, float(getattr(self._config, "gate_budget_scale", 1.0)))
+        self._gate_total_budget_scale = max(
+            0.0, float(getattr(self._config, "gate_total_budget_scale", 1.0))
+        )
+        self._gate_prefill_budget_scale = max(
+            0.0, float(getattr(self._config, "gate_prefill_budget_scale", 1.0))
+        )
+        total_budget_scale = self._gate_budget_scale * self._gate_total_budget_scale
+        prefill_budget_scale = self._gate_budget_scale * self._gate_prefill_budget_scale
+        self._scaled_batch_est = max(1, int(ceil(self._batch_est * total_budget_scale)))
+        self._total_budget = self._scaled_batch_est if self._gate else float('inf')
 
         # Prefill budget: prefill_in_progress * cs
-        self._prefill_budget = int(ceil(prefill_in_progress * self._per_req_budget))
+        self._prefill_budget = max(
+            1,
+            int(ceil(prefill_in_progress * self._per_req_budget * prefill_budget_scale)),
+        )
 
-        print(f"Gate: batch_est={self._batch_est}, seg_decode_budgets={self._seg_decode_budgets}, prefill_budget={self._prefill_budget}")
+        print(
+            f"Gate: batch_est={self._batch_est}, total_budget={self._total_budget}, "
+            f"prefill_budget={self._prefill_budget}, scale={self._gate_budget_scale}, "
+            f"total_scale={self._gate_total_budget_scale}, "
+            f"prefill_scale={self._gate_prefill_budget_scale}"
+        )
 
         # 运行时统计
         self._batch_count = 0
@@ -95,7 +113,10 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
 
         print(f"WAIT-CP: per_req={self._per_req_budget}, "
               f"tl={self.total_limit}, P={self._P:.2f}, "
-              f"batch_est={self._batch_est}, gate={'ON' if self._gate else 'OFF'}, "
+              f"batch_est={self._batch_est}, gate_budget={self._total_budget}, "
+              f"gate={'ON' if self._gate else 'OFF'}, "
+              f"wait_entry_min={self._wait_entry_min_count}, "
+              f"decode_priority={self._decode_priority}, "
               f"multi_type={self._multi_type}, n_segments={len(self.segments)}, "
               f"pipeline_w={self._pipeline_depth_weighted:.1f}")
 
@@ -160,13 +181,12 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         batch_tokens = 0
         decode_count = 0
 
-        # ---- Step 3: Decode (stage 1+) — per-segment gate + WAIT ----
+        # ---- Step 3: Decode (stage 1+) — booking limits + total batch gate + WAIT ----
         for seg_idx, seg in enumerate(self.segments):
             seg_start = seg["start"]
             seg_end = seg["end"]
             num_stages = seg_end - seg_start + 1
             budget = seg["seg_total_limit"]
-            seg_decode_budget = self._seg_decode_budgets[seg_idx] if self._gate else float('inf')
 
             # Rotation (用于 WAIT 阈值)
             base_nk = budget // num_stages
@@ -174,26 +194,35 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
             batch_idx = self._batch_count % num_stages
             this_limit = base_nk + 1 if batch_idx < remainder_nk else base_nk
 
-            # WAIT: 各 seg 独立判断
+            # WAIT gates segment entry by the accumulated boundary backlog.
+            # Causality is already enforced by request stages: a request can
+            # appear at seg_start only after the previous segment advanced it.
             entry_count = len(grouped.get(seg_start, []))
             occupied_internal = sum(1 for req in self._request_queue
                 if getattr(req, 'current_stage', 0) > seg_start
                 and getattr(req, 'current_stage', 0) <= seg_end)
             total_in_seg = entry_count + occupied_internal
-            if self._config.wait_gate:
+            allow_segment_entry = True
+            drain_wait_gate = (
+                self._drain_wait_gate_after_all_arrived and self.all_requests_arrived
+            )
+            if self._config.wait_gate and not drain_wait_gate:
                 seg_full = total_in_seg >= budget
-                entry_ready = entry_count >= this_limit
+                entry_threshold = max(this_limit, self._wait_entry_min_count)
+                entry_ready = entry_count >= entry_threshold
                 if not seg_full and not entry_ready:
-                    continue  # WAIT
+                    allow_segment_entry = False  # WAIT gates entry, not internal service.
 
             seg_tokens_added = 0
 
             # 3a. Entry stage (segment 边界, seg_start >= 1)
-            if seg_start >= 1:
+            if allow_segment_entry and seg_start >= 1:
                 remain = max(0, budget - occupied_internal)
                 entry_group = grouped.get(seg_start, [])
                 count = 0
-                while entry_group and count < remain and seg_tokens_added < seg_decode_budget:
+                while entry_group and count < remain:
+                    if self._gate and batch_tokens >= self._total_budget:
+                        break
                     req = entry_group.pop(0)
                     if not self._can_allocate_request(req):
                         break
@@ -208,25 +237,27 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
                     seg_tokens_added += 1
                     count += 1
 
-            # 3b. Internal stages: free flow, 受 seg decode budget 限制
+            # 3b. Internal stages: free flow; gate only limits total batch tokens.
+            internal_requests: List[Request] = []
             for stage in range(max(seg_start + 1, 1), seg_end + 1):
-                if seg_tokens_added >= seg_decode_budget:
+                internal_requests.extend(grouped.get(stage, []))
+            if self._decode_priority == "fifo":
+                internal_requests.sort(key=lambda req: req.arrived_at)
+
+            for req in list(internal_requests):
+                if self._gate and batch_tokens >= self._total_budget:
                     break
-                group = grouped.get(stage, [])
-                for req in list(group):
-                    if seg_tokens_added >= seg_decode_budget:
-                        break
-                    if not self._can_allocate_request(req):
-                        continue
-                    if req in self._request_queue:
-                        self._request_queue.remove(req)
-                    self._allocate_request(req)
-                    req.advance_stage()
-                    selected.append(req)
-                    tokens.append(1)
-                    batch_tokens += 1
-                    decode_count += 1
-                    seg_tokens_added += 1
+                if not self._can_allocate_request(req):
+                    continue
+                if req in self._request_queue:
+                    self._request_queue.remove(req)
+                self._allocate_request(req)
+                req.advance_stage()
+                selected.append(req)
+                tokens.append(1)
+                batch_tokens += 1
+                decode_count += 1
+                seg_tokens_added += 1
 
         # ---- Step 4: Prefill (stage 0) per-request chunk ----
         # PD mode: skip prefill entirely, all requests already completed prefill

@@ -90,14 +90,19 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
             seg_arrival_sum = sum(pt["arrival_rate"] for pt in self.prompt_types if pt["decode"] > unique_decodes[i-1])
             segments.append({"count": seg_count, "arrival_sum": seg_arrival_sum})
         
+        num_segs = len(segments)
+        explicit_seg_limits = list(getattr(self._config, "segment_total_limits", []) or [])
+        if explicit_seg_limits and len(explicit_seg_limits) != num_segs:
+            raise ValueError(
+                f"segment_total_limits length {len(explicit_seg_limits)} "
+                f"does not match number of segments {num_segs}"
+            )
+
         # ---- 按 paper 约束分配 per-stage limit ----
         # n_{k+1}/n_k = p_k + seg_margin, 其中 p_k = arrival_sum_{k+1} / arrival_sum_k
-        # 从 tl 反推各 segment 的 n_k (per-stage limit)
+        # 从 tl 反推各 segment 的 n_k (per-stage limit)，或使用显式整数 segment limit。
         seg_margin = self._config.seg_margin
 
-        num_segs = len(segments)
-        # 计算每个 segment 间的比率 q_k = p_k + seg_margin
-        # q_k 被 clamp 到 (0, 1) 以保证合理性
         ratios = []  # q_1, q_2, ..., q_{m-1}
         for k in range(num_segs - 1):
             p_k = segments[k + 1]["arrival_sum"] / segments[k]["arrival_sum"] if segments[k]["arrival_sum"] > 0 else 0
@@ -110,11 +115,17 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         for q in ratios:
             cumulative_ratio.append(cumulative_ratio[-1] * q)
 
-        denominator = sum(segments[k]["count"] * cumulative_ratio[k] for k in range(num_segs))
-        n_1 = self.total_limit / denominator if denominator > 0 else 0
-
-        # 各 segment 的 per-stage limit (float) 和 seg_total_limit
-        n_per_seg = [n_1 * cumulative_ratio[k] for k in range(num_segs)]
+        if explicit_seg_limits:
+            n_per_seg = [
+                explicit_seg_limits[k] / segments[k]["count"]
+                if segments[k]["count"] > 0 else 0
+                for k in range(num_segs)
+            ]
+            print(f"explicit_segment_total_limits={explicit_seg_limits}")
+        else:
+            denominator = sum(segments[k]["count"] * cumulative_ratio[k] for k in range(num_segs))
+            n_1 = self.total_limit / denominator if denominator > 0 else 0
+            n_per_seg = [n_1 * cumulative_ratio[k] for k in range(num_segs)]
 
         print(f"seg_margin={seg_margin}, n_per_seg={[f'{n:.3f}' for n in n_per_seg]}")
         for k in range(num_segs - 1):
@@ -128,8 +139,13 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
         total_limit_real = 0
 
         for k, seg in enumerate(segments):
-            seg_total_limit_float = n_per_seg[k] * seg["count"]
-            seg_total_limit_int = int(round(seg_total_limit_float))
+            if explicit_seg_limits:
+                seg_total_limit_int = int(explicit_seg_limits[k])
+            else:
+                seg_total_limit_float = n_per_seg[k] * seg["count"]
+                seg_total_limit_int = int(round(seg_total_limit_float))
+            if seg["arrival_sum"] > 0 and seg_total_limit_int == 0:
+                seg_total_limit_int = 1
 
             # 整数分配: base + 余数，保证 max - min <= 1
             base = seg_total_limit_int // seg["count"] if seg["count"] > 0 else 0

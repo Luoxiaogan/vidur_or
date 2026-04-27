@@ -827,6 +827,13 @@ class GeneralNestedBookingLimitSchedulerConfig(BaseReplicaSchedulerConfig):
                     "False = always process all segments (admission-only control).",
         },
     )
+    segment_total_limits: List[int] = field(
+        default_factory=list,
+        metadata={
+            "help": "Optional explicit integer booking limit per nested segment. "
+                    "If provided, overrides the n_{k+1}/n_k formula.",
+        },
+    )
 
     @staticmethod
     def get_type():
@@ -849,6 +856,30 @@ class GeneralNestedChunkedSchedulerConfig(GeneralNestedBookingLimitSchedulerConf
     pd_mode: bool = field(
         default=False,
         metadata={"help": "PD separated mode: skip prefill, all requests enter decode directly."},
+    )
+    gate_budget_scale: float = field(
+        default=1.0,
+        metadata={"help": "Scale factor applied to WAIT_CP_GATE total and prefill token budgets."},
+    )
+    gate_total_budget_scale: float = field(
+        default=1.0,
+        metadata={"help": "Additional scale factor applied only to WAIT_CP_GATE total token budget."},
+    )
+    gate_prefill_budget_scale: float = field(
+        default=1.0,
+        metadata={"help": "Additional scale factor applied only to WAIT_CP_GATE prefill token budget."},
+    )
+    wait_entry_min_count: int = field(
+        default=1,
+        metadata={"help": "Minimum entry-stage requests required before WAIT gate opens a segment."},
+    )
+    drain_wait_gate_after_all_arrived: bool = field(
+        default=False,
+        metadata={"help": "Relax segment WAIT entry gating after all requests have arrived so finite-horizon runs drain."},
+    )
+    decode_priority: str = field(
+        default="stage",
+        metadata={"help": "Decode ordering inside a segment: 'stage' for stage order or 'fifo' for arrival-time order."},
     )
 
     @staticmethod
