@@ -299,7 +299,7 @@ def slugify(raw: str) -> str:
     )
 
 
-def build_bins(df: pd.DataFrame, qps: int, nbins: int) -> list[dict]:
+def build_bins(df: pd.DataFrame, qps: int, nbins: int, arrival_rate_round_digits: int = 4) -> list[dict]:
     seg_size = max(1, 500 // nbins)
     prompt_types = []
     for idx in range(nbins):
@@ -314,7 +314,10 @@ def build_bins(df: pd.DataFrame, qps: int, nbins: int) -> list[dict]:
                 "type": f"d{hi}",
                 "prefill": max(1, int(sub.num_prefill_tokens.mean())),
                 "decode": int(hi),
-                "arrival_rate": round(qps * len(sub) / len(df), 4),
+                "arrival_rate": round(
+                    qps * len(sub) / len(df),
+                    arrival_rate_round_digits,
+                ),
             }
         )
     return prompt_types
@@ -814,12 +817,15 @@ def build_run_specs(
     nreq: int,
     mode: str,
     strategy: SearchStrategy,
+    arrival_rate_round_digits: int,
 ) -> list[RunSpec]:
     specs: list[RunSpec] = []
     max_tokens = 539
     for qps in qps_list:
         tl_values = resolve_tl_values_for_qps(qps, strategy)
-        prompt_types_json = json.dumps(build_bins(df, qps, 50))
+        prompt_types_json = json.dumps(
+            build_bins(df, qps, 50, arrival_rate_round_digits)
+        )
         if mode in {"all", "baselines"}:
             specs.extend(
                 build_baseline_specs(
@@ -1424,6 +1430,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--adaptive-tl-max", type=int, default=300, help="Maximum tl in the adaptive grid.")
     parser.add_argument("--segment-counts", default="5,10,20,50", help="Comma-separated segment-count choices m for uniform_segment_chunked.")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
+    parser.add_argument(
+        "--arrival-rate-round-digits",
+        type=int,
+        default=4,
+        help="Decimal places for binned request arrival rates. Use 2 to reproduce the March scripts.",
+    )
     parser.add_argument("--trim-head-frac", type=float, default=0.25, help="Drop this fraction of completed requests from the beginning before computing latency.")
     parser.add_argument("--trim-tail-frac", type=float, default=0.10, help="Drop this fraction of completed requests from the end before computing latency.")
     parser.add_argument("--limit", type=int, default=None, help="Run only the first N generated specs.")
@@ -1448,6 +1460,7 @@ def main() -> int:
         nreq=args.nreq,
         mode=args.mode,
         strategy=strategy,
+        arrival_rate_round_digits=args.arrival_rate_round_digits,
     )
     if args.limit is not None:
         specs = specs[: args.limit]
@@ -1474,6 +1487,7 @@ def main() -> int:
     print(f"extra_low_qps_tl_values={strategy.extra_low_qps_tl_values}")
     print(f"segment_counts={strategy.segment_counts}")
     print(f"adaptive_tl_grid={strategy.adaptive_tl_grid}")
+    print(f"arrival_rate_round_digits={args.arrival_rate_round_digits}")
     print(f"latency_trim=head{args.trim_head_frac},tail{args.trim_tail_frac}")
     if strategy.adaptive_tl_grid:
         print(

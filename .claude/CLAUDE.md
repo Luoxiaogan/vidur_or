@@ -972,7 +972,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
-- `docs/progress/2026_04_28_qps10_gate_on_tuning.md` - **QPS=10 gate-on Nested WAIT 调参** (best WCP mean 1.703400783, 尚差 Sarathi 11.5us)
+- `docs/progress/2026_04_28_qps10_gate_on_tuning.md` - **QPS=10 gate-on Nested WAIT 调参** (old-metric verify strict win: `auto6seg_tl290_cs52_gp1p01_wgON`, mean 1.696853360 vs Sarathi 1.696868151)
 - `docs/progress/2026_04_26_real_data_provenance_grid.md` - **Real-data provenance rerun 窄网格 (tl<=300, 3 tl/QPS, m=5/10/20/50)**
 - `docs/progress/2026_04_17_numerical_section_rewrite.md` - **Section 6 整节重写 (4 figures + 2 tables + §6.1/§6.2 + Appendix A)**
 - `docs/progress/2026_04_07_gpu_validation_reviewer2.md` - **GPU 验证完成 (Reviewer 2) - 32 batch sizes including B=600**
@@ -1002,7 +1002,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `scripts/rate_sweep_w3_vllm_backfill.py` - VM runner:W3 vLLM rate sweep nreq=20000
 
 #### WAIT-CP 实验
-- `scripts/real_data_provenance_rerun.py` - **Real data LMSYS durable provenance rerun** (SQLite resume, fixed 50 request bins, trimmed metrics, gate/boundary/segment-limit sweeps)
+- `scripts/real_data_provenance_rerun.py` - **Real data LMSYS durable provenance rerun** (SQLite resume, fixed 50 request bins, configurable arrival-rate rounding, trimmed metrics, gate/boundary/segment-limit sweeps)
 - `scripts/rate_sweep_perseg_gate.py` - **W1/W2/W3 per-seg gate rate sweep** (主力脚本)
 - `scripts/real_data_finetune.py` - **Real data (lmsys) 调参**
 - `scripts/real_data_high_qps.py` - **Real data 高 QPS + segment 调参**
