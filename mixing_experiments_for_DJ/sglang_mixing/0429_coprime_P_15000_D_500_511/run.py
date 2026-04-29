@@ -1,6 +1,6 @@
 """
-02_20 exp_two_non_coprime 复现：两类型 decode length 实验
-- Type A: prefill=5000, decode=1200
+02_20 exp_two_long_time 复现：两类型 decode length 实验
+- Type A: prefill=5000, decode=1211
 - Type B: prefill=5000, decode=1000
 - 两类独立 Poisson 到达
 - Engine 直接调用，绕过 HTTP
@@ -19,7 +19,7 @@ from sglang.srt.managers.io_struct import GenerateReqInput
 MODEL_PATH = "/root/Qwen2.5-1.5B-Instruct"
 SEED = 42
 
-# 两种请求类型：复现 02_20_exp/batch_metrics_exp_two_non_coprime.png
+# 两种请求类型：复现 02_20_exp/batch_metrics_exp_two_long_time.png
 REQUEST_TYPES = {
     "type_a": {
         "prefill_tokens": 15000,
@@ -29,16 +29,16 @@ REQUEST_TYPES = {
     },
     "type_b": {
         "prefill_tokens": 15000,
-        "decode_tokens": 500,
+        "decode_tokens": 511,
         "poisson_rate": 10000,
         "count": 20000,
     }
 }
 
 # 输出路径
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0428_reproduce_non.coprime/output"
-BATCH_CSV = f"{OUTPUT_DIR}/exp_two_non_coprime_batch.csv"
-REQUEST_CSV = f"{OUTPUT_DIR}/exp_two_non_coprime_request.csv"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0429_coprime_P_15000_D_500_511/output"
+BATCH_CSV = f"{OUTPUT_DIR}/exp_two_coprime_batch.csv"
+REQUEST_CSV = f"{OUTPUT_DIR}/exp_two_coprime_request.csv"
 
 # ==============================================
 

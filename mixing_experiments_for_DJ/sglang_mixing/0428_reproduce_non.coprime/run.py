@@ -22,15 +22,15 @@ SEED = 42
 # 两种请求类型：复现 02_20_exp/batch_metrics_exp_two_non_coprime.png
 REQUEST_TYPES = {
     "type_a": {
-        "prefill_tokens": 15000,
-        "decode_tokens": 500,
-        "poisson_rate": 10000,
+        "prefill_tokens": 5000,
+        "decode_tokens": 1200,
+        "poisson_rate": 5000,
         "count": 20000,
     },
     "type_b": {
-        "prefill_tokens": 15000,
-        "decode_tokens": 500,
-        "poisson_rate": 10000,
+        "prefill_tokens": 5000,
+        "decode_tokens": 1000,
+        "poisson_rate": 5000,
         "count": 20000,
     }
 }

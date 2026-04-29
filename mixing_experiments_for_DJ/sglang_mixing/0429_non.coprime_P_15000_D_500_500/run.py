@@ -36,7 +36,7 @@ REQUEST_TYPES = {
 }
 
 # 输出路径
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0428_reproduce_non.coprime/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0429_non.coprime_P_15000_D_500_500/output"
 BATCH_CSV = f"{OUTPUT_DIR}/exp_two_non_coprime_batch.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/exp_two_non_coprime_request.csv"
 

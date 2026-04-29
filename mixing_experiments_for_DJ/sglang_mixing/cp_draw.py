@@ -2,10 +2,10 @@
 画图脚本：从 batch_metrics CSV 生成 4 个子图
 
 用法:
-    python tmp_draw.py /path/to/output_dir
+    python cp_draw.py /path/to/exp_dir
 
 输出:
-    /path/to/output_dir/../fig/batch_metrics.png
+    /path/to/exp_dir/output/fig/<exp_name>_batch_metrics.png
 """
 import sys
 import pandas as pd
@@ -13,16 +13,46 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 
+def find_metrics_csv(output_dir: Path, kind: str) -> Path:
+    """Find batch/request metrics CSV across coprime and non-coprime runs."""
+    candidates = [
+        output_dir / f"exp_two_coprime_{kind}.csv",
+        output_dir / f"exp_two_non_coprime_{kind}.csv",
+        output_dir / f"exp_two_not_coprime_{kind}.csv",
+    ]
+
+    for path in candidates:
+        if path.exists():
+            return path
+
+    matches = sorted(output_dir.glob(f"*{kind}.csv"))
+    if len(matches) == 1:
+        return matches[0]
+
+    if not matches:
+        expected = ", ".join(str(p) for p in candidates)
+        raise FileNotFoundError(f"No {kind} CSV found. Tried: {expected}")
+
+    preferred = [p for p in matches if "exp_two" in p.name]
+    if len(preferred) == 1:
+        return preferred[0]
+
+    names = ", ".join(str(p) for p in matches)
+    raise FileNotFoundError(f"Multiple {kind} CSV files found; cannot choose automatically: {names}")
+
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python tmp_draw.py /path/to/output_dir")
+        print("Usage: python cp_draw.py /path/to/exp_dir")
         sys.exit(1)
 
     input_dir = Path(sys.argv[1]).resolve()
-    csv_path = input_dir / "output/exp_two_coprime_batch.csv"
+    metrics_dir = input_dir / "output"
 
-    if not csv_path.exists():
-        print(f"Error: {csv_path} not found")
+    try:
+        csv_path = find_metrics_csv(metrics_dir, "batch")
+    except FileNotFoundError as exc:
+        print(f"Error: {exc}")
         sys.exit(1)
 
     # 输出目录：input_dir 的父目录下的 fig/
@@ -35,6 +65,7 @@ def main():
 
     # 读取数据
     df = pd.read_csv(csv_path)
+    print(f"Using batch CSV: {csv_path}")
 
     # 过滤 dummy 数据 (batch_id < 12)
     df = df[df["batch_id"] >= 12].copy()
@@ -90,9 +121,14 @@ def main():
     print(f"Saved to: {output_path}")
 
     # 可选：读取 request_metrics 并打印统计
-    req_csv = input_dir / "output/exp_two_coprime_request.csv"
-    if req_csv.exists():
+    try:
+        req_csv = find_metrics_csv(metrics_dir, "request")
+    except FileNotFoundError:
+        req_csv = None
+
+    if req_csv is not None and req_csv.exists():
         req_df = pd.read_csv(req_csv)
+        print(f"Using request CSV: {req_csv}")
         print(f"\nRequest Metrics Summary:")
         print(f"  Total requests: {len(req_df)}")
         if "retraction_count" in req_df.columns:

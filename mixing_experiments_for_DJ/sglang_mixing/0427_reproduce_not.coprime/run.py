@@ -22,21 +22,21 @@ SEED = 42
 # 两种请求类型：复现 02_20_exp/batch_metrics_exp_two_non_coprime.png
 REQUEST_TYPES = {
     "type_a": {
-        "prefill_tokens": 15000,
-        "decode_tokens": 500,
-        "poisson_rate": 10000,
-        "count": 20000,
+        "prefill_tokens": 5000,
+        "decode_tokens": 1200,
+        "poisson_rate": 5000,
+        "count": 10000,
     },
     "type_b": {
-        "prefill_tokens": 15000,
-        "decode_tokens": 500,
-        "poisson_rate": 10000,
-        "count": 20000,
+        "prefill_tokens": 5000,
+        "decode_tokens": 1000,
+        "poisson_rate": 5000,
+        "count": 10000,
     }
 }
 
 # 输出路径
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0428_reproduce_non.coprime/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0427_reproduce_not.coprime/output"
 BATCH_CSV = f"{OUTPUT_DIR}/exp_two_non_coprime_batch.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/exp_two_non_coprime_request.csv"
 
