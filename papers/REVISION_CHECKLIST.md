@@ -93,10 +93,10 @@ grep -nE "memory footprint|throughput-optimal|otherwise feasible|fluid dynamics|
   - Single-type GPU sweep (λ=1-15, mirror §6.1, +29.7% mean)
   - Real-data GPU sweep (λ=0.1-0.7 lmsys, mirror §6.2, peak +9.2% at λ=0.4)
 - [x] **Table~\ref{tab:sglang_realtrace} 去 wait_gate column**，只保留 (λ, TL, improvement)
-- [x] **appendix_sim_fidelity 重组为 §app:experimental_config**（参数表 + scheduler hyperparams），sim validation 内容已迁出
+- [x] **appendix_sim_fidelity 不再单独输入**；supplemental experiments 统一放入 §app:additional_experiments，sim validation 内容已迁出
 - [x] §app:no_wait conclusion 软化为 "regime-dependent"，cross-ref 新 §app:gpu_validation
-- [x] numerical.tex 3 处 cross-refs 更新（app:sim_fidelity → app:gpu_validation 或 app:experimental_config）
-- [x] 7 个 app: labels 全 resolve（experimental_config / gpu_validation / long_decode / multi_seed / no_wait / pd_disagg / additional_experiments）
+- [x] numerical.tex cross-refs 更新到 app:gpu_validation 或 app:additional_experiments
+- [x] Active app labels resolve（gpu_validation / long_decode / multi_seed / no_wait / pd_disagg / additional_experiments）
 
 ### P0.5 Footprint / delineate 术语 sweep（2026-04-21）
 - [x] abstract/intro/conclusion: "memory footprint" → "memory consumption / memory level" (2026-04-21)

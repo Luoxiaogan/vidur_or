@@ -1,9 +1,9 @@
 """
 Figure A (Appendix): Vidur simulator fidelity against real A100 GPU.
 
-Scatter of real vs predicted iteration time for Llama-2-7B, B in [1,128],
-prefill=256, decode=20. Responds to R2's request for "a figure comparing
-simulated and real processing times".
+Scatter of real vs predicted iteration time for Llama-2-7B, using the
+powers-of-two batch-size grid B in {1,2,4,...,256}, with prefill=256 and
+decode=20.
 
 Output:
     outputs/validation_database/figures/figure_A_sim_fidelity.pdf
@@ -42,10 +42,12 @@ conn = sqlite3.connect(DB)
 cur = conn.cursor()
 cur.execute(
     """
-    SELECT batch_size, real_ms, predicted_ms, abs_error_percent
+    SELECT batch_size, real_ms, predicted_ms, abs_error_percent, region
     FROM comparison_results
     WHERE model = ?
-      AND region IN ('ACCURATE', 'ACCURATE_PLUS')
+      AND prefill_len = 256
+      AND decode_len = 20
+      AND batch_size IN (1, 2, 4, 8, 16, 32, 64, 128, 256)
     ORDER BY batch_size
     """,
     ("Llama-2-7B",),
@@ -57,6 +59,7 @@ batch = np.array([r[0] for r in rows])
 real = np.array([r[1] for r in rows])
 pred = np.array([r[2] for r in rows])
 ape = np.array([r[3] for r in rows])
+region = np.array([r[4] for r in rows])
 
 mape = float(ape.mean())
 ss_res = float(np.sum((real - pred) ** 2))
@@ -84,8 +87,9 @@ ax.text(tag_x, tag_y, r"$y = x$", fontsize=11, color="gray",
         ha="left", va="bottom", rotation=45,
         rotation_mode="anchor")
 
-# Scatter points
-ax.scatter(real, pred, s=42, color="#1f77b4", edgecolor="white",
+# Scatter points. Each point is one batch-size configuration; the coordinates
+# compare the real measured iteration time with the simulator prediction.
+ax.scatter(real, pred, s=44, color="#1f77b4", edgecolor="white",
            linewidth=0.7, zorder=3)
 
 ax.set_xlim(lims)
@@ -95,7 +99,7 @@ ax.set_aspect("equal", adjustable="box")
 ax.set_xlabel("Measured iteration time on NVIDIA A100 (ms)")
 ax.set_ylabel("Vidur simulator prediction (ms)")
 
-# Annotation (lower-right): fidelity metrics only.
+# Annotation (lower-right): fidelity metrics for the plotted grid.
 # Experimental setup (model, hardware, prefill/decode, batch range) goes in
 # the caption, not on the figure itself.
 ax.text(

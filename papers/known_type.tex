@@ -1,58 +1,53 @@
 \section{Scheduling with Known Arrival Types: The WAIT Algorithm}
 \label{sec:wait}
 
-This section introduces the \textit{Waiting for Accumulated Inference Threshold} (WAIT) algorithm, a scheduling policy that achieves asymptotically optimal effective throughput under known prompt arrival types. Using the fluid model established in Section~\ref{sec:fluid}, WAIT forms each batch by accumulating prompts until specific thresholds are met. This approach uses resources efficiently in stochastic environments by maintaining the system near equilibrium while respecting memory constraints and optimizing latency and time-to-first-token (TTFT). We assume that the memory capacity $C\ge M^*,$ the equilibrium memory capacity given in \eqref{eq:memory_multi2} (otherwise the throughput can never approach the optimal fluid throughput \eqref{throughput_fluid_multiple} by Proposition \ref{prop::online policy expected throughput upper bound, multiple type}).
-
-\begin{remark}[On the Assumption $C \geq M^*$]
-\label{remark:memory_assumption}
-Our theoretical analysis assumes $C \geq M^*$, as this is the necessary condition under which the system can achieve stable operation without accumulating backlog. When $C < M^*$ (the overloaded regime), our algorithms remain effective: the eviction prevention mechanism still outperforms baselines, as demonstrated in Section~\ref{sec:experiments}. Avoiding eviction cascades provides value across all operating regimes.
-\end{remark}
+This section develops the \textit{Waiting for Accumulated Inference Threshold} (WAIT) algorithm for the case in which prompt types and arrival rates are known. WAIT uses the fluid equilibrium from Section~\ref{sec:fluid} as a batching target: for each type \(j\), it waits until enough prompts have accumulated before admitting a batch, so that the active decode-stage populations remain close to the equilibrium levels \(n_j^*\). This threshold rule prevents eviction cascades while allowing the server to approach the fluid throughput benchmark. The throughput guarantees below assume \(C \ge M^*\), where \(M^*\) is the memory requirement needed to support that fluid equilibrium in \eqref{eq:memory_multi2}; this is the feasibility condition under which the equilibrium allocation across decode stages fits in memory. The same load-balancing and non-eviction logic also applies under overload, where the goal is to exploit the available system capacity as effectively as possible; Section~\ref{sec:experiments} illustrates this behavior numerically.
 
 \subsection{Motivation: Why Naive Scheduling Fails}
 \label{subsec:wait_motivation}
 
-We first demonstrate why naive scheduling policies fail even when memory capacity is sufficient, motivating the design of WAIT.
+The condition \(C\ge M^*\) is a capacity condition, not a scheduling rule. It identifies when the fluid equilibrium can fit in memory, but it does not ensure that an online policy will keep work balanced across decode stages.
 
-Consider what happens under a First-Come-First-Serve (FCFS) policy that processes prompts immediately upon arrival. Even when the memory capacity $C$ equals the equilibrium memory $M^*$ (a capacity theoretically sufficient to handle the workload), FCFS can trigger catastrophic failure. The following proposition formalizes this observation.
+Consider a First-Come-First-Serve (FCFS) policy that admits prompts as soon as they arrive. Even when \(C=M^*\), so the fluid equilibrium fits exactly in memory, FCFS can move too much work into downstream decode stages and create a persistent throughput loss. The following proposition gives a worst-case lower bound for this failure mode.
 
 \begin{proposition}\label{prop:lower_bound_FCFS}
-When the memory capacity \(C\) equals the equilibrium memory \(M^*\), there exists an instance where the First-Come-First-Serve (FCFS) policy incurs a throughput gap of \(\throughput^* - \mathbb{E}[\throughput^T] = \Omega(1)\) as \(T \to \infty\).
+When \(C=M^*\), there exists an instance in which First-Come-First-Serve (FCFS) incurs a throughput gap \(\throughput^* - \mathbb{E}[\throughput^{(T,\pi)}] = \Omega(1)\) as \(T \to \infty\).
 \end{proposition}
 
-The proof is provided in Appendix. To illustrate the mechanism behind this failure concretely, consider the following example.
+The proof is provided in Appendix~\ref{appendix:proof_fcfs_lower_bound}. The example below is a simpler single-type illustration of the same eviction cascade.
 
 \begin{example}[Eviction Cascade under FCFS]
 \label{ex:fcfs_cascade}
-Consider a single prompt type where each prompt is a simple query such as ``Hello'' with a 1-token response ``Hi'' (prefill length $l=1$ and decode length $l'=1$). Each prompt occupies 1 unit of memory after prefill and 2 units after decode. Let the memory capacity be $C=12$ and arrival rate $\lambda=4$. The fluid equilibrium has 4 prompts at each stage (prefill and decode), using exactly $4 \times 1 + 4 \times 2 = 12$ units of memory with 4 completions per iteration.
+Consider a single prompt type: a prompt such as ``Hello'' with a one-token response ``Hi,'' so \(l=1\) and \(l'=1\). Each prompt uses 1 unit of memory after prefill and 2 units after decode. Let \(C=12\) and \(\lambda=4\). The fluid equilibrium keeps 4 prompts at each stage, uses \(4 \times 1 + 4 \times 2 = 12\) units of memory, and completes 4 prompts per iteration.
 
 Now suppose the system starts slightly imbalanced with 6 prompts at stage 0 (awaiting prefill) and 3 prompts at stage 1 (in decode). Under FCFS:
 \begin{enumerate}
-    \item \textbf{Iteration 1}: Process all 9 prompts. The 3 decode prompts complete, but the 6 prefill prompts advance to decode, requiring $6 \times 2 = 12$ units. Memory is exactly full with only 3 completions.
-    \item \textbf{Iteration 2}: During iteration 1, approximately 4 new prompts arrive. To admit them for prefill ($4 \times 1 = 4$ units needed), we must evict 2 decode prompts (freeing $2 \times 2 = 4$ units). Now we have 4 prefill + 4 decode = $4 + 8 = 12$ units.
-    \item \textbf{Iteration 3}: The 4 decode prompts complete (4 completions). The 2 previously evicted prompts, having lost their KV caches, must now restart from the prefill phase (stage $s=0$), re-entering the queue as new arrivals and competing for resources alongside genuinely new prompts. This restart mechanism perpetuates the imbalance.
+    \item \textbf{Iteration 1}: FCFS processes all 9 prompts. The 3 decode prompts complete, while the 6 prefill prompts advance to decode and require \(6 \times 2 = 12\) units of memory. The system is full after only 3 completions.
+    \item \textbf{Iteration 2}: About 4 new prompts arrive during the previous iteration. Admitting them for prefill requires 4 additional memory units, so the server evicts 2 decode prompts to free \(2 \times 2 = 4\) units. The system returns to 4 prefill prompts and 4 decode prompts, again using \(4+8=12\) units.
+    \item \textbf{Iteration 3}: The 4 decode prompts complete. The 2 evicted prompts have lost their KV caches and must restart from prefill, re-entering the queue alongside genuinely new arrivals. The restart mechanism perpetuates the imbalance.
 \end{enumerate}
-This eviction-restart cycle persists, yielding approximately 3--3.5 completions per iteration instead of the 4 sustained at the fluid equilibrium. Even though $C = M^* = 12$ (theoretically sufficient capacity for stability), FCFS triggers cascading evictions that reduce the effective throughput, the completion rate net of evictions, by as much as $25\%$.
+The eviction-restart cycle yields approximately 3--3.5 completions per iteration instead of the 4 completions sustained by the fluid equilibrium. Thus \(C=M^*=12\) is sufficient to support the fluid balance, but FCFS does not maintain that balance and loses effective throughput.
 \end{example}
 
-This example shows that \emph{memory sufficiency alone does not guarantee stability}: a system whose capacity is theoretically sufficient for stability can become unstable under poor scheduling. The root cause is that FCFS does not maintain \emph{load balance}: it admits prompts greedily, causing the system to deviate from the fluid equilibrium and triggering the eviction-restart cycle.
+The operational implication is that having enough memory to support the fluid equilibrium does not by itself guarantee that the stochastic system will operate near that equilibrium. The scheduler must also regulate the decode-stage mix. FCFS admits prompts greedily, lets the allocation of active prompts across decode stages drift away from the fluid balance, and thereby creates the eviction-restart cycle.
 
 \subsection{The WAIT Algorithm}
 \label{subsec:wait_algorithm}
 
-The WAIT algorithm prevents eviction cascades by maintaining load balance through a threshold mechanism. The core idea is to control admission at each decode stage so that the rate of new arrivals matches the rate of completions. This keeps the system close to the fluid equilibrium derived in Section~\ref{sec:fluid}, \emph{approaching load balance} where arrival and completion rates match. This principle of maintaining the system near equilibrium through controlled admission is central to preventing the cascading failures illustrated in Example~\ref{ex:fcfs_cascade}.
+The FCFS example points to the missing control variable: the composition of the in-service population across decode stages. WAIT regulates this composition by assigning each type \(j\) a threshold \(n_j\), interpreted as the target number of type-\(j\) prompts to serve from each decode stage in an iteration. If fewer than \(n_j\) new type-\(j\) prompts are waiting at entry, WAIT does not admit that type. Once the threshold is reached, the server processes up to \(n_j\) prompts from each decode stage of that type. In this way, new work enters the system only when it can replenish a balanced allocation across decode stages, rather than pushing the system toward the downstream buildup seen under FCFS.
 
-The threshold-and-wait mechanism achieves three goals. First, it prevents \emph{eviction cascades} by controlling admission. Second, it \emph{decouples the complex multi-stage, multi-type dynamics}, transforming the system into $m$ independent single-type analyses. Third, by waiting until thresholds are met, the batch approaches the fluid equilibrium size, \emph{using memory capacity fully to maximize throughput}. The decoupling is crucial: without thresholds, delays in one type would affect memory availability for others through shared capacity constraints, creating feedback loops that resist classical drift analysis. The threshold mechanism breaks these inter-type dependencies, enabling tractable per-type analysis. The third goal reflects a complementary principle: memory is a resource to exploit rather than merely a constraint, since larger batches amortize the fixed overhead $d_0$ across more prompts per iteration, and waiting until the threshold is met ensures each batch approaches the equilibrium size that maximizes this amortization while staying within safe limits.
+The threshold rule also gives the analysis its tractable structure. Once the thresholds are fixed, each type evolves as a threshold queue observed at batch-completion epochs, while the shared memory interaction is captured by the feasibility of the threshold vector. The waiting requirement is therefore not merely a safety device against eviction; it also preserves the batching benefit created by the fixed overhead \(d_0\). Batches form at a scale large enough to use the server effectively, while the thresholds keep memory usage within capacity.
 
-\paragraph{Algorithm Description.} For each prompt type $j \in [m]$, WAIT sets a threshold $n_j$ derived from the fluid model. At time $t$, the algorithm monitors the inventory $n_{js}^t$, the number of waiting prompts of type $j$ at stage $s$. Type $j$ prompts are included in a batch only when:
+\paragraph{Algorithm Description.} For each prompt type \(j \in [m]\), WAIT sets a threshold \(n_j\) derived from the fluid model. At decision epoch \(t\), let \(n_{js}^t\) denote the number of type-\(j\) prompts at stage \(s\). Type \(j\) is eligible for the next batch only when
 \[
 n_{j0}^t \geq n_j.
 \]
-When this condition is met, WAIT constructs a batch by selecting $\min\{n_j, n_{js}^t\}$ prompts of type $j$ at each stage $s$ for all types meeting the threshold. If no type satisfies the condition, the algorithm waits for more arrivals. KV caches for waiting prompts are preserved, avoiding redundant computation. The complete specification is in Algorithm~\ref{alg:wait} and Figure~\ref{fig:wait}.
+When this condition holds, WAIT selects \(\min\{n_j,n_{js}^t\}\) type-\(j\) prompts from each stage \(s\). If no type is eligible, the server waits for more arrivals. Prompts that are not selected remain in their current queues. A prompt waiting outside the GPU before prefill has no resident KV cache, but any prompt that has already been admitted and is waiting between decode iterations keeps its KV cache on the GPU and continues to count against memory. Algorithm~\ref{alg:wait} and Figure~\ref{fig:wait} summarize the policy.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.85\linewidth]{Experiments_pdf/fig_WAIT.pdf}
-    \caption{Pipeline of Algorithm \ref{alg:wait}}
+    \caption{Batch formation under WAIT for a fixed type \(j\). The scheduler updates the type-\(j\) inventory and batches this type only when the entry-stage queue reaches \(n_j\); otherwise, it waits and carries the inventory forward. When batched, up to \(n_j\) prompts from each stage are advanced.}
     \label{fig:wait}
 \end{figure}
 
@@ -65,145 +60,76 @@ When this condition is met, WAIT constructs a batch by selecting $\min\{n_j, n_{
 \State Initialize prompt inventory $n_{js} \gets 0$ for all $j \in [m], s \in \{0, 1, \dots, l_j'\}$
 \State Initialize event queue with arrival events for each type $j$
 \State Set current time $t \gets 0$
+\State Set server status to idle
 \While{True}
     \State Wait for the next event (arrival or batch completion)
     \If{event is an arrival of type $j$}
         \State Update inventory: $n_{j0} \gets n_{j0} + 1$  \Comment{Add new prompt to waiting queue of prefill phase}
     \ElsIf{event is a batch completion}
-        \State Update inventory: For each $j$ in batch $B$, $n_{js} \gets n_{js} - \min\{n_j, n_{js}\}$ for $s = 0, \dots, l_j'$
-        \State Advance prompts: For each $j$, move $\min\{n_j, n_{js}\}$ prompts from stage $s$ to $s+1$
-        \State Clear KV caches for prompts reaching stage $l_j' + 1$  \Comment{Free memory for completed prompts}
+        \State Retrieve the selected counts $a_{js}$ stored with the completed batch
+        \State Simultaneously advance selected prompts one stage: $n_{js}\gets n_{js}-a_{js}$ and $n_{j,s+1}\gets n_{j,s+1}+a_{js}$ for $s<l_j'$
+        \State Clear KV caches for the $a_{j,l_j'}$ prompts completing after stage $l_j'$  \Comment{Free memory for completed prompts}
+        \State Set server status to idle
     \EndIf
-    \State Check if $n_{j0} \geq n_j$ for any $j \in [m]$  \Comment{Check threshold for batching}
-    \If{condition $n_{j0} \geq n_j$ is met for some $j$}
-        \State Form batch $B$ by selecting $\min\{n_j, n_{js}\}$ prompts of type $j$ at each stage $s$ for all $j$ meeting the condition
-        \State Process batch $B$, keep prompts outside the batch waiting and do not delete their KV caches
+    \State Set \(J(t)\gets\{j\in[m]: n_{j0}\ge n_j\}\)  \Comment{Eligible types}
+    \If{server is idle and \(J(t)\neq\emptyset\)}
+        \State For every \(j\in J(t)\) and stage \(s\), set \(a_{js}\gets\min\{n_j,n_{js}\}\)
+        \State Form batch \(B\) from all selected prompts and store \(a_{js}\) with \(B\)
+        \State Process batch $B$; keep already resident prompts outside the batch waiting with their KV caches retained
+        \State Set server status to busy until the completion event for \(B\)
     \EndIf
 \EndWhile
 \end{algorithmic}
 }
 \end{algorithm}
 
-\subsection{Asymptotic Analysis}
+\subsection{Asymptotic Guarantees}
 \label{subsec:asymptotic_analysis}
-We evaluate the performance of WAIT in an asymptotic regime that captures long-run system behavior. Specifically, we scale the arrival rates to $\lambda_j^{(\zeta)} = \zeta \lambda_j$ and processing speeds accordingly ($(d_0^{(\zeta)},d_1^{(\zeta)})=(\zeta^{-1}d_0,\zeta^{-1}d_1)$) while keeping memory capacity $C$ fixed. This can equivalently be viewed as scaling the time horizon from $T$ to $\zeta T$ while keeping arrival rates and processing speeds unchanged. As $\zeta \to \infty$, we obtain infinite-horizon limits that characterize the system's long-run average performance, allowing us to study throughput stability under sustained load.
-
-% and (ii) the \emph{many-server heavy traffic scaling}, where both arrival rates and memory capacity are scaled proportionally.
-
-% \textbf{Conventional Heavy Traffic:} 
-
-% \textbf{Many-Server Heavy Traffic:} Here, we scale arrival rates to $\lambda_j^{(\zeta)} = \zeta \lambda_j$ and memory capacity to $C^{(\zeta)} = \zeta C$, compressing the time horizon by a factor of $1/\zeta$ (i.e., observing over $[T]$). This regime examines system performance when both demand and resources grow proportionally.
-
-\textbf{Performance Metric:} We focus on the average throughput, denoted $\throughput^{(\zeta, \pi)}$, where $\pi$ represents the WAIT policy, defined as:
-\[
-\throughput^{(\zeta, \pi)} = \frac{1}{\zeta T} \sum_{j=1}^m N_j^{(\zeta, \pi)},
-\]
-with $N_j^{(\zeta, \pi)}$ being the total number of type-$j$ tokens processed under scaling $\zeta$. The average latency $\Latency^{(\zeta,\pi)},\TTFT^{(\zeta,\pi)}$ and TTFT are defined similarly by dividing the quantity by $\zeta$. Our objective is to demonstrate that $\throughput^{(\zeta, \pi)}$ approaches the fluid equilibrium benchmark $\throughput^* = \sum_{j=1}^m \lambda_j l_j'$ (\ref{throughput_fluid_multiple}) as $\zeta \to \infty$ while giving bound to the latency and TTFT.
-
-\subsection{Theoretical Analysis}
 \label{subsec:main_theorem}
-When memory capacity satisfies \(C \geq M^*\) (where $M^*$ is the equilibrium memory from Equation~\eqref{eq:memory_multi2}), consider the WAIT policy \(\pi\) parameterized by thresholds \([n_1, \dots, n_m]\), where \(n_j\) is the threshold for type-$j$ prompts at each stage. WAIT is asymptotically optimal when the thresholds satisfy:
+We analyze WAIT in a long-horizon scaling that averages out stochastic fluctuations while preserving the fixed memory constraint. For \(\zeta\ge 1\), arrival rates scale as \(\lambda_j^{(\zeta)}=\zeta\lambda_j\) and processing times scale as \((d_0^{(\zeta)},d_1^{(\zeta)})=(\zeta^{-1}d_0,\zeta^{-1}d_1)\), with memory capacity \(C\) fixed. For WAIT, the required physical memory is \(M_{\mathrm{req}}^{(\zeta,\pi)}=M^\pi\), which is independent of \(\zeta\) because no downstream boundary buffer is needed. For a policy \(\pi\), let \(N_j^{(\zeta,\pi)}\) be the number of completed decode tokens from type-\(j\) prompts over this horizon, and define
+\[
+\throughput^{(\zeta, \pi)} = \frac{1}{\zeta T} \sum_{j=1}^m N_j^{(\zeta, \pi)}.
+\]
+For delay metrics, let \(\Latency_{\rm cal}^{(\zeta,\pi)}\) and \(\TTFT_{\rm cal}^{(\zeta,\pi)}\) denote the elapsed calendar-time averages over this scaled system. The theorem reports the service-normalized delays \(\Latency^{(\zeta,\pi)}:=\zeta\Latency_{\rm cal}^{(\zeta,\pi)}\) and \(\TTFT^{(\zeta,\pi)}:=\zeta\TTFT_{\rm cal}^{(\zeta,\pi)}\), so the effective horizon in the bounds is \(\zeta T\). The benchmark is the fluid throughput \(\throughput^*=\sum_{j=1}^m \lambda_j l_j'\) in \eqref{throughput_fluid_multiple}.
+
+Assume \(C \ge M^*\), with \(M^*\) given by \eqref{eq:memory_multi2}. Consider a WAIT policy \(\pi=[n_1,\dots,n_m]\), where \(n_j\) is the integer type-\(j\) threshold applied at each stage. When thresholds are obtained from real-valued fluid calculations, we use the nearest feasible integer thresholds; the resulting \(O(1)\) changes in memory and drift are absorbed in the asymptotic constants. The threshold vector must satisfy a load-balance condition and a memory condition:
 \begin{equation}
 \label{eq:wait_thresholds}
 \begin{aligned}
 \Delta T(n_{1:m}) &:= d_0 + d_1 M^{\pi} \leq \tfrac{n_j}{\lambda_j},\, \forall j\in[m],\\
- M^{\pi} &= \sum_{j=1}^m n_j (l_j' + 1) \big(l_j + \tfrac{l_j'}{2}\big)
+ M^{\pi} &= \sum_{j=1}^m n_j (l_j' + 1) \big(l_j + \tfrac{l_j'}{2}\big),\\
+ M^* &\leq M_{\mathrm{req}}^{(\zeta,\pi)}:=M^\pi \leq C
 \end{aligned}
 \end{equation}
-The intuition follows from Equation~\eqref{eq:time_fluid}: when type $j$ is included in a batch, the iteration time $\Delta T$ ensures that expected arrivals of type $j$ do not exceed $n_j$. This keeps the system close to the fluid equilibrium, using memory capacity fully for throughput while avoiding overflow.
+The first line is the arrival-completion balance for each type: during an iteration of length \(\Delta T(n_{1:m})\), the expected number of type-\(j\) arrivals is \(\lambda_j\Delta T(n_{1:m})\), and WAIT serves \(n_j\) type-\(j\) prompts from each active stage. The memory condition then asks the threshold vector to be large enough to support the fluid equilibrium, but not so large that the required memory \(M_{\mathrm{req}}^{(\zeta,\pi)}\) exceeds the available physical capacity \(C\). The condition \(M^*\le C\) says that the workload is stabilizable in the fluid model; the theorem below shows that WAIT realizes this stability in the stochastic system by keeping memory growth under control.
 
-% we obtain the policy class $\Pi$, each $\pi = [n_1,\cdots,n_m]\in \Pi$ with corresponding memory capacity $M^{\pi} \geq  M^*$.
-
-% $\forall \pi \in \Pi$, when prompts of all $m$ types are in the same batch, $\text{Arrival}_j\leq \text{Completion}_j$. Indeed, when type $j$ is in the batch, no matter what the other types are in the batch, we have that $\text{Arrival}_j\leq \text{Completion}_j$. Specifically, when $M^c = M$, the policy is $\pi = [ \frac{n_1^*}{l_1^\prime+1},\,\cdots,\,\frac{n_m^*}{l_m^\prime+1} ]$. 
-
-% The following theorem establishes the near-optimality of WAIT under heavy traffic conditions.
 \begin{theorem}
 \label{thm:wait_heavy_traffic}
-    Assume the thresholds $\pi=[n_1,\dots,n_m]$ satisfy \eqref{eq:wait_thresholds}, then we have 
-% \begin{equation*}
-%     \begin{aligned}
-%         &\throughput^*-\ex{}{\throughput^{(\zeta,\pi)}}=O((\zeta T)^{-\frac{1}{2}}),\\ 
-% &\ex{}{\Latency^{(\zeta,\pi)}}=O\prn{(\zeta T)^{\frac{1}{2}}},\\
-% &\ex{}{\TTFT^{(\zeta,\pi)}}=O\prn{(\zeta T)^{\frac{1}{2}}}.
-%     \end{aligned}
-% \end{equation*}
-$$
+If the thresholds \(\pi=[n_1,\dots,n_m]\) satisfy \eqref{eq:wait_thresholds}, then
+\[
 \begin{aligned}
-    &\throughput^*-\ex{}{\throughput^{(\zeta,\pi)}}=O((\zeta T)^{-\frac{1}{2}}),\\ 
+&\throughput^*-\ex{}{\throughput^{(\zeta,\pi)}}=O((\zeta T)^{-\frac{1}{2}}),\\
 &\ex{}{\Latency^{(\zeta,\pi)}},\,\ex{}{\TTFT^{(\zeta,\pi)}}=O\prn{(\zeta T)^{\frac{1}{2}}}.
 \end{aligned}
-$$
-    Moreover, when we have $\Delta T_{[1,\dots,m]}<n_j/\lambda_j,\forall j\in[m]$ where $\Delta T_{[1,\dots,m]}$ is defined in \eqref{eq:wait_thresholds}, it holds that
-$$    \begin{aligned}
-        &\throughput^* - \ex{}{\throughput^{(\zeta,\pi)}} = O(1/(\zeta T)), \\ 
+\]
+Moreover, if \(\Delta T(n_{1:m})<n_j/\lambda_j\) for all \(j\in[m]\), then
+\[
+\begin{aligned}
+&\throughput^* - \ex{}{\throughput^{(\zeta,\pi)}} = O(1/(\zeta T)), \\
 &\ex{}{\Latency^{(\zeta,\pi)}},\, \ex{}{\TTFT^{(\zeta,\pi)}} = O(1).
-    \end{aligned}$$
+\end{aligned}
+\]
 \end{theorem}
 
+The theorem rests on the control structure created by WAIT. The difficult step is not to prove recurrence after a stable queue has been isolated. Instead, it is to design a batching rule that keeps KV-cache growth under control before memory overflows. Each admitted prompt creates a KV cache that grows throughout decode. If an unstructured batching rule admits too much work, these caches can exceed memory in later iterations, forcing eviction and restart. The restarted prompts then return as future work and can reduce effective throughput even when the fluid memory requirement fits within capacity. WAIT prevents this failure mode by fixing a target allocation across decode stages through \(n_{1:m}\). Given this threshold vector, every full batch has memory usage \(M^\pi\) and iteration length \(\Delta T(n_{1:m})\), and the main stochastic component for type \(j\) is the time until its entry queue reaches \(n_j\). The proof then works with the induced threshold queues: the load-balance condition gives nonpositive drift for each queue, while the memory condition prevents threshold-sized batches from exceeding capacity. In this sense, WAIT turns the original memory-coupled controlled process into threshold queues tied together by the deterministic feasibility condition \(M^\pi\le C\). The complete proof is in Appendix~\ref{appexidx::proof of wait_heavy_traffic}.
 
-
-% \begin{theorem}
-% \label{thm:wait_heavy_traffic}
-% Under the conventional heavy traffic regimes, the WAIT algorithm achieves near-optimal throughput. Specifically:
-% % \begin{itemize}
-% %     \item In the many-server heavy traffic regime:
-% %     \[
-% %     \liminf_{\zeta \to \infty} \zeta^{-1} \mathbb{E} \left[ \throughput^{\zeta, \pi} \right] \geq (1 - T^{-1}) \throughput^*,
-% %     \]
-% %     where the time horizon is $T$.
-% % \end{itemize}
-% when $C = M^*$, we have that $\pi = [\frac{n_1^*}{l_1^\prime+1},\,\cdots,\, \frac{n_m^*}{l_m^\prime+1}]$. This is a special case where all types satisfy the condition $\Delta T_{[1,\cdots,m]} = \frac{n_j}{\lambda_j}$. So with the union bound, we have the expected upper bound of the throughput gap to the $\text{Throughput}^*$ under the fluid system \gan{ref, and the prop~\ref{prop::online policy expected throughput upper bound, multiple type} shows that this is the upper bound}.
-% $$\frac{1}{S}\sum_{j=1}^m \ex{}{W_S^{(j)}}\leq \frac{1}{S}\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\frac{1}{S}\lambda_j} $$
-% In \textbf{Conventional Heavy-Traffic} case,
-% $$\frac{1}{S^{\zeta }}\sum_{j=1}^m \lambda_j^{\zeta } +\sum_{j=1}^m \sqrt{\frac{1}{S^{\zeta }}\lambda_j^{\zeta }}  =\frac{1}{\zeta S}\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\frac{1}{\zeta S}\lambda_j} \to 0, \,\zeta \to \infty.$$
-% With the expected end-to-end latency
-% $$\frac{1}{S}\cdot\Delta T_{[1,\cdots,m]} \cdot \left(\sum_{j=1}^m \lambda_j +\sum_{j=1}^m \sqrt{\lambda_j\cdot S} \right) \sim \Omega(\sqrt{\frac{1}{S}})$$
-
-% When all $m$ types satisfy the condition $\Delta T_{[1,\cdots,m]} < \frac{n_j}{\lambda_j}$, the expected upper bound of the throughput gap is bounded:
-% $$\frac{1}{S}\sum_{j=1}^m \ex{}{W_S^{(j)}}\leq \frac{1}{S}  \sum_{j=1}^m \left(2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\cdots,m]}}{2\cdot\left(n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}\right)}\right) $$
-% with the bounded expected end-to-end latency
-% $$ \Delta T_{[1,\cdots,m]} \cdot\frac{1}{S}\sum_{j=1}^m \ex{}{W_S^{(j)}}\leq \Delta T_{[1,\cdots,m]} \cdot\frac{1}{S} \sum_{j=1}^m \left(2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\cdots,m]}}{2\cdot\left(n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}\right)}\right) \sim \Omega (\frac{1}{S})$$
-% \end{theorem}
-
-The WAIT algorithm prevents eviction cascades through a simple but powerful principle: controlled admission via thresholds. By requiring $n_{j0}^t \geq n_j$ before admitting type-$j$ prompts, the algorithm ensures that expected arrivals during each iteration do not exceed completions. This keeps each prompt type close to its equilibrium inventory level, preventing the overflow that triggers eviction cascades in FCFS (Example~\ref{ex:fcfs_cascade}).
-
-The threshold mechanism simultaneously achieves three design goals: (1) \emph{eviction prevention} by controlling when prompts enter batches; (2) \emph{approaching load balance} by maintaining the system near the fluid equilibrium where arrivals match completions; and (3) \emph{memory exploitation} by waiting until batches can be formed close to the equilibrium size $M^*$, maximizing throughput.
-
-From an analytical perspective, the threshold decouples the $m$ prompt types: we can analyze each type independently, as if it were the only type in the system. Without this decoupling, delays in one type would affect memory availability for others through the shared capacity constraint, creating feedback loops that resist classical drift analysis. With the types decoupled, we construct a dominating process per type and apply Lindley-style drift analysis to establish the asymptotic-optimality bounds. The decoupling itself is what makes the analysis tractable; the complete proof is in Appendix~\ref{appexidx::proof of wait_heavy_traffic}.
-
-Theorem \ref{thm:wait_heavy_traffic} provides performance bounds that match the worst-case lower bounds for latency and Time to First Token (TTFT). The following proposition establishes these lower bounds.
+The square-root delay bound at the boundary is also unavoidable. When the threshold queues have no slack, their fluctuations cannot be averaged away by any non-predictive online rule, even if the total memory equals the fluid memory requirement. The next proposition gives the matching lower bound for latency and TTFT.
 \begin{proposition}\label{prop::simple random walk, tight bound}
 There exists an instance where \( C = M^* \), and for any non-predictive online policy \(\pi\), the expected average latency and TTFT satisfy
 \[
 \mathbb{E}[\Latency^{(\zeta,\pi)}],\quad \mathbb{E}[\TTFT^{(\zeta,\pi)}] = \Omega((\zeta T)^{1/2}).
 \]
 \end{proposition}
-Moreover, we demonstrate that the latency for type \( j \) prompts depends exclusively on the relationship between \(\Delta T_{[1,\dots,m]}\) and $n_j/\lambda_j$. Specifically, when \(\Delta T_{[1,\dots,m]} < n_j/\lambda_j\), the average latency and TTFT for type \( j \) prompts are \( O(1) \), offering a more precise performance estimate than that provided in Theorem \ref{thm:wait_heavy_traffic}.
-% A detailed discussion is presented in Appendix \ref{appexidx::proof of wait_heavy_traffic}.
+The strict inequalities in Theorem~\ref{thm:wait_heavy_traffic} correspond to slack in these threshold queues. If \(\Delta T(n_{1:m})<n_j/\lambda_j\), the type-\(j\) entry queue has negative drift, and the average latency and TTFT of type-\(j\) prompts remain \(O(1)\).
 
-% 1. When $ \Delta T_{[1,\cdots,m]} = \frac{n_j}{\lambda_j}$, we have that
-% $$\lambda_j\cdot \Delta T = n_j\Rightarrow \ex{}{Y_s^{(j)}}=0.$$
-% So by Lemma~\ref{lemma::throughput gap}, we have that
-% $$\ex{}{W_S^{(j)}}\leq \ex{}{\tilde{W}_S^{(j)}}\leq \lambda_j + \sqrt{\lambda_j S}$$
-
-% \gan{and the Proposition~\ref{prop::simple random walk, tight bound} of simple random walk shows that the bound is tight.}
-
-% 2. When $\Delta T_{[1,\cdots,m]} < \frac{n_j}{\lambda_j}$, the expectation $\ex{}{Y_s^{(j)}}<0$. The coupled process $\tilde{W}_s^{(j)}$ has a negative drift. Since
-% \begin{align*}
-% \text{Var}(Y_s^{(j)} )&= \text{Var}(X_s^{(j)} )  = \lambda_j \cdot \Delta T_{[1,\cdots,m]}\\
-% \left| \ex{}{Y_s^{(j)}} \right| &= n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}
-% \end{align*}
-% By Kingman, we have that
-% $$\ex{}{W_S^{(j)}}\leq \ex{}{\tilde{W}_S^{(j)}}\leq 2n_j + \frac{\text{Var}(Y_s^{(j)} )}{2\left| \ex{}{Y_s^{(j)}} \right| } =2n_j+ \frac{\lambda_j \cdot \Delta T_{[1,\cdots,m]}}{2\cdot\left(n_j - \lambda_j\cdot \Delta T_{[1,\cdots,m]}\right)}$$
-
-% \textbf{Proof Sketch:} The proof analyzes the queue dynamics under WAIT. By construction, WAIT processes batches only when inventory levels $n_{jk}^t$ meet or exceed the thresholds $n_{jk}^*$, aligning with the fluid equilibrium. For the many-server regime, scaling $\lambda_j$ and $C$ by $\zeta$ ensures resource availability grows with demand, but finite horizon $T$ introduces a boundary effect of order $T^{-1}$. In the conventional regime, the extended horizon $\zeta T$ allows throughput to stabilize at $\throughput^*$ as waiting times diminish relative to the timescale. Using renewal theory and Poisson process properties, we bound the expected waiting times (Lemmas~\ref{throughput gap}--\ref{lemma::throughput gap}) and show convergence to the fluid benchmark. The detailed proof is relegated to Appendix~\ref{app:proof_wait}.
-
-% \subsection{Discussion}
-% \label{subsec:wait_discussion}
-
-% Our WAIT algorithm provides a scheduling mechanism for LLM inference by aligning batch 
-%  with the fluid model's optimal solution. Its threshold-based strategy mitigates inefficient and overloaded batching, particularly under high demand where memory and processing resources are constrained. The heavy traffic analysis shows that WAIT achieves near-optimal throughput compared with the fluid optimal benchmark. Detailed proofs are provided in Appendix~\ref{appexidx::proof of wait_heavy_traffic}.
-
-
-
-A limitation of WAIT is its reliance on known arrival types and rates, which may not hold in realistic environments (though we can approximate it by using predictors, see e.g. \citep{fu2025efficient}). In the next section, we address this issue by extending WAIT to handle unknown arrival types, introducing a nested variant that adapts to stochastic settings with unknown prompt types upon arrival.
+The policy in this section assumes that type labels and arrival rates are known when the thresholds are set. In practice, these quantities can be estimated from predictors \citep{fu2025efficient}, but an online serving system may not know a request's decode length at admission. The next section relaxes this information requirement by developing a nested version of WAIT for unknown prompt types.

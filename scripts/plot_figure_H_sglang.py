@@ -1,5 +1,5 @@
 """
-Figure H (Appendix B.3): real-system validation on SGLang.
+Figure H (Appendix): real-system validation on SGLang.
 
 SGLang 0.5.7 on NVIDIA A100 80GB serving Llama-2-7B.
 Workload: random prompts (input 512, output 20), Poisson arrivals,
@@ -64,16 +64,13 @@ print(f"Avg improvement: {np.mean([(b-w)/b for b,w in zip(baseline, wait)])*100:
 
 fig, ax = plt.subplots(figsize=(6.5, 4.4))
 
-ax.plot(RATES, baseline,
-        color=COLORS["Baseline"], linestyle=LINESTYLES["Baseline"],
-        linewidth=LW["Baseline"], marker=MARKERS["Baseline"],
-        markersize=MS["Baseline"], markeredgecolor="white",
-        markeredgewidth=0.7, label="SGLang baseline")
-ax.plot(RATES, wait,
-        color=COLORS["WAIT"], linestyle=LINESTYLES["WAIT"],
-        linewidth=LW["WAIT"], marker=MARKERS["WAIT"],
-        markersize=MS["WAIT"], markeredgecolor="white",
-        markeredgewidth=0.7, label="WAIT (ours)")
+for label, ys in [("Baseline", baseline), ("WAIT", wait)]:
+    ax.plot(RATES, ys,
+            color=COLORS[label], linestyle=LINESTYLES[label],
+            linewidth=LW[label], marker=MARKERS[label],
+            markersize=MS[label], markeredgecolor="white",
+            markeredgewidth=0.7,
+            label="SGLang baseline" if label == "Baseline" else "WAIT")
 
 ax.set_xlabel(r"Arrival rate $\lambda$ (requests/s)")
 ax.set_ylabel("Mean end-to-end latency (s)")

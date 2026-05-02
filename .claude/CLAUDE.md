@@ -973,6 +973,12 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 
 ### 进度报告
 - `docs/progress/2026_04_28_qps10_gate_on_tuning.md` - **QPS=10 gate-on Nested WAIT 调参** (old-metric verify strict win: `auto6seg_tl290_cs52_gp1p01_wgON`, mean 1.696853360 vs Sarathi 1.696868151)
+- `docs/progress/2026_05_02_opre_revision_final_qa_push.md` - **OPRE revision final QA + push preparation（paper/letter consistency、Figure D caption restore、time-varying extension condition、stale-term searches）**
+- `docs/progress/2026_05_02_real_data_provenance_audit.md` - **lmsys Figure D SQL provenance audit（valid rows cover QPS 10/20/50/60 only; current conservative paper/letter claim strength remains safe）**
+- `docs/progress/2026_05_01_revision_theory_response_state.md` - **OPRE revision theory/response consistency（fluid equilibrium、\(M_{\mathrm{req}}^{(\zeta,\pi)}\)、real-data parameter tradeoff、R2.3 response）**
+- `docs/progress/2026_04_28_paper_polish_overleaf_checkpoint.md` - **Section 2--5 OR-style polish + safe Overleaf merge preview checkpoint**
+- `docs/progress/2026_04_27_section2_objective_consistency.md` - **Section 2 objective consistency + throughput/TTFT 口径统一（offered-load cap、loss channels、admission-control balance）**
+- `docs/progress/2026_04_26_single_type_reproduction_provenance.md` - **Single-type / W3 repeated-run provenance + reproduction configs**
 - `docs/progress/2026_04_26_real_data_provenance_grid.md` - **Real-data provenance rerun 窄网格 (tl<=300, 3 tl/QPS, m=5/10/20/50)**
 - `docs/progress/2026_04_25_section6_real_data_provenance.md` - **Section 6 real-data provenance audit + figure/table polish commit state**
 - `docs/progress/2026_04_25_vm_real_data_tuning_investigation_prompt.md` - **VM-side lmsys tuning provenance investigation prompt**
@@ -1026,7 +1032,40 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
-## OR 论文 Revision 状态 (2026-04-25 updated)
+## OR 论文 Revision 状态 (2026-05-02 updated)
+
+### Final QA / Response Package State(2026-05-02)
+- **主记录文件**: `docs/progress/2026_05_02_opre_revision_final_qa_push.md`
+- **本轮锁定点**:
+  - `papers/LLM_or.pdf` 和 `papers/response_letter.pdf` 均为 up-to-date
+  - response letter 与当前正文在 real-data、A100 validation、memory cap、`\mathrm{tl}` grid、eviction/restart、related work 口径上保持一致
+  - Figure D PDF 轴标签为 `Arrival rate \lambda` / `Effective completion rate`; caption 恢复直接 latency-comparison wording，正文段落保持更 neutral 的 observed-grid 叙述
+  - time-varying extension 保留 throughput/memory guarantee，并将 service-normalized delay 放在 first-segment waiting condition 下
+  - active paper/letter stale-term 搜索通过：无 `tl=400/1000`、`Arrival rate QPS`、旧 `1.5%` validation、`direct vLLM measurements`、`in-flight limit` 等残留
+- **状态**: ✅ 当前 revision package 可进入提交/推送；唯一开放项是 lmsys Figure D 完整 per-arrival-rate provenance，当前保守表述下不阻塞
+- **待做**: 若后续强化 lmsys stability-boundary 或 per-rate config claim，必须先完成 rerun/reconstruction
+
+### Paper Polish / Overleaf Merge Checkpoint(2026-04-28)
+- **主记录文件**: `docs/progress/2026_04_28_paper_polish_overleaf_checkpoint.md`
+- **本轮锁定点**:
+  - Section 2--5 已按 OR/queueing narrative 继续 polish，重点包括 objective 口径、fluid terminology、WAIT/Nested WAIT threshold interpretation、unknown output length theorem explanation
+  - numerical section opener 已改成 mechanism-first metric exposition，避免 `X alone is not informative` / `primary diagnostic` 等 AI-like 句式
+  - Overleaf safe merge preview 已完成：active root manuscript scope 内 `CONFLICT=0`，本地更新根文件 15 个，目标路径为 Dropbox Overleaf revision 目录
+  - merge scope 已收窄为 `LLM_or.tex` active manuscript dependencies + `Experiments_pdf/`，不复制 `msom/`, `competitions/`, `arxiv/`, `sig/`, `ssrn/` 等非 active variants
+- **状态**: 🚧 Overleaf copy 尚未执行；下一步应先备份目标端 15 个 root files，再复制 narrowed scope
+- **待做**: 执行 `$merge-overleaf` narrowed copy，等待 Dropbox sync 后确认 Overleaf compilation
+
+### Section 2 Objective / Throughput Consistency(2026-04-27)
+- **主编辑文件**: `papers/model.tex`, `papers/appendix_notation.tex`, `papers/known_type.tex`, `papers/numerical.tex`
+- **同步脚本/图**: `scripts/plot_figure_B_compare.py`, `scripts/plot_figure_C_multi_type.py`, `scripts/plot_figure_D_lmsys.py`, `scripts/plot_figure_G_long_decode.py`, `papers/Experiments_pdf/figure_B/C/D/G_*.pdf`
+- **本轮锁定点**:
+  - theory 中 `\throughput^{(T,\pi)}` / `\throughput^{(\zeta,\pi)}` 统一为 completed decode tokens per unit time
+  - experiments 中右图统一写作 `effective completion rate`，即 completed requests/queries per second net of eviction-induced restarts
+  - Section 2 objective 段采用 offered-load cap -> idle/restart loss channels -> admission-control balance 的 OR/queueing 叙述
+  - TTFT 的意义明确为防止策略反复优先 short prompts 而长期推迟 long prompts 的 first service
+  - notation table 已迁移到 `papers/appendix_notation.tex`，正文只 narratively 引入符号并引用 appendix table
+- **状态**: ✅ Section 2 当前轮 polish 和 throughput/TTFT consistency 已完成；主文已成功编译
+- **待做**: 开始 Section 3 polish 时，继续检查 `throughput`, `fluid benchmark`, `stability region` 是否与 Section 2 新口径一致
 
 ### Real-data Provenance Audit(2026-04-25)
 - **主记录文件**: `docs/progress/2026_04_25_real_data_parameter_audit.md`

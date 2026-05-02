@@ -1,5 +1,5 @@
 """
-Figure C: multi-type W3 mean latency + effective throughput vs arrival rate.
+Figure C: multi-type W3 mean latency + effective completion rate vs arrival rate.
 
 Workload: W3 = (p512d20, p512d50) at 70/30 mix.
 Same Vidur + A100 + Llama-3-8B setting as Figure B.
@@ -12,7 +12,7 @@ Data: experiments.db, table rate_sweep_perseg, workload='W3'
   - Sarathi / Nested WAIT: existing rows (best per rate via MIN)
   - vLLM: backfill from scripts/rate_sweep_w3_vllm_backfill.py
 
-Layout matches Figure B (side-by-side log-y latency + linear throughput).
+Layout matches Figure B (side-by-side log-y latency + linear completion rate).
 Rate range: 12..24 (matches Figure B x-axis for cross-figure consistency).
 """
 
@@ -95,16 +95,16 @@ def rate_to_x(r):
 
 X_TICK_RATES = [12, 14, 16, 18, 20, 22, 24]
 
-# --- Sustainable throughput mu --------------------------------------------
+# --- Sustainable completion-rate mu ---------------------------------------
 # The auto-detector (ratio>2 jump) collapses Sarathi and Nested WAIT onto
 # the same rate (22) because both curves jump at r=22->23. We override
 # with the absolute knee position visible in the latency panel so the
-# throughput panel displays the same stability ordering:
+# completion-rate panel displays the same stability ordering:
 #   vLLM: latency crosses 4 s at r=19 -> mu = 18
 #   Sarathi: knee begins at r=21->22 (1.76 -> 4.06) -> mu = 21
 #   Nested WAIT: still <2.5 s at r=22, only diverges at r=23 -> mu = 22
 mu = {"vLLM": 18, "Sarathi": 21, "Nested WAIT": 22}
-print(f"Sustainable throughput mu (override): {mu}")
+print(f"Sustainable completion-rate mu (override): {mu}")
 
 
 # --- Plot -----------------------------------------------------------------
@@ -170,13 +170,13 @@ for algo in ["vLLM", "Sarathi", "Nested WAIT"]:
         zorder=9,
     )
 
-# --- Right: effective throughput (linear, same x mapping) ---
+# --- Right: effective completion rate (linear, same x mapping) ---
 axR = axes[1]
 rate_grid = np.linspace(r_min - 1, r_max + 2, 400)
 x_grid = np.array([rate_to_x(r) for r in rate_grid])
 
 axR.plot(x_grid, rate_grid, color="#888888", linestyle=":", linewidth=1.0,
-         label=r"Ideal ($\lambda =$ throughput)", zorder=1)
+         label=r"Ideal completion rate ($=\lambda$)", zorder=1)
 
 for algo in ["vLLM", "Sarathi", "Nested WAIT"]:
     m = mu[algo]
@@ -193,7 +193,7 @@ for algo in ["vLLM", "Sarathi", "Nested WAIT"]:
              linestyle="None", label=algo, zorder=3)
 
 axR.set_xlabel(r"Arrival rate $\lambda$ (requests/s)")
-axR.set_ylabel("Effective throughput (requests/s)")
+axR.set_ylabel("Effective completion rate (requests/s)")
 axR.set_xlim(x_lo, x_hi)
 axR.set_xticks(x_tick_positions)
 axR.set_xticklabels(x_tick_labels)
@@ -203,7 +203,7 @@ axR.grid(True, linestyle=":", linewidth=0.4, alpha=0.35, color="#999999")
 axR.legend(loc="lower right", frameon=False, handlelength=2.5,
            borderpad=0.4)
 
-# --- Transition-points callout (throughput panel) ------------------------
+# --- Transition-points callout (completion-rate panel) --------------------
 text_xy_R = (13.5, 22)
 axR.text(*text_xy_R, "Transition\npoints",
          fontsize=10.5, ha="center", va="center", fontweight="semibold",

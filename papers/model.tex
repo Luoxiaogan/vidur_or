@@ -1,53 +1,11 @@
 \section{Model}
 \label{sec:model}
 
-We formalize the online scheduling problem for Large Language Model (LLM) inference under memory constraints. Unlike traditional scheduling where job sizes are fixed, LLM inference involves \textit{dynamically growing memory demands}: the Key-Value (KV) cache expands continuously as prompts generate output tokens, and the two-phase structure (prefill and decode) creates fundamentally different resource consumption patterns. This dynamic growth, combined with unknown output lengths, distinguishes our problem from classical queueing models. We first introduce the inference process, then describe prompt characteristics, batching rules, system constraints, and performance metrics.
-
-\subsection{Notation}
-\label{subsec:notation}
-We summarize the key notation used throughout this paper in Table~\ref{tab:notation}.
-
-\begin{table}[h]
-\centering
-\caption{Summary of Notation}
-\label{tab:notation}
-\small
-\begin{tabular}{cl}
-\toprule
-\textbf{Symbol} & \textbf{Description} \\
-\midrule
-$m$ & Number of prompt types \\
-$j$ & Index of prompt type, $j \in \{1, \dots, m\}$ \\
-$\lambda_j$ & Arrival rate of type-$j$ prompts (Poisson process) \\
-$l_j$ & Input length (tokens) of type-$j$ prompts after prefill \\
-$l_j'$ & Output length (tokens) of type-$j$ prompts in decode phase \\
-$s$ & Stage index: $s = 0$ for prefill, $s \in \{1, \dots, l_j'\}$ for decode \\
-$k$ & Segment index in Nested WAIT, $k \in \{1, \dots, m\}$ \\
-$b$ & Batch index (iteration count) \\
-$n_{js}^t$ & Number of type-$j$ prompts at stage $s$ at time $t$ \\
-$n_j$ & Threshold for type-$j$ prompts in WAIT algorithm \\
-$n_k$ & Threshold for segment $k$ in Nested WAIT \\
-\midrule
-$C$ & GPU memory capacity \\
-$\mathcal{G}^t$ & Set of prompts with KV cache on GPU at time $t$ \\
-$B^t$ & Batch of prompts processed at iteration $t$ ($B^t \subseteq \mathcal{G}^t$) \\
-$\tau$ & Iteration time to process a batch \\
-$d_0$ & Fixed overhead time per batch iteration \\
-$d_1$ & Time cost per unit of KV cache memory \\
-\midrule
-$M^*$ & Equilibrium memory usage in fluid model \\
-$n_j^*$ & Equilibrium number of active type-$j$ prompts \\
-$\throughput^*$ & Equilibrium throughput (fluid benchmark) \\
-$\Pi$ & Class of admissible scheduling policies \\
-\bottomrule
-\end{tabular}
-\end{table}
+We model Large Language Model (LLM) inference as an online scheduling system with stochastic arrivals, staged service, and a shared memory constraint. The key departure from classical scheduling is that a job's memory requirement is not fixed at admission: as the model generates output tokens, the prompt's \textit{Key-Value (KV) cache} grows over time. The notation is defined where it first appears, with a consolidated summary in Table~\ref{tab:notation} of Appendix~\ref{app:notation}.
 
 \subsection{Prompts and Inference Process}
 
-User queries, called \textit{prompts}, arrive at a single Graphics Processing Unit (GPU) for processing. We focus on maximizing how fully the GPU is used, and our algorithms extend to multi-GPU settings such as pipeline parallelism, where each prompt is processed across different GPUs in different layers of the LLM. When communication costs are negligible, our algorithms apply directly to these settings. 
-
-During the inference process, each prompt is divided into discrete units known as \textit{tokens} during the prefill phase and generates output text through an inference process in the decode phase. A token represents a distinct text element, such as a word or subword, and its processing relies on a memory structure called the Key-Value (KV) cache. The KV cache improves inference efficiency by storing the computational history of prior tokens, thus avoiding redundant computations. The cache size increases as tokens are processed, requiring careful memory management to maintain system performance.
+Prompts arrive to a single Graphics Processing Unit (GPU) over time and require two phases of service. The \textit{prefill} phase embeds the input context and initializes the prompt's KV cache. The \textit{decode} phase then generates one output token per iteration, increasing the prompt's KV cache by one unit at each decode step. We focus on a single GPU as the basic scheduling unit; multi-GPU deployments can apply the same admission and batching logic within each GPU partition or pipeline stage.
 
 % A Central Processing Unit (CPU) with unlimited memory acts as auxiliary storage; however, transferring a token’s KV cache from the CPU to the GPU introduces a delay \( d_s > 0 \) per token.
 
@@ -62,9 +20,9 @@ During the inference process, each prompt is divided into discrete units known a
 
 % \gan{I will add more explanation. The rate $\lambda_j$ comes from the real world inference serving data, and the rate of one type is indeed the sum of rates of many mini types in the real world inference serving data. Or maybe this part should add to the nested WAIT section?}
 
-\textbf{Prompt Characteristics}: Prompts arrive stochastically and are classified into \( m \) distinct types according to their input / output lengths, indexed by \( j \in \{1, \dots, m\} \). We assume that prompts of type \( j \) arrive according to a Poisson process with rate \( \lambda_j \).
+We group prompts into \( m \) types indexed by \( j \in \{1, \dots, m\} \). Type-\(j\) prompts arrive according to a Poisson process with rate \( \lambda_j \), have input length \(l_j\) after prefill, and require \(l_j'\) decode iterations before completion.
 % (however, our algorithms and analysis can be extended to more general cases with varying arrival rates, which is left in Appendix \ref{sec:extension}).
-Each prompt's memory consumption depends on its processing stage. A prompt of type \( j \) has the following properties:
+Thus, a prompt of type \( j \) has the following length profile:
 \begin{equation*}
     \left\{
     \begin{aligned}
@@ -73,118 +31,67 @@ Each prompt's memory consumption depends on its processing stage. A prompt of ty
     \end{aligned}
     \right.
 \end{equation*}
-Therefore, a type-$j$ prompt must undergo one prefill iteration followed by $l_j'$ decode iterations to complete its inference processing. During the prefill phase, the prompt's input context and question are embedded as $l_j$ tokens in a single iteration, consuming a KV cache of size $l_j$ units. In the subsequent decode phase, one output token is generated per iteration, each incurring an additional unit of KV cache memory.
-
-To track processing progress, we define a prompt to be in \textbf{stage $s=0$} if it is about to undergo the prefill phase, and in \textbf{stage $s$} (where $s \in \{1, \dots, l_j'\}$) if it is scheduled to receive its $s$-th output token during the decode phase. Thus, a prompt at stage $s$ occupies memory of size $l_j + s$ units.
+Therefore, a type-$j$ prompt undergoes one prefill iteration followed by \(l_j'\) decode iterations. To track service progress, we use stage \(s=0\) for prompts awaiting prefill and stages \(s \in \{1, \dots, l_j'\}\) for prompts in decode. A prompt waiting outside the GPU at stage \(s=0\) has no resident KV cache; processing its prefill allocates \(l_j\) units, and each generated decode token adds one unit. Thus a resident type-$j$ prompt with decode progress \(s\) occupies \(l_j+s\) units of KV cache memory. This stage-dependent memory requirement is the source of the dynamic capacity constraint analyzed below.
 
 Though the total number of different types $m$ can be large (for example, from $1$ to $10000$), our algorithms and their theoretical guarantees exhibit only a weak (logarithmic) dependence on $m$. The analysis relies primarily on the total arrival rate across all types, ensuring that our approach scales efficiently regardless of the number of types.
 
-While our analysis focuses on fixed arrival rates $\lambda_j$, our threshold-based algorithms can be extended to settings with time-varying arrivals by dynamically adjusting thresholds based on the arrival rates (see Section~\ref{sec:extension}).
+While our main analysis focuses on fixed arrival rates $\lambda_j$, Appendix~\ref{sec:extension} discusses a finite-horizon extension in which thresholds are adjusted to bounded time-varying arrival rates.
 
 
 % The uncertainty of the output length distinguishes our model fundamentally from previous work, such as \cite{jaillet2025onlineschedulingllminference}, which assumes known output lengths. 
 
 \subsection{Batching and Iteration Time}
-To use GPU resources efficiently, the GPU processes tasks in \textit{batches}, combining prompts for prefilling and prefilled prompts for decoding. Figure~\ref{fig:batching_example} illustrates the temporal dynamics of batching and scheduling in GPU-based inference. Two prompts, \( P1 \) and \( P2 \), arrive sequentially and are processed according to their current stage—prefill or decode—at each time step. Initially, \( P1 \) arrives and enters the prefill phase, embedding its input sequence ``How are you?'' in a single iteration. Shortly after, \( P2 \) arrives with the query ``Is 5 a prime?'', which is also scheduled for prefill. The GPU batches prompts in the same phase together; thus, \( P1 \) is processed for prefill alone, followed by \( P2 \). At the next step, \( P1 \) enters the decode phase, generating its first output token ``I'm,'' while \( P2 \) undergoes prefill in parallel. Subsequently, both prompts advance in the decode phase, each generating one token per iteration: ``Yes'' for \( P2 \) and ``I'm fine'' for \( P1 \). This example highlights how the scheduler interleaves prompts in different stages—prefill and decode—into shared GPU batches, thereby improving throughput. Prefill stages involve initializing KV caches based on input tokens, while decode stages extend outputs one token at a time, with incremental KV cache updates.
-
-
-In general, consider a batch composed of:
-\begin{itemize}
-    \item \( n_1 \) prompts in the prefill phase (stage $s=0$), where prompt \( i \) has input length \( l_{j(i)} \) tokens corresponding to its type \( j(i) \). These prompts are processed to initialize their KV caches.
-    \item \( n_2 \) prompts in the decode phase, where prompt \( i \) is at stage \( s_i \in \{1, \dots, l_{j(i)}'\} \), having generated \( s_i \) output tokens. The total KV cache size for prompt \( i \) is \( l_{j(i)} + s_i \) tokens.
-\end{itemize}
-
-
+At each iteration, the scheduler forms a \textit{batch} of prompts to process on the GPU. A batch may include newly admitted prompts in prefill and previously admitted prompts in decode, so the scheduling decision determines both how many prompts enter service and how many in-service prompts advance by one token. Because each iteration incurs a fixed launch and synchronization overhead, larger batches generally improve token throughput by spreading this overhead across more prompts. Figure~\ref{fig:batching_example} illustrates this timing with two sequential arrivals. Prompt \(P_1\) arrives first and is processed in prefill, which initializes its KV cache. Prompt \(P_2\) arrives later and also requires prefill. The displayed processing iterations are \(B^1=\{(P_1,s=0)\}\), \(B^2=\{(P_1,s=1),(P_2,s=0)\}\), and \(B^3=\{(P_1,s=2),(P_2,s=1)\}\), so the corresponding sums in Equation~\eqref{eq:time_consump} are \(l_{j(P_1)}\), \((l_{j(P_1)}+1)+l_{j(P_2)}\), and \((l_{j(P_1)}+2)+(l_{j(P_2)}+1)\), respectively. This example highlights the operational trade-off that drives the model: batching improves throughput by sharing fixed overhead across prompts, but it also increases the KV cache load carried by the system.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.55\linewidth]{Experiments_pdf/fig_batching1.pdf}
-    \caption{Example of batching and scheduling.}
+    \caption{Example of batching and scheduling with two prompts. The three GPU iterations shown are a prefill-only batch for \(P_1\), a mixed batch that decodes \(P_1\) while prefilling \(P_2\), and a decode-only batch for both prompts.}
     \label{fig:batching_example}
 \end{figure}
 
-Experiments in \cite{agrawal2023sarathi,kwon2023efficient,zhong2024distserve} show that \textit{iteration time} scales linearly with total KV cache size. We model this as:
+We next specify the service time of an iteration. In Transformer inference, prefill evaluates the input sequence and creates the initial KV cache; thereafter, each decode iteration produces one token per active prompt while attending to the prompt's cached history. For a decode-dominated batch, the batch KV-cache size is therefore a natural workload descriptor. Let \(B^t\) denote the batch processed at iteration \(t\), let \(j(i)\) be the type of prompt \(i\), and let \(s_i^t\) be its current stage. A prefill prompt has \(s_i^t=0\) and initializes \(l_{j(i)}\) units of KV cache, while a decode prompt at stage \(s_i^t\) reads and extends a cache of size \(l_{j(i)}+s_i^t\). Guided by profiling studies of LLM serving workloads~\citep{agrawal2023sarathi,kwon2023efficient,zhong2024distserve}, we approximate iteration time by
 \begin{equation}
 \label{eq:time_consump}
-    \tau = d_0 + d_1 \cdot \underbrace{\left( \sum_{i=1}^{n_1} l_{j(i)} + \sum_{i'=1}^{n_2} (l_{j(i')} + s_{i'}) \right)}_{\text{Total KV cache size in batch}},
+    \tau(B^t) = d_0 + d_1 \sum_{i\in B^t} \bigl(l_{j(i)} + s_i^t\bigr),
 \end{equation}
-where \( d_0 \) is the fixed per-batch overhead and \( d_1 \) is the marginal time cost per unit of KV cache memory. This form makes the throughput trade-off explicit: larger batches amortize \( d_0 \) over more prompts, but the resulting increase in KV cache load pushes the system toward the memory constraint~\eqref{eq:memory_constraint} and raises eviction risk. Figure~\ref{fig:inference time} validates this linear approximation on a single L20 GPU using Llama-2-7B and Llama-2-13B. For the A100-based experiments in Section~\ref{sec:experiments}, Appendix~\ref{app:gpu_validation} reports a separate calibration of the same model against direct A100 measurements, yielding \( d_0 \approx 276 \)\,ms and \( d_1 \approx 0.0115 \)\,ms per KV cache token over the batch-size range used there.
+where \( d_0 \) is the fixed per-iteration overhead and \( d_1 \) is the marginal time cost per cached token. The affine form separates this fixed overhead from the marginal cost of serving larger KV caches. It captures the admission-control trade-off central to our model: admitting more prompts spreads \(d_0\) across more generated tokens and can therefore raise throughput, but it also lengthens subsequent iterations and consumes scarce GPU memory through larger KV caches. This regime is especially relevant because prompts typically spend most of their lifetime in decode, so admission decisions primarily determine the population and age distribution of active caches. Figure~\ref{fig:inference time} reports A100~80GB validation results for Llama-2-7B with the prompt setting fixed at input length \(256\) and output length \(20\). We vary the number of requests in the batch from \(1\) to \(256\) and record batch inference time across batch states in which the active requests may be at different decode stages. The horizontal axis is the total number of tokens stored in the KV cache across active requests, corresponding to \(\sum_{i\in B^t}(l_{j(i)}+s_i^t)\) for a serving iteration \(t\). Because the stages \(s_i^t\) vary across requests and iterations, batches with similar numbers of requests can have different total cached-token counts, producing the scattered validation points around the affine fit. Appendix~\ref{app:gpu_validation} reports additional simulator-validation and end-to-end GPU experiments for the same hardware setting.
 
-The linear model~\eqref{eq:time_consump} is most accurate in decode-dominated regimes, where each iteration processes one token per prompt and the computational cost is dominated by KV cache memory access. It is exact under prefill-decode disaggregation \citep{zhong2024distserve,patel2024splitwise}, where prefill and decode are processed on different devices and the decode-side server handles only decode operations. In mixed prefill-decode batches, it remains a good approximation when prefill lengths are similar across prompts.
-
-More generally, iteration time can be piecewise linear across operating regimes. For example, \cite{li2025throughput} models it as $\tau(b') = c + a \cdot \max\{0, b' - b_0\}$, so iteration time is constant for small batches and grows linearly once the batch size exceeds a threshold $b_0$. This form captures the transition from compute-bound to memory-bound operation. Our algorithms and analysis extend naturally to such models: the threshold mechanism in WAIT (Section~\ref{sec:wait}) and Nested WAIT (Section~\ref{sec:nested_wait}) still controls the number of prompts in each decode stage, and the design principle of balancing arrivals and completions to approach the fluid equilibrium remains unchanged as long as iteration time scales predictably with batch composition. We adopt the simplified linear model~\eqref{eq:time_consump} for tractability, and Figure~\ref{fig:inference time} shows that it is accurate in the decode-dominated regime where our algorithms operate.
+The same formulation can accommodate other calibrated service-time curves. When prefill dominates, especially when prefill lengths are highly heterogeneous, input attention can add nonlinear length effects; mixed prefill-decode batches and hardware saturation can create distinct compute-bound and memory-bound regimes. These effects can be represented by replacing~\eqref{eq:time_consump} with a monotone function of batch composition, including piecewise-linear specifications such as \(\tau(b') = c + a\max\{0,b'-b_0\}\)~\citep{li2025throughput}. Prefill-decode disaggregated serving gives the complementary case: prefill work is routed to separate workers, and the decode server repeatedly executes one-token decode steps, making aggregate KV-cache usage an especially accurate state variable for iteration time~\citep{patel2024splitwise,zhong2024distserve}. Thus the affine model is both a close approximation in decode-centered settings and a transparent first-order primitive for the fluid analysis. It keeps the central operational trade-off explicit: larger batches improve utilization, but they also increase iteration time and memory pressure. Even when a richer calibrated service-time model is needed, the same perspective remains useful: the scheduler must control the population and decode-stage mix of resident prompts because these quantities determine both memory pressure and future service times.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.55\linewidth]{Experiments_pdf/inference_time_comparison.pdf}
-    \caption{Inference time of Llama-2-7B and Llama-2-13B with varying number of tokens per batch on a single L20 GPU.}
+    \caption{Batch inference time of Llama-2-7B on a single NVIDIA A100~80GB GPU. We fix the prompt length at \(256\) tokens and the output length at \(20\) tokens, and vary the number of requests in the batch from \(1\) to \(256\). Each validation point corresponds to a batch state; requests in the same batch may be at different decode stages, so the horizontal axis reports the resulting total number of tokens stored in the KV cache across active requests. The vertical axis reports measured batch inference time. The affine fit indicates an approximately linear relationship between batch inference time and total cached tokens.}
     \label{fig:inference time}
 \end{figure}
 
 \subsection{Memory Constraint and Challenges}
 
-Unlike traditional scheduling where job sizes are fixed, LLM inference faces a unique challenge: prompts occupy memory that \textbf{grows during decode}. Each generated token adds one unit to the prompt's KV cache, causing its memory consumption to grow continuously until completion. This dynamic growth creates eviction risks even when total capacity appears sufficient.
+The service-time model above describes how a batch uses the GPU in one iteration. The second constraint is intertemporal: a prompt that remains in service carries its KV cache across iterations, and this cache grows as decode progresses. Hence the scheduling state must track not only the current batch \(B^t\), but all prompts whose KV caches are currently resident on the GPU.
 
-\textbf{Memory Constraint}: At all times $t$, the total KV cache stored on GPU must not exceed capacity $C$:
+\textbf{Memory Constraint}: At all times \(t\), the total KV cache stored on the GPU must not exceed capacity \(C\):
 \begin{equation}
 \label{eq:memory_constraint}
 \sum_{i \in \mathcal{G}^t} (l_{j(i)} + s^t_i) \le C,
 \end{equation}
-where $\mathcal{G}^t$ denotes the set of prompts whose KV caches are stored on GPU at time $t$. This includes both prompts actively processed in the current batch $B^t \subseteq \mathcal{G}^t$ and prompts that are preempted but retain their KV caches on GPU. Here $j(i)$ is the type of prompt $i$, and $s^t_i \in \{0, 1, \dots, l_{j(i)}'\}$ is its current stage. Unlike traditional scheduling where job sizes are fixed, the per-prompt memory consumption $l_{j(i)} + s^t_i$ \textit{grows dynamically} as decode progresses ($s^t_i$ increases each iteration). This dynamic growth creates the risk of \textit{eviction}: if memory becomes insufficient to satisfy the constraint~\eqref{eq:memory_constraint}, ongoing prompts must be removed from the GPU and their KV caches discarded. When eviction is necessary, prompts are removed in \textbf{LIFO order} (most recently admitted prompts are evicted first) until sufficient memory is freed. Evicted prompts lose all accumulated computation and must restart from the prefill phase (stage $s=0$), re-entering the scheduling queue as new arrivals. This creates a vicious cycle: eviction temporarily frees memory, but restarted prompts compete for resources again and can trigger further evictions, a phenomenon we call \textit{cascading failure}. The following example illustrates this mechanism.
+where \(\mathcal{G}^t\) is the set of prompts whose KV caches are resident on the GPU at time \(t\). This set includes the current batch \(B^t \subseteq \mathcal{G}^t\) as well as prompts that are waiting between iterations while retaining their KV caches on the GPU. Here \(j(i)\) is the type of prompt \(i\), and \(s_i^t \in \{0,1,\dots,l_{j(i)}'\}\) is its current decode progress. Prompts that have not yet been prefilled are not in \(\mathcal{G}^t\); once their KV cache is allocated, their memory contribution grows from \(l_{j(i)}\) with each generated token. If the constraint~\eqref{eq:memory_constraint} cannot be satisfied, the server must \textit{evict} resident prompts by discarding their KV caches. We model eviction as last-in-first-out: the most recently admitted prompts are evicted first until enough memory is freed. An evicted prompt loses its accumulated computation and restarts from prefill, re-entering the scheduling queue as a new job. This restart rule can create an eviction cascade: each eviction relieves memory pressure temporarily, but the restarted prompts return to the queue, raise future admission pressure, and can force additional evictions. The following example illustrates this mechanism.
 
 \begin{example}[Dynamic Memory Growth and Eviction]
 \label{ex:memory_growth}
-Consider a simple prompt type: users submit ``Hello'' queries, each expecting a 1-token response ``Hi.'' Each prompt has prefill length $l=1$ token and decode length $l'=1$ token. Memory consumption evolves as follows:
-\begin{itemize}
-    \item \textbf{Stage $s=0$ (awaiting prefill)}: No memory allocated yet.
-    \item \textbf{After prefill}: The prompt's KV cache occupies $l=1$ unit of memory.
-    \item \textbf{After decode (stage $s=1$)}: The prompt occupies $l+s = 1+1 = 2$ units before completion.
-\end{itemize}
+Consider the running toy prompt ``Hello,'' which receives the one-token response ``Hi.'' This prompt type has prefill length \(l=1\) and decode length \(l'=1\). A prompt waiting for prefill uses no KV cache. Once its prefill is processed, the prompt becomes resident and uses one unit of KV cache; after it generates its single decode token, it uses \(l+1=2\) units just before completion. Suppose the GPU has capacity \(C=12\). One full-memory iteration can process four prefills and four decodes: the four newly prefilled prompts require \(4\times1=4\) units, and the four prompts already in decode require \(4\times2=8\) units, for a total of \(12\) units and four completions.
 
-Suppose the GPU has capacity $C=12$ units. A batch processes 4 prompts at prefill (using $4 \times 1 = 4$ units) and 4 prompts at decode (using $4 \times 2 = 8$ units), totaling $4+8=12$ units with 4 completions per iteration.
+Now suppose three prompts are already decoding, using \(3\times2=6\) units, and the scheduler admits six new prompts for prefill, using another \(6\times1=6\) units during the iteration. After the iteration, the three old prompts complete and release their caches, while the six newly admitted prompts move into decode and now require \(6\times2=12\) units, filling memory. If four more prompts arrive next, admitting their prefills requires four additional units. The only way to create this space is to evict two resident decode prompts, each freeing two units. These evicted prompts lose their KV caches and return to the queue as new jobs, where they compete with subsequent arrivals and can force further evictions.
 
-Now consider a scenario where 6 new prompts arrive simultaneously while 3 prompts are already decoding:
-\begin{enumerate}
-    \item \textbf{Current state}: 3 prompts in decode occupy $3 \times 2 = 6$ units.
-    \item \emph{Admit all 6 for prefill.} After prefill, these 6 prompts advance to decode. The 3 existing decode prompts complete. The system now has 6 prompts in decode, occupying $6 \times 2 = 12$ units, so memory is full.
-    \item \textbf{Next batch}: 4 new prompts arrive. To prefill them (needing $4 \times 1 = 4$ units), we must \textbf{evict} 2 decode prompts to free space.
-    \item \textbf{Evicted prompts restart}: The 2 evicted prompts lose their KV caches and return to stage $s=0$, re-entering the queue as new arrivals.
-    \item \textbf{Cascade}: These restarted prompts compete with new arrivals. The imbalance persists, triggering repeated evictions.
-\end{enumerate}
-
-This example reveals the \textbf{cascading eviction problem} our algorithms target. Even with $C \geq M^*$ (the equilibrium memory from our fluid analysis, Section~\ref{sec:fluid}), poor admission control triggers this cascade, destabilizing a system whose capacity is theoretically sufficient for stability. The eviction-restart cycle can persist indefinitely, reducing the effective throughput, the completion rate net of evictions, by as much as $20\%$ (Example~\ref{ex:fcfs_cascade} quantifies this for FCFS).
+This example highlights the \textbf{eviction cascade} and the admission trade-off behind it. A larger batch can raise throughput because the fixed per-iteration overhead is shared across more generated tokens, but every admitted prompt also creates a KV cache that stays on the GPU and grows one token at a time until completion. If the scheduler admits too many prompts now, later decode iterations may leave too little memory for new arrivals, forcing eviction and restart. When output lengths are unknown, this decision must be made before the scheduler knows how long each prompt will remain in memory. Section~\ref{sec:fluid} formalizes the balanced admission level at which arrivals, completions, and memory growth can be kept in balance.
 \end{example}
 
-\paragraph{Core Challenge.}
-When output lengths are unknown, optimistic admission risks overflow; pessimistic admission wastes capacity. Our threshold-based algorithms resolve this dilemma by: (i) preventing evictions through controlled admission, (ii) exploiting memory fully via batching, (iii) classifying prompts on-the-fly as they complete decode stages. This approach maintains the system near the load-balanced equilibrium derived in Section~\ref{sec:fluid}, where arrivals match completions and memory use is stable.
+\subsection{Objective and Policy Space}
 
-\subsection{Performance Metrics}
+We evaluate a scheduling policy over a finite horizon \([0,T]\). The primary efficiency metric, denoted \(\throughput^{(T,\pi)}\), is \textit{effective throughput}: the average number of decode tokens from prompts that complete under policy \(\pi\). Tokens generated before a prompt is evicted do not count, because eviction discards the prompt's KV cache and returns it to prefill. This convention makes memory overflow part of the performance criterion rather than a separate implementation detail. For a fixed arrival process, effective throughput is capped by the offered decode-token load. A policy falls below this cap when it leaves capacity idle or admits work that later restarts instead of completing. Admission control must therefore balance utilization against memory feasibility: admitting enough prompts to exploit the GPU, but not so many that KV-cache growth forces eviction. Maintaining this balance over a wider range of arrival rates expands the realized stability region, and under overload it keeps completed work close to the server's usable capacity. We also evaluate \(\Latency^{(T,\pi)}\), the average elapsed time from prompt arrival to completion, and \(\TTFT^{(T,\pi)}\), the average elapsed time from arrival to the first generated output token. These delay metrics capture service quality beyond aggregate output. In particular, TTFT rules out policies that keep completion counts high by repeatedly prioritizing short prompts while delaying the first service of longer prompts. Later sections introduce the fluid model and use it to establish throughput, latency, and TTFT guarantees for the proposed policies.
 
-We define the metrics guiding scheduling optimization:
-\begin{itemize}
-    \item \textbf{Throughput}: Average number of tokens generated in decode phase per unit time, measuring system efficiency. We count throughput only after prompt completion to ensure validity of the output.
-    \item \textbf{Latency}: Average elapsed time from prompt arrival to completion, capturing responsiveness.
-    \item \textbf{Time to First Token (TTFT)}: Average delay from prompt arrival to the generation of the first token, reflecting initial user-perceived delay.
-\end{itemize}
+Let \(\Pi\) denote the class of admissible online policies. At each decision epoch \(t\), a policy \(\pi \in \Pi\) observes the prompts that have arrived, their input lengths, their current stages \(s_i^t\), and whether their KV caches are resident on the GPU. The policy is non-anticipating: it cannot use future arrivals or a prompt's output length before that length is revealed by completion.
 
-\subsection{Optimization Problem and Policy Space}
-We formalize the problem as optimizing throughput subject to latency and TTFT constraints over continuous time horizon $[0,T]$:
- 
-
-\textbf{Policy Space $\Pi$.} We define the class of admissible scheduling policies $\Pi$. At each decision epoch $t$, a policy $\pi \in \Pi$ observes the system state and makes scheduling decisions subject to the following constraints:
-
-\textit{Information Structure.} The system state at time $t$ includes: (i) the set of all prompts that have arrived by time $t$, along with their input lengths $l_i$; (ii) the current stage $s_i^t$ of each prompt $i$ (i.e., how many output tokens have been generated); (iii) whether each prompt's KV cache is currently stored on GPU. Policies are \textit{non-anticipating}: decisions at time $t$ depend only on information available at or before time $t$. In particular, the output length $l_i'$ of a prompt may be unknown until the prompt completes (generates an end-of-sequence token). This unknown output length is a key challenge addressed by our Nested WAIT algorithm (Section~\ref{sec:nested_wait}).
-
-\textit{Admissible Actions.} At each decision epoch, a policy may:
-\begin{enumerate}
-    \item \textbf{Admit}: Select a subset of waiting prompts (at stage $s=0$) to enter the system. Admitted prompts wait until included in a batch for prefill.
-    \item \textbf{Batch}: Form a batch $B^t$ of prompts to process in the current iteration. After prefill completes, a prompt's KV cache is allocated on GPU.
-    \item \textbf{Preempt}: Pause a prompt while retaining its KV cache on GPU. The prompt can resume later without recomputation.
-    \item \textbf{Evict}: Remove a prompt's KV cache from GPU to free memory when the constraint~\eqref{eq:memory_constraint} cannot be satisfied. Eviction follows a \textbf{LIFO (Last In, First Out)} policy: the most recently admitted prompts are evicted first. The evicted prompt returns to the waiting queue at stage $s=0$, losing all prior computation.
-\end{enumerate}
-
-\textit{Memory Constraint.} At all times, the total KV cache stored on GPU must satisfy the capacity constraint~\eqref{eq:memory_constraint}.
-
-Preemption and eviction are both permitted, but eviction is costly: the evicted prompt re-enters the system as a new arrival and must repeat all processing stages from the beginning. Our WAIT algorithms are designed to \textit{prevent eviction} by controlling admission through thresholds, thereby avoiding the memory pressure that causes eviction. 
+Given this information, the policy chooses which waiting prompts to admit, which resident prompts to batch in the current iteration, and whether to preempt or evict prompts. Preemption pauses a resident prompt while keeping its KV cache on the GPU, so it can resume without recomputation. Eviction removes the KV cache to free memory; under the LIFO rule used here, the most recently admitted resident prompts are evicted first, and each evicted prompt returns to stage \(s=0\) and must restart from prefill. All decisions must satisfy the memory constraint~\eqref{eq:memory_constraint} after the resulting state transition.
 % This formulation
 % encapsulates the potential trade-offs between resource efficiency and service quality: without the latency and TTFT constraints, the algorithm may always prioritize the shortest jobs in order to maximize the throughput and the latency of the long jobs can be very large in overloaded systems.
 

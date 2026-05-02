@@ -1,4 +1,4 @@
-\begin{thebibliography}{63}
+\begin{thebibliography}{68}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \providecommand{\urlprefix}{URL }
@@ -40,6 +40,11 @@ Anthropic (2025) Claude 3.7 sonnet.
 \bibitem[{Asmussen(2003)}]{asmussen2003applied}
 Asmussen S (2003) \emph{Applied probability and queues}, volume~2 (Springer).
 
+\bibitem[{Atharva(2026)}]{huggingface-kv-cache-basics}
+Atharva (2026) The kv cache: How it eliminates redundancy.
+  \url{https://huggingface.co/blog/atharv6f/kv-cache-basics}, accessed:
+  2026-05-01.
+
 \bibitem[{Bai et~al.(2023)Bai, Bai, Chu, Cui, Dang, Deng, Fan, Ge, Han, Huang
   et~al.}]{bai2023qwen}
 Bai J, Bai S, Chu Y, Cui Z, Dang K, Deng X, Fan Y, Ge W, Han Y, Huang F, et~al.
@@ -49,6 +54,11 @@ Bai J, Bai S, Chu Y, Cui Z, Dang K, Deng X, Fan Y, Ge W, Han Y, Huang F, et~al.
   Singer}]{balkanski2016power}
 Balkanski E, Rubinstein A, Singer Y (2016) The power of optimization from
   samples. \emph{Advances in Neural Information Processing Systems} 29.
+
+\bibitem[{Bari et~al.(2025)Bari, Hegde, \protect\BIBand{}
+  de~Veciana}]{bari2025optimal}
+Bari A, Hegde P, de~Veciana G (2025) Optimal scheduling algorithms for llm
+  inference: Theory and practice. \emph{arXiv preprint arXiv:2508.01002} .
 
 \bibitem[{B{\"a}uerle(2002)}]{bauerle2002optimal}
 B{\"a}uerle N (2002) Optimal control of queueing networks: An approach via
@@ -133,6 +143,11 @@ Hooper C, Kim S, Mohammadzadeh H, Mahoney MW, Shao S, Keutzer K, Gholami A
   (2025) Kvquant: Towards 10 million context length llm inference with kv cache
   quantization. \emph{Advances in Neural Information Processing Systems}
   37:1270--1303.
+
+\bibitem[{{Hugging Face}(2025)}]{huggingface-llama2-docs}
+{Hugging Face} (2025) Llama 2 model documentation.
+  \url{https://huggingface.co/docs/transformers/model_doc/llama2}, accessed:
+  2026-05-01.
 
 \bibitem[{Im \protect\BIBand{} Moseley(2013)}]{im2013online}
 Im S, Moseley B (2013) Online batch scheduling for flow objectives.
@@ -224,6 +239,10 @@ Mandelbaum A, Massey WA, Reiman MI (1998) Strong approximations for markovian
 \bibitem[{Microsoft(2023)}]{microsoft2023bing}
 Microsoft (2023) Bing ai. \url{https://www.bing.com/chat}.
 
+\bibitem[{{NVIDIA}(2026)}]{nvidia-a100-specs}
+{NVIDIA} (2026) Nvidia a100 tensor core gpu specifications.
+  \url{https://www.nvidia.com/en-eu/data-center/a100/}, accessed: 2026-05-01.
+
 \bibitem[{OpenAI(2024)}]{openai2024gpt4technicalreport}
 OpenAI (2024) Gpt-4 technical report.
   \urlprefix\url{https://arxiv.org/abs/2303.08774}.
@@ -239,7 +258,7 @@ Ouyang L, Wu J, Jiang X, Almeida D, Wainwright C, Mishkin P, Zhang C, Agarwal
 Patel D (2023) {Peeling The Onion’s Layers: Large Language Models’ Cost,
   Context, and Feature Breakdown}. Semianalysis blog,
   \urlprefix\url{https://semianalysis.com/2023/02/13/peeling-the-onions-layers-large-language/},
-  accessed: [Insert Date Here].
+  accessed: 2026-04-28.
 
 \bibitem[{Patel et~al.(2024)Patel, Choukse, Zhang, Shah, Goiri, Maleki,
   \protect\BIBand{} Bianchini}]{patel2024splitwise}
@@ -259,6 +278,11 @@ Patterson D, Gonzalez J, Le Q, Liang C, Munguia LM, Rothchild D, So D, Texier
 Pope R, Douglas S, Chowdhery A, Devlin J, Bradbury J, Heek J, Xiao K, Agrawal
   S, Dean J (2023) Efficiently scaling transformer inference. \emph{Proceedings
   of Machine Learning and Systems} 5:606--624.
+
+\bibitem[{{SGLang Team}(2024)}]{sglang-github}
+{SGLang Team} (2024) Sglang: Fast serving framework for large language models
+  and vision language models. \url{https://github.com/sgl-project/sglang},
+  gitHub repository.
 
 \bibitem[{Shazeer et~al.(2017)Shazeer, Mirhoseini, Maziarz, Davis, Le, Hinton,
   \protect\BIBand{} Dean}]{shazeer2017outrageously}

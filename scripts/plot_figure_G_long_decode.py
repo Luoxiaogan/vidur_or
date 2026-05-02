@@ -6,7 +6,7 @@ lambda = 0.5 to 5.0 in steps of 0.5.
 
 Layout: 1 x 2 side-by-side
   - Left  : mean latency vs rate on a stretched nonlinear y scale
-  - Right : effective throughput vs rate
+  - Right : effective completion rate vs rate
 
 Data: experiments.db.long_decode_v2, MIN over hyperparameter variants
 per (algorithm, rate).
@@ -82,7 +82,7 @@ def rate_to_x(r: float) -> float:
 X_TICK_RATES = rates
 
 mu = {"vLLM": 4.0, "Sarathi": 4.0, "WAIT": 4.5}
-print(f"Sustainable throughput mu (override): {mu}")
+print(f"Sustainable completion-rate mu (override): {mu}")
 
 fig, axes = plt.subplots(
     1, 2, figsize=(10.4, 5.35),
@@ -162,13 +162,13 @@ for algo in ["vLLM", "Sarathi", "WAIT"]:
         zorder=9,
     )
 
-# --- Right: effective throughput (stylized, as in Figures B/C) ----------
+# --- Right: effective completion rate (stylized, as in Figures B/C) -----
 axR = axes[1]
 rate_grid = np.linspace(r_min - 0.25, r_max + 0.25, 300)
 x_grid = np.array([rate_to_x(r) for r in rate_grid])
 
 axR.plot(x_grid, rate_grid, color="#888888", linestyle=":", linewidth=1.0,
-         label=r"Ideal ($\lambda =$ throughput)", zorder=1)
+         label=r"Ideal completion rate ($=\lambda$)", zorder=1)
 
 for algo in ["vLLM", "Sarathi", "WAIT"]:
     m = mu[algo]
@@ -184,7 +184,7 @@ for algo in ["vLLM", "Sarathi", "WAIT"]:
              linestyle="None", zorder=3)
 
 axR.set_xlabel(r"Arrival rate $\lambda$ (requests/s)")
-axR.set_ylabel("Effective throughput (requests/s)")
+axR.set_ylabel("Effective completion rate (requests/s)")
 axR.set_xlim(x_lo, x_hi)
 axR.set_xticks(x_tick_positions)
 axR.set_xticklabels(x_tick_labels)
@@ -202,7 +202,7 @@ for algo, (x_t, y_t) in transition_points_R.items():
 
 axR.plot([3.25, 3.72], [0.62, 0.62], color="#888888", linestyle=":",
          linewidth=1.0, zorder=1)
-axR.text(3.82, 0.62, r"Ideal ($\lambda =$ throughput)", color="#666666",
+axR.text(3.82, 0.62, r"Ideal completion rate ($=\lambda$)", color="#666666",
          fontsize=9.8, va="center", ha="left")
 
 fig.tight_layout()

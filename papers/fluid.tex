@@ -1,184 +1,89 @@
 \section{Fluid Model and Equilibrium}\label{sec:fluid}
-Unlike traditional queueing systems where job sizes are fixed, LLM inference faces a unique challenge: KV cache memory grows dynamically as prompts progress through decode stages. Each additional generated token increases the prompt's memory consumption, making it difficult to predict when total memory usage will exceed capacity $C$ and trigger costly evictions. These evictions waste the partial computation already invested in interrupted prompts, degrading both throughput and latency.
+Section~\ref{sec:model} identifies the central admission-control trade-off: the scheduler should admit enough prompts to exploit batching, but not so many that their KV caches later overflow memory. This section derives the balanced operating point for that trade-off. The key state variable is the distribution of resident prompts across prefill and decode stages. As prompts move deeper into decode, each prompt carries a larger KV cache; if too many prompts accumulate at late stages, the system can run out of memory and restart work through eviction.
 
-We develop a fluid model to characterize the system's equilibrium state, a balanced configuration in which arrival rates match completion rates and memory usage stabilizes. This equilibrium serves two purposes. First, it quantifies the maximum sustainable throughput $\throughput^*$ under memory constraint $C$, establishing a benchmark for any scheduling policy. Second, it reveals the load-balancing principle that guides our algorithm design (Section~\ref{sec:wait}): maintain the system close to equilibrium to prevent evictions. When prompts distribute evenly across processing stages, memory consumption remains predictable and overflow risk minimizes.
-
-We first analyze a system with a single prompt type to build intuition about equilibrium dynamics, then extend to multiple heterogeneous types. The equilibrium provides a theoretical benchmark; our WAIT algorithm (Section~\ref{sec:wait}) achieves asymptotic optimality by approaching this benchmark through threshold-based admission control that keeps the system near the balanced state.
+We develop a fluid model that replaces stochastic sample paths with average flows and characterizes a fluid equilibrium in which arrivals, stage transitions, and completions occur at matching rates. For a given arrival vector, this equilibrium gives two reference quantities: the memory requirement \(M^*\) needed to support the equilibrium and the effective throughput \(\throughput^*\) achieved when the offered load can be completed without eviction. Equivalently, for a fixed memory capacity \(C\), the fluid stability region consists of arrival vectors whose equilibrium memory requirement satisfies \(M^*\le C\). We derive these quantities first for a single prompt type, which isolates the stage-by-stage memory accumulation, and then for multiple prompt types sharing one memory constraint. The same equilibrium also supplies the design target for WAIT in Section~\ref{sec:wait}: keep the in-service population close to the implied allocation across decode stages, thereby avoiding eviction-induced restarts while approaching the largest throughput attainable under the offered load and memory constraint.
 
 \subsection{Single-Type Fluid Model}
-We begin with a system handling prompts of a single type \(j\). Each prompt's memory usage depends on its processing stage: \(l_j\) tokens in the prefill stage ($s=0$) and \(l_j + s\) tokens in the \(s\)-th decode stage (\(s = 1, \dots, l_j'\)). When the prompt completes stage $s = l_j'$, it finishes decoding and its KV cache is cleared from GPU memory.
+Consider a single prompt type \(j\). A resident prompt uses \(l_j\) units of KV cache immediately after prefill and \(l_j+s\) units at decode stage \(s=1,\dots,l_j'\); after stage \(l_j'\), the prompt completes and releases its cache. Let \(n_j^*\) denote the equilibrium number of type-\(j\) prompts at each stage. The balanced state therefore has \(n_j^*\) prompts in each of the \(l_j'+1\) stages.
 
-In equilibrium, we assume the system maintains \(n_j^*\) active prompts distributed evenly across all $(l_j'+1)$ stages, with \(n_j^*/(l_j'+1)\) prompts at each stage. This balanced distribution is crucial: if prompts accumulate at later decode stages, where memory consumption is highest ($l_j + l_j'$ tokens), total usage may exceed capacity $C$, forcing evictions that waste partial computation. By spreading prompts evenly, we minimize overflow risk while maximizing throughput. This equilibrium model allows us to derive the system's fundamental capacity limit.
-
-Before deriving the equilibrium parameters, we identify when the system becomes fundamentally unstable regardless of the scheduling policy used. Intuitively, each prompt requires total processing time $d_1 (l_j' + 1)(l_j + l_j'/2)$ to load its KV cache across all $(l_j'+1)$ stages. When the arrival rate exceeds the inverse of this processing time, the queue grows unbounded.
+Before deriving the equilibrium, we identify the load condition under which batching can be effective. Adding prompts to a batch is useful only if the additional completions outweigh the longer iteration time. Across its prefill and decode stages, a type-\(j\) prompt contributes memory-dependent work proportional to \((l_j' + 1)(l_j + l_j'/2)\). If arrivals are high enough that this memory-dependent work alone saturates the server, batching cannot restore stability.
 
 \begin{proposition}\label{prop:large_rate}
-When the condition $\lambda_j d_1 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right) \geq 1$ is satisfied, the system becomes unstable in the sense that the expected average latency under any scheduling policy with deterministic arrival rate \( \lambda_j \) grows linearly with time. Formally,
+When the condition $\lambda_j d_1 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right) \geq 1$ is satisfied, the system is unstable in the sense that the expected average latency under any scheduling policy with arrival rate \( \lambda_j \) grows linearly with time. Formally,
 $$
 \mathbb{E}[\textbf{Latency}^{(T,\pi)}] = \Omega(T) \quad \text{as} \quad T \to \infty.
 $$
 \end{proposition}
 
-This condition represents the fundamental capacity limit: arrivals outpace completions, causing latency to grow linearly with time. The proof constructs an equilibrium batch and shows that even in this balanced state, arrivals exceed completions when the condition holds (Appendix~\ref{appendix:proof_large_rate}). We therefore assume $\lambda_j d_1 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right) <1$ for the remainder of this section, ensuring the system can reach equilibrium.
+The proof is a service-capacity cut: each completed prompt must consume \(d_1\sum_{s=0}^{l_j'}(l_j+s)\) units of memory-dependent processing time over its lifetime, and the fixed positive overhead \(d_0\) leaves no slack at the boundary under finite memory capacity (Appendix~\ref{appendix:proof_large_rate}). We therefore focus on the nontrivial regime $\lambda_j d_1 (l_j' + 1) \left( l_j + \frac{l_j'}{2} \right) <1$, where batching can support a fluid equilibrium.
 
-% \arc{anyway, prove that when $n_j^*$ has not positive solution, then latency cannot be controlled. ,there is an instance such that $\ex{}{\text{Latency}^T}\to\infty$ as $T\to\infty.$}
-
-The total memory usage in equilibrium depends on the distribution of prompts across stages:
+At equilibrium, the \(l_j'+1\) stages each contain \(n_j^*\) prompts, so the memory usage is
 \begin{equation}
-    M_j^* = \frac{n_j^*}{l_j^{\prime}+1}\sum_{s=0}^{l_j^{\prime}}(l_j+s) = n_j^*\prn{l_j+\frac{l_j'}{2}},
+    M_j^* = n_j^* \sum_{s=0}^{l_j^{\prime}}(l_j+s) = n_j^*(l_j'+1)\prn{l_j+\frac{l_j'}{2}},
 \end{equation}
-where we sum over all $(l_j'+1)$ stages, each containing $n_j^*/(l_j'+1)$ prompts. The factor $(l_j + l_j'/2)$ represents the average memory per prompt across its lifecycle, from prefill ($l_j$) to final decode stage ($l_j + l_j'$).
+where \(l_j+l_j'/2\) is the average KV-cache usage of a type-\(j\) prompt across its prefill and decode stages.
 
-To find $n_j^*$, we use the equilibrium condition: arrivals must equal completions. Each iteration processes one stage for all $n_j^*$ prompts, taking time $(d_0 + d_1 M_j^*)$. During this time, $\lambda_j(d_0 + d_1 M_j^*)$ new prompts arrive. For equilibrium, this must equal the $n_j^*/(l_j'+1)$ prompts that complete:
-$$ \underset{\text{Time per iteration}}{\underbrace{(d_0+d_1M_j^{*} )}}\lambda_j =\left(d_0+d_1 n_j^*\left( l_j +\frac{l_j^{\prime}}{2} \right) \right)\lambda_j= \frac{n_j^*}{l_j^{\prime}+1}. $$
+Flow balance requires arrivals during one iteration to match completions. Since one iteration takes time \(d_0+d_1M_j^*\), \(\lambda_j(d_0+d_1M_j^*)\) prompts arrive and \(n_j^*\) prompts complete, giving
+\begin{equation}
+\label{eq:single_type_equilibrium}
+\underset{\text{Time per iteration}}{\underbrace{(d_0+d_1M_j^{*} )}}\lambda_j =\left(d_0+d_1 n_j^*(l_j'+1)\left( l_j +\frac{l_j^{\prime}}{2} \right) \right)\lambda_j= n_j^*.
+\end{equation}
 
-Solving for $n_j^*$ yields:
-$$n_j^* = \frac{d_0\lambda_j(l_j^{\prime}+1)}{1-d_1\lambda_j(l_j^{\prime}+1)(l_j+\frac{l_j^{\prime}}{2})}.$$
-
-Substituting this into the memory equation, the equilibrium memory equals:
+Solving gives \(n_j^* = d_0\lambda_j/[1-d_1\lambda_j(l_j^{\prime}+1)(l_j+l_j^{\prime}/2)]\). Substituting this value into the memory expression yields
 \begin{equation}
     \label{eq:memory_single}
-M_j^* = n_j^*\left( l_j+\frac{l_j^{\prime}}{2} \right)
+M_j^* = n_j^*(l_j'+1)\left( l_j+\frac{l_j^{\prime}}{2} \right)
 =  \frac{d_0\lambda_j(l_j^{\prime}+1)\left( l_j+\frac{l_j^{\prime}}{2} \right) }{1-d_1\lambda_j(l_j^{\prime}+1)(l_j+\frac{l_j^{\prime}}{2})}.
 \end{equation}
 
-This equilibrium batch size balances arrivals and completions. The denominator $\left(1 - d_1\lambda_j(l_j'+1)(l_j + l_j'/2)\right)$ represents the fraction of iteration time available for processing; as this fraction approaches zero, the batch size grows unbounded (approaching instability).
-% \begin{comment}
-% When the available memory is bigger than the equilibrium memory $M_j^*$, we can form a batch with a bigger  batch size. For example, each stage has $\frac{n_j^*}{l_j^\prime+1}+1$ prompts, and the memory $M_j^{+}$ is that
-% $$M_j^{+} = \left(\frac{n_j^*}{l_j^\prime+1}+1\right)\sum_{k=0}^{l_j^{\prime}}(l_j+k)=(n_j^*+l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right) = M_j^* + (l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right)  $$
-% So the arrival and completion ratio is that 
-% $$ 
-% \frac{\text{Arrival}}{\text{Completion}} 
-% = \frac{\left(d_0+d_1M_j^*+d_1 (l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right)\right)\lambda_j}{\frac{n_j^*}{l_j^\prime+1}+1} 
-% = \frac{n_j^*+d_1 \lambda_j(l_j^\prime+1)^2\left( l_j + \frac{l_j^\prime}{2} \right)}{n_j^*+l_j^\prime+1} < 1 $$
-% Where the last inequality comes from that $d_1 \lambda_j(l_j^\prime+1)\left( l_j + \frac{l_j^\prime}{2} \right)<1$. Similarly, when the available memory is smaller than equilibrium memory $M_j^*$, we have to form a batch with a smaller batch size. For example, each stage has $\frac{n_j^*+1}{l_j^\prime} -1$ prompts, and the memory $M_j^{-}$ is that
-% $$
-% M_j^{-}
-% = \left( \frac{n_j^*}{l_j^\prime+1}-1 \right) \sum_{k=0}^{l_j^\prime}(l_j+k) = M_j^* - (l_j^\prime+1)\left(l_j + \frac{l_j^\prime}{2} \right)
-% $$
-% So the arrival and completion ratio is that 
-% $$
-% \frac{\text{Arrival}}{\text{Completion}} 
-% = \frac{n_j^* - d_1\lambda_j(l_j^\prime+1)^2\left( l_j + \frac{l_j^\prime}{2} \right) }{ n_j^* - (l_j^\prime+1)  }>1
-% $$
-% \end{comment}
-The average throughput at equilibrium is the number of decode tokens generated per iteration divided by the time consumption for one iteration. In each iteration, $n_j^*/(l_j'+1)$ prompts complete (those at stage $l_j'$), each generating $l_j'$ decode tokens:
+The denominator is the slack in the batching feasibility condition; as it approaches zero, the inventory required for balance diverges. Equation~\eqref{eq:memory_single} also shows why long responses are especially demanding. For fixed input length and arrival rate, away from the critical denominator, the memory needed to support the fluid equilibrium grows on the order of \((l_j')^2\), because the number of resident stages and the average KV-cache size across those stages both increase with decode length. As the denominator approaches zero, this requirement diverges. Thus the memory condition defining the fluid stability region is highly sensitive to long-decode traffic, making control of the decode-stage population central to the scheduling problem.
+The balanced throughput is completed decode tokens per iteration divided by iteration time:
 \begin{equation}\label{eq:throughput_fluid}
-\throughput_j^* = \frac{n_j^* \cdot l_j'}{(l_j'+1)(d_0+d_1n_j^*\prn{l_j+\frac{l_j'}{2}})} = \lambda_j l_j',
+\throughput_j^* = \frac{n_j^* \cdot l_j'}{d_0+d_1n_j^*(l_j'+1)\prn{l_j+\frac{l_j'}{2}}} = \lambda_j l_j',
 \end{equation}
-where the equality follows from the equilibrium condition in line 46. This shows how arrival rate, memory, and throughput relate in equilibrium, where arrivals equal completions.
-
-% \gan{I should add more explanation. Why we introduce this class.}
-% Moreover, we define a class of scheduling policies \(\Pi\) that includes non-predictive policies without \textit{preemption}. Here, \textit{non-predictive} means the policy uses only the realized sample path up to the current time, without knowing future information. The term \textit{preemption} describes the action where the policy clears the memory used by an ongoing prompt request and re-queues it to the front of the waiting prompts, usually because of limited memory. Policies in \(\Pi\) avoid preemption because it causes problems. For instance, preemption interrupts the ongoing work, requiring the system to restart or reload data for that prompt, which takes extra time and uses more computing resources. This delay in finishing the preempted prompt also lowers the system’s overall efficiency by repeating tasks unnecessarily. As an example, a non-predictive policy that reserves memory of \(l_{\max} + l_{\max}'\) for each prompt—where \(l_{\max} + l_{\max}'\) is the maximum memory one prompt can need—avoids preemption by always having enough memory, making it a policy in \(\Pi\) (though in this way, it may utilize the memory inefficiently).
-% \gan{cite some example of scheduling policies without Preemption.}
-
-% \begin{proposition}\label{prop::online policy expected throughput upper bound}
-% Suppose the memory capacity is not smaller than the equilibrium memory capacity $M^*_j$, consider the expected upper bound of any online policy $c\in \Pi$ in the stochastic scenario, compared with the throughput of the steady system, we have that
-% $$\ex{}{\throughput^{c}(T)}\leq \throughput^*= \lambda_j(l_j^\prime+1)$$
-% \end{proposition}
-% So for any policy without \textbf{Preemption}, the expectation of average throughput is bounded by $\throughput^*$. Detailed proofs are provided in Appendix~\ref{appendix::proof of online policy expected throughput upper bound}
-% \begin{comment}The time cost for processing $K\cdot n_j^*$ prompts of type $j$ of static system is $Kd_0+d_{c}KM^*_j$. Under any online policy $c\in \Pi$, the time cost is $\tilde{N}\cdot d_0+d_{c}KM^*_j$ under stochastic scenario, where $\tilde{N}$ is the number of batch iterations. The second term is the same since this term only corresponds to the total memory of all the processed prompts, which is $KM_j^*$. For the first term, it only corresponds to the number of batch iterations to complete the inference of all the prompts. Since the accumulated total memory usage is $KM_j^*$, and the biggest batch size is $M_j^*$, we can easily derive that $\tilde{N}\geq K$. So we have that
-% $$\ex{}{\text{Average Throughput}^{c}(T)}\leq \text{Average Throughput}^*= \lambda_j(l_j^\prime+1) $$
-% \end{comment}
-
-
-
+where the equality follows from the flow-balance condition \eqref{eq:single_type_equilibrium}.
 
 \subsection{Multiple-Type Fluid Model}
-The single-type analysis provides intuition, but real systems handle multiple prompt types simultaneously, each with different input lengths $l_j$ and output lengths $l_j'$. This heterogeneity introduces a key challenge: types compete for the same memory capacity $C$. Admitting a long prompt (large $l_j'$) may force evicting multiple short prompts, wasting their partial computation; this cascading failure is analyzed in Section~\ref{sec:wait}. We now extend the equilibrium model to capture this multi-type interaction.
+We now extend the balance calculation to \(m\) prompt types. Type \(j\) has input length \(l_j\), decode length \(l_j'\), and arrival rate \(\lambda_j\). Because all types draw from the same memory pool, the equilibrium is determined by the joint allocation of active prompts across decode stages and the aggregate KV-cache usage it induces.
 
-We assume the system maintains $n_j^*$ active prompts of each type $j \in \{1, \dots, m\}$ in equilibrium. Following the derivation of \eqref{eq:memory_single}, the total memory occupancy equals:
+The balance equations are written at the scheduler's iteration scale: an iteration selects a batch, advances active prompts by one stage, and updates their KV-cache usage. Let \(n_j^*\) denote the equilibrium number of type-\(j\) prompts at each stage. The resulting memory usage is
 \begin{equation}
 \label{eq:memory_multi1}
-    M^* = \sum_{j=1}^m n_j^*\left(l_j + \frac{l_j^\prime}{2}\right)
+    M^* = \sum_{j=1}^m n_j^*(l_j'+1)\left(l_j + \frac{l_j^\prime}{2}\right)
 \end{equation}
-with:
-$$ \underset{\text{Time per iteration}}{\underbrace{(d_0+d_1M^*)}}\lambda_j(l_j'+1) = n_j^*, \;\forall j \in \{1,2,\cdots,m\}$$
-since the arrivals during each iteration should equal the number of completions in equilibrium, and there are $(l_j'+1)$ stages total. Substituting the above equations into \eqref{eq:memory_multi1} yields
+Flow balance requires \((d_0+d_1M^*)\lambda_j = n_j^*\) for each type \(j\), because \(n_j^*\) type-\(j\) prompts complete in one iteration. Substituting these identities into \eqref{eq:memory_multi1} gives
 \begin{equation}
 \label{eq:memory_multi2}
 M^* = \frac{d_0\sum_{j=1}^m \lambda_j (l_j^{\prime}+1)\left(l_j + \frac{l_j^{\prime}}{2} \right)}{1-d_1\sum_{j=1}^m \lambda_j (l_j^{\prime}+1)\left(l_j + \frac{l_j^{\prime}}{2} \right) } 
 \end{equation}
-Aggregating the results above, we get the processing time per iteration in equilibrium:
+The aggregate term in \eqref{eq:memory_multi2} inherits the same quadratic dependence on decode length. A small amount of long-decode traffic can therefore account for a disproportionate share of the memory requirement needed for stability, which is precisely the pressure that the threshold policies regulate.
+The corresponding iteration time is
 \begin{equation}    \label{eq:time_fluid}
     \begin{aligned}
-            &\text{Processing Time}^* \\&= d_0 + d_1 M^*  \\
+            &\Delta T^* = d_0 + d_1 M^*  \\
                   &= \frac{d_0}{1 - d_1 \sum_{j=1}^m \lambda_j (l_j' + 1)(l_j + \tfrac{1} {2}l_j')},
     \end{aligned}
 \end{equation}
-as well as the average throughput:
+and the fluid throughput benchmark is
 \begin{equation}
     \label{throughput_fluid_multiple}
     \begin{aligned}
         &\throughput^*
-        = \sum_{j=1}^m \frac{n_j^* \cdot l_j^{\prime}}{(l_j^{\prime}+1) \cdot (d_0 + d_1 M^*)}
+        = \sum_{j=1}^m \frac{n_j^* \cdot l_j^{\prime}}{d_0 + d_1 M^*}
         = \sum_{j=1}^m \lambda_j l_j^{\prime}
     \end{aligned}
 \end{equation}
-% \begin{equation}
-%             \throughput^* 
-%         = \frac{1}{d_0}\left(\sum_{j=1}^n n_j^*\right) \cdot \left(1 - \sum_{j=1}^m \lambda_j (l_j^{\prime}+1)\left(l_j + \frac{l_j^{\prime}}{2} \right)\right) 
-%         = \sum_{j=1}^m \lambda_j(l_j^{\prime}+1)
-% \end{equation}
-The equilibrium throughput benchmarks all non-predictive policies within the policy class \(\Pi\). The following proposition demonstrates that the expected throughput of any policy in \(\Pi\) cannot exceed the equilibrium throughput \(\throughput^*\), as specified in Equation \eqref{throughput_fluid_multiple}. 
+The fluid model gives an upper bound for any online policy:
 % Detailed proofs are presented in Appendix~\ref{appendix::proof online policy expected throughput upper bound, multiple type}.
 
 \begin{proposition}\label{prop::online policy expected throughput upper bound, multiple type}
-Suppose that the memory capacity satisfies \(C \geq M^*\), where \(M^*\) denotes the equilibrium memory given in \eqref{eq:memory_multi2}. Then, for any online policy \(\pi \in \Pi\), the expected throughput satisfies
+Suppose that the memory capacity satisfies \(C \geq M^*\), where \(M^*\) denotes the memory requirement needed to support the fluid equilibrium in \eqref{eq:memory_multi2}. Then, for any online policy \(\pi \in \Pi\), the expected throughput satisfies
 \[
 \mathbb{E}[\throughput^{(T,\pi)}] \leq \throughput^*,
 \]
 where \(\throughput^*\) is given in \eqref{throughput_fluid_multiple}.
 \end{proposition}
-This result has two implications for algorithm design. First, it quantifies the theoretical limit: no non-predictive policy can exceed $\throughput^* = \sum_{j=1}^m \lambda_j l_j'$ when $C \geq M^*$. This establishes a performance benchmark for any scheduling policy. Second, it suggests a design principle: any policy that prevents evictions and maintains balanced stages can approach this throughput. This motivates our WAIT algorithm (Section~\ref{sec:wait}), which uses thresholds to keep the system near equilibrium, preventing the cascading failures that cause FCFS to fall short (see Example~\ref{ex:fcfs_cascade}).
-
-The equilibrium analysis reveals a critical design principle: maintain balanced prompt distribution across stages. Having exactly $n_j^*/(l_j'+1)$ prompts at each stage prevents two failure modes. First, if prompts accumulate at later decode stages (where each consumes more memory), total usage may exceed capacity $C$, forcing evictions that waste partial computation. Second, if prompts concentrate at early stages while later stages starve, the system leaves processing capacity unused, reducing throughput.
-
-This load-balancing principle directly motivates our WAIT algorithm (Section~\ref{sec:wait}). By controlling when prompts advance to the next stage via thresholds, WAIT keeps the system close to the balanced equilibrium, preventing the cascading evictions that plague FCFS (see Example~\ref{ex:fcfs_cascade} in Section~\ref{sec:wait}). The fluid model thus provides both a performance benchmark and a design guide.
-
-In classical queueing theory, fluid models typically lead to ordinary differential equations (ODEs) describing the continuous transition of queue lengths over time. Constructing such ODEs for LLM inference, however, presents technical challenges. Eviction events, which are triggered when memory usage exceeds capacity, cause discontinuous jumps in the system state, as KV caches of evicted prompts are cleared entirely rather than decreasing smoothly. At boundaries where certain stage populations reach zero or where drift terms vanish, the direction of state transition becomes ambiguous under standard ODE analysis. We therefore adopt a discrete, iteration-based framework that directly characterizes equilibrium and uses it as a performance benchmark pending a complete characterization of such an asymptotic regime.
-
-
-
-
-\begin{comment}Similar to the discussion in the single-type fluid model, when the available memory is larger than the equilibrium memory \( M^* \), we can form a batch with a larger batch size, resulting in \(\text{Arrival} < \text{Completion}\). For example, consider the type \( j \) with the smallest value of \((l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)\). Without loss of generality, we set \( j=1 \) and the number of prompts of each stage of type $j=1$ is that $\frac{n_1^*}{l_1^\prime+1}+1$. And the memory \( M^+ \) is defined as
-$$M^+ = M^* + (l_1^\prime+1)(l_1+\frac{l_1^\prime}{2})$$
-So the arrival and completion ratio is that:
-\begin{align*}
-\frac{ \text{Arrival}}{ \text{Completion} }=& 
-\frac{\left(d_0+d_1M^*+d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\right)\sum_{j=1}^m \lambda_j}{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} +1}\\
-=&\frac{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} +d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\sum_{j=1}^m\lambda_j }{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} +1}<1
-\end{align*}
-The last inequality comes from that: 
-$$ d_1(l_1^\prime+1)\left(l_1+\frac{l_1^\prime}{2}\right)\sum_{j=1}^m \lambda_j  \leq d_1\sum_{j=1}^m \lambda_j (l_j^\prime+1)\left(l_j+\frac{l_j^\prime}{2}\right)<1$$
-Similarly, when the the available memory is smaller than the equilibrium memory $M^*$, we can form a batch with a smaller batch size, resulting in \(\text{Arrival} > \text{Completion}\). For example, consider the number of prompts of each stage of type \( j=1 \) is that $\frac{n_1^*}{l_1^\prime+1}-1$. And the memory $M^-$ is given by
-$$M^- = M^* - (l_1^\prime+1)(l_1+\frac{l_1^\prime}{2})$$
-So the arrival and completion ratio is that:
-\begin{align*}
-\frac{ \text{Arrival}}{ \text{Completion} }=& 
-\frac{\left(d_0+d_1M^*-d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\right)\sum_{j=1}^m \lambda_j}{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} -1}\\
-=&\frac{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} -d_1(l_1^\prime+1)\left( l_1 + \frac{l_1^\prime}{2} \right)\sum_{j=1}^m\lambda_j }{ \sum_{j=1}^m  \frac{n_j^*}{l_j^\prime+1} -1}>1
-\end{align*}
-\end{comment}
-
-% with:
-% \[
-% n_j^* = \lambda_j (1 + l_j') \quad \forall j.
-% \]
-% Thus:
-% \[
-% M^* = \sum_{j=1}^m \lambda_j (1 + l_j') \left( l_j + \frac{l_j' + 1}{2} \right)= C,
-% \]
-% where the last equality holds since the system dynamics are in equilibrium. Aggregating the results above, we get:
-% \[
-% \throughput^* = \frac{\sum_{j=1}^mn_j^*}{\sum_{j=1}^m\brk{d_0+d_1n_j^*\prn{l_j+\frac{l_j'}{2}}}}.
-% \]
-
-% Now we step We refine the fluid model to incorporate this, defining:
-% \begin{itemize}
-%     \item \(n_{j, \text{prefill}}^*\): steady-state number of type-\(j\) prompts in the prefill stage per batch.
-%     \item \(n_{j, \text{decode}}^*\): steady-state number of type-\(j\) prompts in decode stages per batch.
-% \end{itemize}
+The fluid model serves two purposes. First, it provides the throughput benchmark in Proposition~\ref{prop::online policy expected throughput upper bound, multiple type}. Second, the fluid equilibrium identifies the operating point a policy should maintain: roughly \(n_j^*\) type-\(j\) prompts at each decode stage, with total memory requirement \(M^*\). Accumulating too much late-stage work consumes memory and risks eviction, while holding too little late-stage work leaves completions below the fluid rate. Section~\ref{sec:wait} uses \(M^*\) and \(n_j^*\) to define thresholds that keep the decode-stage populations near the fluid equilibrium.
 
 % The \textit{iteration time} \(\tau^*\), the duration to process one batch, is:
 % \[

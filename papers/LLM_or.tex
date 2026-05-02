@@ -235,7 +235,7 @@ breaklinks=false,pdfborder={0 0 1}]
 % Enter the full title:
 
 
-\TITLE{Optimizing LLM Inference: Fluid-Based Online Scheduling under Memory Constraints
+\TITLE{Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints
 % \arc{do you think Confirmation or Confirmation Timing is better}
 }
 
@@ -295,8 +295,6 @@ breaklinks=false,pdfborder={0 0 1}]
 
 \input{numerical}
 
-\input{extension}
-
 \input{conclusion}
 
 
@@ -343,11 +341,15 @@ breaklinks=false,pdfborder={0 0 1}]
 \bibliography{main.bib}
 \newpage
 \begin{APPENDICES}
+\renewcommand{\theHsection}{appendix.\Alph{section}}
+\renewcommand{\theHsubsection}{appendix.\Alph{section}.\arabic{subsection}}
+\renewcommand{\theHsubsubsection}{appendix.\Alph{section}.\arabic{subsection}.\arabic{subsubsection}}
+\input{extension}
+\clearpage
+\input{appendix_notation}
+\clearpage
 \input{Appendix}
 \end{APPENDICES}
 %%%%%%%%%%%%%%%%%
 \end{document}
 %%%%%%%%%%%%%%%%%
-
-
-

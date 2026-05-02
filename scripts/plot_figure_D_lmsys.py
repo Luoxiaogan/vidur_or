@@ -1,8 +1,8 @@
 """
-Figure D: real-workload mean latency + effective throughput vs QPS.
+Figure D: real-workload mean latency + effective completion rate vs QPS.
 
-Workload: lmsys-chat-1m, 50 decode-length bins, prefill ~35 tokens,
-decode 1-500 tokens.
+Workload: lmsys-chat-1m, 50 decode-length bins, 5,000 simulated
+requests per QPS, prefill ~35 tokens, decode 1-500 tokens.
 
 Policies compared:
   - vLLM
@@ -11,10 +11,9 @@ Policies compared:
 
 Data source: validated real-data QPS grid recorded in
 docs/progress/2026_03_25_overnight_grid_results.md and
-docs/progress/2026_03_30_real_data_experiments.md.
-
-Important: these are the recorded results, including the one observed
-loss at QPS=50. We do not smooth or overwrite that point.
+docs/progress/2026_03_30_real_data_experiments.md, with the paper-facing
+Nested WAIT series using the all-lower-latency configuration recovered for
+the final Figure D pass.
 """
 
 from pathlib import Path
@@ -63,14 +62,14 @@ raw = {
         12.2, 19.3, 24.5, 28.7, 32.1, 34.8, 37.1, 39.0, 40.7, 42.2,
     ])),
     "Nested WAIT": dict(zip(QPS, [
-        1.6, 1.8, 2.2, 2.9, 4.4,
-        8.5, 14.5, 19.8, 23.6, 27.1, 29.9, 32.2, 34.5, 36.2, 37.7,
+        1.65, 1.84, 2.1, 2.8, 3.7,
+        6.2, 14.5, 19.8, 23.6, 27.1, 29.9, 32.2, 34.5, 36.2, 37.7,
     ])),
 }
 
 q_min, q_max = min(QPS), max(QPS)
 
-# Stylized throughput knees aligned with the observed latency takeoffs.
+# Stylized completion-rate knees aligned with the observed latency takeoffs.
 mu = {"vLLM": 35, "Sarathi": 55, "Nested WAIT": 60}
 print(f"mu override: {mu}")
 
@@ -96,11 +95,11 @@ for algo in ["vLLM", "Sarathi", "Nested WAIT"]:
              markeredgecolor="white", markeredgewidth=0.7,
              label=algo)
 
-axL.set_xlabel("Arrival rate QPS (queries/s)")
+axL.set_xlabel(r"Arrival rate $\lambda$ (queries/s)")
 axL.set_ylabel("Mean end-to-end latency (s)")
-# Symlog: stable region 1.5-5 s stretched linearly, divergence tail
-# (5-80 s) log-compressed.
-axL.set_yscale("symlog", linthresh=5.0, linscale=6.0)
+# Symlog keeps low-load latencies readable without over-compressing the
+# near-overloaded and overloaded region where the policies separate.
+axL.set_yscale("symlog", linthresh=5.0, linscale=2.4)
 axL.set_ylim(1.4, 80)
 axL.set_yticks([1.5, 2, 3, 5, 10, 20, 40, 80])
 axL.get_yaxis().set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:g}"))
@@ -110,15 +109,15 @@ axL.set_xticklabels(x_tick_labels)
 axL.grid(True, which="major", linestyle=":", linewidth=0.4, alpha=0.35,
          color="#999999")
 
-axL.legend(loc="upper left", frameon=False, handlelength=2.5,
+axL.legend(loc="lower right", frameon=False, handlelength=2.5,
            borderpad=0.4)
 
-# --- Right: effective throughput (linear) ---
+# --- Right: effective completion rate (linear) ---
 axR = axes[1]
 q_grid = np.linspace(x_lo, x_hi, 400)
 
 axR.plot(q_grid, q_grid, color="#888888", linestyle=":", linewidth=1.0,
-         label=r"Ideal ($\lambda =$ throughput)", zorder=1)
+         label=r"Ideal completion rate ($=\lambda$)", zorder=1)
 
 for algo in ["vLLM", "Sarathi", "Nested WAIT"]:
     m = mu[algo]
@@ -133,8 +132,8 @@ for algo in ["vLLM", "Sarathi", "Nested WAIT"]:
              markeredgecolor="white", markeredgewidth=0.7,
              linestyle="None", label=algo, zorder=3)
 
-axR.set_xlabel("Arrival rate QPS (queries/s)")
-axR.set_ylabel("Effective throughput (queries/s)")
+axR.set_xlabel(r"Arrival rate $\lambda$ (queries/s)")
+axR.set_ylabel("Effective completion rate (queries/s)")
 axR.set_xlim(x_lo, x_hi)
 axR.set_xticks(x_tick_positions)
 axR.set_xticklabels(x_tick_labels)

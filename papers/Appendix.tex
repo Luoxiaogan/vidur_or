@@ -30,24 +30,28 @@
 \subsection{Proof of Proposition~\ref{prop:large_rate}}
 \label{appendix:proof_large_rate}
 
-\noindent\textbf{Proof Outline.} We show that when $\lambda_j d_1 (l_j'+1)(l_j + l_j'/2) \geq 1$, arrivals consistently exceed completions regardless of batch size, causing queue length to grow unboundedly.
-
 \begin{proof}
-Consider a system with only type-$j$ prompts and suppose $n_j$ prompts are in the batch. If equilibrium were to hold, prompts would be uniformly distributed across stages $0, 1, \ldots, l_j'$, with $n_j/(l_j'+1)$ prompts at each stage. The total memory consumption is:
-$$M_j = \frac{n_j}{l_j'+1}\sum_{s=0}^{l_j'}(l_j + s) = n_j \left(l_j + \frac{l_j'}{2}\right).$$
+We use a service-capacity cut. The memory-dependent work required by arriving prompts already saturates the server at the stated boundary; the fixed positive overhead \(d_0\), together with finite memory capacity, makes the service capacity strictly smaller at equality.
 
-The iteration time to process this batch is:
-$$\tau_j = d_0 + d_1 M_j = d_0 + d_1 n_j \left(l_j + \frac{l_j'}{2}\right).$$
+Consider a system with only type-\(j\) prompts and finite memory capacity \(C\). Every completed prompt must be selected once for prefill and once for each decode stage \(s=1,\ldots,l_j'\). Across these \(l_j'+1\) service steps, its KV-cache contribution is
+\[
+    S_j=\sum_{s=0}^{l_j'}(l_j+s)=(l_j'+1)\left(l_j+\frac{l_j'}{2}\right).
+\]
+Because an iteration with selected memory \(M\) has duration \(d_0+d_1M\ge d_1M\), completing \(C_j(T)\) type-\(j\) prompts by time \(T\) requires at least \(d_1S_j C_j(T)\) units of calendar time, up to the bounded contribution of prompts initially present in the system. Hence
+\[
+    C_j(T)\le \frac{T}{d_1S_j}+O(1).
+\]
+This proves a linear backlog gap when \(\lambda_jd_1S_j>1\).
 
-During this iteration, the expected number of arriving prompts is:
-$$\text{Arrivals}_j = \tau_j \cdot \lambda_j = d_0\lambda_j + \lambda_j d_1 n_j \left(l_j + \frac{l_j'}{2}\right),$$
-while the number of completions is $n_j/(l_j'+1)$ (prompts at stage $l_j'$ complete). The arrival-completion gap satisfies:
-$$\text{Arrivals}_j - \frac{n_j}{l_j'+1} = d_0\lambda_j + n_j\left[\lambda_j d_1 \left(l_j + \frac{l_j'}{2}\right) - \frac{1}{l_j'+1}\right] \geq d_0\lambda_j > 0,$$
-where the inequality follows from $\lambda_j d_1 (l_j'+1)(l_j + l_j'/2) \geq 1$.
-
-Since this gap is positive for all $n_j > 0$, the queue length after $N$ iterations satisfies:
-$$\text{Queue Length}(N) \geq d_0\lambda_j \cdot N.$$
-The latency for a prompt arriving at iteration $N$ grows as $\Omega(N)$, establishing instability.
+It remains to handle the boundary case \(\lambda_jd_1S_j=1\). Because the GPU memory capacity is finite, there is a finite upper bound \(B_C\) on the number of type-\(j\) prompts that can be served in one iteration; for instance \(B_C\le C/l_j\). Therefore completing \(C_j(T)\) prompts requires at least \(C_j(T)/B_C\) nonempty iterations. Each such iteration incurs the fixed overhead \(d_0\). Combining memory-dependent service and fixed overhead gives
+\[
+    T \ge d_1S_j C_j(T)+d_0\,\frac{C_j(T)}{B_C}-O(1),
+\]
+and hence
+\[
+    C_j(T)\le \frac{T+O(1)}{d_1S_j+d_0/B_C}.
+\]
+At the boundary, \(\lambda_j=1/(d_1S_j)\), so this upper bound is strictly smaller than the expected arrivals \(\lambda_jT\) by a linear amount. Thus in both the strict and boundary cases, expected arrivals exceed possible completions by \(\Omega(T)\), which implies \(\mathbb{E}[\textbf{Latency}^{(T,\pi)}]=\Omega(T)\).
 \end{proof}
 
 % --------------------------------------------------
@@ -56,18 +60,18 @@ The latency for a prompt arriving at iteration $N$ grows as $\Omega(N)$, establi
 \subsection{Proof of Proposition~\ref{prop::online policy expected throughput upper bound, multiple type}}
 \label{appendix:proof_throughput_upper_bound}
 
-\noindent\textbf{Proof Outline.} The expected throughput of any online policy cannot exceed the fluid throughput $\throughput^*$, since throughput is bounded by the arrival rate of output tokens.
-
 \begin{proof}
+The expected throughput of any online policy cannot exceed the fluid throughput $\throughput^*$, since throughput is bounded by the arrival rate of output tokens.
+
 In the fluid model, the equilibrium parameters are:
-$$\Delta T = \frac{d_0}{1 - d_1\sum_{j=1}^m \lambda_j(l_j'+1)(l_j + l_j'/2)}, \quad n_j^* = \Delta T \cdot \lambda_j(l_j'+1),$$
+$$\Delta T = \frac{d_0}{1 - d_1\sum_{j=1}^m \lambda_j(l_j'+1)(l_j + l_j'/2)}, \quad n_j^* = \Delta T \cdot \lambda_j,$$
 $$M^* = \Delta T \cdot \sum_{j=1}^m \lambda_j(l_j'+1)(l_j + l_j'/2), \quad \throughput^* = \sum_{j=1}^m \lambda_j l_j'.$$
 
 In any stochastic system, throughput is counted only after prompts complete. Over time horizon $[0,T]$, let $\text{Arrivals}_j^T$ denote the total arrivals of type-$j$ prompts. The total output tokens generated cannot exceed the total output length of all arrivals:
 $$\text{Throughput}^{(\pi,T)} \leq \sum_{j=1}^m \text{Arrivals}_j^T \cdot l_j'.$$
 
 Taking expectations and dividing by $T$:
-$$\mathbb{E}[\throughput^{(\pi,T)}] \leq \sum_{j=1}^m \mathbb{E}\left[\frac{\text{Arrivals}_j^T}{T}\right] \cdot l_j' = \sum_{j=1}^m \lambda_j l_j' = \throughput^*.$$
+$$\mathbb{E}[\throughput^{(T,\pi)}] \leq \sum_{j=1}^m \mathbb{E}\left[\frac{\text{Arrivals}_j^T}{T}\right] \cdot l_j' = \sum_{j=1}^m \lambda_j l_j' = \throughput^*.$$
 \end{proof}
 
 % --------------------------------------------------
@@ -76,14 +80,14 @@ $$\mathbb{E}[\throughput^{(\pi,T)}] \leq \sum_{j=1}^m \mathbb{E}\left[\frac{\tex
 \subsection{Proof of Proposition~\ref{prop:lower_bound_FCFS}}
 \label{appendix:proof_fcfs_lower_bound}
 
-\noindent\textbf{Proof Outline.} We construct a two-type example where FCFS suffers from cascading evictions even when capacity equals equilibrium memory $M^*$, leading to $\Omega(1)$ throughput gap.
-
 \begin{proof}
+We construct a two-type example where FCFS suffers from cascading evictions even when capacity equals the fluid memory requirement \(M^*\), leading to an \(\Omega(1)\) throughput gap.
+
 Consider two prompt types: type~1 with $(l_1, l_1', \lambda_1) = (1, 1, 1)$ and type~2 with $(l_2, l_2', \lambda_2) = (1, 2, 1)$.
 
-\textbf{Fluid Equilibrium.} The equilibrium equations $d_0 + d_1(1.5n_1 + 2n_2) = n_1/2 = n_2/3$ yield:
-$$K = \frac{d_0}{1-9d_1}, \quad n_1^* = 2K, \quad n_2^* = 3K, \quad M^* = 9K.$$
-Setting $K = 1$ (without loss of generality), we have $n_1^* = 2$, $n_2^* = 3$, $M^* = 9$.
+\textbf{Fluid Equilibrium.} Under the per-stage convention for \(n_j^*\), the equilibrium equations are \(d_0 + d_1(3n_1 + 6n_2) = n_1 = n_2\), which yield:
+$$K = \frac{d_0}{1-9d_1}, \quad n_1^* = K, \quad n_2^* = K, \quad M^* = 9K.$$
+Setting $K = 1$ (without loss of generality), we have $n_1^* = n_2^* = 1$ and $M^* = 9$.
 
 \textbf{Equilibrium Batch Composition.} In equilibrium, the batch contains:
 \begin{itemize}
@@ -103,20 +107,27 @@ Since overflow probability is bounded away from zero, FCFS experiences eviction 
 \subsection{Proof of Proposition~\ref{prop:unknown_lower_bound}}
 \label{appendix:proof_unknown_lower_bound}
 
-\noindent\textbf{Proof Outline.} Using the same two-type example, we show that when output lengths are unknown until completion, any online policy faces either memory underutilization or constant overflow probability.
-
 \begin{proof}
-Consider the same setup as Proposition~\ref{prop:lower_bound_FCFS}: type~1 with $(l_1, l_1', \lambda_1) = (1, 1, 1)$ and type~2 with $(l_2, l_2', \lambda_2) = (1, 2, 1)$. The fluid equilibrium gives $M^* = 9$.
+We construct a two-type instance in which prompts are indistinguishable until the first decode boundary. At the known-type fluid memory level, there is no room for stochastic excess survivors at that boundary. A non-predictive policy must therefore either reserve capacity and lose a constant amount of throughput, or admit at the fluid scale and face a constant probability of overflow.
 
-The key constraint is that prompt types cannot be distinguished until a type-2 prompt enters stage~2 (generates its second output token). At stage~0 and stage~1, both types appear identical to the scheduler.
+Consider two prompt types with the same prefill length and the same first decode token. Type~1 completes after the first decode token, whereas type~2 continues to one additional decode stage. Let a newly admitted prompt be type~2 with probability \(p\in(0,1)\), independently across prompts, and suppose the type is not revealed until the prompt either completes at the first boundary or survives into the second segment. This is the information structure faced by any non-predictive online policy.
 
-Consider any admissible batching policy. For each possible batch configuration, one of the following must hold:
-\begin{enumerate}
-\item \textbf{Memory underutilization:} The batch leaves significant memory unused, causing expected arrivals to exceed completions during the iteration.
-\item \textbf{Overflow risk:} The batch fully utilizes memory, but faces constant probability $\rho > 0$ of overflow when arrivals exceed expectations.
-\end{enumerate}
+Choose the arrival rate and the memory capacity so that, under known output lengths, the fluid equilibrium uses exactly the available memory \(C=M^*\). In that known-type equilibrium, the downstream segment contains its mean survivor population and there is no additional memory reserved for the positive fluctuation of survivor counts. Now consider any non-predictive policy over a block in which it admits \(b\) prompts whose types are still hidden. Let
+\[
+    Y_b\sim\mathrm{Binomial}(b,p)
+\]
+be the number of these prompts that survive the first boundary and therefore require resident memory in the downstream segment.
 
-Since throughput is counted only upon prompt completion, and the fluid throughput equals expected arrivals' output length per unit time, any policy that either underutilizes memory or experiences overflow incurs a throughput gap of at least $\Omega(\rho)$ compared to $\throughput^*$.
+There are two cases. First, suppose the policy admits at least a fixed fraction of the fluid-scale cohort needed to match the offered load. Then \(b\) is bounded below by a positive constant in this fixed instance, and the binomial distribution has a positive probability of exceeding its fluid mean allocation by at least one prompt:
+\[
+    \Pr\{Y_b>\lfloor pb\rfloor\}\ge \rho
+\]
+for some constant \(\rho>0\) depending only on \(p\) and the chosen instance. Since \(C=M^*\) contains no downstream safety buffer, this event forces memory overflow. Under the paper's effective-throughput convention, an overflow discards useful partial work through eviction and restart, so the expected completed decode-token service falls below the fluid benchmark by a constant amount.
+
+Second, suppose the policy avoids this overflow event by admitting strictly fewer hidden prompts than the fluid-scale cohort. Then it leaves a constant amount of admissible service capacity unused in this instance. Since the fluid benchmark \(\throughput^*\) equals the offered decode-token load that can be completed at the known-type equilibrium, this conservative admission again creates a constant throughput gap. Combining the two cases gives an instance for which every non-predictive online policy incurs
+\[
+    \throughput^*-\mathbb E[\throughput^{(\zeta,\pi)}]=\Omega(1).
+\]
 \end{proof}
 
 % ==================================================
@@ -148,12 +159,7 @@ Since throughput is counted only upon prompt completion, and the fluid throughpu
 % ==================================================
 
 % --------------------------------------------------
-% Appendix A: Simulator Fidelity (Reviewer 2)
-% --------------------------------------------------
-\input{appendix_sim_fidelity}
-
-% --------------------------------------------------
-% Appendix B: Additional Experiments (Reviewer 2)
+% Appendix A: Experimental configuration and additional experiments
 %   - Threshold without waiting
 %   - SGLang real-system validation
 %   - Multi-seed reproducibility

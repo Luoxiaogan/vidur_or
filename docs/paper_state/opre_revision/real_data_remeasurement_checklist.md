@@ -1,9 +1,11 @@
 # Real-Data Remeasurement Checklist
 
 ## Status
-- Current paper text and Figure D now reflect the **observed** real-data sweep that is already recorded.
+- Current paper text and Figure D now reflect the **observed** real-data arrival-rate comparison that is already recorded.
 - For now, we are **keeping those observed results as-is**.
 - The items below are what should be rerun before making any stronger claim about the real-data stability boundary or about the exact strength of Nested WAIT on lmsys.
+- Current submission posture: the manuscript reports the calibration rule, finite parameter grids, and plotted-rate comparison. It does not claim a sharp lmsys stability boundary or provide a per-arrival-rate configuration provenance table.
+- 2026-05-02 SQL audit: `experiments.db.real_data_provenance_runs` currently has only partial valid coverage for QPS \(10,20,50,60\), not the full Figure D grid. Three historical rows have malformed metric columns; use the new non-destructive view `real_data_provenance_valid` for any future SQL summaries and `real_data_provenance_malformed` only for forensics. See `docs/progress/2026_05_02_real_data_provenance_audit.md`.
 
 ## 1. Source-of-Truth Reconstruction
 
@@ -19,7 +21,8 @@ These are the minimum items needed to make the current real-data section auditab
   - any gate / wait-gate switches
   - number of requests and warmup/truncation rule
 - Import the full grid into a durable local table (instead of keeping Figure D as a hand-transcribed artifact).
-- Check that the current `experiments.db` matches the paper-facing sweep. Right now the local `real_data` table is incomplete relative to the figure.
+- Check that the current `experiments.db` matches the paper-facing arrival-rate comparison. Right now the local `real_data` table is incomplete relative to the figure.
+- Check that `real_data_provenance_valid` covers all QPS points before treating SQL as the source of truth. Current valid coverage is still incomplete: QPS \(10,20,50,60\) only.
 
 ## 2. Figure D Data Cleanup
 
@@ -31,19 +34,19 @@ These items are needed so the plotted figure is directly reproducible from store
 - Verify that the plotted throughput panel is based on measured completions or a clearly documented stylized rule.
 - Confirm that the paper caption, prose, and plotting script all refer to the same QPS grid.
 
-## 3. Boundary Clarification Sweep
+## 3. Boundary Clarification Runs
 
-These runs are needed if we want to say more than “observed sweep outcomes.”
+These runs are needed if we want to say more than "observed comparison outcomes."
 
-- Run a denser local sweep around the real-data crossover / transition region.
+- Run a denser local set of arrival rates around the real-data crossover / transition region.
 - Minimum recommended QPS set:
   - `35, 40, 45, 50, 55, 60, 65, 70`
 - If compute budget allows, add:
   - `75`
 - Goal:
   - pin down where vLLM first deteriorates
-  - pin down where Sarathi and Nested WAIT cross
-  - determine whether the `QPS=50` loss is isolated or part of a wider interval
+  - confirm where the Sarathi--Nested WAIT gap first becomes material
+  - recover the exact `QPS=50` Nested WAIT configuration and latency used in the current Figure D series
 
 ## 4. Long-Horizon Validation on Real Data
 
@@ -52,7 +55,7 @@ These runs are needed before using “stability boundary” language for lmsys.
 - Pick 2-3 QPS points near the suspected Sarathi / Nested WAIT transition.
 - Recommended candidates:
   - `50`, `60`, `70`
-  - or `55`, `60`, `65` if the denser sweep above is available
+  - or `55`, `60`, `65` if the denser local runs above are available
 - For each chosen QPS, rerun with increasing horizons / request counts.
 - Minimum progression:
   - current baseline horizon
@@ -68,7 +71,7 @@ These runs are needed if we want the real-data claim to sound statistically stab
 - Repeat the key real-data points with multiple seeds / repeated Poisson draws.
 - Minimum points:
   - one low-load point where policies are close
-  - the `QPS=50` exception point
+  - the `QPS=50` near-tie point
   - one or two medium/high-load points where Nested WAIT is clearly better
 - Recommended minimum set:
   - `40`, `50`, `60`, `100`
@@ -88,20 +91,19 @@ These runs are needed if we want to argue the gain is structural rather than a f
   - performance gap among them
 - Important checkpoints:
   - whether the best config is isolated or part of a stable basin
-  - whether `QPS=50` remains a loss even after a careful local search
+  - whether the plotted ordering remains stable around `QPS=50` after a careful local search
 
 ## 7. Segment-Count / Segment-Size Consistency
 
 These runs are needed because the paper now reports a segment-count sensitivity analysis for the real-data setup.
 
-- Reconfirm whether the main real-data figure should be tied to a single paper-facing choice of `m`, and if so whether `m=50` remains the right choice under the current real-data setup.
-- Recheck comparison set:
-  - `m=10`
-  - `m=25`
-  - `m=50`
-  - `m=100`
-  - `m=200`
-- Ensure that the ablation table and the main real-data figure are based on the same underlying workload definition and compatible tuning rules.
+- The current main text does not report a segment-count ablation table.
+- If an ablation is reintroduced, use the paper-facing segment-count notation `L`, not workload-discretization bins.
+- Recheck the current paper-facing grid first:
+  - `L \in \{1,2,3,4,5,10,20\}`
+  - `\mathrm{tl} \in \{40,60,\ldots,300\}`
+  - `\eta=0.05`
+- Ensure any future ablation table and Figure D are based on the same workload definition and compatible tuning rules.
 
 ## 8. Appendix / Configuration Audit
 
@@ -120,10 +122,10 @@ These items are needed so the appendix does not silently describe an obsolete ex
 
 ## 9. Claims That Should Wait Until After Reruns
 
-Do **not** strengthen the real-data wording beyond the current observed-sweep phrasing until the items above are done.
+Do **not** strengthen the real-data wording beyond the current observed-comparison phrasing until the items above are done.
 
 - Do not claim an exact real-data stability boundary.
-- Do not claim `Nested WAIT` wins at every rate.
+- Do not claim `Nested WAIT` wins uniformly beyond the plotted arrival-rate grid. It is acceptable to describe the observed plotted-rate latency ordering if the figure supports it.
 - Do not claim a precise boundary ordering like synthetic unless supported by a denser sweep plus horizon validation.
 - Do not describe the throughput panel as a measured stability frontier unless it is backed by measured completion data.
 

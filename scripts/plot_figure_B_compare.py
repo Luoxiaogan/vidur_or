@@ -1,5 +1,5 @@
 """
-Figure B: single-type mean latency + effective throughput vs arrival rate.
+Figure B: single-type mean latency + effective completion rate vs arrival rate.
 
 Workload: p512d20, Llama-3-8B on simulated A100 (Vidur).
 Policies compared:
@@ -12,7 +12,7 @@ Data: experiments.db, nreq >= 5000; we take best (min) result per
 
 Layout: 1 x 2 side-by-side
   - Left  : mean latency vs rate, log y
-  - Right : effective throughput vs rate, linear
+  - Right : effective completion rate vs rate, linear
 """
 
 import sqlite3
@@ -132,15 +132,15 @@ def rate_to_x(r):
 
 X_TICK_RATES = [12, 14, 16, 18, 20, 22, 24]
 
-# --- Sustainable throughput mu (override) ---------------------------------
-# Align the throughput panel's knee positions with the visible knees in
+# --- Sustainable completion-rate mu (override) ----------------------------
+# Align the completion-rate panel's knee positions with the visible knees in
 # the latency panel, giving a consistent stability ordering across the
 # two panels of Figure B.
 #   vLLM: latency jumps at r=20 (6.95 s) -> mu = 19
 #   Sarathi: knee at r=22->23 (1.85 -> 5.08) -> mu = 22
 #   WAIT: stays <1.3 s through r=23, only spikes at r=24 -> mu = 23
 mu = {"vLLM": 19, "Sarathi": 22, "WAIT": 23}
-print(f"Sustainable throughput mu (override): {mu}")
+print(f"Sustainable completion-rate mu (override): {mu}")
 
 
 # --- Plot -----------------------------------------------------------------
@@ -212,13 +212,13 @@ for algo in ["vLLM", "Sarathi", "WAIT"]:
         zorder=9,
     )
 
-# --- Right: effective throughput (linear, same x mapping) ---
+# --- Right: effective completion rate (linear, same x mapping) ---
 axR = axes[1]
 rate_grid = np.linspace(r_min - 1, r_max + 2, 400)
 x_grid = np.array([rate_to_x(r) for r in rate_grid])
 
 axR.plot(x_grid, rate_grid, color="#888888", linestyle=":", linewidth=1.0,
-         label=r"Ideal ($\lambda =$ throughput)", zorder=1)
+         label=r"Ideal completion rate ($=\lambda$)", zorder=1)
 
 for algo in ["vLLM", "Sarathi", "WAIT"]:
     m = mu[algo]
@@ -235,7 +235,7 @@ for algo in ["vLLM", "Sarathi", "WAIT"]:
              linestyle="None", label=algo, zorder=3)
 
 axR.set_xlabel(r"Arrival rate $\lambda$ (requests/s)")
-axR.set_ylabel("Effective throughput (requests/s)")
+axR.set_ylabel("Effective completion rate (requests/s)")
 axR.set_xlim(x_lo, x_hi)
 axR.set_xticks(x_tick_positions)
 axR.set_xticklabels(x_tick_labels)
@@ -245,7 +245,7 @@ axR.grid(True, linestyle=":", linewidth=0.4, alpha=0.35, color="#999999")
 axR.legend(loc="lower right", frameon=False, handlelength=2.5,
            borderpad=0.4)
 
-# --- Transition-points callout (throughput panel) ------------------------
+# --- Transition-points callout (completion-rate panel) --------------------
 # Textbox above-left of the ideal y = lambda diagonal, close to the kinks.
 text_xy_R = (13.5, 22)
 axR.text(*text_xy_R, "Transition\npoints",

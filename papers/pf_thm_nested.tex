@@ -4,146 +4,178 @@
 
 \section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic}}\label{appendix::proof of nested_wait_heavy_traffic}
 
-\paragraph{Proof Outline.}
-This proof establishes asymptotic optimality of Nested WAIT when output lengths are unknown. The algorithm achieves \emph{on-the-fly classification}: prompts classify themselves by their actual output lengths at segment boundaries, requiring no prediction. The structure proceeds as follows:
-\begin{enumerate}
-    \item \textbf{First segment analysis}: All prompts enter segment 1 with Poisson arrivals. We couple with a Lindley process and apply Kingman's inequality for bounded expectations.
-    \item \textbf{Subsequent segments analysis}: After completing segment $k-1$, prompts naturally reveal whether they continue to segment $k$. This type revelation follows Binomial thinning: a fraction $p_k$ of completions continue, while short prompts finish without being delayed by longer ones. We apply Lindley coupling to each segment.
-    \item \textbf{High-probability bounds prevent eviction}: Expected bounds ensure average stability, but stochastic fluctuations risk overflow. We construct an exponential martingale and apply Doob's inequality to obtain high-probability memory bounds, preventing eviction cascades.
-\end{enumerate}
+The proof analyzes the no-overflow Nested WAIT dynamics and then shows that the memory condition makes those dynamics feasible with high probability. The main difference from WAIT is that downstream arrivals are generated endogenously: a prompt reaches segment \(k\) only if it survives the boundary \(l_{k-1}'\). The proof therefore follows the queues at these segment boundaries. Segment 1 is a threshold-renewal queue with external Poisson arrivals. For \(k\ge2\), each upstream boundary-crossing opportunity produces a binomially thinned cohort. The threshold conditions give negative drift for these embedded queues. Standard reflected-random-walk and exponential-martingale bounds then control their expected size and high-probability excursions; the nonstandard part is the memory accounting that separates fresh boundary arrivals from carryover residual queues.
 
-We adopt notation consistent with the main text (Section~\ref{sec:nested_wait}). Let $l$ denote the common input length (tokens after prefill), and let $l_j'$ denote the output length for type-$j$ prompts. We use $b$ to denote the \emph{batch index} (count of completed iterations) and $k \in \{1, \ldots, m\}$ to denote the \emph{segment index}, where segment $k$ contains prompts with output lengths in $(l_{k-1}', l_k']$. The threshold for segment $k$ is $n_k$ (from Equation~\eqref{eq:nested_wait_thresholds}). We denote by $W^b_{(k)}$ the queue length for segment $k$ after batch $b$, and by $B$ the total number of batches over the time horizon. The thinning probability $p_k = (\sum_{j=k}^m \lambda_j)/(\sum_{j=k-1}^m \lambda_j)$ represents the fraction of prompts completing segment $k-1$ that continue to segment $k$.
+Let
+\[
+    \Lambda_k=\sum_{j=k}^m\lambda_j,\qquad
+    p_k=\frac{\Lambda_k}{\Lambda_{k-1}},\quad k\ge2,
+\]
+and write
+\[
+    \Delta^\pi=\Delta T_{[1,\ldots,m]}(n_1,\ldots,n_m)=d_0+d_1M^\pi .
+\]
+The theorem assumes \(\Lambda_1\Delta^\pi<n_1\) and \(p_k<n_k/n_{k-1}<1\) for \(k\ge2\). In the \(\zeta\)-scaled system, every realized iteration has physical duration at least \(d_0/\zeta\), so the number of realized processing opportunities over \([0,T]\) is at most
+\[
+    B_\zeta^{\max}=\left\lceil \frac{\zeta T}{d_0}\right\rceil
+    \le 1+\frac{\zeta T}{d_0}.
+\]
+This is an upper bound on actual event opportunities, not a full-threshold comparison-slot count.
 
-\subsection{First Segment Analysis}
+\subsection{Segment-1 Entry Queue}
 
-All prompts initially enter segment 1 with Poisson arrivals at aggregate rate $\sum_{j=1}^m \lambda_j$. We construct a dominating process and apply Kingman's inequality to bound expected queue length.
+Prompts waiting to enter segment 1 have not been prefilled, so they are outside the GPU-resident KV-cache state. The only subtlety is that the server may idle while waiting for the segment-1 threshold. We therefore index the segment-1 queue by threshold renewals rather than by realized processing iterations. Let \(R_q\) be the residual number of not-yet-prefilled prompts immediately after the \(q\)-th segment-1 service start, after \(n_1\) prompts have been removed for prefill. During the following service period, the number of external arrivals is stochastically dominated by
+\[
+    \bar Y^q_{(1)}\sim \mathrm{Poisson}(\Lambda_1\Delta^\pi),
+\]
+because the physical service period is at most \(\Delta^\pi/\zeta\) and arrivals occur at rate \(\zeta\Lambda_1\). If the residual plus these arrivals is below \(n_1\), the system idles until the next arrivals complete the threshold and then immediately starts the next segment-1 service. Thus
+\[
+    R_{q+1}\le (R_q+\bar Y^q_{(1)}-n_1)^+ .
+\]
+This recursion is dominated by the reflected random walk
+\[
+    \widetilde R^0_{(1)}=2n_1,\qquad
+    \widetilde R^{q+1}_{(1)}
+    =
+    \max\{2n_1,\widetilde R^q_{(1)}+\bar Y^q_{(1)}-n_1\}.
+\]
+Since \(\mathbb{E}[\bar Y^q_{(1)}]-n_1=\Lambda_1\Delta^\pi-n_1<0\), the standard Lindley-recursion bound for a random walk with negative drift \citep[see, e.g.,][]{kingman1962queues,asmussen2003applied} gives
+\[
+    \sup_{q\ge0}\mathbb{E}[R_q]
+    \le
+    2n_1+
+    \frac{\mathbb{E}[(\bar Y^q_{(1)}-n_1)^2]}{2(n_1-\Lambda_1\Delta^\pi)}
+    <\infty .
+\]
+The idle time before the next segment-1 service is the time needed to collect fewer than \(n_1\) arrivals, whose expected physical length is \(O(1/\zeta)\); in service-normalized time this contributes \(O(1)\).
 
-For the first segment ($k=1$), the state transition is:
-$$ W^{b+1}_{(1)} =  W^b_{(1)} + Y^b_{(1)} -n_1\cdot  \mathbf{1}\{ W^b_{(1)} + Y^b_{(1)}\geq n_1 \},\quad Y^b_{(1)}\sim \text{Poisson}(\Delta T_b \cdot \sum_{j=1}^m \lambda_j), $$
-where $\Delta T_b$ denotes the processing time of batch $b$. Since $\Delta T_b\leq \Delta T_{[1,\ldots,m]}$ (the time for a full batch), we construct a dominating process:
-$$ \bar{W}^{b+1}_{(1)} =  \bar{W}^b_{(1)} + \bar{Y}^b_{(1)} -n_1\cdot  \mathbf{1}\{ \bar{W}^b_{(1)} + \bar{Y}^b_{(1)}\geq n_1 \},\quad \bar{Y}^b_{(1)}\sim \text{Poisson}(\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j). $$
-This is further dominated by a Lindley process:
-$$\tilde{W}^0_{(1)}=2n_1, \quad \tilde{W}^{b+1}_{(1)}=\max\{2n_1, \tilde{W}^b_{(1)}+\bar{Y}^b_{(1)}-n_1\}.$$
-Since $\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j<n_1$ (negative drift), by Kingman's inequality \citep{kingman1962queues}:
-$$\ex{}{W^b_{(1)}}\leq 2n_1 + \frac{\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j}{2\left( n_1 - \Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j\right)}. $$
+\subsection{Boundary Queues for Downstream Segments}
 
-\noindent\textbf{Remark.} Prompts waiting in the first segment are stored in CPU and do not consume GPU memory.
+For \(k\ge2\), consider an opportunity at which segment \(k-1\) advances prompts across boundary \(l_{k-1}'\). Let \(A^r_{k-1}\le n_{k-1}\) be the number of prompts that cross this boundary at the \(r\)-th such opportunity. Conditional on the filtration just before output-length revelation at the boundary, the indicators that these prompts continue to segment \(k\) are independent Bernoulli random variables with probability \(p_k=\Lambda_k/\Lambda_{k-1}\). This uses the i.i.d. type mix and the fact that service before the boundary is nonanticipating with respect to future output length; before a boundary is reached, prompts with possible remaining types are exchangeable within the surviving mixture. Therefore
+\[
+    Y^r_{(k)}\mid A^r_{k-1}\sim \mathrm{Binomial}(A^r_{k-1},p_k),
+    \qquad
+    Y^r_{(k)}\preceq \bar Y^r_{(k)},
+\]
+where the dominating variables \(\bar Y^r_{(k)}\sim\mathrm{Binomial}(n_{k-1},p_k)\) can be chosen independent across boundary opportunities.
 
-\subsection{Subsequent Segments Analysis ($k \geq 2$)}
+Let \(V^r_{(k)}\) be the carryover boundary queue at stage \(l_{k-1}'\) after the threshold review at the start of the \(r\)-th opportunity in which segment \(k-1\) is processed. Thus \(V^r_{(k)}\) is a post-review residual, not the pre-review boundary population. This convention preserves the nested, prefix structure of the algorithm. Whenever segment \(k-1\) is active, all earlier segment thresholds have been met. If the boundary queue for segment \(k\) also contains at least \(n_k\) prompts at that review, Nested WAIT includes segment \(k\) in the same prefix batch and removes a threshold cohort from the boundary. During the batch, at most \(A^r_{k-1}\le n_{k-1}\) additional prompts may survive segment \(k-1\) and join the boundary. These fresh survivors are part of the just-processed upstream threshold cohort, so their KV-cache memory is charged to the threshold-sized batch term \(M^\pi\). Only the carryover residual remains as additional boundary memory. With the binomial domination above, the pre-review queue for the next opportunity is \(V^r_{(k)}+\bar Y^r_{(k)}\), and the post-review residual satisfies
+\[
+    V^{r+1}_{(k)}
+    \le
+    V^r_{(k)}+\bar Y^r_{(k)}
+    -
+    n_k{\bf 1}\{V^r_{(k)}+\bar Y^r_{(k)}\ge n_k\}.
+\]
+The residual queue is dominated by
+\[
+    \widetilde W^0_{(k)}=n_k,\qquad
+    \widetilde W^{r+1}_{(k)}
+    =
+    \max\{n_k,\widetilde W^r_{(k)}+\bar Y^r_{(k)}-n_k\}.
+\]
+This domination follows by induction over boundary-crossing opportunities. If \(V^r_{(k)}+\bar Y^r_{(k)}\ge n_k\), the post-review residual is at most \(V^r_{(k)}+\bar Y^r_{(k)}-n_k\), which is bounded by \(\widetilde W^r_{(k)}+\bar Y^r_{(k)}-n_k\). If \(V^r_{(k)}+\bar Y^r_{(k)}<n_k\), the residual is below \(n_k\), while the dominating recursion is always at least \(n_k\). Hence \(V^r_{(k)}\le\widetilde W^r_{(k)}\) for all \(r\).
 
-For segment $k$ ($2\leq k\leq m$), the arrival process reflects on-the-fly classification: prompts that completed segment $k-1$ reveal whether their output lengths exceed $l_{k-1}'$. This type revelation follows binomial thinning with probability $p_k$.
+The increments \(\bar Y^r_{(k)}-n_k\) have strictly negative drift because
+\[
+    \mathbb{E}[\bar Y^r_{(k)}-n_k]=n_{k-1}p_k-n_k<0.
+\]
+Applying the same negative-drift reflected-random-walk bound yields, uniformly in \(r\),
+\[
+    \mathbb{E}[V^r_{(k)}]
+    \le
+    n_k+
+    \frac{\mathbb{E}[(\bar Y^r_{(k)}-n_k)^2]}{2(n_k-n_{k-1}p_k)}
+    <\infty,\qquad k=2,\ldots,m.
+\]
+Thus all external and downstream boundary queues have bounded expected size, uniformly over \(\zeta\) and \(T\).
 
-Arrivals come from prompts that completed segment $k-1$:
-$$Y^b_{(k)} \sim \text{Binomial}\left(  n_{k-1} ,\, p_k \right),\quad \text{where } p_k = \frac{\sum_{j=k}^m \lambda_j}{\sum_{j=k-1}^m \lambda_j}.$$
+We also use the stage-cap invariant induced by the threshold rule. Starting from the empty system, every threshold-controlled interior stage of segment \(k\) contains at most \(n_k\) resident prompts. A batch that includes segment \(k\) advances at most \(n_k\) prompts from each preceding stage into the next stage; a batch that excludes segment \(k\) leaves its interior stages unchanged. The only resident populations not covered by this interior-stage cap are the downstream boundary queues \(V_{(k)}\), \(k\ge2\), which are controlled by the residual-queue bounds above.
 
-\paragraph{On-the-fly Classification via Binomial Thinning.}
-The arrival process $Y^b_{(k)} \sim \text{Binomial}(n_{k-1}, p_k)$ reflects the \emph{on-the-fly classification mechanism}, not merely a modeling choice. After segment $k-1$ processing, exactly $n_{k-1}$ prompts complete that stage. Among these, a fraction $p_k = \frac{\sum_{j=k}^m \lambda_j}{\sum_{j=k-1}^m \lambda_j}$ have output lengths exceeding $l_{k-1}'$. These prompts naturally continue to segment $k$. Prompts classify themselves by their actual output lengths—no prediction needed. Short prompts complete quickly without being delayed by longer ones.
+\subsection{Throughput and Delay}
 
-The state transition is:
-$$W^{b+1}_{(k)}=W^{b}_{(k)}+Y^b_{(k)} - n_{k}\cdot \mathbf{1}\{ W^{b}_{(k)}+Y^b_{(k)}\geq n_{k}  \},$$
-where $b$ indexes the batches containing segment $k-1$. Note that each segment has its own batch index, but all are bounded by the total batch count $B$.
-
-Define $X^b_{(k)} = Y^b_{(k)} - n_{k}$. We construct a coupled dominating process:
-\begin{lemma}[Coupled Process for Segment $k$]\label{lemma::nested coupled process}
-Define $\{ \tilde{W}^b_{(k)} \}$ by:
-\begin{equation*}
+We first translate the queue bounds into the no-overflow performance estimates. Let \(W_{(1)}(T)\) denote the segment-1 entry residual at time \(T\), let \(V_{(k)}(T)\) be the downstream resident boundary queue for \(k\ge2\), and let \(I_k(T)\) be the number of prompts inside the threshold-controlled interior of segment \(k\). The threshold rule gives \(I_k(T)\le n_k\delta_k\), where \(\delta_k\) is the number of interior stages in segment \(k\). There are constants \(\alpha_k,\beta_k\), depending only on the fixed output lengths, such that terminal unfinished decode work is bounded by
+\[
+    \sum_{k=1}^m \alpha_k W_{(k)}(T)
+    +
+    \sum_{k=1}^m \beta_k I_k(T)
+    +
+    A_{\mathrm{tail}}(T),
+\]
+where \(W_{(k)}=V_{(k)}\) for \(k\ge2\), and \(A_{\mathrm{tail}}(T)\) accounts for arrivals in the final partial opportunity. The expected final-partial-opportunity arrivals are \(O(1)\) because that opportunity has physical length at most \(\Delta^\pi/\zeta\). Consequently,
+\[
 \begin{aligned}
-\tilde{W}^0_{(k)} &= n_{k}, \\
-\tilde{W}^{b+1}_{(k)} &= \max\{ n_{k},\tilde{W}^{b}_{(k)} + X^b_{(k)}\}.
+    \throughput^*-\mathbb{E}[\throughput^{(\zeta,\pi)}]
+    &\le
+    \frac{1}{\zeta T}
+    \mathbb{E}\!\left[
+    \sum_{k=1}^m \alpha_k W_{(k)}(T)
+    +
+    \sum_{k=1}^m \beta_k I_k(T)
+    +
+    A_{\mathrm{tail}}(T)
+    \right]  \\
+    &= O((\zeta T)^{-1}).
 \end{aligned}
-\end{equation*}
-Then $\tilde{W}_{(k)}^b \geq W^b_{(k)}$ for all $b\in \mathbb{N}$.
-\end{lemma}
-\noindent The proof is in Appendix~\ref{appendix_lemma::proof of nested coupled process}. The process $\{\tilde{W}^b_{(k)}\}$ has the Lindley representation:
-\begin{equation*}
-\begin{aligned}
-\tilde{W}^{b+1}_{(k)} &=n_{k}+ \max_{0\leq i\leq b}\{ S^i_{(k)} \},\\
-\text{where } S^i_{(k)} &= \sum_{r=1}^i X^r_{(k)},\; S^0_{(k)}=0.
-\end{aligned}
-\end{equation*}
+\]
 
-\paragraph{Expected Queue Length.} Since $\ex{}{X^b_{(k)}} = n_{k-1} p_k - n_{k}<0$ (negative drift), by Kingman's inequality \citep{kingman1962queues}:
-$$\ex{}{W^b_{(k)}}\leq \ex{}{\tilde{W}^b_{(k)}}\leq n_k+\frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)}.$$
-Negative drift ensures queue stability, preventing unbounded growth that would lead to eviction. This bound ensures finite expected queue length for each segment $k \geq 2$, controlling expected GPU memory consumption. The segment structure ensures shorter prompts complete without waiting for longer ones to finish.
-
-\subsection{Throughput Gap Bound}
-
-Using $B$ as the total batch count (upper bound for each segment's batch index), the throughput gap is:
-$$\frac{1}{B}\sum_{k=1}^m \ex{}{W^B_{(k)}}\leq
-\frac{2n_1}{B} +\frac{\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j}{2B\left( n_1 - \Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j\right)} +\frac{1}{B}\sum_{k=2}^m n_k +\frac{1}{B}\sum_{k=2}^m\frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)}.$$
-
-\paragraph{Asymptotic Regime.} As $\zeta \to \infty$, the throughput gap is $O((\zeta B)^{-1})$. The expected latency and TTFT are $O(1)$.
+For delay, let \(Q(t)\) be the total number of prompts in the segment-1 entry queue, downstream boundary queues, and threshold-controlled segment interiors. The bounds above, together with the \(O(1/\zeta)\) expected idle period needed to collect fewer than a threshold cohort, imply
+\[
+    \mathbb{E}\!\left[\int_0^T Q(t)\,dt\right]=O(T).
+\]
+The expected number of completed prompts over \([0,T]\) is \(\Theta(\zeta T)\), because terminal unfinished work is \(O(1)\) in expectation. Hence the calendar-time average latency and TTFT are \(O(1/\zeta)\). The theorem reports service-normalized delays, \(\Latency^{(\zeta,\pi)}=\zeta\Latency_{\rm cal}^{(\zeta,\pi)}\) and \(\TTFT^{(\zeta,\pi)}=\zeta\TTFT_{\rm cal}^{(\zeta,\pi)}\), so
+\[
+    \mathbb{E}[\Latency^{(\zeta,\pi)}],
+    \mathbb{E}[\TTFT^{(\zeta,\pi)}]
+    =
+    O(1).
+\]
 
 \subsection{High-Probability Memory Bound}
 
-\paragraph{High-Probability Bounds Prevent Eviction.}
-Expected queue length bounds ensure average stability. However, stochastic fluctuations may cause $W^b_{(k)}$ to exceed these limits, risking memory overflow and eviction. We derive high-probability bounds to quantify this overflow risk. By choosing capacity $C$ to ensure overflow probability $< \delta$ across all batches and segments, we prevent eviction cascades.
-
-\paragraph{Martingale Construction.}
-To obtain high-probability bounds on queue length, we need to control tail probabilities of the random walk maximum $\max_{0\leq i\leq s-1}\{S^i_{(k)}\}$. Expected bounds alone cannot prevent rare but catastrophic overflow events. We construct an exponential martingale that enables Doob's inequality, converting expected bounds into probabilistic guarantees.
-
-We need to estimate
-$$P\left( \max\{0,S^1_{(k)},\cdots,S^{s-1}_{(k)}\} \ge c\right)=P\left( \max_{0\leq i\leq s-1}\{S^i_{(k)}\} \ge c\right), \forall c>0 ,\,\text{where }S^0_{(k)}=0.$$
-Define the exponential martingale $M^i_{(k)} = e^{\theta S^i_{(k)}}$. For this to be a martingale, the moment generating function must equal 1, ensuring zero expected drift in log space:
-$$\phi_{(k)}(\theta) = \ex{}{e^{\theta X_{(k)}^i}}= e^{-\theta n_{k}}(1-p_k+p_ke^{\theta})^{n_{k-1}} = 1.$$
-The following lemma establishes existence and properties of the solution $\theta_k > 0$ that satisfies this martingale condition (proof in Appendix~\ref{appendix_lemma::proof of solution to martingale exists}).
-\begin{lemma}\label{lemma::solution to martingale exists}
-Suppose \(n_{k-1} > n_k > n_{k-1} p_k\) and \(p_k \in (0, 1)\). Then there exists a unique solution \(\theta_k > 0\) to the equation
-\begin{equation}
-    e^{-\theta_k n_k} (1 - p_k + p_k e^{\theta_k})^{n_{k-1}} = 1, \label{eq::eq of theta}
-\end{equation}
-where \(\theta_k\) is strictly increasing with respect to \(D = n_k - n_{k-1} p_k\) and satisfies the lower bound
+The base term
 \[
-\theta_k \geq \frac{8 (n_k - n_{k-1} p_k)}{n_{k-1}}.
+    M^\pi=\sum_{k=1}^m n_k(l+\bar s_k)\delta_k
 \]
-\end{lemma}
-When $\theta_k>0$ satisfies $\phi(\theta_k)=1$, the process $M^i_{(k)}$ is a martingale starting at $M^0_{(k)}= e^{\theta_k \cdot 0}=1$. This zero-drift property in log space enables Doob's inequality to bound tail probabilities.
+accounts for threshold-sized segment batches. With the convention used in Theorem~\ref{thm:nested_wait_heavy_traffic}, segment 1 covers stages \(s=0,\ldots,l_1'\), while for \(k\ge2\), the resident boundary queue at \(s=l_{k-1}'\) is tracked separately and segment \(k\)'s interior covers \(s=l_{k-1}'+1,\ldots,l_k'\). The memory accounting separates two boundary populations. Fresh survivors that have just crossed from segment \(k-1\) are a subset of the upstream threshold cohort. They have the same KV-cache size as the prompts charged to the \(s=l_{k-1}'\) stage of segment \(k-1\) in \(M^\pi\), so charging them to the base term does not add memory. The only additional memory is the carryover residual left at downstream boundaries across opportunities. Therefore, if \(V^r_{(k)}\le c_k\) for all downstream boundaries, then total resident KV-cache memory is at most
+\[
+    M^\pi+\sum_{k=2}^m(l+l_{k-1}')c_k .
+\]
+The deterministic \(n_k\) component of \(c_k\) is on the same scale as the base term: since \(n_k<n_{k-1}\), \((l+l_{k-1}')n_k\) is bounded by the contribution of the terminal stage \(s=l_{k-1}'\) of segment \(k-1\) already included in \(M^\pi\).
 
-By Doob's martingale inequality \citep{durrett2019probability}, we have that
-$$P(\max_{1\leq i
-\leq b-1}\{ e^{\theta_k S^i_{(k)}} \}\geq a)\leq \frac{\ex{}{M^i}}{a} = \frac{\ex{}{M^0}}{a}= \frac{1}{a}.$$
-Exponentiating both sides of the inequality event, we obtain:
-$$P(\max_{1\leq i
-\leq b-1}\{ e^{\theta S^i_{(k)}}\} \geq e^{\theta c})\leq \frac{1}{e^{\theta c}}  \Rightarrow P(\max_{1\leq i
-\leq b-1}\{  S^i_{(k)}\} \geq c)\leq e^{-\theta c}.$$
-Using the dominance $\tilde{W}^b_{(k)} = n_k + \max_{0\leq i\leq b-1}\{ S^i_{(k)}\} \geq W^b_{(k)}$, we have
-$$P\left(  W^b_{(k)}\geq c  \right) <P\left(  \tilde{W}^b_{(k)}\geq c  \right) = P(\max_{1\leq i
-\leq b-1}\{  S^i_{(k)}\} \geq c - n_k)\leq e^{-\theta_k (c - n_k)}$$
+Fix \(k\ge2\). Since \(p_k<n_k/n_{k-1}<1\), Appendix~\ref{appendix_lemma::proof of solution to martingale exists} records the standard exponential-martingale construction for binomial increments and gives a unique \(\theta_k>0\) satisfying
+\[
+    e^{-\theta_k n_k}(1-p_k+p_ke^{\theta_k})^{n_{k-1}}=1.
+\]
+For \(S^i_{(k)}=\sum_{r=1}^i(\bar Y^r_{(k)}-n_k)\), the process \(e^{\theta_k S^i_{(k)}}\) is a martingale. Doob's maximal inequality \citep[see, e.g.,][]{durrett2019probability} gives
+\[
+    \mathbb{P}\!\left(\max_{0\le i\le r}S^i_{(k)}\ge x\right)\le e^{-\theta_k x}.
+\]
+Equivalently, the finite-horizon reflected-random-walk bound in Appendix~\ref{appendix_lemma::proof of solution to martingale exists} gives, for the dominating boundary queue,
+\[
+    \mathbb{P}\!\left(
+    \max_{0\le r\le B}\big(\widetilde W^r_{(k)}-n_k\big)\ge x
+    \right)
+    \le B e^{-\theta_k x},\qquad B\ge1.
+\]
+Since \(V^r_{(k)}\le \widetilde W^r_{(k)}\), set
+\[
+    c_k
+    =
+    n_k+\theta_k^{-1}
+    \ln\!\left(\frac{m(1+\zeta T/d_0)}{\delta}\right).
+\]
+Applying this finite-horizon bound with \(B=B_\zeta^{\max}\), and then unioning over \(k=2,\ldots,m\), gives
+\[
+    \mathbb{P}\!\left(
+    V^r_{(k)}\le c_k
+    \text{ for all } k=2,\ldots,m,\; r\le B_\zeta^{\max}
+    \right)\ge1-\delta.
+\]
+On this event, the no-overflow Nested WAIT dynamics are feasible on the physical GPU whenever the memory condition in Theorem~\ref{thm:nested_wait_heavy_traffic} holds. If a physical implementation instead evicts on the complement of this event, the unconditional throughput gap acquires an additional \(O(\delta)\) failure term; the theorem reports the no-overflow performance bounds and the separate high-probability feasibility guarantee.
 
-For all $2\leq k\leq m$ and $1\leq b\leq B$:
-$$P\left(  W^b_{(k)}\geq c  \right)< e^{-\theta_k (c - n_k)},$$
-where $\theta_k>0$ is the solution to (\ref{eq::eq of theta}).
-
-\paragraph{Union bound for safety guarantee.}
-To ensure memory consumption does not exceed the bound at any batch $b \in \{1, \dots, B\}$ with probability at least \( 1 - \delta \), we apply a union bound across all segments and batches. For each segment \( k \in \{2, \dots, m\} \) and batch index \( b \in \{1, \dots, B\} \), we have:
-\[ P\left( W^b_{(k)} \geq c \right) < e^{-\theta_k (c - n_k)}, \]
-There are \( m - 1 \) segments (from \( k = 2 \) to \( m \)) and \( B \) batches (from \( b = 1 \) to \( B \)). We allocate the total failure probability \( \delta \) across all segments and batches. The total number of events is \( (m - 1) \cdot B \). Set the overflow probability for each segment and batch to:
-$$P\left( W^b_{(k)} \geq c_k \right) \leq \frac{\delta}{(m - 1) \cdot B}\Rightarrow e^{-\theta_k (c_k - n_k)} \leq \frac{\delta}{(m - 1) \cdot B}\Rightarrow c_k \geq n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k}$$
-If we choose
-\[ c_k = n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k}, \]
-then we have that
-\[ P\left( W^b_{(k)} \geq c_k \right) \leq \frac{\delta}{(m - 1) \cdot B}. \]
-
-Next, we compute the joint probability of overflow across all segments and batches using a union bound:
-$$P\left( \bigcup_{k=2}^m \bigcup_{b=1}^B \{ W^b_{(k)} \geq c_k \} \right) \leq \sum_{k=2}^m \sum_{b=1}^B P\left( W^b_{(k)} \geq c_k \right)\leq (m - 1) \cdot B \cdot \frac{\delta}{(m - 1) \cdot B} = \delta$$
-Thus:
-$$P\bigg( W^b_{(k)} \leq c_k \text{ for all }
-\begin{aligned}
-    &k \in \{2, \dots, m\}, \\
-    &b \in \{1, \dots, B\}
-\end{aligned} \bigg)
-\geq 1 - \delta.$$
-So the memory consumption is bounded:
-$$    \text{Memory Consumption}^b
-= M^{\pi} + \sum_{k=2}^m W^b_{(k)} \cdot (l + l_{k-1}')\leq M^{\pi} + \sum_{k=2}^m c_k \cdot (l + l_{k-1}')$$
-where $M^\pi$ is the peak batch memory usage as defined in Equation~\eqref{eq:nested_wait_memory}:
-$$M^\pi = \sum_{j=1}^m n_j \left( l + \frac{L_j'}{2} \right) \Delta l_j', \quad \text{with } L_j' = \sum_{i=1}^j l_i',\; \Delta l_j' = l_j' - l_{j-1}',\; l_0' = 0.$$
-Note that this differs from the $M^\pi$ formula for the WAIT algorithm (Theorem~\ref{thm:wait_heavy_traffic}), because Nested WAIT groups prompts into segments based on their unknown output lengths, leading to segment-wise memory accumulation
-
-Substitute \(c_k = n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \), we have that
-$$    \text{Memory Consumption}^b \leq M^{\pi} + \sum_{k=2}^m \left( n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \right) \cdot (l + l_{k-1}').$$
-Define the memory bound \( \mathbf{M}^B \):
-$$\mathbf{M}^B = M^{\pi} + \sum_{k=2}^m n_k \cdot (l + l_{k-1}') + \sum_{k=2}^m \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \cdot (l + l_{k-1}').$$
-By the lower bound in Lemma~\ref{lemma::solution to martingale exists}, we can obtain the upper bound of the third term:
-$$\sum_{k=2}^m \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \cdot (l + l_{k-1}') \leq \sum_{k=2}^m \frac{n_{k-1}}{8(n_k - n_{k-1}p_k)}\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)\cdot (l + l_{k-1}')$$
-And this \( \mathbf{M}^B \) ensures that with probability at least \( 1 - \delta \), the memory consumption does not exceed \( \mathbf{M}^B \) at any batch index \( b \in \{1, \dots, B\} \).
+Finally, Appendix~\ref{appendix_lemma::proof of solution to martingale exists} also gives
+\[
+    \theta_k\ge \frac{8(n_k-n_{k-1}p_k)}{n_{k-1}},
+\]
+which is the stated drift-to-buffer scaling. This completes the proof.

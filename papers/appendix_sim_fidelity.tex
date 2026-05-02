@@ -1,41 +1,4 @@
-%% Appendix A: Per-workload parameter values and scheduler hyperparameters used
-%% in Section 6. The simulator-vs-GPU validation has been moved into the
-%% Real-GPU validation subsection of Appendix B (see app:gpu_validation).
-
-\section{Experimental Configuration}
-\label{app:experimental_config}
-
-This appendix supplies the per-workload parameter values and the per-scheduler hyperparameters used in Section~\ref{sec:experiments}. The end-to-end real-GPU validation, including the iteration-time comparison against the Vidur simulator, is reported separately in Appendix~\ref{app:gpu_validation}.
-
-\subsection{Per-workload parameters}
-
-Table~\ref{tab:exp_setup} summarizes the per-workload settings used in Section~\ref{sec:experiments}: the total in-flight limit $\mathrm{tl}$ for WAIT and Nested WAIT, and the KV cache capacity $C$ of the simulated pool. Throughout, one KV cache block holds $16$ tokens, so $C = 29{,}952$ blocks corresponds to roughly $479{,}000$ tokens of KV cache on an A100~80\,GB.
-
-\begin{table}[ht]
-\centering
-\small
-\begin{tabular}{lccc}
-\toprule
-Workload & Algorithm & $\mathrm{tl}$ & $C$ (blocks) \\
-\midrule
-Single-type \texttt{p512d20}  & WAIT         & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
-Long-decode \texttt{p512d1000} & WAIT         & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
-Two-type $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$ & Nested WAIT  & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
-Real (lmsys-chat-1m)          & Nested WAIT  & $\{20,25,\ldots,40\}$ by rate  & $29{,}952$ \\
-\bottomrule
-\end{tabular}
-\caption{Per-workload settings for WAIT and Nested WAIT in Section~\ref{sec:experiments}. In the experiments, we do not set the thresholds directly. Instead, we specify a total in-flight limit $\mathrm{tl}$ and derive the per-type thresholds $n_j$ of WAIT and the per-segment thresholds $n_k$ of Nested WAIT so as to satisfy Equations~\eqref{eq:wait_thresholds} and~\eqref{eq:nested_wait_thresholds}, respectively. Thus $\mathrm{tl}$ determines the overall scale of the threshold vector, while the equations determine its relative ratios across types or segments. On the lmsys workload, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$ at each arrival rate.}
-\label{tab:exp_setup}
-\end{table}
-
-\subsection{Scheduler hyperparameters}
-
-\textbf{vLLM.} We use vLLM's default Vidur configuration, which admits new arrivals first-come-first-served and reserves a KV cache watermark fraction of $0.01$ (i.e.\ $1\%$ of the pool) as a safety margin against concurrent growth of in-flight decodes.
-
-\textbf{Sarathi.} We use Sarathi's default Vidur configuration, which combines chunked prefill with an admission cap of $512$ requests per iteration.
-
-\textbf{WAIT (single-type workloads).} For each arrival rate, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$. We use WAIT for both \texttt{p512d20} and the long-decode workload \texttt{p512d1000}; in each case, the per-type threshold $n_1$ is then computed so as to satisfy Equation~\eqref{eq:wait_thresholds}.
-
-\textbf{Nested WAIT (two-type synthetic workload).} Under Nested WAIT, $m$ denotes the number of decode-stage segments. For each arrival rate, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$. For the two-type synthetic workload $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$, meaning that each arrival is \texttt{p512d20} with probability $0.7$ and \texttt{p512d50} with probability $0.3$, we use $m=2$ with decode-stage segments $1$--$20$ and $21$--$50$, and compute the per-segment thresholds $(n_1, n_2)$ so as to satisfy Equation~\eqref{eq:nested_wait_thresholds}. For example, with $\mathrm{tl}=30$, a consistent choice is $(n_1,n_2)\approx(1,1/3)$, which yields segment in-flight limits of about $20$ and $10$ after integerization.
-
-\textbf{Nested WAIT (real lmsys workload).} For the real lmsys workload, Nested WAIT again uses a finite partition of the decode stages, and Section~\ref{sec:exp_real} reports the corresponding sensitivity to the segment count $m$. For each arrival rate, $\mathrm{tl}$ is selected from the grid $\{20,25,\ldots,40\}$, and the per-segment thresholds $n_k$ are then computed so as to satisfy Equation~\eqref{eq:nested_wait_thresholds}.
+%% Deprecated placeholder.
+%% The former experimental-configuration appendix was removed.
+%% Supplemental experiments now live in appendix_b_additional.tex.
+%% This file is intentionally not input from Appendix.tex.

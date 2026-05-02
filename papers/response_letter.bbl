@@ -1,0 +1,51 @@
+\begin{thebibliography}{8}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+
+\bibitem[{Agrawal et~al.(2024)Agrawal, Kedia, Mohan, Panwar, Kwatra, Gulavani,
+  Ramjee, \protect\BIBand{} Tumanov}]{agrawal2024vidur}
+Agrawal A, Kedia N, Mohan J, Panwar A, Kwatra N, Gulavani B, Ramjee R, Tumanov
+  A (2024) Vidur: A large-scale simulation framework for llm inference.
+  \emph{Proceedings of Machine Learning and Systems} 6:351--366.
+
+\bibitem[{Agrawal et~al.(2023)Agrawal, Panwar, Mohan, Kwatra, Gulavani,
+  \protect\BIBand{} Ramjee}]{agrawal2023sarathi}
+Agrawal A, Panwar A, Mohan J, Kwatra N, Gulavani BS, Ramjee R (2023) Sarathi:
+  Efficient llm inference by piggybacking decodes with chunked prefills.
+  \emph{arXiv preprint arXiv:2308.16369} .
+
+\bibitem[{Atharva(2026)}]{huggingface-kv-cache-basics}
+Atharva (2026) The kv cache: How it eliminates redundancy.
+  \url{https://huggingface.co/blog/atharv6f/kv-cache-basics}, accessed:
+  2026-05-01.
+
+\bibitem[{{Hugging Face}(2025)}]{huggingface-llama2-docs}
+{Hugging Face} (2025) Llama 2 model documentation.
+  \url{https://huggingface.co/docs/transformers/model_doc/llama2}, accessed:
+  2026-05-01.
+
+\bibitem[{{NVIDIA}(2026)}]{nvidia-a100-specs}
+{NVIDIA} (2026) Nvidia a100 tensor core gpu specifications.
+  \url{https://www.nvidia.com/en-eu/data-center/a100/}, accessed: 2026-05-01.
+
+\bibitem[{Patel et~al.(2024)Patel, Choukse, Zhang, Shah, Goiri, Maleki,
+  \protect\BIBand{} Bianchini}]{patel2024splitwise}
+Patel P, Choukse E, Zhang C, Shah A, Goiri {\'I}, Maleki S, Bianchini R (2024)
+  Splitwise: Efficient generative llm inference using phase splitting. in 2024
+  acm/ieee 51st annual international symposium on computer architecture (isca).
+  \emph{IEEE Computer Society, Los Alamitos, CA, USA} 118--132.
+
+\bibitem[{{SGLang Team}(2024)}]{sglang-github}
+{SGLang Team} (2024) Sglang: Fast serving framework for large language models
+  and vision language models. \url{https://github.com/sgl-project/sglang},
+  gitHub repository.
+
+\bibitem[{Zhong et~al.(2024)Zhong, Liu, Chen, Hu, Zhu, Liu, Jin,
+  \protect\BIBand{} Zhang}]{zhong2024distserve}
+Zhong Y, Liu S, Chen J, Hu J, Zhu Y, Liu X, Jin X, Zhang H (2024)
+  $\{$DistServe$\}$: Disaggregating prefill and decoding for goodput-optimized
+  large language model serving. \emph{18th USENIX Symposium on Operating
+  Systems Design and Implementation (OSDI 24)}, 193--210.
+
+\end{thebibliography}
