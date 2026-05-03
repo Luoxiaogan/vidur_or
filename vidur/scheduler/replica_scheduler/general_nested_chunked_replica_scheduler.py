@@ -39,6 +39,9 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         self._decode_priority = getattr(self._config, "decode_priority", "stage")
         if self._decode_priority not in {"stage", "fifo"}:
             raise ValueError(f"Unsupported decode_priority: {self._decode_priority}")
+        self._segment_priority = getattr(self._config, "segment_priority", "head")
+        if self._segment_priority not in {"head", "tail"}:
+            raise ValueError(f"Unsupported segment_priority: {self._segment_priority}")
         self._watermark_blocks = int(
             self._config.watermark_blocks_fraction * self._config.num_blocks
         )
@@ -117,6 +120,7 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
               f"gate={'ON' if self._gate else 'OFF'}, "
               f"wait_entry_min={self._wait_entry_min_count}, "
               f"decode_priority={self._decode_priority}, "
+              f"segment_priority={self._segment_priority}, "
               f"multi_type={self._multi_type}, n_segments={len(self.segments)}, "
               f"pipeline_w={self._pipeline_depth_weighted:.1f}")
 
@@ -182,7 +186,10 @@ class GeneralNestedChunkedReplicaScheduler(GeneralizedNestedBookingLimitReplicaS
         decode_count = 0
 
         # ---- Step 3: Decode (stage 1+) — booking limits + total batch gate + WAIT ----
-        for seg_idx, seg in enumerate(self.segments):
+        segment_items = list(enumerate(self.segments))
+        if self._segment_priority == "tail":
+            segment_items = list(reversed(segment_items))
+        for seg_idx, seg in segment_items:
             seg_start = seg["start"]
             seg_end = seg["end"]
             num_stages = seg_end - seg_start + 1

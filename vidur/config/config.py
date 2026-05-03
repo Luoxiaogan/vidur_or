@@ -338,6 +338,13 @@ class BaseReplicaSchedulerConfig(BasePolyConfig):
         default=None,
         metadata={"help": "Number of blocks."},
     )
+    memory_cleanup: bool = field(
+        default=False,
+        metadata={
+            "help": "Enable scheduler-level cleanup of stranded requests after all arrivals. "
+                    "This is a clearer alias for legacy force_clear on schedulers that support it.",
+        },
+    )
 
 
 @dataclass
@@ -880,6 +887,10 @@ class GeneralNestedChunkedSchedulerConfig(GeneralNestedBookingLimitSchedulerConf
     decode_priority: str = field(
         default="stage",
         metadata={"help": "Decode ordering inside a segment: 'stage' for stage order or 'fifo' for arrival-time order."},
+    )
+    segment_priority: str = field(
+        default="head",
+        metadata={"help": "Segment service order: 'head' for early segments first or 'tail' for deeper segments first."},
     )
 
     @staticmethod

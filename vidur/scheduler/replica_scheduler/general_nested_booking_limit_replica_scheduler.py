@@ -18,9 +18,12 @@ class GeneralizedNestedBookingLimitReplicaScheduler(BaseReplicaScheduler):
 
         print("total_limit:", self.total_limit)
         self.total_num_requests = self._config.total_num_requests
-        self.force_clear= self._config.force_clear
+        self.force_clear = bool(
+            getattr(self._config, "force_clear", False)
+            or getattr(self._config, "memory_cleanup", False)
+        )
         if self.force_clear:
-            print("会在最后强制清空队列")
+            print("会在最后强制清空队列 / memory cleanup enabled")
         self.all_requests_arrived = False
         self.num_arrival_requests = 0 # 记录到达的请求数
         

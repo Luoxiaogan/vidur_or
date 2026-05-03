@@ -972,6 +972,9 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
+- `docs/progress/2026_05_04_lmsys_reproduction_codebase.md` - **LMSYS Section 6 reproduction codebase 模块化 + experiments.db 增量合并 + paper-facing grid 运行状态**
+- `docs/progress/2026_05_03_experiments_db_merge.md` - **experiments.db binary conflict 无损增量合并记录（local tuning DB + remote reproduction configs/provenance）**
+- `docs/progress/2026_05_03_lmsys_section6_reproduction_scaffold.md` - **Section 6 LMSYS paper-facing reproduction scaffold（Llama-2-7B/A100, tl=40..300, L={1,2,3,4,5,10,20}, eta=0.05）**
 - `docs/progress/2026_04_28_qps10_gate_on_tuning.md` - **QPS=10 gate-on Nested WAIT 调参** (old-metric verify strict win: `auto6seg_tl290_cs52_gp1p01_wgON`, mean 1.696853360 vs Sarathi 1.696868151)
 - `docs/progress/2026_05_02_opre_revision_final_qa_push.md` - **OPRE revision final QA + push preparation（paper/letter consistency、Figure D caption restore、time-varying extension condition、stale-term searches）**
 - `docs/progress/2026_05_02_real_data_provenance_audit.md` - **lmsys Figure D SQL provenance audit（valid rows cover QPS 10/20/50/60 only; current conservative paper/letter claim strength remains safe）**
@@ -1014,7 +1017,10 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `scripts/rate_sweep_w3_vllm_backfill.py` - VM runner:W3 vLLM rate sweep nreq=20000
 
 #### WAIT-CP 实验
-- `scripts/real_data_provenance_rerun.py` - **Real data LMSYS durable provenance rerun** (SQLite resume, fixed 50 request bins, configurable arrival-rate rounding, trimmed metrics, gate/boundary/segment-limit sweeps)
+- `src/vidur_or_experiments/lmsys/` - **LMSYS reproduction codebase modules** (paper-facing config, runner command generation, DB schema helpers, durable provenance runner implementation)
+- `scripts/real_data_provenance_rerun.py` - **Real data LMSYS durable provenance rerun CLI** (thin entrypoint over `src/vidur_or_experiments/lmsys/provenance_runner.py`)
+- `scripts/lmsys_section6_reproduction.py` - **Section 6 LMSYS paper-facing reproduction CLI** (Llama-2-7B/A100 finite grid from manuscript)
+- `scripts/lmsys_db.py` - **LMSYS reproduction DB utility** (initialize and summarize dedicated reproduction SQLite DB)
 - `scripts/rate_sweep_perseg_gate.py` - **W1/W2/W3 per-seg gate rate sweep** (主力脚本)
 - `scripts/real_data_finetune.py` - **Real data (lmsys) 调参**
 - `scripts/real_data_high_qps.py` - **Real data 高 QPS + segment 调参**
@@ -1028,7 +1034,8 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `scripts/overnight_grid_multitype.py` - Overnight 3D grid search
 
 ### 实验数据
-- `experiments.db` - SQLite, 表: experiments, rate_sweep_perseg, stability_verification, grid_multitype
+- `experiments.db` - SQLite, merged 2026-05-03 from local tuning DB plus remote reproduction configs/provenance; merge rule recorded in `docs/progress/2026_05_03_experiments_db_merge.md`
+- `outputs/databases/lmsys_section6_reproduction.db` - Section 6 LMSYS reproduction working DB (not paper source of truth until full grid completes)
 - `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 

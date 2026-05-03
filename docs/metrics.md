@@ -39,3 +39,20 @@ Note that arrival, schedule and completion time refer to a specific point in tim
 21. `replica_{replica_id}_stage_{stage_id}_busy_time_percent_weighted_mean`: Percentage of time a given replica stage is executing something on device - i.e. not waiting due to scheduling issues or pipeline bubbles.
 22. `replica_{replica_id}_stage_{stage_id}_mfu_weighted_mean`: Model FLOPS Utilization (MFU) at a per replica stage level - it tell how much value we are able to extract from the hardware. MFU increases with batch size, reduced bubble time, higher prefill tokens, etc.
 23. `request_arrivals_time_series`: Time series of request arrival timestamps.
+
+## Real-data provenance comparison metric
+
+For real-data WCP/Sarathi/vLLM provenance runs, paper-facing comparisons should use a steady-state request window instead of all completed requests:
+
+1. Keep only completed requests with non-null `request_e2e_time`.
+2. Sort by `Request Id` when that column is available.
+3. Drop the first 25% of completed requests and the last 25% of completed requests.
+4. Compute mean latency and p99 latency over the middle 50%.
+5. Require full completion before comparing configurations.
+
+For the current 5000-request LMSYS runs, this means `n_steady=2500` and the database fields should read:
+
+- `metric_trim_head_frac = 0.25`
+- `metric_trim_tail_frac = 0.25`
+
+When multiple WCP configurations are within the noise band of the best middle-50% mean latency, select the paper-facing configuration by smoothness and plausibility rather than by the last decimal place. Prefer configurations close to neighboring QPS settings, ordinary chunk sizes such as 128 or 256, small-to-moderate segment counts, and lower `tl` only after these criteria are satisfied.
