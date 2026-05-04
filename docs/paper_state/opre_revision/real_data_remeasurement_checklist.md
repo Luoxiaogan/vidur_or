@@ -6,6 +6,7 @@
 - The items below are what should be rerun before making any stronger claim about the real-data stability boundary or about the exact strength of Nested WAIT on lmsys.
 - Current submission posture: the manuscript reports the calibration rule, finite parameter grids, and plotted-rate comparison. It does not claim a sharp lmsys stability boundary or provide a per-arrival-rate configuration provenance table.
 - 2026-05-02 SQL audit: `experiments.db.real_data_provenance_runs` currently has only partial valid coverage for QPS \(10,20,50,60\), not the full Figure D grid. Three historical rows have malformed metric columns; use the new non-destructive view `real_data_provenance_valid` for any future SQL summaries and `real_data_provenance_malformed` only for forensics. See `docs/progress/2026_05_02_real_data_provenance_audit.md`.
+- 2026-05-04 update: Section 6 now includes Table~`\ref{tab:lmsys_mstar}`, a representative fluid-memory calculation for the real dataset. This helps relate \(C\), \(M^*(\lambda)\), and the observed near-overloaded/overloaded transition, but it does not close the per-arrival-rate provenance items below.
 
 ## 1. Source-of-Truth Reconstruction
 
@@ -101,7 +102,7 @@ These runs are needed because the paper now reports a segment-count sensitivity 
 - If an ablation is reintroduced, use the paper-facing segment-count notation `L`, not workload-discretization bins.
 - Recheck the current paper-facing grid first:
   - `L \in \{1,2,3,4,5,10,20\}`
-  - `\mathrm{tl} \in \{40,60,\ldots,300\}`
+  - `\mathrm{tl} \in \{20,40,\ldots,200\}`
   - `\eta=0.05`
 - Ensure any future ablation table and Figure D are based on the same workload definition and compatible tuning rules.
 

@@ -1,7 +1,7 @@
 \section{Additional Experiments}
 \label{app:additional_experiments}
 
-This appendix reports supplemental robustness and implementation-fidelity analyses for Section~\ref{sec:experiments}. Section~\ref{app:no_wait} isolates the role of the accumulation requirement by comparing WAIT with a threshold-only variant. Section~\ref{app:gpu_validation} validates the simulator against direct GPU measurements and reports physical-GPU counterparts of the main single-type and real-data comparisons. Section~\ref{app:multi_seed} examines repeated-run variability near the stability boundary, and Section~\ref{app:pd_disagg} evaluates the policy in a prefill-decode-disaggregated deployment.
+This appendix reports supplemental robustness and implementation-fidelity analyses for Section~\ref{sec:experiments}. Section~\ref{app:no_wait} isolates the role of the accumulation requirement by comparing WAIT with a threshold-only variant. Section~\ref{app:gpu_validation} validates the simulator against direct GPU measurements and reports supplemental physical-GPU comparisons on single-type and real-data workloads. Section~\ref{app:multi_seed} examines repeated-run variability near the observed transition from near-overloaded to overloaded operation, and Section~\ref{app:pd_disagg} evaluates the policy in a prefill-decode-disaggregated deployment.
 
 \subsection{Threshold without waiting}
 \label{app:no_wait}
@@ -23,12 +23,12 @@ Figure~\ref{fig:wait_gate_ablation} reports the comparison across arrival rates.
 We complement the Vidur experiments in Section~\ref{sec:experiments} with measurements on a physical NVIDIA A100~80\,GB serving Llama-2-7B. These runs serve two purposes. First, direct GPU measurements calibrate the iteration-time model used by Vidur. Second, we implement WAIT's admission logic using SGLang~0.5.7, an open-source LLM serving framework~\citep{sglang-github}, and test the resulting scheduler in end-to-end GPU runs. We report three comparisons: iteration-time measurements against Vidur's prediction, a single-type GPU workload corresponding to Section~\ref{sec:exp_synthetic}, and a real-data GPU workload corresponding to Section~\ref{sec:exp_real}.
 
 \paragraph{Simulator vs GPU.}
-To calibrate the simulator in the operating region used in Section~\ref{sec:experiments}, we compare Vidur's iteration-time predictions with direct measurements on the same A100~80\,GB GPU running Llama-2-7B under the SGLang baseline scheduler. The comparison uses the powers-of-two batch-size grid $B \in \{1,2,4,\ldots,256\}$, with prefill length $256$ and decode length $20$. In Figure~\ref{fig:sim_fidelity}, each point is one batch-size configuration: the horizontal coordinate is the measured GPU batch inference time, and the vertical coordinate is Vidur's prediction. Points near the $y=x$ line therefore indicate accurate simulator predictions. On this grid, the fitted linear iteration-time model has mean absolute percentage error $1.93\%$ and $R^2=0.9943$. The fitted intercept and slope are $d_0 \approx 276$\,ms and $d_1 \approx 0.0115$\,ms per KV-cache token, respectively, consistent with the time model in Equation~\eqref{eq:time_consump}. This agreement supports the use of Vidur for the latency and stability comparisons in Section~\ref{sec:experiments}.
+To calibrate the simulator in the operating region used in Section~\ref{sec:experiments}, we compare Vidur's iteration-time predictions with direct measurements on the same A100~80\,GB GPU running Llama-2-7B under the SGLang baseline scheduler. Vidur's raw Llama-2-7B attention profiling covers batch sizes up to $128$. Within this profiled range, the validation uses batch sizes $B \in \{1,2,4,\ldots,128\}$ with prefill length $256$ and decode length $20$; we also test extrapolation to $B=256$. In Figure~\ref{fig:sim_fidelity}, each point is one batch-size configuration: the horizontal coordinate is the measured GPU batch inference time, and the vertical coordinate is Vidur's prediction. Points near the $y=x$ line therefore indicate accurate simulator predictions. On the plotted grid, the fitted linear iteration-time model has mean absolute percentage error $1.93\%$ and $R^2=0.9943$; extrapolation to $B=256$ has absolute percentage error $4.93\%$. The fitted intercept and slope are $d_0 \approx 276$\,ms and $d_1 \approx 0.0115$\,ms per KV-cache token, respectively, consistent with the time model in Equation~\eqref{eq:time_consump}. This agreement supports the Vidur-based latency and operating-range comparisons in Section~\ref{sec:experiments} for the workloads studied here.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.6\textwidth]{Experiments_pdf/figure_A_sim_fidelity.pdf}
-    \caption{Simulator calibration against NVIDIA A100~80\,GB GPU measurements. Each marker is one batch-size configuration: its horizontal coordinate is the measured GPU batch inference time, and its vertical coordinate is the Vidur prediction. The comparison uses prefill length $256$ and decode length $20$ while varying $B$ over the grid $\{1,2,4,\ldots,256\}$. The dashed line is the $y=x$ reference. The fitted linear iteration-time model in Equation~\eqref{eq:time_consump} achieves $R^2=0.9943$ and mean absolute percentage error $1.93\%$ on the plotted grid.}
+    \caption{Simulator calibration against NVIDIA A100~80\,GB GPU measurements. Each marker is one batch-size configuration: its horizontal coordinate is the measured GPU batch inference time, and its vertical coordinate is the Vidur prediction. The comparison uses prefill length $256$ and decode length $20$, with powers-of-two batch sizes through the profiled range $B\le128$ and one extrapolation check to $B=256$. The dashed line is the $y=x$ reference. The fitted linear iteration-time model in Equation~\eqref{eq:time_consump} achieves $R^2=0.9943$ and mean absolute percentage error $1.93\%$ on the plotted grid.}
     \label{fig:sim_fidelity}
 \end{figure}
 
@@ -43,7 +43,7 @@ Using the same single-type workload as Section~\ref{sec:exp_synthetic}, we run e
 \end{figure}
 
 \paragraph{Real dataset on GPU.}
-Using the same lmsys-chat-1m workload distribution as Section~\ref{sec:exp_real}, we run paired SGLang experiments with Poisson arrivals at $\lambda \in \{0.1, 0.2, \ldots, 0.7\}$ requests/s and $200$ prompts per rate. The server is restarted before each rate so that the SGLang baseline and WAIT are compared from the same clean GPU state. WAIT uses chunk size $384$ and a rate-specific system-wide batch-size cap $\mathrm{tl}$. For the real-data runs, $\mathrm{tl}$ is distributed over the decode horizon through the listed segment partitions, using the same continuation-based allocation described in Section~\ref{sec:exp_real}. Table~\ref{tab:sglang_realtrace} reports the batch-size caps and decode-stage partitions used in these GPU runs. Figure~\ref{fig:sglang_realtrace} reports mean end-to-end latency in absolute units. Across the tested rates, WAIT has lower latency than the SGLang baseline, with the largest reduction at $\lambda = 0.6$ and an average reduction of $3.6\%$.
+Using the same lmsys-chat-1m workload distribution as Section~\ref{sec:exp_real}, we run paired SGLang experiments with Poisson arrivals at $\lambda \in \{0.1, 0.2, \ldots, 0.7\}$ requests/s and $200$ prompts per rate. The server is restarted before each rate so that the SGLang baseline and Nested WAIT are compared from the same clean GPU state. Nested WAIT uses chunk size $384$ and a rate-specific system-wide batch-size cap $\mathrm{tl}$. For the real-data runs, $\mathrm{tl}$ is distributed over the decode horizon through the listed segment partitions, using the same continuation-based allocation described in Section~\ref{sec:exp_real}. Table~\ref{tab:sglang_realtrace} reports the batch-size caps and decode-stage partitions used in these GPU runs. Figure~\ref{fig:sglang_realtrace} reports mean end-to-end latency in absolute units. Across the tested rates, Nested WAIT has lower latency than the SGLang baseline, with the largest reduction at $\lambda = 0.6$ and an average reduction of $3.6\%$.
 
 \begin{table}[ht]
 \centering
@@ -61,21 +61,21 @@ $0.6$ & $70$  & $[0,175), [175,350), [350,500]$ \\
 $0.7$ & $95$  & $[0,250), [250,500]$ \\
 \bottomrule
 \end{tabularx}
-\caption{WAIT parameter settings for the real-data GPU experiment on SGLang~0.5.7 with the lmsys-chat-1m workload distribution, NVIDIA A100~80\,GB, Llama-2-7B, and $200$ prompts per rate. The column $\mathrm{tl}$ gives the system-wide batch-size cap; the decode-stage ranges specify the segment partition over the $500$-token decode horizon. The per-stage thresholds are induced from these two quantities by the continuation-based allocation rule in Section~\ref{sec:exp_real}.}
+\caption{Nested WAIT parameter settings for the real-data GPU experiment on SGLang~0.5.7 with the lmsys-chat-1m workload distribution, NVIDIA A100~80\,GB, Llama-2-7B, and $200$ prompts per rate. The column $\mathrm{tl}$ gives the system-wide batch-size cap; the decode-stage ranges specify the segment partition over the $500$-token decode horizon. The per-stage thresholds are induced from these two quantities by the continuation-based allocation rule in Section~\ref{sec:exp_real}.}
 \label{tab:sglang_realtrace}
 \end{table}
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.58\textwidth]{Experiments_pdf/figure_J_sglang_realtrace.pdf}
-    \caption{Real-data GPU experiment on SGLang~0.5.7 with the lmsys-chat-1m workload distribution: mean end-to-end latency versus arrival rate for the SGLang baseline scheduler and WAIT. The WAIT runs use the rate-specific parameter settings in Table~\ref{tab:sglang_realtrace}.}
+    \caption{Real-data GPU experiment on SGLang~0.5.7 with the lmsys-chat-1m workload distribution: mean end-to-end latency versus arrival rate for the SGLang baseline scheduler and Nested WAIT. The Nested WAIT runs use the rate-specific parameter settings in Table~\ref{tab:sglang_realtrace}.}
     \label{fig:sglang_realtrace}
 \end{figure}
 
 \subsection{Repeated-run variability}
 \label{app:multi_seed}
 
-The main arrival-rate figures in Section~\ref{sec:experiments} report averages over $10$ independent simulation replications at each plotted configuration. To examine sampling variability near the stability boundary, we additionally repeat the near-boundary configurations $20$ times and report the corresponding deviations.
+The main arrival-rate figures in Section~\ref{sec:experiments} report averages over $10$ independent simulation replications at each plotted configuration. To examine sampling variability near the observed transition from near-overloaded to overloaded operation, we additionally repeat the near-transition configurations $20$ times and report the corresponding deviations.
 
 The repeated-run diagnostic preserves the same latency ordering as the main figures across independent arrival draws.
 
@@ -92,16 +92,16 @@ Two-type & $22$ & $56.70\,\pm\,2.22$ & $4.06\,\pm\,1.66$ & $\mathbf{2.36\,\pm\,0
 Two-type & $23$ & $80.25\,\pm\,2.37$ & $8.41\,\pm\,1.74$ & $\mathbf{5.66\,\pm\,1.88}$ \\
 \bottomrule
 \end{tabular}
-\caption{Repeated-run reproducibility check at the near-boundary arrival rates. Each entry reports mean end-to-end latency together with the sample standard deviation across repeated simulation runs.}
+\caption{Repeated-run reproducibility check near the observed transition from near-overloaded to overloaded operation. Each entry reports mean end-to-end latency together with the sample standard deviation across repeated simulation runs.}
 \label{tab:multi_seed}
 \end{table}
 
 \subsection{Prefill-decode-disaggregated deployment}
 \label{app:pd_disagg}
 
-Production LLM serving increasingly uses a \emph{prefill-decode disaggregation} (PD) architecture, in which prefill and decode are executed by separate services and the KV cache is transferred between them~\citep{patel2024splitwise,zhong2024distserve}. This architecture closely matches the modeling assumptions in Section~\ref{sec:model}. Because the decode server no longer mixes prefill and decode work, each iteration processes one token for each active post-prefill job, and the iteration time is driven primarily by active KV-cache usage. The linear iteration-time model in~\eqref{eq:time_consump} is therefore especially appropriate in this setting. The corresponding control decision is how many post-prefill jobs to keep in concurrent decoding; the WAIT threshold implements this decision as an upper bound on the decode-side service population.
+Production LLM serving increasingly uses a \emph{prefill-decode disaggregation} (PD) architecture, in which prefill and decode are executed by separate services and the KV cache is transferred between them~\citep{patel2024splitwise,zhong2024distserve}. This architecture aligns more closely with the memory-dependent timing model in Section~\ref{sec:model}. Because the decode server no longer mixes prefill and decode work, each iteration processes one token for each active post-prefill job, and the iteration time is driven primarily by active KV-cache usage. The linear iteration-time model in~\eqref{eq:time_consump} is therefore especially appropriate in this setting. The corresponding control decision is how many post-prefill jobs to keep in concurrent decoding; the WAIT threshold implements this decision as an upper bound on the decode-side service population.
 
-We implement this setting in Vidur by using a decode-only request generator: each request enters the simulated decode server after prefill has completed, with post-prefill context length $630$ tokens and decode length $20$ (\texttt{p630d20}). Arrivals follow a Poisson process with $\lambda \in \{100, 150, \ldots, 500\}$ requests/s. In this decode-only setting, Sarathi's chunked-prefill rule no longer changes the scheduling decision, so vLLM's PD scheduler (\texttt{vLLM (PD)}) represents the baseline. Figure~\ref{fig:pd_disagg} reports mean end-to-end decode latency: WAIT improves over vLLM at every rate, with the relative gap ranging from $45\%$ at $\lambda = 100$ to $55\%$ at $\lambda = 500$. Thus, when prefill-decode interactions are removed, the same threshold rule continues to improve decode-side delay.
+We implement this setting in Vidur by using a decode-only request generator: each request enters the simulated decode server after prefill has completed, with post-prefill context length $630$ tokens and decode length $20$ (\texttt{p630d20}). Arrivals follow a Poisson process with $\lambda \in \{100, 150, \ldots, 500\}$ requests/s. In this decode-only setting, Sarathi's chunked-prefill rule no longer changes the scheduling decision, so vLLM's PD scheduler (\texttt{vLLM (PD)}) represents the baseline. Figure~\ref{fig:pd_disagg} reports mean end-to-end decode latency: WAIT improves over vLLM at every rate, with the relative gap ranging from $45\%$ at $\lambda = 100$ to $55\%$ at $\lambda = 500$. Thus, in this tested decode-only setting, the threshold rule improves delay by controlling the decode-side batch composition.
 
 \begin{figure}[ht]
     \centering

@@ -1,5 +1,26 @@
 # Consistency Log
 
+## 2026-05-04
+
+- Recompiled [papers/LLM_or.pdf](/Users/ruicheng/GitHub/vidur_or/papers/LLM_or.pdf) and [papers/response_letter.pdf](/Users/ruicheng/GitHub/vidur_or/papers/response_letter.pdf) after synchronizing the `linear` / `multi-stage model with endogenous memory growth` wording. Both builds succeeded; remaining LaTeX messages are the existing nonfatal locale, float, underfull, and font-size warnings.
+- Confirmed the wording-only edit round did not change theorem statements, labels, citations, figures, tables, or numerical results.
+- Confirmed active manuscript and response-letter sources no longer contain `affine`, `decode-centered`, or `decode centered`; any remaining occurrences are only in paper-state rules that record terms to avoid.
+- Ran `$update-paper-state` after adding the lmsys real-data fluid-memory bridge.
+- Confirmed this edit round added one main-text table label and reference:
+  - new table label: `tab:lmsys_mstar`;
+  - new reference: `Table~\ref{tab:lmsys_mstar}` in Section 6.2.
+- Confirmed the new table does not change theorem statements or proof dependencies. It is an experiment/theory bridge: representative `M^*(\lambda)` values are computed from the real dataset and empirically estimated service-time parameters, then compared with memory capacity `C`.
+- Confirmed [papers/response_letter.pdf](/Users/ruicheng/GitHub/vidur_or/papers/response_letter.pdf) recompiles successfully after adding the same real-data \(M^*(\lambda)\) versus \(C\) note to the R2.3 response.
+- Recorded that [papers/LLM_or.pdf](/Users/ruicheng/GitHub/vidur_or/papers/LLM_or.pdf) and [papers/response_letter.pdf](/Users/ruicheng/GitHub/vidur_or/papers/response_letter.pdf) compiled successfully after the real-dataset wording polish; remaining LaTeX messages were nonfatal float/underfull/font-size warnings.
+- Recompiled [papers/LLM_or.pdf](/Users/ruicheng/GitHub/vidur_or/papers/LLM_or.pdf) after reframing the WAIT proof coupling; the build succeeded with only existing nonfatal locale, float, underfull, and font-size warnings.
+- Confirmed this proof-wording edit changed no theorem statements, labels, citations, figures, tables, numerical results, or response-letter text.
+- Confirmed the WAIT proof now describes the multi-type reduction as an auxiliary embedded full-threshold process plus type-wise sample path coupling, rather than a `comparison clock` or a claim that the auxiliary process is globally slower than actual WAIT.
+- Recompiled [papers/LLM_or.pdf](/Users/ruicheng/GitHub/vidur_or/papers/LLM_or.pdf) after tightening the Proposition~`\ref{prop:lower_bound_FCFS}` and Proposition~`\ref{prop:unknown_lower_bound}` proofs; the build succeeded with only existing nonfatal warnings.
+- Recompiled [papers/response_letter.pdf](/Users/ruicheng/GitHub/vidur_or/papers/response_letter.pdf) after synchronizing proof-coupling terminology; the build succeeded.
+- Confirmed this proof-audit pass changed proof exposition and response-letter wording only: no theorem/proposition statements, labels, citations, figures, tables, or numerical results were changed.
+- Recompiled [papers/LLM_or.pdf](/Users/ruicheng/GitHub/vidur_or/papers/LLM_or.pdf) after the queueing-language polish for the lower-bound proofs; the build succeeded with only existing nonfatal warnings.
+- Confirmed the lower-bound proof polish changed wording only and did not alter proposition statements, theorem statements, labels, citations, figures, tables, or numerical results.
+
 ## 2026-04-23
 
 - Initialized paper-state tracking for the OPRE revision paper.
@@ -77,7 +98,7 @@
 - Fixed one notation issue:
   - the single-type warm-up no longer redefines `\lambda` as expected arrivals per batch;
   - it now uses `\tilde{\lambda}` for continuous arrival rate, `\mu=\tilde{\lambda}\Delta T` for expected arrivals per batch, and the critical condition `\mu=n`.
-- Confirmed the multi-type proof uses the deterministic full-threshold comparison clock only as a conservative comparison process, not as the actual event-driven WAIT batch count.
+- Confirmed the multi-type proof uses deterministic full-threshold review epochs only to define an auxiliary embedded full-threshold process, not as the actual event-driven WAIT batch count.
 - Applied the second GPT-Pro proof-audit corrections.
 - Confirmed the main WAIT and Nested WAIT theorem statements remain unchanged.
 - Locked the memory convention requested by reviewers:
@@ -97,7 +118,7 @@
 - Ran `$verify-proof` after the second-round proof patches.
 - Confirmed the main WAIT theorem remains consistent with Algorithm `alg:wait` and Appendix D:
   - Algorithm `alg:wait` batches all eligible types and stores selected counts;
-  - the proof's comparison index is deterministic comparison slots, not realized WAIT batches;
+  - the proof's embedded review index is distinct from realized WAIT batches;
   - resident decode-stage prompts waiting on GPU remain included in the memory invariant.
 - Confirmed the main Nested WAIT theorem keeps the tight downstream boundary buffer `n_k+\theta_k^{-1}\log(\cdot)`:
   - `V^r_{(k)}` is post-review carryover residual;
@@ -127,7 +148,7 @@
   - patched residual `effective throughput` wording so the main text uses token-level completed decode service net of eviction, while Section 6 uses request-level effective completion rate for figures;
   - patched response-letter wording so `M^*` is a memory requirement, not an equilibrium memory level;
   - patched the segment-design appendix so `M^\pi` is described as base threshold-batch memory, not the fluid memory requirement;
-  - patched the advisor review-comment digest so it refers to the review team without committing to a referee-count convention.
+  - patched the advisor review-comment digest so it refers to the reports and decision letter without committing to a referee-count convention.
 - Corrected the real-data Nested WAIT calibration narrative: `\mathrm{tl}` and segment count `L` are now described as finite-grid tradeoffs rather than monotone improvements, with too-large caps risking overflow pressure and too-large segment counts fragmenting caps and increasing threshold waiting.
 - Ran a `paper-pipeline quick/status` maintenance pass:
   - LaTeX logs for the main paper, response letter, and organized advisor comments contain no undefined references/citations and no overfull hbox warnings;
@@ -170,3 +191,7 @@
   - the manuscript now reports prefill mean/median `58.6/21`, decode mean/median `147.3/116`, about `31%` decode length at most `50`, and about `14%` exceeding `300`;
   - the distribution figure is regenerated by `scripts/plot_lmsys_distribution.py` from `lmsys_chat_1m_dataset/output_trace/lmsys_chat_1m_dataset.csv` using the same `prefill<500, decode<500` filter as the text;
   - this closes the audit item about inconsistent Section 6 text versus distribution-figure statistics.
+- Updated the validation and real-data calibration consistency lock:
+  - `scripts/validate_llama2_b256_vidur.py` records the reproducible check that Llama-2-7B raw Vidur attention profiling covers `B<=128`, while the paper's `B=256` validation point is an extrapolation check against recorded A100~80GB measurement with `4.93%` error under the fitted linear model;
+  - Section 6, Appendix B, and the response letter now distinguish the profiled range from the `B=256` extrapolation point;
+  - the active real-data Nested WAIT grid is now `\mathrm{tl}\in\{20,40,\ldots,200\}`, `L\in\{1,2,3,4,5,10,20\}`, and `\eta=0.05`.

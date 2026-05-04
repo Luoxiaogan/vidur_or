@@ -7,6 +7,7 @@
 - `n_k`: per-segment Nested WAIT threshold
 - `\mathrm{tl}`: system-wide batch-size cap used to determine the segment-level caps and per-stage thresholds
 - `M^*`: memory requirement needed to support the fluid equilibrium; for fixed capacity `C`, `M^*(\lambda) \le C` defines the fluid stability region
+- `M^*(\lambda)`: arrival-rate-dependent fluid memory requirement used in Section 6 to compare representative lmsys arrival rates with the A100 KV-cache token cap
 - `M^\pi`: base threshold memory induced by a WAIT/Nested WAIT threshold vector
 - `M_{\mathrm{req}}^{(\zeta,\pi)}`: physical memory required by the scaled policy; for WAIT this equals `M^\pi` and is independent of `\zeta`, while for Nested WAIT it equals `M^\pi` plus the finite-horizon downstream safety buffer
 - `C`: physical memory capacity

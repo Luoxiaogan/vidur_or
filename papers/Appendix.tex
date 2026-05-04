@@ -61,17 +61,66 @@ At the boundary, \(\lambda_j=1/(d_1S_j)\), so this upper bound is strictly small
 \label{appendix:proof_throughput_upper_bound}
 
 \begin{proof}
-The expected throughput of any online policy cannot exceed the fluid throughput $\throughput^*$, since throughput is bounded by the arrival rate of output tokens.
+The proof compares completed decode-token service with the cumulative decode-token work brought by exogenous arrivals. The fluid calculation identifies the memory requirement and batch composition under which this upper bound is attained in equilibrium.
 
 In the fluid model, the equilibrium parameters are:
 $$\Delta T = \frac{d_0}{1 - d_1\sum_{j=1}^m \lambda_j(l_j'+1)(l_j + l_j'/2)}, \quad n_j^* = \Delta T \cdot \lambda_j,$$
 $$M^* = \Delta T \cdot \sum_{j=1}^m \lambda_j(l_j'+1)(l_j + l_j'/2), \quad \throughput^* = \sum_{j=1}^m \lambda_j l_j'.$$
 
-In any stochastic system, throughput is counted only after prompts complete. Over time horizon $[0,T]$, let $\text{Arrivals}_j^T$ denote the total arrivals of type-$j$ prompts. The total output tokens generated cannot exceed the total output length of all arrivals:
+In any stochastic system, throughput is counted only after prompts complete. Over time horizon $[0,T]$, let $\text{Arrivals}_j^T$ denote the total arrivals of type-$j$ prompts. The total completed output tokens cannot exceed the total output length of all arrivals:
 $$\text{Throughput}^{(\pi,T)} \leq \sum_{j=1}^m \text{Arrivals}_j^T \cdot l_j'.$$
 
 Taking expectations and dividing by $T$:
 $$\mathbb{E}[\throughput^{(T,\pi)}] \leq \sum_{j=1}^m \mathbb{E}\left[\frac{\text{Arrivals}_j^T}{T}\right] \cdot l_j' = \sum_{j=1}^m \lambda_j l_j' = \throughput^*.$$
+\end{proof}
+
+% --------------------------------------------------
+% Proposition: Boundary Delay Lower Bound
+% --------------------------------------------------
+\subsection{Proof of Proposition~\ref{prop::simple random walk, tight bound}}
+\label{appendix:proof_boundary_delay_lower_bound}
+
+\begin{proof}
+We use a single-type instance at the fluid boundary. The point of the construction is to remove all type-mix complications: the only remaining source of delay is the stochastic fluctuation of a critical entry queue. This is exactly the regime in which the square-root reflected-random-walk scaling is unavoidable.
+
+Consider one prompt type with prefill length \(l\), decode length \(l'\ge1\), and arrival rate \(\lambda\). Let
+\[
+    S=(l'+1)\left(l+\frac{l'}{2}\right)
+\]
+be the total KV-cache mass accumulated by one prompt over its prefill and decode stages. Choose \(d_0,d_1,\lambda\) so that the fluid equilibrium has iteration length
+\[
+    \Delta^*=\frac{d_0}{1-d_1\lambda S}
+\]
+and \(n=\lambda\Delta^*\) is an integer. The fluid memory requirement is then \(M^*=\lambda\Delta^*S=nS\). Set the physical capacity to \(C=M^*\). At this capacity, the fluid equilibrium has room for exactly the threshold-sized batch composition with \(n\) prompts at each stage and no additional buffer.
+
+Now consider the \(\zeta\)-scaled system over a calendar horizon \(T\), and divide time into comparison intervals of length \(\Delta^*/\zeta\). The number of such intervals is
+\[
+    B_\zeta=\left\lfloor\frac{\zeta T}{\Delta^*}\right\rfloor.
+\]
+The number of external arrivals in each interval is i.i.d. \(\mathrm{Poisson}(n)\). Any policy whose normalized effective-throughput gap is \(o(1)\) must, up to \(o(B_\zeta)\) intervals, admit and advance work at the fluid rate. Otherwise, the missed service opportunities alone would create a nonvanishing effective-throughput gap. Since the memory capacity is exactly \(M^*=nS\), such a policy cannot create a persistent positive service slack above this rate without exceeding the boundary memory profile. Thus the entry process contains, as a lower-bound workload, a critical bulk-service queue with arrivals \(X^b\sim\mathrm{Poisson}(n)\) and service capacity \(n\) per comparison interval:
+\[
+    Q^{b+1}=(Q^b+X^b-n)^+,\qquad Q^0=0.
+\]
+This queue is the most favorable nonanticipative way to clear the entry backlog under the boundary service rate: serving less only increases delay or sacrifices throughput, while serving more persistently is not feasible at \(C=M^*\).
+
+The reflected random walk above has mean-zero increments \(X^b-n\) with positive finite variance. Standard results for critical reflected random walks, equivalently for the waiting time process of a critical \(GI/D/1\)-type queue, give
+\[
+    \mathbb{E}[Q^b]=\Theta(\sqrt{b}),
+    \qquad
+    \frac{1}{B}\sum_{b=0}^{B-1}\mathbb{E}[Q^b]=\Theta(\sqrt{B}).
+\]
+For completeness, this follows from the Lindley representation for reflected random walks \citep[Proposition~6.3]{asmussen2003applied} and the random-walk maximum identity of \citet{strait1974maximum}: if \(S_k=\sum_{r=1}^k(X^r-n)\), then the reflected workload is governed by maxima of \(S_k\), and the central limit theorem yields \(\mathbb{E}[S_k^+]\asymp\sqrt{k}\) because the increments are nondegenerate and centered.
+
+The time-average of \(Q^b\) lower-bounds the accumulated waiting before first service. Therefore TTFT is already at least a constant multiple of the average critical backlog in comparison-slot units; end-to-end latency is no smaller. The theorem reports service-normalized delay, and one comparison interval has scaled length \(\Delta^*\). Since the number of arrivals and completions under any \(o(1)\)-throughput-gap policy is \(\Theta(B_\zeta)\), the preceding time-average backlog bound implies
+\[
+    \mathbb{E}[\TTFT^{(\zeta,\pi)}],
+    \mathbb{E}[\Latency^{(\zeta,\pi)}]
+    \ge
+    c\,\sqrt{B_\zeta}
+    =
+    \Omega((\zeta T)^{1/2})
+\]
+for some constant \(c>0\) depending only on the constructed instance. This proves the claimed lower bound.
 \end{proof}
 
 % --------------------------------------------------
@@ -81,24 +130,42 @@ $$\mathbb{E}[\throughput^{(T,\pi)}] \leq \sum_{j=1}^m \mathbb{E}\left[\frac{\tex
 \label{appendix:proof_fcfs_lower_bound}
 
 \begin{proof}
-We construct a two-type example where FCFS suffers from cascading evictions even when capacity equals the fluid memory requirement \(M^*\), leading to an \(\Omega(1)\) throughput gap.
+We construct a two-type instance in which the fluid equilibrium fits exactly in memory but FCFS does not preserve the corresponding prefill/decode-stage composition. We partition the sample path into disjoint two-iteration blocks and compare the useful completions in each block with the fluid completion count. The key event is that FCFS admits arrivals that are feasible at the moment of admission but become infeasible, with constant probability, after they advance downstream.
 
-Consider two prompt types: type~1 with $(l_1, l_1', \lambda_1) = (1, 1, 1)$ and type~2 with $(l_2, l_2', \lambda_2) = (1, 2, 1)$.
+Let type~1 have \((l_1,l_1',\lambda_1)=(1,1,1)\) and let type~2 have \((l_2,l_2',\lambda_2)=(1,2,1)\). Choose \(d_1<1/9\) and \(d_0=1-9d_1\). Then the fluid balance equations
+\[
+    d_0+d_1(3n_1+6n_2)=n_1=n_2
+\]
+give \(n_1^*=n_2^*=1\). The associated memory requirement is
+\[
+    M^*
+    = (1+2) +(1+2+3)
+    =9 .
+\]
+Set \(C=M^*=9\). The fluid batch composition therefore contains one type~1 prompt at prefill, one type~1 prompt at its only decode stage, one type~2 prompt at prefill, and one type~2 prompt at each of its two decode stages. This composition completes \(l_1'+l_2'=3\) useful decode tokens per iteration.
 
-\textbf{Fluid Equilibrium.} Under the per-stage convention for \(n_j^*\), the equilibrium equations are \(d_0 + d_1(3n_1 + 6n_2) = n_1 = n_2\), which yield:
-$$K = \frac{d_0}{1-9d_1}, \quad n_1^* = K, \quad n_2^* = K, \quad M^* = 9K.$$
-Setting $K = 1$ (without loss of generality), we have $n_1^* = n_2^* = 1$ and $M^* = 9$.
+Consider now the FCFS sample path immediately following an iteration epoch, and suppose that the next two-iteration block begins with this composition. Let \((X_1,X_2)\) be the external arrivals during the first iteration; \(X_1\) and \(X_2\) are independent \(\mathrm{Poisson}(1)\) random variables. Enumerating the next two FCFS state transitions, the only arrival combinations that do not force memory overflow within the block are
+\[
+    (0,0),\quad (1,0),\quad (0,1),\quad (1,1),\quad (2,0).
+\]
+All other combinations create too many resident prompts after the newly admitted work advances to later decode stages. Hence the overflow probability in such a block is
+\[
+    p
+    =
+    1-\frac{1}{e^2}-\frac{1}{e^2}-\frac{1}{e^2}
+      -\frac{1}{e^2}-\frac{1}{2e^2}
+    =
+    1-\frac{9}{2e^2}
+    >0 .
+\]
 
-\textbf{Equilibrium Batch Composition.} In equilibrium, the batch contains:
-\begin{itemize}
-\item Type~1: 1 prompt at stage~0 (memory $= 1$), 1 prompt at stage~1 (memory $= 2$, completing)
-\item Type~2: 1 prompt at stage~0 (memory $= 1$), 1 at stage~1 (memory $= 2$), 1 at stage~2 (memory $= 3$, completing)
-\end{itemize}
+On this overflow event, FCFS must evict at least one resident prompt before the block can realize the fluid two-iteration completion count of \(2(l_1'+l_2')=6\) useful decode tokens. The evicted prompt either has already generated decode tokens, which are discarded under the effective-throughput convention, or must restart from prefill before it can contribute completed decode tokens. Therefore the conditional expected useful-completion deficit in such a block is bounded below by a positive constant.
 
-\textbf{Overflow Probability.} Let $(X_1, X_2)$ denote arrivals during one iteration, where $X_j \sim \text{Poisson}(1)$. The combinations that do not cause memory overflow within two iterations are: $(0,0), (1,0), (0,1), (1,1), (2,0)$. All other combinations lead to overflow. The overflow probability is:
-$$p = 1 - \frac{1}{e^2} - \frac{1}{e^2} - \frac{1}{e^2} - \frac{1}{e^2} - \frac{1}{2e^2} = 1 - \frac{9}{2e^2} \approx 0.391.$$
-
-Since overflow probability is bounded away from zero, FCFS experiences eviction with constant probability at each iteration. This leads to queue length growth $\Omega(t)$ and throughput gap $\Omega(1)$.
+The same block lower bound applies uniformly in a neighborhood of the fluid-boundary composition. If a block begins below the displayed composition in some prefill/decode stage, then FCFS cannot complete more useful decode work in that block than the fluid composition does. If a block begins with extra resident work, the system is no farther from overflow than in the displayed composition, so the same arrival event yields the same restart loss after a bounded adjustment for the initial excess. Consequently, over disjoint two-iteration blocks, the expected useful-completion deficit is bounded below by \(\epsilon\) per block outside a bounded transient, for some \(\epsilon>0\) depending only on the constructed instance. Dividing the accumulated deficit over \(\Theta(T)\) blocks by the horizon gives
+\[
+    \throughput^*-\mathbb E[\throughput^{(T,\mathrm{FCFS})}]
+    =\Omega(1).
+\]
 \end{proof}
 
 % --------------------------------------------------
@@ -108,23 +175,25 @@ Since overflow probability is bounded away from zero, FCFS experiences eviction 
 \label{appendix:proof_unknown_lower_bound}
 
 \begin{proof}
-We construct a two-type instance in which prompts are indistinguishable until the first decode boundary. At the known-type fluid memory level, there is no room for stochastic excess survivors at that boundary. A non-predictive policy must therefore either reserve capacity and lose a constant amount of throughput, or admit at the fluid scale and face a constant probability of overflow.
+We construct a two-type instance in which prompts are indistinguishable until the first decode boundary. At the known-type fluid memory level, there is no room for positive survivor-count fluctuations at that boundary. The lower bound is therefore an information constraint: before the boundary revelation, any non-predictive policy must either reserve capacity and lose a constant amount of throughput, or admit at the fluid scale and face a constant probability of overflow.
 
 Consider two prompt types with the same prefill length and the same first decode token. Type~1 completes after the first decode token, whereas type~2 continues to one additional decode stage. Let a newly admitted prompt be type~2 with probability \(p\in(0,1)\), independently across prompts, and suppose the type is not revealed until the prompt either completes at the first boundary or survives into the second segment. This is the information structure faced by any non-predictive online policy.
 
-Choose the arrival rate and the memory capacity so that, under known output lengths, the fluid equilibrium uses exactly the available memory \(C=M^*\). In that known-type equilibrium, the downstream segment contains its mean survivor population and there is no additional memory reserved for the positive fluctuation of survivor counts. Now consider any non-predictive policy over a block in which it admits \(b\) prompts whose types are still hidden. Let
+Choose the arrival rate and the memory capacity so that, under known output lengths, the fluid equilibrium uses exactly the available memory \(C=M^*\). In that known-type equilibrium, the downstream segment contains the mean number of survivors and there is no additional memory reserved for positive survivor-count fluctuations. Let \(\mathcal F\) be the sigma-field generated by the policy's observations just before a decision epoch, including past arrivals, past boundary revelations, current queues, and any internal randomization already realized by the policy. Conditional on \(\mathcal F\), suppose the policy admits \(b\) prompts whose types are still hidden. The admission decision is \(\mathcal F\)-measurable, while the hidden continuation labels are independent of \(\mathcal F\). Therefore, conditional on \(\mathcal F\), the number of admitted prompts that survive the first boundary is
 \[
     Y_b\sim\mathrm{Binomial}(b,p)
 \]
-be the number of these prompts that survive the first boundary and therefore require resident memory in the downstream segment.
+conditional on \(\mathcal F\).
 
-There are two cases. First, suppose the policy admits at least a fixed fraction of the fluid-scale cohort needed to match the offered load. Then \(b\) is bounded below by a positive constant in this fixed instance, and the binomial distribution has a positive probability of exceeding its fluid mean allocation by at least one prompt:
+There are two cases. First, suppose the policy admits at least a fixed fraction of the fluid-scale cohort needed to match the offered load. Then \(b\) is bounded below by a positive constant in this fixed instance, and nondegeneracy of the binomial thinning distribution gives a positive probability of exceeding the fluid mean allocation by at least one prompt:
 \[
     \Pr\{Y_b>\lfloor pb\rfloor\}\ge \rho
 \]
 for some constant \(\rho>0\) depending only on \(p\) and the chosen instance. Since \(C=M^*\) contains no downstream safety buffer, this event forces memory overflow. Under the paper's effective-throughput convention, an overflow discards useful partial work through eviction and restart, so the expected completed decode-token service falls below the fluid benchmark by a constant amount.
 
-Second, suppose the policy avoids this overflow event by admitting strictly fewer hidden prompts than the fluid-scale cohort. Then it leaves a constant amount of admissible service capacity unused in this instance. Since the fluid benchmark \(\throughput^*\) equals the offered decode-token load that can be completed at the known-type equilibrium, this conservative admission again creates a constant throughput gap. Combining the two cases gives an instance for which every non-predictive online policy incurs
+Second, suppose the policy avoids this overflow event by admitting strictly fewer hidden prompts than the fluid-scale cohort. Then it leaves a constant amount of admissible service capacity unused in this instance. Since the fluid benchmark \(\throughput^*\) equals the offered decode-token load that can be completed at the known-type equilibrium, this conservative admission again creates a constant throughput gap.
+
+Because the argument holds after conditioning on the policy's filtration \(\mathcal F\), randomized policies are covered by averaging over their internal randomization. Repeating the block construction over the horizon gives a constant expected useful-completion deficit per relevant block, up to bounded end effects. Combining the two cases gives an instance for which every non-predictive online policy incurs
 \[
     \throughput^*-\mathbb E[\throughput^{(\zeta,\pi)}]=\Omega(1).
 \]

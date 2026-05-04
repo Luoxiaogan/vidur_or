@@ -975,6 +975,9 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `docs/progress/2026_05_04_lmsys_reproduction_codebase.md` - **LMSYS Section 6 reproduction codebase 模块化 + experiments.db 增量合并 + paper-facing grid 运行状态**
 - `docs/progress/2026_05_03_experiments_db_merge.md` - **experiments.db binary conflict 无损增量合并记录（local tuning DB + remote reproduction configs/provenance）**
 - `docs/progress/2026_05_03_lmsys_section6_reproduction_scaffold.md` - **Section 6 LMSYS paper-facing reproduction scaffold（Llama-2-7B/A100, tl=40..300, L={1,2,3,4,5,10,20}, eta=0.05）**
+- `docs/progress/2026_05_04_revision_final_qa_packet.md` - **OPRE revision final QA packet（主文/response letter 编译确认、PDF stale-term 检查、queueing proof wording 收口、`review team` response-letter 语气修正、最新 AE/reviewer audit packet `native_ae_reviewer_audit_packet_20260504_1835.zip`）**
+- `docs/progress/2026_05_02_revision_final_packet_abstract_layout.md` - **OPRE revision final packet + abstract/layout pass（GPT-Pro upload packet v2、abstract 压缩到 OPRE 200-word limit、Section 6 图/caption 压缩、删除重复 Figure 13）**
+- `docs/progress/2026_05_02_vidur_validation_grid_sync.md` - **Vidur validation + real-data grid sync（Llama-2-7B raw profiling B<=128，B=256 单点外推校验 error 4.93%，real-data `tl` grid 锁定为 20..200）**
 - `docs/progress/2026_04_28_qps10_gate_on_tuning.md` - **QPS=10 gate-on Nested WAIT 调参** (old-metric verify strict win: `auto6seg_tl290_cs52_gp1p01_wgON`, mean 1.696853360 vs Sarathi 1.696868151)
 - `docs/progress/2026_05_02_opre_revision_final_qa_push.md` - **OPRE revision final QA + push preparation（paper/letter consistency、Figure D caption restore、time-varying extension condition、stale-term searches）**
 - `docs/progress/2026_05_02_real_data_provenance_audit.md` - **lmsys Figure D SQL provenance audit（valid rows cover QPS 10/20/50/60 only; current conservative paper/letter claim strength remains safe）**
@@ -1001,6 +1004,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 ### 实验脚本
 
 #### GPU 验证 (Reviewer 2)
+- `scripts/validate_llama2_b256_vidur.py` - **Llama-2-7B B=256 validation provenance check** (confirms raw Vidur profiling B<=128; refits affine predictor and checks B=256 A100 extrapolation point, error 4.93%)
 - `scripts/large_batch_validation.py` - **大 batch 验证 (B=70-600)**
 - `scripts/extended_batch_validation.py` - **扩展 batch 验证 (B=3-56)**
 - `scripts/generate_validation_figures.py` - **生成验证图表**
@@ -1039,16 +1043,25 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
-## OR 论文 Revision 状态 (2026-05-02 updated)
+## OR 论文 Revision 状态 (2026-05-04 updated)
 
-### Final QA / Response Package State(2026-05-02)
-- **主记录文件**: `docs/progress/2026_05_02_opre_revision_final_qa_push.md`
+### Final QA / Response Package State(2026-05-04)
+- **主记录文件**: `docs/progress/2026_05_04_revision_final_qa_packet.md`
+- **Previous final QA record**: `docs/progress/2026_05_02_opre_revision_final_qa_push.md`
+- **Final packet / abstract-layout pass**: `docs/progress/2026_05_02_revision_final_packet_abstract_layout.md`
+- **Validation / grid sync**: `docs/progress/2026_05_02_vidur_validation_grid_sync.md`
 - **本轮锁定点**:
-  - `papers/LLM_or.pdf` 和 `papers/response_letter.pdf` 均为 up-to-date
+  - `papers/LLM_or.pdf` 和 `papers/response_letter.pdf` 均为 up-to-date；当前分别为 87 pages 和 20 pages
+  - `papers/abstract.tex` 已压缩到 OPRE 200-word abstract limit 内，并保留 LLM inference prevalence、endogenous memory growth、fluid model、WAIT/Nested WAIT、near-overloaded/overloaded regimes 的核心叙事
+  - 最新 AE/reviewer-style audit packet: `docs/revision/native_ae_reviewer_audit_packet_20260504_1835.zip`，包含 original submission、当前 revised paper、当前 response letter、AE report、referee reports、decision letter 和最小 prompt
+  - Section 6 正文图和 captions 已压缩，duplicate appendix Figure 13 (`lambda_list`) 已删除；当前主文增加 real-data \(M^*(\lambda)\) versus \(C\) table 后为 87 pages
   - response letter 与当前正文在 real-data、A100 validation、memory cap、`\mathrm{tl}` grid、eviction/restart、related work 口径上保持一致
+  - Llama-2-7B A100 raw Vidur profiling 口径锁定为 \(B\le128\)；appendix/response letter 中的 \(B=256\) 仅作为 single extrapolation check，当前 measured/predicted error 为 `4.93%`
+  - real-data Nested WAIT paper-facing grid 锁定为 `\mathrm{tl}\in\{20,40,\ldots,200\}`, \(L\in\{1,2,3,4,5,10,20\}\), \(\eta=0.05\)
   - Figure D PDF 轴标签为 `Arrival rate \lambda` / `Effective completion rate`; caption 恢复直接 latency-comparison wording，正文段落保持更 neutral 的 observed-grid 叙述
   - time-varying extension 保留 throughput/memory guarantee，并将 service-normalized delay 放在 first-segment waiting condition 下
-  - active paper/letter stale-term 搜索通过：无 `tl=400/1000`、`Arrival rate QPS`、旧 `1.5%` validation、`direct vLLM measurements`、`in-flight limit` 等残留
+  - active paper/letter PDF text stale-term 搜索通过：无 unresolved `??`、`TODO`、`PLACEHOLDER`、`tl=400/1000`、`review team`、`steady-state mean latency`、`decode-centered`、`affine`、`resident population`、`comparison clock`、`sample-path block argument`、`binomial thinning law`、`completed-work deficit` 等残留
+  - WAIT proof language now uses `auxiliary embedded full-threshold process` and `sample path coupling`; response letter no longer uses generic `review team`
 - **状态**: ✅ 当前 revision package 可进入提交/推送；唯一开放项是 lmsys Figure D 完整 per-arrival-rate provenance，当前保守表述下不阻塞
 - **待做**: 若后续强化 lmsys stability-boundary 或 per-rate config claim，必须先完成 rerun/reconstruction
 
@@ -1222,6 +1235,11 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - Report: `outputs/validation_database/FINAL_REPORT.md`
 - Figures: `outputs/validation_database/figures/` (5 PDFs)
 - Scripts: `scripts/*_validation.py`, `scripts/generate_validation_figures.py`
+
+**2026-05-02 revision lock**:
+- Active paper/letter wording now treats \(B\le128\) as the Llama-2-7B raw-profiled calibration range.
+- The \(B=256\) point is a single extrapolation check against recorded A100 measurement: measured `1146.54` ms, predicted `1090.07` ms, absolute error `4.93%`.
+- Reproducibility script: `scripts/validate_llama2_b256_vidur.py`.
 
 **Response Letter 段落**: 已包含在 FINAL_REPORT.md 中
 

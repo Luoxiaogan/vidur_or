@@ -15,6 +15,7 @@
 - `fig:lmsys_distribution`
 - `fig:lmsys_rate`
 - `tab:eviction`
+- `tab:lmsys_mstar`
 - `tab:segments_ablation` (currently commented out in `papers/numerical.tex`)
 
 ## Section 6 / Appendix Experiment References

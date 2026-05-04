@@ -5,6 +5,7 @@
 - Simulator fidelity must be stated quantitatively, with direct citation to the Vidur paper and local appendix validation.
 - Section 6 should explain why throughput differences reflect stability-region differences under the serving model used here.
 - The response to the `C\ge M^*` concern now treats `M^*` as the memory requirement for the fluid equilibrium. The paper explains that `M^*\le C` is a fluid-model stabilizability condition, while the experiments evaluate whether WAIT/Nested WAIT realize the corresponding stable operating regime under stochastic memory growth and eviction risk.
+- Section 6 now adds a real-data fluid-memory bridge: Table `tab:lmsys_mstar` reports representative `M^*(\lambda)` values for the real dataset and shows the computed fluid stable-region crossing near `74.1` requests/s under memory capacity `C`. This addresses the reviewer-facing concern about relating `C`, `M^*`, and observed near-overloaded/overloaded behavior without claiming a sharp empirical stability boundary.
 - Real-data Nested WAIT parameter reporting is now conservative: it states the finite grids for the system-wide batch cap and segment count, explains that these policy parameters are distribution-aware and arrival-rate dependent, and avoids claiming that larger caps or finer segmentation are monotone improvements.
 - Section 6 now also reports the A100~80\,GB / Llama-2-7B KV-cache token scale, so the real-data `\mathrm{tl}` grid is interpreted alongside the physical memory capacity rather than as an abstract request-count knob.
 

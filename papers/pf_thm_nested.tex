@@ -51,7 +51,7 @@ The idle time before the next segment-1 service is the time needed to collect fe
 
 \subsection{Boundary Queues for Downstream Segments}
 
-For \(k\ge2\), consider an opportunity at which segment \(k-1\) advances prompts across boundary \(l_{k-1}'\). Let \(A^r_{k-1}\le n_{k-1}\) be the number of prompts that cross this boundary at the \(r\)-th such opportunity. Conditional on the filtration just before output-length revelation at the boundary, the indicators that these prompts continue to segment \(k\) are independent Bernoulli random variables with probability \(p_k=\Lambda_k/\Lambda_{k-1}\). This uses the i.i.d. type mix and the fact that service before the boundary is nonanticipating with respect to future output length; before a boundary is reached, prompts with possible remaining types are exchangeable within the surviving mixture. Therefore
+For \(k\ge2\), consider an opportunity at which segment \(k-1\) advances prompts across boundary \(l_{k-1}'\). Let \(A^r_{k-1}\le n_{k-1}\) be the number of prompts that cross this boundary at the \(r\)-th such opportunity. Conditional on the filtration just before output-length revelation at the boundary, the indicators that these prompts continue to segment \(k\) are independent Bernoulli random variables with probability \(p_k=\Lambda_k/\Lambda_{k-1}\). This uses the i.i.d. output-length mix and the fact that service before the boundary is nonanticipating with respect to future output length; before a boundary is reached, prompts with possible remaining output-length classes are exchangeable within the surviving mixture. Therefore
 \[
     Y^r_{(k)}\mid A^r_{k-1}\sim \mathrm{Binomial}(A^r_{k-1},p_k),
     \qquad
@@ -90,7 +90,7 @@ Applying the same negative-drift reflected-random-walk bound yields, uniformly i
 \]
 Thus all external and downstream boundary queues have bounded expected size, uniformly over \(\zeta\) and \(T\).
 
-We also use the stage-cap invariant induced by the threshold rule. Starting from the empty system, every threshold-controlled interior stage of segment \(k\) contains at most \(n_k\) resident prompts. A batch that includes segment \(k\) advances at most \(n_k\) prompts from each preceding stage into the next stage; a batch that excludes segment \(k\) leaves its interior stages unchanged. The only resident populations not covered by this interior-stage cap are the downstream boundary queues \(V_{(k)}\), \(k\ge2\), which are controlled by the residual-queue bounds above.
+We also use the stage-cap invariant induced by the threshold rule. Starting from the empty system, every threshold-controlled interior stage of segment \(k\) contains at most \(n_k\) resident prompts. A batch that includes segment \(k\) advances at most \(n_k\) prompts from each preceding stage into the next stage; a batch that excludes segment \(k\) leaves its interior stages unchanged. The only resident queues not covered by this interior-stage cap are the downstream boundary queues \(V_{(k)}\), \(k\ge2\), which are controlled by the residual-queue bounds above.
 
 \subsection{Throughput and Delay}
 
@@ -137,7 +137,7 @@ The base term
 \[
     M^\pi=\sum_{k=1}^m n_k(l+\bar s_k)\delta_k
 \]
-accounts for threshold-sized segment batches. With the convention used in Theorem~\ref{thm:nested_wait_heavy_traffic}, segment 1 covers stages \(s=0,\ldots,l_1'\), while for \(k\ge2\), the resident boundary queue at \(s=l_{k-1}'\) is tracked separately and segment \(k\)'s interior covers \(s=l_{k-1}'+1,\ldots,l_k'\). The memory accounting separates two boundary populations. Fresh survivors that have just crossed from segment \(k-1\) are a subset of the upstream threshold cohort. They have the same KV-cache size as the prompts charged to the \(s=l_{k-1}'\) stage of segment \(k-1\) in \(M^\pi\), so charging them to the base term does not add memory. The only additional memory is the carryover residual left at downstream boundaries across opportunities. Therefore, if \(V^r_{(k)}\le c_k\) for all downstream boundaries, then total resident KV-cache memory is at most
+accounts for threshold-sized segment batches. With the convention used in Theorem~\ref{thm:nested_wait_heavy_traffic}, segment 1 covers stages \(s=0,\ldots,l_1'\), while for \(k\ge2\), the resident boundary queue at \(s=l_{k-1}'\) is tracked separately and segment \(k\)'s interior covers \(s=l_{k-1}'+1,\ldots,l_k'\). The memory accounting separates two boundary terms. Fresh survivors that have just crossed from segment \(k-1\) are a subset of the upstream threshold cohort. They have the same KV-cache size as the prompts charged to the \(s=l_{k-1}'\) stage of segment \(k-1\) in \(M^\pi\), so charging them to the base term does not add memory. The only additional memory is the carryover residual left at downstream boundaries across opportunities. Therefore, if \(V^r_{(k)}\le c_k\) for all downstream boundaries, then total resident KV-cache memory is at most
 \[
     M^\pi+\sum_{k=2}^m(l+l_{k-1}')c_k .
 \]

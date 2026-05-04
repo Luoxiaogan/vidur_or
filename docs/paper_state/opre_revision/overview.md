@@ -21,7 +21,7 @@
   - an evicted request restarts from the beginning if admitted again
 - Vidur validation citations in Section 6 should retain quantitative evidence rather than vague phrases such as `prior work shows`.
 - The Section 6 WAIT / Nested WAIT setup paragraph should describe `\mathrm{tl}` as a system-wide batch-size cap and then explain how it induces segment-level caps and per-stage thresholds.
-- In the real-workload setup, write the Nested WAIT calibration grid as `\mathrm{tl}\in\{40,60,\ldots,300\}`, `L\in\{1,2,3,4,5,10,20\}`, and `\eta=0.05`.
+- In the real-workload setup, write the Nested WAIT calibration grid as `\mathrm{tl}\in\{20,40,\ldots,200\}`, `L\in\{1,2,3,4,5,10,20\}`, and `\eta=0.05`.
 - In Section 6, use `inventory` for realized counts, `system-wide batch-size cap` for `\mathrm{tl}`, `segment-level cap` for `B_k=\Delta l'_k n_k`, and `per-stage threshold` for the derived scheduling thresholds; avoid the phrases `in-flight limit` and `admission threshold` for `\mathrm{tl}`.
 - Real-data Nested WAIT calibration should be described as a finite-grid tradeoff, not as monotone improvement in `\mathrm{tl}` or segment count `L`: overly small caps/segments underuse control resolution, while overly large caps/segments increase overflow pressure or make prompts wait at segment thresholds too often.
 - In Section 6, use `arrival rate \lambda` consistently rather than alternating between `rate` and `QPS`; add `requests per second` only as a unit clarification.
@@ -38,6 +38,7 @@
   - `M^*` = the memory requirement needed to support that equilibrium
   - `fluid stability region` = theoretical arrival-rate set defined by `M^*(\lambda)\le C`
   - `realized stability region` = policy-specific or experiment-facing stable arrival-rate range
+- Section 6 now includes a representative real-data fluid-memory check, Table~`\ref{tab:lmsys_mstar}`, which computes `M^*(\lambda)` for the real dataset using empirically estimated service-time parameters and compares it with memory capacity `C`. In the A100 experiment, `C\approx1.37\times10^5` KV-cache tokens. This table supports the transition from near-overloaded to overloaded language but should not be upgraded into a sharp empirical stability-boundary claim without the real-data provenance reruns.
 
 ## Next Pipeline Step
 

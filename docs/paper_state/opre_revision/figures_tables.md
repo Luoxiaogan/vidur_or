@@ -15,6 +15,7 @@
 - Figure G: `fig:long_decode`
 - Figure: `fig:lmsys_distribution`
 - Table: `tab:eviction`
+- Table: `tab:lmsys_mstar`
 - Table: `tab:segments_ablation` (currently inside a commented-out block in `papers/numerical.tex`)
 
 ## Appendix B / Additional Experiments
