@@ -75,7 +75,7 @@ ax.plot(
     markersize=7.2,
     markeredgecolor="white",
     markeredgewidth=0.7,
-    label="WAIT",
+    label="Nested WAIT",
 )
 ax.set_title("Mean end-to-end latency", pad=8)
 ax.set_xlabel(r"Arrival rate $\lambda$ (requests/s)")

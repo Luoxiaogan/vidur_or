@@ -972,6 +972,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
+- `docs/progress/2026_05_05_response_letter_style_polish.md` - **Response letter 最终语气/术语 polish（热情但不机械、避免强行 queueing 术语、PDF 19 pages、stale-term 检查通过）**
 - `docs/progress/2026_05_04_lmsys_reproduction_codebase.md` - **LMSYS Section 6 reproduction codebase 模块化 + experiments.db 增量合并 + paper-facing grid 运行状态**
 - `docs/progress/2026_05_03_experiments_db_merge.md` - **experiments.db binary conflict 无损增量合并记录（local tuning DB + remote reproduction configs/provenance）**
 - `docs/progress/2026_05_03_lmsys_section6_reproduction_scaffold.md` - **Section 6 LMSYS paper-facing reproduction scaffold（Llama-2-7B/A100, tl=40..300, L={1,2,3,4,5,10,20}, eta=0.05）**
@@ -1043,15 +1044,16 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
-## OR 论文 Revision 状态 (2026-05-04 updated)
+## OR 论文 Revision 状态 (2026-05-05 updated)
 
-### Final QA / Response Package State(2026-05-04)
-- **主记录文件**: `docs/progress/2026_05_04_revision_final_qa_packet.md`
-- **Previous final QA record**: `docs/progress/2026_05_02_opre_revision_final_qa_push.md`
+### Final QA / Response Package State(2026-05-05)
+- **主记录文件**: `docs/progress/2026_05_05_response_letter_style_polish.md`
+- **Previous final QA record**: `docs/progress/2026_05_04_revision_final_qa_packet.md`
+- **Earlier final QA record**: `docs/progress/2026_05_02_opre_revision_final_qa_push.md`
 - **Final packet / abstract-layout pass**: `docs/progress/2026_05_02_revision_final_packet_abstract_layout.md`
 - **Validation / grid sync**: `docs/progress/2026_05_02_vidur_validation_grid_sync.md`
 - **本轮锁定点**:
-  - `papers/LLM_or.pdf` 和 `papers/response_letter.pdf` 均为 up-to-date；当前分别为 87 pages 和 20 pages
+  - `papers/LLM_or.pdf` 和 `papers/response_letter.pdf` 均为 up-to-date；当前分别为 87 pages 和 19 pages
   - `papers/abstract.tex` 已压缩到 OPRE 200-word abstract limit 内，并保留 LLM inference prevalence、endogenous memory growth、fluid model、WAIT/Nested WAIT、near-overloaded/overloaded regimes 的核心叙事
   - 最新 AE/reviewer-style audit packet: `docs/revision/native_ae_reviewer_audit_packet_20260504_1835.zip`，包含 original submission、当前 revised paper、当前 response letter、AE report、referee reports、decision letter 和最小 prompt
   - Section 6 正文图和 captions 已压缩，duplicate appendix Figure 13 (`lambda_list`) 已删除；当前主文增加 real-data \(M^*(\lambda)\) versus \(C\) table 后为 87 pages
@@ -1060,8 +1062,8 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
   - real-data Nested WAIT paper-facing grid 锁定为 `\mathrm{tl}\in\{20,40,\ldots,200\}`, \(L\in\{1,2,3,4,5,10,20\}\), \(\eta=0.05\)
   - Figure D PDF 轴标签为 `Arrival rate \lambda` / `Effective completion rate`; caption 恢复直接 latency-comparison wording，正文段落保持更 neutral 的 observed-grid 叙述
   - time-varying extension 保留 throughput/memory guarantee，并将 service-normalized delay 放在 first-segment waiting condition 下
-  - active paper/letter PDF text stale-term 搜索通过：无 unresolved `??`、`TODO`、`PLACEHOLDER`、`tl=400/1000`、`review team`、`steady-state mean latency`、`decode-centered`、`affine`、`resident population`、`comparison clock`、`sample-path block argument`、`binomial thinning law`、`completed-work deficit` 等残留
-  - WAIT proof language now uses `auxiliary embedded full-threshold process` and `sample path coupling`; response letter no longer uses generic `review team`
+  - active paper/letter PDF text stale-term 搜索通过：无 unresolved `??`、`TODO`、`PLACEHOLDER`、`tl=400/1000`、`review team`、`steady-state mean latency`、`decode-centered`、`affine`、`resident population`、`comparison clock`、`comparison slot`、`cohort`、`sample-path block argument`、`binomial thinning law`、`completed-work deficit` 等残留
+  - WAIT proof language now uses `auxiliary embedded full-threshold process` and `sample path coupling`; response letter no longer uses generic `review team` or forced queueing-style phrasing
 - **状态**: ✅ 当前 revision package 可进入提交/推送；唯一开放项是 lmsys Figure D 完整 per-arrival-rate provenance，当前保守表述下不阻塞
 - **待做**: 若后续强化 lmsys stability-boundary 或 per-rate config claim，必须先完成 rerun/reconstruction
 

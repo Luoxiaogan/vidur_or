@@ -4,7 +4,7 @@
 
 \section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic}}\label{appendix::proof of nested_wait_heavy_traffic}
 
-The proof analyzes the no-overflow Nested WAIT dynamics and then shows that the memory condition makes those dynamics feasible with high probability. The main difference from WAIT is that downstream arrivals are generated endogenously: a prompt reaches segment \(k\) only if it survives the boundary \(l_{k-1}'\). The proof therefore follows the queues at these segment boundaries. Segment 1 is a threshold-renewal queue with external Poisson arrivals. For \(k\ge2\), each upstream boundary-crossing opportunity produces a binomially thinned cohort. The threshold conditions give negative drift for these embedded queues. Standard reflected-random-walk and exponential-martingale bounds then control their expected size and high-probability excursions; the nonstandard part is the memory accounting that separates fresh boundary arrivals from carryover residual queues.
+The proof analyzes the no-overflow Nested WAIT dynamics and then shows that the memory condition makes those dynamics feasible with high probability. The main difference from WAIT is that downstream arrivals are generated endogenously: a prompt reaches segment \(k\) only if it survives the boundary \(l_{k-1}'\). The proof therefore follows the queues at these segment boundaries. Segment 1 is a threshold-renewal queue with external Poisson arrivals. For \(k\ge2\), each upstream boundary-crossing opportunity produces a binomially thinned boundary batch. The threshold conditions give negative drift for these embedded queues. Standard reflected-random-walk and exponential-martingale bounds then control their expected size and high-probability excursions; the nonstandard part is the memory accounting that separates fresh boundary arrivals from carryover residual queues.
 
 Let
 \[
@@ -59,7 +59,7 @@ For \(k\ge2\), consider an opportunity at which segment \(k-1\) advances prompts
 \]
 where the dominating variables \(\bar Y^r_{(k)}\sim\mathrm{Binomial}(n_{k-1},p_k)\) can be chosen independent across boundary opportunities.
 
-Let \(V^r_{(k)}\) be the carryover boundary queue at stage \(l_{k-1}'\) after the threshold review at the start of the \(r\)-th opportunity in which segment \(k-1\) is processed. Thus \(V^r_{(k)}\) is a post-review residual, not the pre-review boundary population. This convention preserves the nested, prefix structure of the algorithm. Whenever segment \(k-1\) is active, all earlier segment thresholds have been met. If the boundary queue for segment \(k\) also contains at least \(n_k\) prompts at that review, Nested WAIT includes segment \(k\) in the same prefix batch and removes a threshold cohort from the boundary. During the batch, at most \(A^r_{k-1}\le n_{k-1}\) additional prompts may survive segment \(k-1\) and join the boundary. These fresh survivors are part of the just-processed upstream threshold cohort, so their KV-cache memory is charged to the threshold-sized batch term \(M^\pi\). Only the carryover residual remains as additional boundary memory. With the binomial domination above, the pre-review queue for the next opportunity is \(V^r_{(k)}+\bar Y^r_{(k)}\), and the post-review residual satisfies
+Let \(V^r_{(k)}\) be the carryover boundary queue at stage \(l_{k-1}'\) after the threshold review at the start of the \(r\)-th opportunity in which segment \(k-1\) is processed. Thus \(V^r_{(k)}\) is a post-review residual, not the pre-review boundary population. This convention preserves the nested, prefix structure of the algorithm. Whenever segment \(k-1\) is active, all earlier segment thresholds have been met. If the boundary queue for segment \(k\) also contains at least \(n_k\) prompts at that review, Nested WAIT includes segment \(k\) in the same prefix batch and removes a threshold batch from the boundary. During the batch, at most \(A^r_{k-1}\le n_{k-1}\) additional prompts may survive segment \(k-1\) and join the boundary. These fresh survivors are part of the just-processed upstream threshold batch, so their KV-cache memory is charged to the threshold-sized batch term \(M^\pi\). Only the carryover residual remains as additional boundary memory. With the binomial domination above, the pre-review queue for the next opportunity is \(V^r_{(k)}+\bar Y^r_{(k)}\), and the post-review residual satisfies
 \[
     V^{r+1}_{(k)}
     \le
@@ -119,7 +119,7 @@ where \(W_{(k)}=V_{(k)}\) for \(k\ge2\), and \(A_{\mathrm{tail}}(T)\) accounts f
 \end{aligned}
 \]
 
-For delay, let \(Q(t)\) be the total number of prompts in the segment-1 entry queue, downstream boundary queues, and threshold-controlled segment interiors. The bounds above, together with the \(O(1/\zeta)\) expected idle period needed to collect fewer than a threshold cohort, imply
+For delay, let \(Q(t)\) be the total number of prompts in the segment-1 entry queue, downstream boundary queues, and threshold-controlled segment interiors. The bounds above, together with the \(O(1/\zeta)\) expected idle period needed to collect fewer than a threshold batch, imply
 \[
     \mathbb{E}\!\left[\int_0^T Q(t)\,dt\right]=O(T).
 \]
@@ -137,7 +137,7 @@ The base term
 \[
     M^\pi=\sum_{k=1}^m n_k(l+\bar s_k)\delta_k
 \]
-accounts for threshold-sized segment batches. With the convention used in Theorem~\ref{thm:nested_wait_heavy_traffic}, segment 1 covers stages \(s=0,\ldots,l_1'\), while for \(k\ge2\), the resident boundary queue at \(s=l_{k-1}'\) is tracked separately and segment \(k\)'s interior covers \(s=l_{k-1}'+1,\ldots,l_k'\). The memory accounting separates two boundary terms. Fresh survivors that have just crossed from segment \(k-1\) are a subset of the upstream threshold cohort. They have the same KV-cache size as the prompts charged to the \(s=l_{k-1}'\) stage of segment \(k-1\) in \(M^\pi\), so charging them to the base term does not add memory. The only additional memory is the carryover residual left at downstream boundaries across opportunities. Therefore, if \(V^r_{(k)}\le c_k\) for all downstream boundaries, then total resident KV-cache memory is at most
+accounts for threshold-sized segment batches. With the convention used in Theorem~\ref{thm:nested_wait_heavy_traffic}, segment 1 covers stages \(s=0,\ldots,l_1'\), while for \(k\ge2\), the resident boundary queue at \(s=l_{k-1}'\) is tracked separately and segment \(k\)'s interior covers \(s=l_{k-1}'+1,\ldots,l_k'\). The memory accounting separates two boundary terms. Fresh survivors that have just crossed from segment \(k-1\) are a subset of the upstream threshold batch. They have the same KV-cache size as the prompts charged to the \(s=l_{k-1}'\) stage of segment \(k-1\) in \(M^\pi\), so charging them to the base term does not add memory. The only additional memory is the carryover residual left at downstream boundaries across opportunities. Therefore, if \(V^r_{(k)}\le c_k\) for all downstream boundaries, then total resident KV-cache memory is at most
 \[
     M^\pi+\sum_{k=2}^m(l+l_{k-1}')c_k .
 \]

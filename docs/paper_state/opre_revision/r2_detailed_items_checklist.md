@@ -36,7 +36,7 @@ This checklist tracks the detailed notation, proof, and experiment items in Revi
 - [x] State Section 6 hardware, simulator, baseline configurations, arrival-rate grids, and replication count.
 - [x] Reconcile the lmsys dataset summary with the plotted distribution: the paper now states the filtered workload population, mean/median prefill and decode lengths, and short/long response shares consistently with Figure~`\ref{fig:lmsys_distribution}`.
 - [x] State Sarathi's chunked-prefill configuration role and the baseline memory-reservation rule.
-- [x] State WAIT / Nested WAIT threshold-construction rules and the main real-data tuning grids: \(\mathrm{tl}\in\{20,40,\ldots,200\}\), \(L\in\{1,2,3,4,5,10,20\}\), and \(\eta=0.05\).
+- [x] State WAIT / Nested WAIT threshold-construction rules and the main real-data parameter grids: \(\mathrm{tl}\in\{20,40,\ldots,200\}\), \(L\in\{1,2,3,4,5,10,20\}\), and \(\eta=0.05\).
 - [x] Add a quantitative real-data \(M^*(\lambda)\) versus \(C\) check: Table~`\ref{tab:lmsys_mstar}` reports representative fluid-memory values for the real dataset and places the fluid stable-region crossing near \(74.1\) requests/s under memory capacity \(C\).
 - [x] Add simulator-to-GPU validation on A100 and end-to-end real-GPU checks.
 - [x] Add long-decode workload \(\texttt{p512d1000}\) and near-capacity eviction-induced restart diagnostic.

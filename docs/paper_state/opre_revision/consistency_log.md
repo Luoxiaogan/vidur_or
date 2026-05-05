@@ -122,7 +122,7 @@
   - resident decode-stage prompts waiting on GPU remain included in the memory invariant.
 - Confirmed the main Nested WAIT theorem keeps the tight downstream boundary buffer `n_k+\theta_k^{-1}\log(\cdot)`:
   - `V^r_{(k)}` is post-review carryover residual;
-  - selected boundary cohorts are charged to `M^\pi`;
+  - selected boundary batches are charged to `M^\pi`;
   - fresh survivors are treated as next-review input rather than requiring a `2n_k` buffer.
 - Refined the time-varying extension convention:
   - `\mathcal A_j^{(\zeta)}(t,h)` now truncates the final partial window at `T`;

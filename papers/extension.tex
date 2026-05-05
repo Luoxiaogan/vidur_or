@@ -137,7 +137,7 @@ Moreover, the no-overflow dynamics are feasible on the physical GPU, i.e., memor
 \end{theorem}
 
 \paragraph{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic, any segment}.}
-The proof applies the Nested WAIT argument in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic} to aggregated segment classes. The only changes are the segment arrival rates and the segment boundaries; the boundary-thinning domination, Lindley bound for downstream boundary queues, and high-probability martingale buffer are the same as in Theorem~\ref{thm:nested_wait_heavy_traffic}. Segment \(k\) contains original output-length classes with aggregate rate \(\lambda_k'=\sum_{h_{k-1}<j\le h_k}\lambda_j\), and the rate of prompts that can reach segment \(k\) is \(\lambda'(k\to L)=\sum_{r=k}^L\lambda_r'\). Hence, conditional on a threshold-sized cohort crossing boundary \(r_{k-1}\), the number of prompts that continue to segment \(k\) is dominated by a binomial random variable with parameters \(n_{k-1}\) and \(p_k=\lambda'(k\to L)/\lambda'(k-1\to L)\), exactly as in the boundary-thinning step of Theorem~\ref{thm:nested_wait_heavy_traffic}. The threshold conditions in \eqref{eq:nested_wait_thresholds_L} give negative drift for the Segment 1 entry queue and for every downstream boundary queue. Therefore the same Lindley-recursion bounds give uniformly bounded expected entry and boundary queues. The terminal-work and time-average queue conversions used in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic} then yield the \(O((\zeta T)^{-1})\) normalized throughput gap and \(O(1)\) service-normalized latency and TTFT bounds.
+The proof applies the Nested WAIT argument in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic} to aggregated segment classes. The only changes are the segment arrival rates and the segment boundaries; the boundary-thinning domination, Lindley bound for downstream boundary queues, and high-probability martingale buffer are the same as in Theorem~\ref{thm:nested_wait_heavy_traffic}. Segment \(k\) contains original output-length classes with aggregate rate \(\lambda_k'=\sum_{h_{k-1}<j\le h_k}\lambda_j\), and the rate of prompts that can reach segment \(k\) is \(\lambda'(k\to L)=\sum_{r=k}^L\lambda_r'\). Hence, conditional on a threshold-sized batch crossing boundary \(r_{k-1}\), the number of prompts that continue to segment \(k\) is dominated by a binomial random variable with parameters \(n_{k-1}\) and \(p_k=\lambda'(k\to L)/\lambda'(k-1\to L)\), exactly as in the boundary-thinning step of Theorem~\ref{thm:nested_wait_heavy_traffic}. The threshold conditions in \eqref{eq:nested_wait_thresholds_L} give negative drift for the Segment 1 entry queue and for every downstream boundary queue. Therefore the same Lindley-recursion bounds give uniformly bounded expected entry and boundary queues. The terminal-work and time-average queue conversions used in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic} then yield the \(O((\zeta T)^{-1})\) normalized throughput gap and \(O(1)\) service-normalized latency and TTFT bounds.
 
 It remains to check memory. The base term \(M^\pi=\sum_{k=1}^L n_k(l+\bar s_k)\delta_k\) charges the threshold-controlled interior stages of each segment. The resident boundary queue at \(r_{k-1}\), \(k\ge2\), is treated separately, with deterministic component \(n_k(l+r_{k-1})\) and stochastic carryover controlled by the exponential-martingale bound used in Appendix~\ref{appendix_lemma::proof of solution to martingale exists}. Applying that bound over at most \(1+\zeta T/d_0\) processing opportunities and union bounding over downstream segment boundaries gives the logarithmic buffer in \eqref{eq:nested_wait_memory_L}. Since \(L\le m\), using \(m\) in the logarithm is conservative. On this high-probability event, the no-overflow Nested WAIT dynamics are feasible whenever \(C\ge M_{\mathrm{req},L}^{(\zeta,\pi)}\), completing the proof.
 
@@ -150,21 +150,21 @@ Figures \ref{fig:fixed_T_200_rate_50_delta_0.1_1e-5}, \ref{fig:fixed_T_200_rate_
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=50,T=200.pdf}
-    \caption{Memory usage proportions under low arrival rate (total rate = 50, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
+    \caption{Memory-bound components under low arrival rate (total rate = 50, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
     \label{fig:fixed_T_200_rate_50_delta_0.1_1e-5}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=500,T=200.pdf}
-    \caption{Memory usage proportions under high arrival rate (total rate = 500, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
+    \caption{Memory-bound components under high arrival rate (total rate = 500, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
     \label{fig:fixed_T_200_rate_500_delta_0.1_1e-5}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=50,delta=0.001,T=20or2000.pdf}
-    \caption{Memory usage proportions with varying time horizons (total rate = 50, $\delta = 0.001$). Left: $T = 20$; Right: $T = 2000$.}
+    \caption{Memory-bound components with varying time horizons (total rate = 50, $\delta = 0.001$). Left: $T = 20$; Right: $T = 2000$.}
     \label{fig:fixed_delta_0.001_rate_50_T_20_2000}
 \end{figure}
 
