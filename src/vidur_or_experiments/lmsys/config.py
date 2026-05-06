@@ -31,14 +31,14 @@ class Section6LmsysConfig:
     nbins: int = 50
     model_name: str = "meta-llama/Llama-2-7b-hf"
     device: str = "a100"
-    memory_margin_fraction: float = 0.1
+    memory_margin_fraction: float = 0.01
     prediction_max_prefill_chunk_size: int = 16384
     prediction_max_batch_size: int = 2048
     prediction_max_tokens_per_request: int = 65536
     arrival_rate_round_digits: int = 4
     include_vllm: bool = True
     sarathi_baseline_chunk_sizes: str = "512,256"
-    sarathi_baseline_batch_size_cap: int = 1_000_000
+    sarathi_baseline_batch_size_cap: int = 256
     wcp_chunk_sizes: str = "128"
     tl_values: str = field(default_factory=lambda: comma_range(40, 300, 20))
     nested_segment_counts: str = "1,2,3,4,5,10,20"
