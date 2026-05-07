@@ -97,7 +97,8 @@ def build_batched_request(requests, token_ids_by_type, received_time):
     """Build one batched request in the already-sorted logical queue order."""
     input_ids = [token_ids_by_type[req["req_type"]] for req in requests]
     sampling_params = [
-        {"max_new_tokens": req["decode"], "ignore_eos": True} for req in requests
+        {"max_new_tokens": req["decode"], "ignore_eos": True, "temperature": 0.0}
+        for req in requests
     ]
     rids = [
         f"batchq-{req['request_id']:06d}-{req['req_type']}-"
