@@ -23,16 +23,16 @@ SEED = 42
 
 REQUEST_TYPES = {
     "type_a": {
-        "prefill_tokens": 100,
-        "decode_tokens": 5,
+        "prefill_tokens": 500,
+        "decode_tokens": 3,
         "poisson_rate": 1,
-        "count": 40000,
+        "count": 50000,
     },
     "type_b": {
-        "prefill_tokens": 100,
-        "decode_tokens": 11,
+        "prefill_tokens": 500,
+        "decode_tokens": 9,
         "poisson_rate": 1,
-        "count": 40000,
+        "count": 50000,
     },
 }
 
@@ -168,8 +168,9 @@ def main():
         disaggregation_decode_enable_fake_auto=True,
         export_batch_metrics_to_file=BATCH_CSV,
         export_request_metrics_to_csv=REQUEST_CSV,
-        mem_fraction_static=0.7,
-        max_running_requests=20000,
+        mem_fraction_static=0.1,
+        # max_running_requests=20000,
+        max_running_requests=8192,
         max_queued_requests=None,
         num_reserved_decode_tokens=0,
     )
