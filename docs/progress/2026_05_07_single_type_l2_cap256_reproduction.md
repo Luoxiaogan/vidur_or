@@ -22,6 +22,7 @@ This note records the paper-facing single-type WAIT reproduction rerun after ali
 - Winner selection tag: `section6_single_type_l2_cap256_wgON_rawmean_winners_20260507`.
 - Run-level rows: `single_type_runs`, including full `command_json`, output paths, metric trim fractions, and return codes.
 - Selected rows: `single_type_selected_winners`, filtered to WAIT rows with `wait_gate='on'`.
+- SQL helper: `docs/sql/single_type_boundary_winners.sql`.
 
 ## Selected Winners
 
@@ -73,3 +74,81 @@ The corresponding Llama-2 boundary appears about two arrival-rate units later. T
 | 26 | 18.634 | 4.688 | 74.8% | `WAIT_tl200_cs256_wgON` |
 
 These rows show that the large-win mechanism is reproducible under Llama-2/cap-256 near its observed boundary, but not specifically at `lambda=23` with the current Llama-2 service curve.
+
+## Reproduction Commands
+
+Run the main Llama-2/cap-256 curve:
+
+```bash
+python scripts/section6_single_type_reproduction.py \
+  --run-tag section6_single_type_l2_cap256_main_20260507 \
+  --mode all \
+  --rates 12,13,14,15,16,17,18,19,20,21,22,23,24 \
+  --tl-values 20,25,30,35,40,45,50 \
+  --wcp-chunk-sizes 256 \
+  --nreq 5000 \
+  --memory-margin-fraction 0.01 \
+  --sarathi-batch-size-cap 256 \
+  --trim-head-frac 0 \
+  --trim-tail-frac 0
+```
+
+Run the Llama-2 boundary grid with middle-50% latency:
+
+```bash
+python scripts/section6_single_type_reproduction.py \
+  --run-tag section6_single_type_l2_cap256_boundary_grid_n10000_seed42_20260507 \
+  --mode all \
+  --rates 24,25,26 \
+  --tl-values 20,30,40,50,60,80,100,120,160,200 \
+  --wcp-chunk-sizes 256 \
+  --nreq 10000 \
+  --seed 42 \
+  --memory-margin-fraction 0.01 \
+  --sarathi-batch-size-cap 256 \
+  --trim-head-frac 0.25 \
+  --trim-tail-frac 0.25
+```
+
+Run the rate-25 chunk-size refinement:
+
+```bash
+python scripts/section6_single_type_reproduction.py \
+  --run-tag section6_single_type_l2_cap256_rate25_chunk_tune_n10000_seed42_20260507 \
+  --mode all \
+  --rates 25 \
+  --tl-values 160,180,200,220,240 \
+  --wcp-chunk-sizes 64,128,256,384,512 \
+  --nreq 10000 \
+  --seed 42 \
+  --memory-margin-fraction 0.01 \
+  --sarathi-batch-size-cap 256 \
+  --trim-head-frac 0.25 \
+  --trim-tail-frac 0.25
+```
+
+Reproduce the older Llama-3 large-win sanity check:
+
+```bash
+python scripts/section6_single_type_reproduction.py \
+  --run-tag section6_single_type_l3_oldstyle_n10000_seed42_20260507 \
+  --mode all \
+  --rates 23 \
+  --tl-values 21 \
+  --wcp-chunk-sizes 256 \
+  --nreq 10000 \
+  --seed 42 \
+  --model-name meta-llama/Meta-Llama-3-8B \
+  --memory-margin-fraction 0.1 \
+  --sarathi-batch-size-cap 512 \
+  --no-wait-gate \
+  --trim-head-frac 0.25 \
+  --trim-tail-frac 0.25
+```
+
+Query the selected boundary winners:
+
+```bash
+sqlite3 -header -column outputs/databases/section6_single_type_reproduction.db \
+  < docs/sql/single_type_boundary_winners.sql
+```
