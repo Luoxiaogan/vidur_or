@@ -46,3 +46,30 @@ This note records the paper-facing single-type WAIT reproduction rerun after ali
 The paper-facing rerun reproduces the qualitative Section 6 claim that WAIT is lower latency than Sarathi at every tested rate in `12..24` under the Llama-2/A100/Sarathi-cap-256 setting. The selected parameters are simple: `tl=20` for rates `12..23`, and `tl=30` at rate `24`.
 
 The earlier manuscript sentence claiming an over-70% gap at `lambda=23` is not supported by this rerun. Under both untrimmed mean and middle-50% mean, the `lambda=23` improvement is about 3.9%. The large boundary separation appears at `lambda=24`, where WAIT improves over Sarathi by about 35%.
+
+## Follow-up Boundary Tuning
+
+After checking the original Figure B provenance, the large `lambda=23` gap was traced to an older Llama-3 style configuration:
+
+- Model: `meta-llama/Meta-Llama-3-8B`.
+- Memory margin: `0.1`.
+- Sarathi batch cap: `512`.
+- WAIT: `tl=21`, `chunk_size=256`, scheduler `wait_gate=off`.
+- Requests/metric: `10000` requests, seed `42`, middle-50% request window.
+- Reproduced at `lambda=23`: Sarathi `8.787s`, WAIT `1.270s`, win `85.5%`.
+
+Under the current Llama-2/Sarathi-cap-256 setting, `lambda=23` is not yet at the same overload boundary:
+
+- Run tag: `section6_single_type_l2_cap256_n10000_seed42_20260507`.
+- `lambda=23`: Sarathi `1.254s`, best WAIT `1.205s`, win `3.9%`.
+- Changing Sarathi cap from `256` to `512`, changing memory margin from `0.01` to `0.1`, or switching scheduler `wait_gate` off did not materially change the Llama-2 `lambda=23` result.
+
+The corresponding Llama-2 boundary appears about two arrival-rate units later. The tuned Llama-2/cap-256 boundary winners are stored under selection tag `section6_single_type_l2_cap256_boundary_winners_n10000_seed42_20260507`:
+
+| rate | Sarathi512 cap256 mean | WAIT mean | win | WAIT config |
+| ---: | ---: | ---: | ---: | --- |
+| 24 | 4.228 | 1.846 | 56.3% | `WAIT_tl30_cs256_wgON` |
+| 25 | 11.086 | 2.994 | 73.0% | `WAIT_tl240_cs512_wgON` |
+| 26 | 18.634 | 4.688 | 74.8% | `WAIT_tl200_cs256_wgON` |
+
+These rows show that the large-win mechanism is reproducible under Llama-2/cap-256 near its observed boundary, but not specifically at `lambda=23` with the current Llama-2 service curve.

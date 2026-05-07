@@ -102,6 +102,8 @@ def build_specs(args: argparse.Namespace) -> list[RunSpec]:
             "--custom_request_generator_config_num_requests",
             str(args.nreq),
         ]
+        if args.seed is not None:
+            request_args += ["--custom_request_generator_config_seed", str(args.seed)]
         if args.mode in {"all", "baselines"}:
             specs.append(
                 RunSpec(
@@ -496,6 +498,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prefill", type=int, default=512)
     parser.add_argument("--decode", type=int, default=20)
     parser.add_argument("--nreq", type=int, default=5000)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--model-name", default="meta-llama/Llama-2-7b-hf")
     parser.add_argument("--device", default="a100")
     parser.add_argument("--memory-margin-fraction", type=float, default=0.01)
