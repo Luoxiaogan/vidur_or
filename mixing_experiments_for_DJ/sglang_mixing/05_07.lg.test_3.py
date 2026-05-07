@@ -168,7 +168,7 @@ def main():
         export_batch_metrics_to_file=BATCH_CSV,
         export_request_metrics_to_csv=REQUEST_CSV,
         mem_fraction_static=0.7,
-        max_running_requests=4096,
+        max_running_requests=20000,
         max_queued_requests=None,
         num_reserved_decode_tokens=0,
     )
