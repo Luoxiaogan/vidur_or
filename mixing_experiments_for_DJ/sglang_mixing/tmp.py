@@ -26,7 +26,8 @@ def main():
     output_dir = exp_dir / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    src_script = Path("/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/04_24.lg.test_3.py")
+    # src_script = Path("/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/04_24.lg.test_3.py")
+    src_script = Path("/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/05_07.lg.test_3.py")
     if not src_script.exists():
         print(f"Error: Source script not found: {src_script}")
         sys.exit(1)

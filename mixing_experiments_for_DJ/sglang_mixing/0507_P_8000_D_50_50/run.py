@@ -24,7 +24,7 @@ SEED = 42
 REQUEST_TYPES = {
     "type_a": {
         "prefill_tokens": 8000,
-        "decode_tokens": 45,
+        "decode_tokens": 50,
         "poisson_rate": 1,
         "count": 10000,
     },
@@ -36,7 +36,7 @@ REQUEST_TYPES = {
     },
 }
 
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_batch_queue_inject_loose_decode/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_P_8000_D_50_50/output"
 BATCH_CSV = f"{OUTPUT_DIR}/batch_metrics.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/request_metrics.csv"
 

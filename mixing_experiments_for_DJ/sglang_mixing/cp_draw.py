@@ -19,6 +19,7 @@ def find_metrics_csv(output_dir: Path, kind: str) -> Path:
         output_dir / f"exp_two_coprime_{kind}.csv",
         output_dir / f"exp_two_non_coprime_{kind}.csv",
         output_dir / f"exp_two_not_coprime_{kind}.csv",
+        output_dir / f"{kind}_metrics.csv",
     ]
 
     for path in candidates:
