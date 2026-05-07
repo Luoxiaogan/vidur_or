@@ -1,5 +1,5 @@
 """
-画图脚本：从 batch_metrics CSV 生成 4 个子图
+画图脚本：从 batch_metrics CSV 生成 batch_metrics 和 pre_decode 对比图
 
 用法:
     python cp_draw.py /path/to/exp_dir
@@ -125,7 +125,29 @@ def plot_pre_decode_comparison(df: pd.DataFrame, output_dir: Path, exp_name: str
         left_ax.set_ylabel(ylabel)
         left_ax.grid(True, alpha=0.3)
 
-        right_ax.plot(x, new_values, color="darkorange", linewidth=0.8)
+        right_ax.plot(x, new_values, color="darkorange", linewidth=0.8, label=new_col)
+        if (
+            new_col == "pre_decode_batch_size"
+            and "num_prev_completed_reqs" in df.columns
+            and "num_new_seqs" in df.columns
+        ):
+            right_ax.plot(
+                x,
+                df["num_prev_completed_reqs"],
+                color="brown",
+                linewidth=0.8,
+                linestyle="--",
+                label="num_prev_completed_reqs",
+            )
+            right_ax.plot(
+                x,
+                df["num_new_seqs"],
+                color="purple",
+                linewidth=0.8,
+                linestyle=":",
+                label="num_new_seqs",
+            )
+            right_ax.legend()
         right_ax.set_title(new_col)
         right_ax.set_xlabel("Batch Index")
         right_ax.set_ylabel(ylabel)
@@ -155,7 +177,10 @@ def plot_pre_decode_comparison(df: pd.DataFrame, output_dir: Path, exp_name: str
             else:
                 pad = (y_max - y_min) * 0.05
             left_ax.set_ylim(y_min - pad, y_max + pad)
-            right_ax.set_ylim(y_min - pad, y_max + pad)
+            if new_col == "pre_decode_batch_size":
+                right_ax.set_ylim(bottom=0)
+            else:
+                right_ax.set_ylim(y_min - pad, y_max + pad)
             compare_ax.set_ylim(y_min - pad, y_max + pad)
 
     output_path = output_dir / f"{exp_name}_pre_decode_comparison.png"
@@ -191,9 +216,19 @@ def process_experiment(input_dir: Path):
     df["batch_index"] = range(len(df))
 
     print(f"Loaded {len(df)} batches (after filtering)")
+    if "num_prev_completed_reqs" in df.columns:
+        print(
+            "  Completion/admission summary: "
+            f"prev_completed_sum={df['num_prev_completed_reqs'].sum():.0f}, "
+            f"new_seqs_sum={df['num_new_seqs'].sum():.0f}, "
+            f"max_prev_completed={df['num_prev_completed_reqs'].max():.0f}, "
+            f"max_new_seqs={df['num_new_seqs'].max():.0f}"
+        )
+    else:
+        print("  num_prev_completed_reqs not found; plotting num_new_seqs only")
 
-    # 创建 2x2 子图
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    # 创建 2x3 子图：前两列保留原始布局，第三列用于 completion/admission。
+    fig, axes = plt.subplots(2, 3, figsize=(21, 10))
     fig.suptitle(f"Batch Metrics: {input_dir.parent.name}", fontsize=16, fontweight='bold')
 
     x = df["batch_index"]
@@ -234,6 +269,35 @@ def process_experiment(input_dir: Path):
     ax4.set_ylabel("num_new_seqs")
     ax4.set_title("New Sequences (per batch)")
     ax4.grid(True, alpha=0.3)
+
+    # 子图 5: Previous Completions vs New Sequences
+    ax5 = axes[0, 2]
+    ax5.plot(x, df["num_new_seqs"], color='purple', linewidth=0.8,
+             label='num_new_seqs')
+    if "num_prev_completed_reqs" in df.columns:
+        ax5.plot(x, df["num_prev_completed_reqs"], color='brown', linewidth=0.8,
+                 label='num_prev_completed_reqs', linestyle='--')
+    ax5.set_xlabel("Batch Index")
+    ax5.set_ylabel("Requests")
+    ax5.set_title("Previous Completions vs New Sequences")
+    ax5.legend()
+    ax5.grid(True, alpha=0.3)
+
+    # 子图 6: Batch Size with Completions
+    ax6 = axes[1, 2]
+    ax6.plot(x, df["batch_size"], color='steelblue', linewidth=0.8,
+             label='batch_size')
+    if "pre_decode_batch_size" in df.columns:
+        ax6.plot(x, df["pre_decode_batch_size"], color='darkorange',
+                 linewidth=0.8, label='pre_decode_batch_size', linestyle='-.')
+    if "num_prev_completed_reqs" in df.columns:
+        ax6.plot(x, df["num_prev_completed_reqs"], color='brown', linewidth=0.8,
+                 label='num_prev_completed_reqs', linestyle='--')
+    ax6.set_xlabel("Batch Index")
+    ax6.set_ylabel("Requests")
+    ax6.set_title("Batch Size and Previous Completions")
+    ax6.legend()
+    ax6.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
