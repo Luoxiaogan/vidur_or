@@ -23,20 +23,20 @@ SEED = 42
 
 REQUEST_TYPES = {
     "type_a": {
-        "prefill_tokens": 250,
-        "decode_tokens": 5,
+        "prefill_tokens": 5000,
+        "decode_tokens": 3,
         "poisson_rate": 1,
-        "count": 40000,
+        "count": 20000,
     },
     "type_b": {
-        "prefill_tokens": 250,
-        "decode_tokens": 5,
+        "prefill_tokens": 5000,
+        "decode_tokens": 9,
         "poisson_rate": 1,
-        "count": 40000,
+        "count": 20000,
     },
 }
 
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_batch_queue_inject_loose_decode/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0509_P_5000_D_3_9/output"
 BATCH_CSV = f"{OUTPUT_DIR}/batch_metrics.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/request_metrics.csv"
 
@@ -168,7 +168,7 @@ def main():
         disaggregation_decode_enable_fake_auto=True,
         export_batch_metrics_to_file=BATCH_CSV,
         export_request_metrics_to_csv=REQUEST_CSV,
-        mem_fraction_static=0.1,
+        mem_fraction_static=0.3,
         # max_running_requests=20000,
         max_running_requests=8192,
         max_queued_requests=None,

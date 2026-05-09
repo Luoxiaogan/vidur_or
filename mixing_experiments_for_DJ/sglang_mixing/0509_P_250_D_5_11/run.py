@@ -30,13 +30,13 @@ REQUEST_TYPES = {
     },
     "type_b": {
         "prefill_tokens": 250,
-        "decode_tokens": 5,
+        "decode_tokens": 11,
         "poisson_rate": 1,
         "count": 40000,
     },
 }
 
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_batch_queue_inject_loose_decode/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0509_P_250_D_5_11/output"
 BATCH_CSV = f"{OUTPUT_DIR}/batch_metrics.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/request_metrics.csv"
 
