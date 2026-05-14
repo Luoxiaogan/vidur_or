@@ -32,17 +32,44 @@ SEED = 42
 REQUEST_TYPES = {
     "type_a": {
         "prefill_tokens": 300,
-        "decode_tokens": 4,
+        "decode_tokens": 6,
         "poisson_rate": 1,
-        "count": 40000,
+        "count": 20000,
     },
     "type_b": {
         "prefill_tokens": 300,
         "decode_tokens": 9,
         "poisson_rate": 1,
-        "count": 40000,
-    },
+        "count": 20000,
+    }
 }
+
+# REQUEST_TYPES = {
+#     "type_a": {
+#         "prefill_tokens": 100,
+#         "decode_tokens": 5,
+#         "poisson_rate": 1,
+#         "count": 20000,
+#     },
+#     "type_b": {
+#         "prefill_tokens": 100,
+#         "decode_tokens": 6,
+#         "poisson_rate": 1,
+#         "count": 20000,
+#     },
+#     "type_c": {
+#         "prefill_tokens": 100,
+#         "decode_tokens": 9,
+#         "poisson_rate": 1,
+#         "count": 20000,
+#     },
+#     "type_d": {
+#         "prefill_tokens": 100,
+#         "decode_tokens": 10,
+#         "poisson_rate": 1,
+#         "count": 20000,
+#     },
+# }
 
 OUTPUT_DIR = (
     "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/"
@@ -179,7 +206,7 @@ def main():
         export_batch_metrics_to_file=BATCH_CSV,
         export_request_metrics_to_csv=REQUEST_CSV,
         # KV pool 给到正常水位，让真实可用 KV 大
-        mem_fraction_static=0.85,
+        mem_fraction_static=0.3,
         # req-slot 上限；越大越不被 admission cap，但要配合下面的 cuda graph 限制
         max_running_requests=8192,
         # 不限制等待队列长度
