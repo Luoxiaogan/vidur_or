@@ -1,7 +1,4 @@
 {
-    "cSpell.words": [
-        "INTERNLM",
-        "QWEN",
-        "vidur"
-    ]
+    "workbench.editor.wrapTabs": true,
+    "editor.wordWrap": "on",
 }
