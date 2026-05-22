@@ -78,7 +78,7 @@ REQUEST_TYPES = {
 #     },
 # }
 
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_batch_queue_inject_loose_decode/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0522_P_300_D_6_10_N_4W/output"
 BATCH_CSV = f"{OUTPUT_DIR}/batch_metrics.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/request_metrics.csv"
 

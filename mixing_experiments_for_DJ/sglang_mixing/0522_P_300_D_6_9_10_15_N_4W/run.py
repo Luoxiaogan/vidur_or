@@ -21,51 +21,51 @@ from sglang.srt.managers.io_struct import GenerateReqInput
 MODEL_PATH = "/root/Qwen2.5-1.5B-Instruct"
 SEED = 42
 
+# REQUEST_TYPES = {
+#     "type_a": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 9,
+#         "poisson_rate": 1,
+#         "count": 10000,
+#     },
+#     "type_b": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 15,
+#         "poisson_rate": 1,
+#         "count": 10000,
+#     },
+# }
+
 REQUEST_TYPES = {
     "type_a": {
         "prefill_tokens": 300,
         "decode_tokens": 6,
         "poisson_rate": 1,
-        "count": 20000,
+        "count": 10000,
     },
     "type_b": {
         "prefill_tokens": 300,
+        "decode_tokens": 9,
+        "poisson_rate": 1,
+        "count": 10000,
+    },
+    "type_c": {
+        "prefill_tokens": 300,
         "decode_tokens": 10,
         "poisson_rate": 1,
-        "count": 20000,
+        "count": 10000,
+    },
+    "type_d": {
+        "prefill_tokens": 300,
+        "decode_tokens": 15,
+        "poisson_rate": 1,
+        "count": 10000,
     },
 }
 
 # REQUEST_TYPES = {
 #     "type_a": {
 #         "prefill_tokens": 300,
-#         "decode_tokens": 6,
-#         "poisson_rate": 1,
-#         "count": 10000,
-#     },
-#     "type_b": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 9,
-#         "poisson_rate": 1,
-#         "count": 10000,
-#     },
-#     "type_c": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 10,
-#         "poisson_rate": 1,
-#         "count": 10000,
-#     },
-#     "type_d": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 15,
-#         "poisson_rate": 1,
-#         "count": 10000,
-#     },
-# }
-
-# REQUEST_TYPES = {
-#     "type_a": {
-#         "prefill_tokens": 300,
 #         "decode_tokens": 9,
 #         "poisson_rate": 1,
 #         "count": 40000,
@@ -78,7 +78,7 @@ REQUEST_TYPES = {
 #     },
 # }
 
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_batch_queue_inject_loose_decode/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0522_P_300_D_6_9_10_15_N_4W/output"
 BATCH_CSV = f"{OUTPUT_DIR}/batch_metrics.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/request_metrics.csv"
 
