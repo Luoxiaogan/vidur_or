@@ -190,6 +190,118 @@ def plot_pre_decode_comparison(df: pd.DataFrame, output_dir: Path, exp_name: str
     print(f"Saved pre-decode comparison to: {output_path}")
 
 
+def _classify_case(row):
+    """Map a decode row to Case 1/2/3/0 (no retract)."""
+    nr = row["num_retracted_reqs"]
+    if nr == 0:
+        return 0
+    ra, rr, kn = row["real_admission"], row["real_retraction"], row["retracted_K_new"]
+    if ra > 0 and rr == 0:
+        return 1
+    if ra == 0 and rr > 0 and kn > 0:
+        return 2
+    if ra == 0 and rr > 0 and kn == 0:
+        return 3
+    return -1  # unexpected combination
+
+
+def plot_retraction_breakdown(df: pd.DataFrame, output_dir: Path, exp_name: str):
+    """Decompose retraction into regulator (K_new) vs real, plus real_admission and case mix."""
+    required = {"real_admission", "real_retraction", "retracted_K_new", "num_retracted_reqs"}
+    if not required.issubset(df.columns):
+        print("real_admission/real_retraction/retracted_K_new not in CSV; skip breakdown plot")
+        return
+
+    df = df.copy()
+    df["case"] = df.apply(_classify_case, axis=1)
+    x = df["batch_index"]
+
+    counts = df["case"].value_counts().reindex([0, 1, 2, 3, -1], fill_value=0)
+    identity_violations = int(
+        (df["num_retracted_reqs"] != df["retracted_K_new"] + df["real_retraction"]).sum()
+    )
+
+    fig, axes = plt.subplots(2, 2, figsize=(20, 9))
+    fig.suptitle(
+        f"Retraction Breakdown: {exp_name} "
+        f"(case counts: C1={counts[1]}, C2={counts[2]}, C3={counts[3]}, "
+        f"no-retract={counts[0]}, bad={counts[-1]}; identity violations={identity_violations})",
+        fontsize=14,
+        fontweight="bold",
+    )
+
+    # (0,0) Stacked: K_new (regulator) below, real_retraction (real) on top
+    ax = axes[0, 0]
+    ax.stackplot(
+        x,
+        df["retracted_K_new"],
+        df["real_retraction"],
+        labels=["retracted_K_new (regulator, fresh)", "real_retraction (already-decoded)"],
+        colors=["#9ecae1", "#e6550d"],
+        alpha=0.85,
+    )
+    ax.plot(x, df["num_retracted_reqs"], color="black", linewidth=0.6, label="num_retracted_reqs")
+    ax.set_xlabel("Batch Index")
+    ax.set_ylabel("Retracted reqs")
+    ax.set_title("Retraction decomposition: regulator vs real")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(True, alpha=0.3)
+
+    # (0,1) real_admission over time
+    ax = axes[0, 1]
+    ax.plot(x, df["real_admission"], color="#2ca02c", linewidth=0.8, label="real_admission")
+    if "num_new_seqs" in df.columns:
+        ax.plot(
+            x, df["num_new_seqs"], color="purple", linewidth=0.6,
+            linestyle=":", label="num_new_seqs (next prebuilt)",
+        )
+    ax.set_xlabel("Batch Index")
+    ax.set_ylabel("Requests")
+    ax.set_title("real_admission (fresh reqs surviving this iter)")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(True, alpha=0.3)
+
+    # (1,0) Case category scatter
+    ax = axes[1, 0]
+    case_color = {0: "#bbbbbb", 1: "#1f77b4", 2: "#ff7f0e", 3: "#d62728", -1: "magenta"}
+    case_label = {0: "no-retract", 1: "C1 regulator", 2: "C2 underflow", 3: "C3 pure pressure", -1: "bad"}
+    for c, color in case_color.items():
+        mask = df["case"] == c
+        if mask.any():
+            ax.scatter(
+                df.loc[mask, "batch_index"], [c] * mask.sum(),
+                s=18, color=color, label=f"{case_label[c]} ({int(mask.sum())})",
+            )
+    ax.set_yticks([0, 1, 2, 3])
+    ax.set_yticklabels(["no-retract", "C1", "C2", "C3"])
+    ax.set_xlabel("Batch Index")
+    ax.set_ylabel("Case")
+    ax.set_title("Per-iter classification along the run")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(True, alpha=0.3)
+
+    # (1,1) Histogram of case counts
+    ax = axes[1, 1]
+    cats = ["no-retract", "C1", "C2", "C3"]
+    vals = [counts[0], counts[1], counts[2], counts[3]]
+    colors = ["#bbbbbb", "#1f77b4", "#ff7f0e", "#d62728"]
+    bars = ax.bar(cats, vals, color=colors)
+    for bar, v in zip(bars, vals):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2, bar.get_height(),
+            str(int(v)), ha="center", va="bottom", fontsize=10,
+        )
+    ax.set_ylabel("Decode rows")
+    ax.set_title("Case mix")
+    ax.grid(True, alpha=0.3, axis="y")
+
+    output_path = output_dir / f"{exp_name}_retraction_breakdown.png"
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved retraction breakdown to: {output_path}")
+
+
 def process_experiment(input_dir: Path):
     metrics_dir = input_dir / "output"
 
@@ -305,6 +417,7 @@ def process_experiment(input_dir: Path):
     print(f"Saved to: {output_path}")
 
     plot_pre_decode_comparison(df, output_dir, exp_name)
+    plot_retraction_breakdown(df, output_dir, exp_name)
 
     # 可选：读取 request_metrics 并打印统计
     try:
