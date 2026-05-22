@@ -19,7 +19,7 @@ from sglang.srt.managers.io_struct import GenerateReqInput
 
 # ==================== Config ====================
 MODEL_PATH = "/root/Qwen2.5-1.5B-Instruct"
-SEED = 42
+SEED = 4
 
 REQUEST_TYPES = {
     "type_a": {
