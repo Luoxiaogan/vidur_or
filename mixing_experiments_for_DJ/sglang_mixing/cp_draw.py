@@ -221,7 +221,7 @@ def plot_retraction_breakdown(df: pd.DataFrame, output_dir: Path, exp_name: str)
         (df["num_retracted_reqs"] != df["retracted_K_new"] + df["real_retraction"]).sum()
     )
 
-    fig, axes = plt.subplots(2, 2, figsize=(20, 9))
+    fig, axes = plt.subplots(3, 2, figsize=(20, 13))
     fig.suptitle(
         f"Retraction Breakdown: {exp_name} "
         f"(case counts: C1={counts[1]}, C2={counts[2]}, C3={counts[3]}, "
@@ -230,39 +230,51 @@ def plot_retraction_breakdown(df: pd.DataFrame, output_dir: Path, exp_name: str)
         fontweight="bold",
     )
 
-    # (0,0) Stacked: K_new (regulator) below, real_retraction (real) on top
+    # (0,0) OLD retraction: num_retracted_reqs only
     ax = axes[0, 0]
-    ax.stackplot(
-        x,
-        df["retracted_K_new"],
-        df["real_retraction"],
-        labels=["retracted_K_new (regulator, fresh)", "real_retraction (already-decoded)"],
-        colors=["#9ecae1", "#e6550d"],
-        alpha=0.85,
-    )
-    ax.plot(x, df["num_retracted_reqs"], color="black", linewidth=0.6, label="num_retracted_reqs")
+    ax.plot(x, df["num_retracted_reqs"], color="black", linewidth=0.8,
+            label="num_retracted_reqs")
     ax.set_xlabel("Batch Index")
     ax.set_ylabel("Retracted reqs")
-    ax.set_title("Retraction decomposition: regulator vs real")
+    ax.set_title("Old retraction metric: num_retracted_reqs")
     ax.legend(loc="upper right", fontsize=9)
     ax.grid(True, alpha=0.3)
 
-    # (0,1) real_admission over time
+    # (0,1) NEW retraction: K_new (regulator) and real_retraction (already-decoded) as lines
     ax = axes[0, 1]
-    ax.plot(x, df["real_admission"], color="#2ca02c", linewidth=0.8, label="real_admission")
+    ax.plot(x, df["retracted_K_new"], color="#1f77b4", linewidth=0.8,
+            label="retracted_K_new (regulator, fresh)")
+    ax.plot(x, df["real_retraction"], color="#e6550d", linewidth=0.8,
+            label="real_retraction (already-decoded)")
+    ax.set_xlabel("Batch Index")
+    ax.set_ylabel("Retracted reqs")
+    ax.set_title("New retraction breakdown: regulator vs real")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(True, alpha=0.3)
+
+    # (1,0) OLD admission metric: num_new_seqs
+    ax = axes[1, 0]
     if "num_new_seqs" in df.columns:
-        ax.plot(
-            x, df["num_new_seqs"], color="purple", linewidth=0.6,
-            linestyle=":", label="num_new_seqs (next prebuilt)",
-        )
+        ax.plot(x, df["num_new_seqs"], color="purple", linewidth=0.8,
+                label="num_new_seqs (next prebuilt)")
     ax.set_xlabel("Batch Index")
     ax.set_ylabel("Requests")
-    ax.set_title("real_admission (fresh reqs surviving this iter)")
+    ax.set_title("Old admission metric: num_new_seqs")
     ax.legend(loc="upper right", fontsize=9)
     ax.grid(True, alpha=0.3)
 
-    # (1,0) Case category scatter
-    ax = axes[1, 0]
+    # (1,1) NEW admission metric: real_admission
+    ax = axes[1, 1]
+    ax.plot(x, df["real_admission"], color="#2ca02c", linewidth=0.8,
+            label="real_admission")
+    ax.set_xlabel("Batch Index")
+    ax.set_ylabel("Requests")
+    ax.set_title("New admission metric: real_admission (fresh reqs surviving this iter)")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(True, alpha=0.3)
+
+    # (2,0) Case category scatter
+    ax = axes[2, 0]
     case_color = {0: "#bbbbbb", 1: "#1f77b4", 2: "#ff7f0e", 3: "#d62728", -1: "magenta"}
     case_label = {0: "no-retract", 1: "C1 regulator", 2: "C2 underflow", 3: "C3 pure pressure", -1: "bad"}
     for c, color in case_color.items():
@@ -280,8 +292,8 @@ def plot_retraction_breakdown(df: pd.DataFrame, output_dir: Path, exp_name: str)
     ax.legend(loc="upper right", fontsize=9)
     ax.grid(True, alpha=0.3)
 
-    # (1,1) Histogram of case counts
-    ax = axes[1, 1]
+    # (2,1) Histogram of case counts
+    ax = axes[2, 1]
     cats = ["no-retract", "C1", "C2", "C3"]
     vals = [counts[0], counts[1], counts[2], counts[3]]
     colors = ["#bbbbbb", "#1f77b4", "#ff7f0e", "#d62728"]
