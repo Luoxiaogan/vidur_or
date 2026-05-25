@@ -21,45 +21,75 @@ from sglang.srt.managers.io_struct import GenerateReqInput
 MODEL_PATH = "/root/Qwen2.5-1.5B-Instruct"
 SEED = 49
 
+# REQUEST_TYPES = {
+#     "type_a": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 8,
+#         "poisson_rate": 1,
+#         "count": 30000,
+#     },
+#     "type_b": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 16,
+#         "poisson_rate": 1,
+#         "count": 30000,
+#     },
+# }
+
 REQUEST_TYPES = {
     "type_a": {
         "prefill_tokens": 300,
-        "decode_tokens": 6,
+        "decode_tokens": 5,
         "poisson_rate": 1,
-        "count": 10000,
+        "count": 30000,
     },
     "type_b": {
         "prefill_tokens": 300,
-        "decode_tokens": 11,
+        "decode_tokens": 8,
         "poisson_rate": 1,
-        "count": 10000,
+        "count": 30000,
+    },
+    "type_c": {
+        "prefill_tokens": 300,
+        "decode_tokens": 16,
+        "poisson_rate": 1,
+        "count": 30000,
     },
 }
 
 # REQUEST_TYPES = {
 #     "type_a": {
 #         "prefill_tokens": 300,
-#         "decode_tokens": 6,
+#         "decode_tokens": 5,
 #         "poisson_rate": 1,
-#         "count": 10000,
+#         "count": 30000,
+#     }
+# }
+
+# REQUEST_TYPES = {
+#     "type_a": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 5,
+#         "poisson_rate": 1,
+#         "count": 30000,
 #     },
 #     "type_b": {
 #         "prefill_tokens": 300,
-#         "decode_tokens": 9,
+#         "decode_tokens": 8,
 #         "poisson_rate": 1,
-#         "count": 10000,
+#         "count": 30000,
 #     },
 #     "type_c": {
 #         "prefill_tokens": 300,
 #         "decode_tokens": 10,
 #         "poisson_rate": 1,
-#         "count": 10000,
+#         "count": 30000,
 #     },
 #     "type_d": {
 #         "prefill_tokens": 300,
-#         "decode_tokens": 15,
+#         "decode_tokens": 16,
 #         "poisson_rate": 1,
-#         "count": 10000,
+#         "count": 30000,
 #     },
 # }
 
