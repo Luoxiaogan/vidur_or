@@ -24,38 +24,38 @@ SEED = 49
 # REQUEST_TYPES = {
 #     "type_a": {
 #         "prefill_tokens": 300,
-#         "decode_tokens": 8,
-#         "poisson_rate": 1,
-#         "count": 30000,
-#     },
-#     "type_b": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 16,
+#         "decode_tokens": 5,
 #         "poisson_rate": 1,
 #         "count": 30000,
 #     },
 # }
 
-REQUEST_TYPES = {
-    "type_a": {
-        "prefill_tokens": 300,
-        "decode_tokens": 5,
-        "poisson_rate": 1,
-        "count": 30000,
-    },
-    "type_b": {
-        "prefill_tokens": 300,
-        "decode_tokens": 8,
-        "poisson_rate": 1,
-        "count": 30000,
-    },
-    "type_c": {
-        "prefill_tokens": 300,
-        "decode_tokens": 16,
-        "poisson_rate": 1,
-        "count": 30000,
-    },
-}
+# REQUEST_TYPES = {
+#     "type_a": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 6,
+#         "poisson_rate": 1,
+#         "count": 30000,
+#     },
+#     "type_b": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 7,
+#         "poisson_rate": 1,
+#         "count": 30000,
+#     },
+#     "type_c": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 12,
+#         "poisson_rate": 1,
+#         "count": 30000,
+#     },
+#     "type_d": {
+#         "prefill_tokens": 300,
+#         "decode_tokens": 14,
+#         "poisson_rate": 1,
+#         "count": 30000,
+#     },
+# }
 
 # REQUEST_TYPES = {
 #     "type_a": {
@@ -66,32 +66,20 @@ REQUEST_TYPES = {
 #     }
 # }
 
-# REQUEST_TYPES = {
-#     "type_a": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 5,
-#         "poisson_rate": 1,
-#         "count": 30000,
-#     },
-#     "type_b": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 8,
-#         "poisson_rate": 1,
-#         "count": 30000,
-#     },
-#     "type_c": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 10,
-#         "poisson_rate": 1,
-#         "count": 30000,
-#     },
-#     "type_d": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 16,
-#         "poisson_rate": 1,
-#         "count": 30000,
-#     },
-# }
+REQUEST_TYPES = {
+    "type_a": {
+        "prefill_tokens": 300,
+        "decode_tokens": 12,
+        "poisson_rate": 1,
+        "count": 30000,
+    },
+    "type_b": {
+        "prefill_tokens": 300,
+        "decode_tokens": 15,
+        "poisson_rate": 1,
+        "count": 30000,
+    },
+}
 
 # REQUEST_TYPES = {
 #     "type_a": {
