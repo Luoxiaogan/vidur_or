@@ -1,0 +1,71 @@
+WARNING:sglang.srt.server_args:KV cache is forced as chunk cache for decode server
+Loading tokenizer...
+======================================================================
+Batch queue injection experiment
+======================================================================
+Total requests: 60000
+Types: ['type_a', 'type_b']
+
+Generating logical request queue...
+  type_a: 30000 reqs, prefill=300, decode=6, rate=1
+  type_b: 30000 reqs, prefill=300, decode=12, rate=1
+Total: 60000 requests
+First 5 logical arrival times (ms): [0.0, 0.0, 83.60177863312201, 283.7721687129117, 1639.538240522756]
+First 20 request types: ['type_a', 'type_b', 'type_b', 'type_a', 'type_b', 'type_b', 'type_a', 'type_b', 'type_b', 'type_b', 'type_b', 'type_a', 'type_a', 'type_b', 'type_b', 'type_a', 'type_a', 'type_a', 'type_b', 'type_a']
+
+======================================================================
+Initializing SGLang Engine...
+======================================================================
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+[Gloo] Rank 0 is connected to 0 peer ranks. Expected number of connected peer ranks is : 0
+Loading tokenizer...
+Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  1.66it/s]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00,  1.66it/s]
+
+  0%|          | 0/52 [00:00<?, ?it/s]Capturing batches (bs=512 avail_mem=53.09 GB):   0%|          | 0/52 [00:00<?, ?it/s]Capturing batches (bs=512 avail_mem=53.09 GB):   2%|▏         | 1/52 [00:00<00:32,  1.57it/s]Capturing batches (bs=496 avail_mem=52.86 GB):   2%|▏         | 1/52 [00:00<00:32,  1.57it/s]Capturing batches (bs=480 avail_mem=52.85 GB):   2%|▏         | 1/52 [00:00<00:32,  1.57it/s]Capturing batches (bs=464 avail_mem=52.85 GB):   2%|▏         | 1/52 [00:00<00:32,  1.57it/s]Capturing batches (bs=464 avail_mem=52.85 GB):   8%|▊         | 4/52 [00:00<00:07,  6.26it/s]Capturing batches (bs=448 avail_mem=52.83 GB):   8%|▊         | 4/52 [00:00<00:07,  6.26it/s]Capturing batches (bs=432 avail_mem=52.82 GB):   8%|▊         | 4/52 [00:00<00:07,  6.26it/s]Capturing batches (bs=416 avail_mem=52.80 GB):   8%|▊         | 4/52 [00:00<00:07,  6.26it/s]Capturing batches (bs=416 avail_mem=52.80 GB):  13%|█▎        | 7/52 [00:00<00:04, 10.21it/s]Capturing batches (bs=400 avail_mem=52.80 GB):  13%|█▎        | 7/52 [00:00<00:04, 10.21it/s]Capturing batches (bs=384 avail_mem=52.77 GB):  13%|█▎        | 7/52 [00:00<00:04, 10.21it/s]Capturing batches (bs=368 avail_mem=52.77 GB):  13%|█▎        | 7/52 [00:01<00:04, 10.21it/s]Capturing batches (bs=368 avail_mem=52.77 GB):  19%|█▉        | 10/52 [00:01<00:03, 13.41it/s]Capturing batches (bs=352 avail_mem=52.75 GB):  19%|█▉        | 10/52 [00:01<00:03, 13.41it/s]Capturing batches (bs=336 avail_mem=52.74 GB):  19%|█▉        | 10/52 [00:01<00:03, 13.41it/s]Capturing batches (bs=320 avail_mem=52.71 GB):  19%|█▉        | 10/52 [00:01<00:03, 13.41it/s]Capturing batches (bs=320 avail_mem=52.71 GB):  25%|██▌       | 13/52 [00:01<00:02, 15.84it/s]Capturing batches (bs=304 avail_mem=52.71 GB):  25%|██▌       | 13/52 [00:01<00:02, 15.84it/s]Capturing batches (bs=288 avail_mem=52.69 GB):  25%|██▌       | 13/52 [00:01<00:02, 15.84it/s]Capturing batches (bs=272 avail_mem=52.68 GB):  25%|██▌       | 13/52 [00:01<00:02, 15.84it/s]Capturing batches (bs=272 avail_mem=52.68 GB):  31%|███       | 16/52 [00:01<00:02, 17.54it/s]Capturing batches (bs=256 avail_mem=52.66 GB):  31%|███       | 16/52 [00:01<00:02, 17.54it/s]Capturing batches (bs=248 avail_mem=52.65 GB):  31%|███       | 16/52 [00:01<00:02, 17.54it/s]Capturing batches (bs=240 avail_mem=52.63 GB):  31%|███       | 16/52 [00:01<00:02, 17.54it/s]Capturing batches (bs=240 avail_mem=52.63 GB):  37%|███▋      | 19/52 [00:01<00:01, 19.10it/s]Capturing batches (bs=232 avail_mem=52.62 GB):  37%|███▋      | 19/52 [00:01<00:01, 19.10it/s]Capturing batches (bs=224 avail_mem=52.60 GB):  37%|███▋      | 19/52 [00:01<00:01, 19.10it/s]Capturing batches (bs=216 avail_mem=52.60 GB):  37%|███▋      | 19/52 [00:01<00:01, 19.10it/s]Capturing batches (bs=216 avail_mem=52.60 GB):  42%|████▏     | 22/52 [00:01<00:01, 20.26it/s]Capturing batches (bs=208 avail_mem=52.57 GB):  42%|████▏     | 22/52 [00:01<00:01, 20.26it/s]Capturing batches (bs=200 avail_mem=52.57 GB):  42%|████▏     | 22/52 [00:01<00:01, 20.26it/s]Capturing batches (bs=192 avail_mem=52.54 GB):  42%|████▏     | 22/52 [00:01<00:01, 20.26it/s]Capturing batches (bs=192 avail_mem=52.54 GB):  48%|████▊     | 25/52 [00:01<00:01, 21.03it/s]Capturing batches (bs=184 avail_mem=52.54 GB):  48%|████▊     | 25/52 [00:01<00:01, 21.03it/s]Capturing batches (bs=176 avail_mem=52.52 GB):  48%|████▊     | 25/52 [00:01<00:01, 21.03it/s]Capturing batches (bs=168 avail_mem=52.51 GB):  48%|████▊     | 25/52 [00:01<00:01, 21.03it/s]Capturing batches (bs=168 avail_mem=52.51 GB):  54%|█████▍    | 28/52 [00:01<00:01, 21.72it/s]Capturing batches (bs=160 avail_mem=52.49 GB):  54%|█████▍    | 28/52 [00:01<00:01, 21.72it/s]Capturing batches (bs=152 avail_mem=52.49 GB):  54%|█████▍    | 28/52 [00:01<00:01, 21.72it/s]Capturing batches (bs=144 avail_mem=52.46 GB):  54%|█████▍    | 28/52 [00:01<00:01, 21.72it/s]Capturing batches (bs=144 avail_mem=52.46 GB):  60%|█████▉    | 31/52 [00:01<00:00, 22.27it/s]Capturing batches (bs=136 avail_mem=52.46 GB):  60%|█████▉    | 31/52 [00:01<00:00, 22.27it/s]Capturing batches (bs=128 avail_mem=52.43 GB):  60%|█████▉    | 31/52 [00:02<00:00, 22.27it/s]Capturing batches (bs=120 avail_mem=52.43 GB):  60%|█████▉    | 31/52 [00:02<00:00, 22.27it/s]Capturing batches (bs=120 avail_mem=52.43 GB):  65%|██████▌   | 34/52 [00:02<00:00, 22.76it/s]Capturing batches (bs=112 avail_mem=52.41 GB):  65%|██████▌   | 34/52 [00:02<00:00, 22.76it/s]Capturing batches (bs=104 avail_mem=52.40 GB):  65%|██████▌   | 34/52 [00:02<00:00, 22.76it/s]Capturing batches (bs=96 avail_mem=52.38 GB):  65%|██████▌   | 34/52 [00:02<00:00, 22.76it/s] Capturing batches (bs=96 avail_mem=52.38 GB):  71%|███████   | 37/52 [00:02<00:00, 23.20it/s]Capturing batches (bs=88 avail_mem=52.38 GB):  71%|███████   | 37/52 [00:02<00:00, 23.20it/s]Capturing batches (bs=80 avail_mem=52.35 GB):  71%|███████   | 37/52 [00:02<00:00, 23.20it/s]Capturing batches (bs=72 avail_mem=52.35 GB):  71%|███████   | 37/52 [00:02<00:00, 23.20it/s]Capturing batches (bs=72 avail_mem=52.35 GB):  77%|███████▋  | 40/52 [00:02<00:00, 23.53it/s]Capturing batches (bs=64 avail_mem=52.33 GB):  77%|███████▋  | 40/52 [00:02<00:00, 23.53it/s]Capturing batches (bs=56 avail_mem=52.32 GB):  77%|███████▋  | 40/52 [00:02<00:00, 23.53it/s]Capturing batches (bs=48 avail_mem=52.30 GB):  77%|███████▋  | 40/52 [00:02<00:00, 23.53it/s]Capturing batches (bs=48 avail_mem=52.30 GB):  83%|████████▎ | 43/52 [00:02<00:00, 23.71it/s]Capturing batches (bs=40 avail_mem=52.29 GB):  83%|████████▎ | 43/52 [00:02<00:00, 23.71it/s]Capturing batches (bs=32 avail_mem=52.27 GB):  83%|████████▎ | 43/52 [00:02<00:00, 23.71it/s]Capturing batches (bs=24 avail_mem=52.26 GB):  83%|████████▎ | 43/52 [00:02<00:00, 23.71it/s]Capturing batches (bs=24 avail_mem=52.26 GB):  88%|████████▊ | 46/52 [00:02<00:00, 22.89it/s]Capturing batches (bs=16 avail_mem=52.24 GB):  88%|████████▊ | 46/52 [00:02<00:00, 22.89it/s]Capturing batches (bs=12 avail_mem=52.24 GB):  88%|████████▊ | 46/52 [00:02<00:00, 22.89it/s]Capturing batches (bs=8 avail_mem=52.21 GB):  88%|████████▊ | 46/52 [00:02<00:00, 22.89it/s] Capturing batches (bs=8 avail_mem=52.21 GB):  94%|█████████▍| 49/52 [00:02<00:00, 21.20it/s]Capturing batches (bs=4 avail_mem=52.21 GB):  94%|█████████▍| 49/52 [00:02<00:00, 21.20it/s]Capturing batches (bs=2 avail_mem=52.18 GB):  94%|█████████▍| 49/52 [00:02<00:00, 21.20it/s]Capturing batches (bs=1 avail_mem=52.18 GB):  94%|█████████▍| 49/52 [00:02<00:00, 21.20it/s]Capturing batches (bs=1 avail_mem=52.18 GB): 100%|██████████| 52/52 [00:02<00:00, 21.94it/s]Capturing batches (bs=1 avail_mem=52.18 GB): 100%|██████████| 52/52 [00:02<00:00, 17.96it/s]
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+W0527 14:58:02.359598  6544 transfer_engine_py.cpp:96] Using default malloc/free for protocol: rdma
+I0527 14:58:02.359655  6544 transfer_engine_impl.cpp:757] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I0527 14:58:02.359673  6544 transfer_engine_impl.cpp:107] Transfer Engine parseHostNameWithPort. server_name: 172.17.0.7 port: 12001
+I0527 14:58:02.359689  6544 transfer_engine_impl.cpp:174] Transfer Engine RPC using P2P handshake, listening on 172.17.0.7:16939
+I0527 14:58:02.359746  6544 transfer_engine_impl.cpp:229] Auto-discovering topology...
+W0527 14:58:02.359859  6544 topology.cpp:156] No RDMA devices found, check your device installation
+I0527 14:58:02.359879  6544 transfer_engine_impl.cpp:244] Topology discovery complete. Found 0 HCAs.
+E0527 14:58:02.359889  6544 transfer_metadata.cpp:863] Local segment descriptor not found
+I0527 14:58:02.359899  6544 tcp_transport.cpp:541] TcpTransport: listen on port 15223
+Engine initialized!
+
+======================================================================
+Running experiment...
+======================================================================
+
+Building one batched GenerateReqInput...
+Submitting 60000 requests as one sorted batch...
+Logical arrival span: 29924354.79 ms (preserved only as queue order, not wall-clock sleep)
+
+======================================================================
+Results
+======================================================================
+Completed outputs: 60000
+Total time: 165.44s
+Throughput: 362.66 req/s
+
+Output:
+  Batch metrics: /root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0527_P_300_D_6_12/output/batch_metrics.csv
+  Request metrics: /root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0527_P_300_D_6_12/output/request_metrics.csv
+
+Done!
+Copied: /root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/05_07.lg.test_3.py -> /root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0527_P_300_D_6_12/run.py
+Output dir: /root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0527_P_300_D_6_12/output
+
+======================================================================
+Running experiment in /root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0527_P_300_D_6_12
+======================================================================
+
+
+======================================================================
+Done! Output: /root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0527_P_300_D_6_12/output
+======================================================================
