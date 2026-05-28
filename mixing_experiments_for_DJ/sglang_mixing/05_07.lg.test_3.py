@@ -226,6 +226,10 @@ def main():
         model_path=MODEL_PATH,
         disaggregation_mode="decode",
         disaggregation_decode_enable_fake_auto=True,
+        # Retraction policy:
+        #   retract -> prefill KV 从 GPU offload 到 CPU (保留 content)，decode KV 直接释放；
+        #   resume  -> 从 CPU load 回 prefill KV，decode 段重新 alloc + 由模型 forward 重算 KV。
+        disaggregation_decode_retract_mode="recompute_decode_only",
         export_batch_metrics_to_file=BATCH_CSV,
         export_request_metrics_to_csv=REQUEST_CSV,
         # KV pool 给到正常水位，让真实可用 KV 大
