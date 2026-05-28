@@ -33,13 +33,13 @@ SEED = 49
 REQUEST_TYPES = {
     "type_a": {
         "prefill_tokens": 300,
-        "decode_tokens": 5,
+        "decode_tokens": 6,
         "poisson_rate": 1,
         "count": 30000,
     },
     "type_b": {
         "prefill_tokens": 300,
-        "decode_tokens": 10,
+        "decode_tokens": 11,
         "poisson_rate": 1,
         "count": 30000,
     },
@@ -56,33 +56,6 @@ REQUEST_TYPES = {
     #     "count": 15000,
     # },
 }
-
-# REQUEST_TYPES = {
-#     "type_a": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 5,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-#     "type_b": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 6,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-#     "type_c": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 10,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-#     "type_d": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 12,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-# }
 
 # REQUEST_TYPES = {
 #     "type_a": {
@@ -123,7 +96,7 @@ REQUEST_TYPES = {
 #     },
 # }
 
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_batch_queue_inject_loose_decode/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0529_recompute_P_300_D_6_11/output"
 BATCH_CSV = f"{OUTPUT_DIR}/batch_metrics.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/request_metrics.csv"
 

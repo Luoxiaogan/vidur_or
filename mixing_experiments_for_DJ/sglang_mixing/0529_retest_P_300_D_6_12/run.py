@@ -33,13 +33,13 @@ SEED = 49
 REQUEST_TYPES = {
     "type_a": {
         "prefill_tokens": 300,
-        "decode_tokens": 5,
+        "decode_tokens": 6,
         "poisson_rate": 1,
         "count": 30000,
     },
     "type_b": {
         "prefill_tokens": 300,
-        "decode_tokens": 10,
+        "decode_tokens": 12,
         "poisson_rate": 1,
         "count": 30000,
     },
@@ -56,33 +56,6 @@ REQUEST_TYPES = {
     #     "count": 15000,
     # },
 }
-
-# REQUEST_TYPES = {
-#     "type_a": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 5,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-#     "type_b": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 6,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-#     "type_c": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 10,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-#     "type_d": {
-#         "prefill_tokens": 300,
-#         "decode_tokens": 12,
-#         "poisson_rate": 1,
-#         "count": 15000,
-#     },
-# }
 
 # REQUEST_TYPES = {
 #     "type_a": {
@@ -123,7 +96,7 @@ REQUEST_TYPES = {
 #     },
 # }
 
-OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0507_batch_queue_inject_loose_decode/output"
+OUTPUT_DIR = "/root/vidur_or/mixing_experiments_for_DJ/sglang_mixing/0529_P_300_D_6_12_retest/output"
 BATCH_CSV = f"{OUTPUT_DIR}/batch_metrics.csv"
 REQUEST_CSV = f"{OUTPUT_DIR}/request_metrics.csv"
 
@@ -256,8 +229,8 @@ def main():
         # Retraction policy:
         #   retract -> prefill KV 从 GPU offload 到 CPU (保留 content)，decode KV 直接释放；
         #   resume  -> 从 CPU load 回 prefill KV，decode 段重新 alloc + 由模型 forward 重算 KV。
-        disaggregation_decode_retract_mode="recompute_decode_only",
-        # disaggregation_decode_retract_mode="offload",
+        # disaggregation_decode_retract_mode="recompute_decode_only",
+        disaggregation_decode_retract_mode="offload",
         export_batch_metrics_to_file=BATCH_CSV,
         export_request_metrics_to_csv=REQUEST_CSV,
         # KV pool 给到正常水位，让真实可用 KV 大
