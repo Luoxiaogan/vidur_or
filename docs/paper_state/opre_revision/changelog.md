@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-05-25
+
+- Ran a notation-focused `$paper-pipeline` pass after David's feedback. Expanded the consolidated notation table in [papers/appendix_notation.tex](/Users/ruicheng/GitHub/vidur_or/papers/appendix_notation.tex:4) to cover the current scaling notation, threshold-memory notation, Nested WAIT boundary/segment notation, and experimental calibration notation, and synchronized this symbol registry.
+- Converted the notation summary to a page-breaking `longtable` and added the package to all manuscript entry points that input the appendix, avoiding an overfull notation-table float in the OPRE build.
+- Refined David-feedback wording in the active manuscript: the experimental completion-rate claim now uses long-run-horizon language, and the Equation~`\eqref{eq:time_consump}` interpretation in [papers/model.tex](/Users/ruicheng/GitHub/vidur_or/papers/model.tex:45) uses the paper's resident-prompt and prefill/decode-stage terminology.
+
 ## 2026-05-04
 
 - Re-polished [papers/response_letter.tex](/Users/ruicheng/GitHub/vidur_or/papers/response_letter.tex:47) after the final style pass: removed forced queueing-style phrasing, changed the opening summary to `objective and stability interpretation`, replaced mechanical response openers such as `This concern correctly identifies...`, and kept the proof discussion centered on sample path coupling, endogenous memory growth, and batch composition rather than generic terminology. Recompiled [papers/response_letter.pdf](/Users/ruicheng/GitHub/vidur_or/papers/response_letter.pdf) successfully at 19 pages.

@@ -1,6 +1,3 @@
-% ============================================
-% Proof of Theorem 3: Time-Varying Nested WAIT
-% ============================================
 
 \section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic_time_varying}}\label{appendix:: proof of nested optimality, time varying.}
 
@@ -104,7 +101,7 @@ For service-normalized delay, the queue-integral argument from Appendix~\ref{app
 whenever the first-segment waiting condition holds.
 
 For high-probability memory bounds, the analysis follows the same martingale construction applied to the time-invariant coupled process $\{ \bar{W}_{(k)}^b \}$ defined above. Each realized iteration has duration at least \(d_0/\zeta\), so the number of realized opportunities over \([0,T]\) is at most \(B_\zeta^{\max}=\lceil \zeta T/d_0\rceil\). By the same argument as in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic}, with $\bar{X}_{(k)}^{r} = \bar{Y}_{(k)}^r - n_k$, $\bar{Y}_{(k)}^r \sim \text{Binomial}(n_{k-1}, p_k^*)$, and $p_k^*<n_k/n_{k-1}<1$, the memory bound is:
-$$\mathbf{M}^{(\zeta,T)} = M^{\pi} + \sum_{k=2}^m n_k \cdot (l + l_{k-1}') + \sum_{k=2}^m \theta_k^{-1}\ln\left( \frac{m(1+\zeta T/d_0)}{\delta} \right) \cdot (l + l_{k-1}'),$$
+$$\mathbf{M}^{(\zeta,T)} = M^\pi + \sum_{k=2}^m n_k \cdot (l + l_{k-1}') + \sum_{k=2}^m \theta_k^{-1}\ln\left( \frac{m(1+\zeta T/d_0)}{\delta} \right) \cdot (l + l_{k-1}'),$$
 where $\theta_k$ ($2\leq k\leq m$) is the unique positive solution to:
 \begin{equation}
 e^{-\theta_k n_k} (1 - p_k^* + p_k^* e^{\theta_k})^{n_{k-1}} = 1.\label{eq::eq of theta, time varying}

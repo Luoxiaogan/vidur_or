@@ -1,26 +1,59 @@
 \section{Notation Summary}
 \label{app:notation}
 
-\begin{table}[htbp]
-\centering
-\caption{Summary of notation}
-\label{tab:notation}
+\begin{center}
 \small
-\begin{tabular}{cl}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.38\textwidth}p{0.56\textwidth}}
+\caption{Summary of notation}
+\label{tab:notation}\\
 \toprule
 \textbf{Symbol} & \textbf{Description} \\
 \midrule
+\endfirsthead
+\caption[]{Summary of notation (continued)}\\
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
 $m$ & Number of prompt types \\
 $j$ & Index of prompt type, $j \in \{1, \dots, m\}$ \\
 $\lambda_j$ & Arrival rate of type-$j$ prompts \\
+$\lambda_j^t$ & Time-dependent arrival rate of type-$j$ prompts at physical time $t$ \\
+$\lambda$ & Aggregate arrival rate used in single-parameter experiments \\
+$\hat{\lambda}^*$ & Empirically observed transition point from near-overloaded to overloaded operation \\
+$\mathcal A_j^{(\zeta)}(t,h)$ & Expected number of type-$j$ arrivals in a scaled service window starting at time $t$ with service-normalized length $h$ \\
 $l_j$ & Input length of type-$j$ prompts after prefill \\
+$l$ & Common input length in sections that specialize to a shared prefill length \\
 $l_j'$ & Output length of type-$j$ prompts in the decode phase \\
 $s$ & Stage index: $s=0$ for prefill and $s \in \{1, \dots, l_j'\}$ for decode \\
+$j(i)$ & Type of prompt $i$ \\
+$s_i^t$ & Current stage index of prompt $i$ at time $t$: $0$ for prefill and positive values for decode progress \\
 $k$ & Segment index in Nested WAIT \\
+$L$ & Number of decode-stage segments in the coarser Nested WAIT implementation \\
+$h_k$ & Cut point defining the output-length classes grouped into segment $k$ \\
+$r_k$ & Decode boundary of segment $k$ in the coarser segment design \\
 $b$ & Batch index \\
 $n_{js}^t$ & Number of type-$j$ prompts at stage $s$ at time $t$ \\
 $n_j$ & Per-stage threshold for type-$j$ prompts in WAIT \\
 $n_k$ & Threshold for segment $k$ in Nested WAIT \\
+$Q_{k,s}$ & Queue of prompts associated with segment $k$ and stage or boundary $s$ in Nested WAIT \\
+$\lambda_k'$ & Aggregate arrival rate of prompts whose output lengths belong to segment $k$ \\
+$\lambda'(k_1\to k_2)$ & Aggregate arrival rate of prompts whose segment index lies between $k_1$ and $k_2$ \\
+$p_k$ & Continuation probability from segment $k-1$ to segment $k$ \\
+$p_k^{(\zeta)}(t,h)$ & Time-varying continuation probability from segment $k-1$ to segment $k$ over a scaled service window \\
+$p_k^*$ & Worst-case continuation probability used for the time-varying downstream safety buffer \\
+$\theta_k$ & Exponential-martingale root used to bound downstream boundary queues \\
+$\delta_k$ & Number of prefill/decode stages covered by segment $k$ \\
+$\bar s_k$ & Average decode progress across the stages covered by segment $k$ \\
+$\mathrm{tl}$ & System-wide batch-size cap used to set experimental threshold scales \\
+$B_k$ & Segment-level cap induced by $\mathrm{tl}$ for segment $k$ \\
+$\eta$ & Margin parameter used in the experimental continuation-probability allocation \\
+$q_k$ & Inflated continuation ratio used to allocate experimental segment thresholds \\
 \midrule
 $C$ & GPU memory capacity \\
 $\mathcal{G}^t$ & Set of prompts with KV cache on GPU at time $t$ \\
@@ -28,14 +61,23 @@ $B^t$ & Batch of prompts processed at iteration $t$, with $B^t \subseteq \mathca
 $\tau$ & Iteration time to process a batch \\
 $d_0$ & Fixed overhead time per batch iteration \\
 $d_1$ & Time cost per unit of KV cache memory \\
+$\Delta T(\cdot)$ & Iteration time induced by a threshold-sized batch composition \\
 \midrule
+$T$ & Time horizon \\
+$\zeta$ & Scaling parameter: arrivals scale by $\zeta$ and service times by $1/\zeta$ \\
 $M^*$ & Memory requirement needed to support the fluid equilibrium \\
 $n_j^*$ & Equilibrium per-stage inventory of type-$j$ prompts \\
+$M^\pi$ & Base threshold memory induced by policy $\pi$ \\
+$M_{\mathrm{req}}^{(\zeta,\pi)}$ & Physical memory required by policy $\pi$ in the $\zeta$-scaled system \\
+$M_{\mathrm{req},\mathrm{tv}}^{(\zeta,\pi)}$ & Physical memory required by time-varying Nested WAIT in the $\zeta$-scaled system \\
+$M_{\mathrm{req},L}^{(\zeta,\pi)}$ & Physical memory required by the $L$-segment Nested WAIT design in the $\zeta$-scaled system \\
 $\throughput^{(T,\pi)}$ & Effective throughput of policy $\pi$ over horizon $[0,T]$ \\
+$\throughput^{(\zeta,\pi)}$ & Effective throughput of policy $\pi$ in the $\zeta$-scaled system \\
+$\throughput_T^*$ & Time-varying fluid benchmark averaged over horizon $[0,T]$ \\
 $\Latency^{(T,\pi)}$ & Average latency of policy $\pi$ over horizon $[0,T]$ \\
 $\TTFT^{(T,\pi)}$ & Average time to first token of policy $\pi$ over horizon $[0,T]$ \\
 $\throughput^*$ & Equilibrium effective throughput, measured in completed decode tokens per unit time \\
+$\pi$ & Scheduling policy \\
 $\Pi$ & Class of admissible scheduling policies \\
-\bottomrule
-\end{tabular}
-\end{table}
+\end{longtable}
+\end{center}

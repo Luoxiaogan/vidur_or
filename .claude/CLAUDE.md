@@ -972,6 +972,7 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 时间序列图: `outputs/timeseries/timeseries_latency.png`
 
 ### 进度报告
+- `docs/progress/2026_06_11_david_feedback_nested_wait_packages.md` - **David feedback / Nested WAIT package checkpoint（resident boundary queues、LIFO memory repair、appendix full pseudocode、standalone algorithm TeX/PDF、arXiv/SSRN package rebuild）**
 - `docs/progress/2026_05_05_response_letter_style_polish.md` - **Response letter 最终语气/术语 polish（热情但不机械、避免强行 queueing 术语、PDF 19 pages、stale-term 检查通过）**
 - `docs/progress/2026_05_04_lmsys_reproduction_codebase.md` - **LMSYS Section 6 reproduction codebase 模块化 + experiments.db 增量合并 + paper-facing grid 运行状态**
 - `docs/progress/2026_05_03_experiments_db_merge.md` - **experiments.db binary conflict 无损增量合并记录（local tuning DB + remote reproduction configs/provenance）**
@@ -1044,7 +1045,19 @@ Sarathi +464% (UNSTABLE), WCP +63% (near-stable)。
 - `outputs/validation_database/vidur_validation.db` - **GPU 验证数据库 (32 samples, B=1-600)**
 - `outputs/timeseries/*.csv` - 时间序列原始数据 (nreq=10000, 不提交 git)
 
-## OR 论文 Revision 状态 (2026-05-05 updated)
+## OR 论文 Revision 状态 (2026-06-11 updated)
+
+### David feedback / Nested WAIT package checkpoint (2026-06-11)
+- **主记录文件**: `docs/progress/2026_06_11_david_feedback_nested_wait_packages.md`
+- **主编辑文件**: `papers/unknown_type.tex`, `papers/appendix_b_additional.tex`, `papers/nested_wait_full_algorithm.tex`
+- **生成/提交包**: `papers/nested_wait_full_algorithm_standalone.pdf`, `papers/arxiv_current_source.zip`, `papers/ssrn_current_package.zip`
+- **本轮锁定点**:
+  - Nested WAIT 正文现在明确区分 external entry queue \(Q_{1,0}\)、resident boundary queues \(Q_{k,l_{k-1}'}\) 和 segment interior stages。
+  - 正文 Algorithm 2 保留 intuitive scheduling logic，并补入 resident boundary queue 的 LIFO memory-repair rule。
+  - 完整 event-driven queue transitions 和 eviction formulas 移至 Appendix `Nested WAIT implementation pseudocode`，由 `papers/nested_wait_full_algorithm.tex` 维护。
+  - arXiv/SSRN 独立 package copies 已同步新 TeX 文件，并分别从 package 目录内部编译通过。
+  - `LLM_or`, `LLM_arxiv`, `LLM_ssrn`, standalone algorithm PDF、`arxiv_current/main.pdf` 和 `ssrn_current/main.pdf` 均已编译通过；无 undefined references、label-rerun warnings 或 float-too-large warnings。
+- **状态**: ✅ David feedback 对应的 Nested WAIT mechanism / package synchronization checkpoint 完成；剩余 only layout-level overfull/font warnings。
 
 ### Final QA / Response Package State(2026-05-05)
 - **主记录文件**: `docs/progress/2026_05_05_response_letter_style_polish.md`

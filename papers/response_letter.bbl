@@ -15,26 +15,27 @@ Agrawal A, Panwar A, Mohan J, Kwatra N, Gulavani BS, Ramjee R (2023) Sarathi:
   Efficient llm inference by piggybacking decodes with chunked prefills.
   \emph{arXiv preprint arXiv:2308.16369} .
 
-\bibitem[{Atharva(2026)}]{huggingface-kv-cache-basics}
-Atharva (2026) The kv cache: How it eliminates redundancy.
-  \url{https://huggingface.co/blog/atharv6f/kv-cache-basics}, accessed:
-  2026-05-01.
-
 \bibitem[{{Hugging Face}(2025)}]{huggingface-llama2-docs}
 {Hugging Face} (2025) Llama 2 model documentation.
   \url{https://huggingface.co/docs/transformers/model_doc/llama2}, accessed:
   2026-05-01.
 
+\bibitem[{{Hugging Face}(2026)}]{huggingface-kv-cache-basics}
+{Hugging Face} (2026) Caching.
+  \url{https://huggingface.co/docs/transformers/cache_explanation}, accessed:
+  2026-05-06.
+
 \bibitem[{{NVIDIA}(2026)}]{nvidia-a100-specs}
 {NVIDIA} (2026) Nvidia a100 tensor core gpu specifications.
-  \url{https://www.nvidia.com/en-eu/data-center/a100/}, accessed: 2026-05-01.
+  \url{https://www.nvidia.com/en-us/data-center/a100/}, accessed: 2026-05-06.
 
 \bibitem[{Patel et~al.(2024)Patel, Choukse, Zhang, Shah, Goiri, Maleki,
   \protect\BIBand{} Bianchini}]{patel2024splitwise}
 Patel P, Choukse E, Zhang C, Shah A, Goiri {\'I}, Maleki S, Bianchini R (2024)
-  Splitwise: Efficient generative llm inference using phase splitting. in 2024
-  acm/ieee 51st annual international symposium on computer architecture (isca).
-  \emph{IEEE Computer Society, Los Alamitos, CA, USA} 118--132.
+  Splitwise: Efficient generative llm inference using phase splitting.
+  \emph{2024 ACM/IEEE 51st Annual International Symposium on Computer
+  Architecture (ISCA)}, 118--132,
+  \urlprefix\url{http://dx.doi.org/10.1109/ISCA59077.2024.00019}.
 
 \bibitem[{{SGLang Team}(2024)}]{sglang-github}
 {SGLang Team} (2024) Sglang: Fast serving framework for large language models

@@ -1,6 +1,3 @@
-% ============================================
-% Proof of Theorem 1: WAIT Algorithm Optimality
-% ============================================
 
 \section{Proof of Theorem~\ref{thm:wait_heavy_traffic}}\label{appexidx::proof of wait_heavy_traffic}
 
@@ -85,7 +82,7 @@ This is the processing time of the full threshold composition, i.e., the batch t
 \begin{equation}\label{eq:policy_constraints}
 \begin{aligned}
 &\lambda_j\Delta^\pi \leq n_j \quad \text{for all } j \in [m], \\
-&M^{*}\leq M^{\pi}\leq C.
+&M^{*}\leq M^\pi\leq C.
 \end{aligned}
 \end{equation}
 The first line says that, over one full-threshold iteration, the expected type-\(j\) arrivals do not exceed the \(n_j\) type-\(j\) prompts that can be advanced from each active stage. The second line is the corresponding feasibility condition: the threshold composition is at least on the scale of the fluid memory requirement but does not exceed the physical memory \(C\).

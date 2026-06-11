@@ -1,0 +1,64 @@
+\begin{breakablealgorithm}
+\caption{Full Event-Driven Implementation of Nested WAIT}
+\label{alg:nested_wait_full}
+{\footnotesize\linespread{0.98}\selectfont
+\begin{algorithmic}[1]
+\Require Memory capacity \( C \), arrival rates \( \lambda_j \) for \( j \in [m] \), thresholds \( n_k \) for segments \( k \in [m] \)
+\Require Output lengths \( l_1' < l_2' < \cdots < l_m' \) for output-length classes \( j \in [m] \)
+    \Statex \Comment{$Q_{1,0}$ is external; for $k\ge2$, $Q_{k,l_{k-1}'}$ waits outside segment $k$ but remains GPU-resident}
+    \Statex \Comment{Prompts in stages $l_{k-1}'+1,\ldots,l_k'$ have already been admitted into segment $k$}
+    \Statex \Comment{Memory repair evicts prompts from resident boundary queues in LIFO order and returns them to $Q_{1,0}$}
+    \State Initialize all segment-entry, boundary, and interior queues to zero
+    \State Initialize event queue; set current time \( t \gets 0 \)
+    \State Set server status to idle
+    \While{True}
+        \State Wait for the next event (arrival or batch completion)
+        \If{event is an arrival}
+            \State \( Q_{1,0} \gets Q_{1,0} + 1 \)  \Comment{New prompts enter segment 1 at stage 0}
+        \ElsIf{event is a batch completion for prefix \(1,\dots,k\)}
+            \State Retrieve the selected counts \(a_{k's}\) stored with the completed prefix batch
+            \State Update all affected queues simultaneously using pre-completion queue values
+            \For{each processed segment \( k'\le k \)}
+                \For{each selected nonterminal stage \(s<l_{k'}'\)}
+                    \State \(Q_{k',s}\gets Q_{k',s}-a_{k's}\), \quad \(Q_{k',s+1}\gets Q_{k',s+1}+a_{k's}\)
+                \EndFor
+                \If{\(k'<m\)}
+                    \State Let \(c_{k'}\) be the number of selected prompts at \(l_{k'}'\) that complete there
+                \Else
+                    \State Set \(c_m\gets a_{m,l_m'}\)
+                \EndIf
+                \State Set the survivor count \(r_{k'}\gets a_{k',l_{k'}'}-c_{k'}\)
+                \State \(Q_{k',l_{k'}'}\gets Q_{k',l_{k'}'}-a_{k',l_{k'}'}\)
+                \If{\(k'<m\)}
+                    \State \(Q_{k'+1,l_{k'}'}\gets Q_{k'+1,l_{k'}'}+r_{k'}\) \Comment{Survivors join the next resident boundary queue}
+                \Else
+                    \State Clear KV caches of completed prompts
+                \EndIf
+            \EndFor
+            \While{\(M_{\mathrm{res}}(Q)>C\) and a resident boundary queue is nonempty}
+                \State Choose \(h\ge2\) whose resident boundary queue contains the most recently admitted prompt
+                \State \(Q_{h,l_{h-1}'}\gets Q_{h,l_{h-1}'}-1\), \quad \(Q_{1,0}\gets Q_{1,0}+1\)
+                \State Discard the evicted prompt's KV cache and accumulated progress
+            \EndWhile
+            \State Set server status to idle
+        \EndIf
+        \State Find largest \( k \) such that \( Q_{k', l_{k'-1}'} \geq n_{k'} \) for all \( k' \leq k \) \Comment{All segments up to $k$ meet threshold}
+        \If{server is idle and such \( k \) exists}
+            \State Set \(S_1=\{0,\ldots,l_1'\}\)
+            \State For \(k'=2,\ldots,k\), set \(S_{k'}=\{l_{k'-1}',\ldots,l_{k'}'\}\)
+            \State For every \(k'\le k\) and \(s\in S_{k'}\), set \(a_{k's}\gets\min\{n_{k'},Q_{k',s}\}\)
+            \State Form the prefix batch from all selected prompts and store \(a_{k's}\)
+            \State Let \(Q^+\) be the conservative projected post-iteration queue state
+            \While{\(M_{\mathrm{res}}(Q^+)>C\) and an unselected resident boundary prompt exists}
+                \State Choose \(h\ge2\) whose unselected resident boundary prompts include the most recently admitted prompt
+                \State \(Q_{h,l_{h-1}'}\gets Q_{h,l_{h-1}'}-1\), \quad \(Q_{1,0}\gets Q_{1,0}+1\)
+                \State \(Q^+_{h,l_{h-1}'}\gets Q^+_{h,l_{h-1}'}-1\)
+                \State Discard the evicted prompt's KV cache and accumulated progress
+            \EndWhile
+            \State Process batch; already resident prompts outside the batch wait with their KV caches retained
+            \State Set server status to busy until the completion event for this prefix batch
+        \EndIf
+    \EndWhile
+\end{algorithmic}
+}
+\end{breakablealgorithm}

@@ -1,14 +1,35 @@
 # Symbols
 
-- `\lambda`: arrival rate / QPS in experiments
-- `\lambda^*`: stability boundary
+- `\lambda`: aggregate arrival rate used in single-parameter experiments
+- `\lambda_j^t`: time-dependent arrival rate of type-`j` prompts at physical time `t`
+- `\hat{\lambda}^*`: empirically observed transition point from near-overloaded to overloaded operation
+- `\mathcal A_j^{(\zeta)}(t,h)`: expected type-`j` arrivals in a scaled service window
+- `\zeta`: asymptotic scaling parameter; arrival rates scale by `\zeta` and service times by `1/\zeta`
+- `l`: common input length in sections that specialize to a shared prefill length
 - `n_j`: per-type, per-stage WAIT threshold
 - `n_j^*`: equilibrium per-stage inventory of type-`j` prompts in the fluid model
 - `n_k`: per-segment Nested WAIT threshold
+- `h_k`: cut point defining output-length classes grouped into segment `k`
+- `r_k`: decode boundary of segment `k` in the coarser segment design
 - `\mathrm{tl}`: system-wide batch-size cap used to determine the segment-level caps and per-stage thresholds
+- `B_k`: segment-level cap induced by `\mathrm{tl}` for segment `k`
+- `\lambda_k'`: aggregate arrival rate for segment `k`
+- `\lambda'(k_1\to k_2)`: aggregate arrival rate over segment indices from `k_1` through `k_2`
+- `p_k`: continuation probability from segment `k-1` to segment `k`
+- `p_k^{(\zeta)}(t,h)`: time-varying continuation probability over a scaled service window
+- `p_k^*`: worst-case continuation probability used for the time-varying downstream safety buffer
+- `\theta_k`: exponential-martingale root used to bound downstream boundary queues
+- `\delta_k`: number of prefill/decode stages covered by segment `k`
+- `\bar s_k`: average decode progress across segment `k`
 - `M^*`: memory requirement needed to support the fluid equilibrium; for fixed capacity `C`, `M^*(\lambda) \le C` defines the fluid stability region
 - `M^*(\lambda)`: arrival-rate-dependent fluid memory requirement used in Section 6 to compare representative lmsys arrival rates with the A100 KV-cache token cap
 - `M^\pi`: base threshold memory induced by a WAIT/Nested WAIT threshold vector
 - `M_{\mathrm{req}}^{(\zeta,\pi)}`: physical memory required by the scaled policy; for WAIT this equals `M^\pi` and is independent of `\zeta`, while for Nested WAIT it equals `M^\pi` plus the finite-horizon downstream safety buffer
+- `M_{\mathrm{req},\mathrm{tv}}^{(\zeta,\pi)}`: physical memory required by time-varying Nested WAIT in the scaled system
+- `M_{\mathrm{req},L}^{(\zeta,\pi)}`: physical memory required by the `L`-segment Nested WAIT design in the scaled system
 - `C`: physical memory capacity
+- `\mathcal{G}^t`: set of prompts whose KV caches are resident on the GPU at time `t`
+- `B^t`: batch processed at iteration `t`
+- `Q_{k,s}`: Nested WAIT segment-stage or boundary queue
+- `\throughput_T^*`: time-varying fluid benchmark averaged over horizon `[0,T]`
 - `tab:notation`: consolidated notation table, now located in Appendix `app:notation`
