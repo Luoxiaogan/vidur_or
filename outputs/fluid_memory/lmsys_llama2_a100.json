@@ -1,0 +1,134 @@
+{
+  "model_name": "meta-llama/Llama-2-7b-hf",
+  "device": "a100",
+  "workload": "lmsys",
+  "prompt_types": [
+    {
+      "name": "d25",
+      "prefill": 31,
+      "decode": 25,
+      "fraction": 0.2121
+    },
+    {
+      "name": "d50",
+      "prefill": 33,
+      "decode": 50,
+      "fraction": 0.1013
+    },
+    {
+      "name": "d75",
+      "prefill": 34,
+      "decode": 75,
+      "fraction": 0.08555
+    },
+    {
+      "name": "d100",
+      "prefill": 37,
+      "decode": 100,
+      "fraction": 0.0662
+    },
+    {
+      "name": "d125",
+      "prefill": 36,
+      "decode": 125,
+      "fraction": 0.05395
+    },
+    {
+      "name": "d150",
+      "prefill": 39,
+      "decode": 150,
+      "fraction": 0.05225
+    },
+    {
+      "name": "d175",
+      "prefill": 37,
+      "decode": 175,
+      "fraction": 0.05305
+    },
+    {
+      "name": "d200",
+      "prefill": 34,
+      "decode": 200,
+      "fraction": 0.05285
+    },
+    {
+      "name": "d225",
+      "prefill": 34,
+      "decode": 225,
+      "fraction": 0.0537
+    },
+    {
+      "name": "d250",
+      "prefill": 36,
+      "decode": 250,
+      "fraction": 0.04555
+    },
+    {
+      "name": "d275",
+      "prefill": 35,
+      "decode": 275,
+      "fraction": 0.0436
+    },
+    {
+      "name": "d300",
+      "prefill": 37,
+      "decode": 300,
+      "fraction": 0.03755
+    },
+    {
+      "name": "d325",
+      "prefill": 34,
+      "decode": 325,
+      "fraction": 0.03005
+    },
+    {
+      "name": "d350",
+      "prefill": 41,
+      "decode": 350,
+      "fraction": 0.0268
+    },
+    {
+      "name": "d375",
+      "prefill": 42,
+      "decode": 375,
+      "fraction": 0.02165
+    },
+    {
+      "name": "d400",
+      "prefill": 41,
+      "decode": 400,
+      "fraction": 0.0163
+    },
+    {
+      "name": "d425",
+      "prefill": 39,
+      "decode": 425,
+      "fraction": 0.01385
+    },
+    {
+      "name": "d450",
+      "prefill": 37,
+      "decode": 450,
+      "fraction": 0.01135
+    },
+    {
+      "name": "d475",
+      "prefill": 40,
+      "decode": 475,
+      "fraction": 0.0128
+    },
+    {
+      "name": "d500",
+      "prefill": 40,
+      "decode": 500,
+      "fraction": 0.0088
+    }
+  ],
+  "d0_s": 0.0102484863577943,
+  "d1_s_per_token": 3.877682025836559e-07,
+  "r2": 0.8818261595229356,
+  "fit_batch_kind": "decode",
+  "kv_capacity_tokens": 137000.0,
+  "fit_sample_count": 240,
+  "total_sample_count": 320
+}

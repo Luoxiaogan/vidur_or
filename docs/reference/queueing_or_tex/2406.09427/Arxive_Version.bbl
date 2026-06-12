@@ -1,0 +1,180 @@
+\begin{thebibliography}{10}
+
+\bibitem{quasar}
+Christina Delimitrou and Christos Kozyrakis.
+\newblock Quasar: Resource-efficient and qos-aware cluster management.
+\newblock {\em ACM Sigplan Notices}, 49(4):127--144, 2014.
+
+\bibitem{TensorFlow_2016}
+Mart{\'\i}n Abadi, Paul Barham, Jianmin Chen, et~al.
+\newblock {{TensorFlow}: A System for {Large-Scale} Machine Learning}.
+\newblock In {\em 12th USENIX Symposium on Operating Systems Design and
+  Implementation (OSDI 16)}, Savannah, GA, November 2016.
+
+\bibitem{climate}
+Jiawei Zhuang, Daniel~J Jacob, Haipeng Lin, Elizabeth~W Lundgren, Robert~M
+  Yantosca, Judit~Flo Gaya, Melissa~P Sulprizio, and Sebastian~D Eastham.
+\newblock Enabling high-performance cloud computing for earth science modeling
+  on over a thousand cores: application to the geos-chem atmospheric chemistry
+  model.
+\newblock {\em Journal of Advances in Modeling Earth Systems},
+  12(5):e2020MS002064, 2020.
+
+\bibitem{protein}
+Milot Mirdita, Konstantin Sch{\"u}tze, Yoshitaka Moriwaki, Lim Heo, Sergey
+  Ovchinnikov, and Martin Steinegger.
+\newblock Colabfold: making protein folding accessible to all.
+\newblock {\em Nature methods}, 19(6):679--682, 2022.
+
+\bibitem{database}
+Luca Ferretti, Michele Colajanni, and Mirco Marchetti.
+\newblock Distributed, concurrent, and independent access to encrypted cloud
+  databases.
+\newblock {\em IEEE transactions on parallel and distributed systems},
+  25(2):437--446, 2013.
+
+\bibitem{moldable3}
+W.~Cirne and F.~Berman.
+\newblock A model for moldable supercomputer jobs.
+\newblock In {\em Proceedings 15th International Parallel and Distributed
+  Processing Symposium. IPDPS 2001}, pages 8 pp.--, 2001.
+
+\bibitem{moldable1}
+Anne Benoit, Valentin~Le Fèvre, Lucas Perotin, Padma Raghavan, Yves Robert,
+  and Hongyang Sun.
+\newblock Resilient scheduling of moldable jobs on failure-prone platforms.
+\newblock In {\em 2020 IEEE International Conference on Cluster Computing
+  (CLUSTER)}, pages 81--91, 2020.
+
+\bibitem{moldable2}
+Ying-Jhih Wu, Shuo-Ting Yu, Kuan-Chou Lai, Amit Chhabra, Hsi-Ya Chang, and
+  Kuo-Chan Huang.
+\newblock Two-level utilization-based processor allocation for scheduling
+  moldable jobs.
+\newblock {\em The Journal of Supercomputing}, 76:10212--10239, 2020.
+
+\bibitem{Amdahl's_law_2008}
+Mark~D. Hill and Michael~R. Marty.
+\newblock {Amdahl's Law in the Multicore Era}.
+\newblock {\em Computer}, 41(7):33--38, 2008.
+
+\bibitem{Google_Borg_2015}
+Abhishek Verma, Luis Pedrosa, Madhukar Korupolu, et~al.
+\newblock {Large-Scale Cluster Management at Google with Borg}.
+\newblock In {\em Proceedings of the Tenth European Conference on Computer
+  Systems}, EuroSys '15, New York, NY, USA, 2015.
+
+\bibitem{autopilot_google}
+Krzysztof Rzadca, Pawel Findeisen, Jacek Swiderski, Przemyslaw Zych, Przemyslaw
+  Broniek, Jarek Kusmierek, Pawel Nowak, Beata Strack, Piotr Witusowski, Steven
+  Hand, and John Wilkes.
+\newblock Autopilot: workload autoscaling at google.
+\newblock In {\em Proceedings of the Fifteenth European Conference on Computer
+  Systems}, EuroSys '20, New York, NY, USA, 2020. Association for Computing
+  Machinery.
+
+\bibitem{mpc1}
+Guanhao Hou, Xingguang Chen, Sibo Wang, and Zhewei Wei.
+\newblock Massively parallel algorithms for personalized pagerank.
+\newblock {\em Proceedings of the VLDB Endowment}, 14(9):1668--1680, 2021.
+
+\bibitem{mpc2}
+Navid~Anjum Aadit, Andrea Grimaldi, Mario Carpentieri, Luke Theogarajan, John~M
+  Martinis, Giovanni Finocchio, and Kerem~Y Camsari.
+\newblock Massively parallel probabilistic computing with sparse ising
+  machines.
+\newblock {\em Nature Electronics}, 5(7):460--468, 2022.
+
+\bibitem{lei_ying_2020_Stein}
+Xin Liu and Lei Ying.
+\newblock {Steady-State Analysis of Load-Balancing Algorithms in the
+  Sub-Halfin–Whitt Regime}.
+\newblock {\em Journal of Applied Probability}, 57(2):578–596, 2020.
+
+\bibitem{Srikant_Stein_2020}
+Wentao Weng, Xingyu Zhou, and R.~Srikant.
+\newblock {Optimal Load Balancing with Locality Constraints}.
+\newblock {\em Proc. ACM Meas. Anal. Comput. Syst.}, 4(3), 2020.
+
+\bibitem{Brill_multiserver_1984}
+Percy~H. Brill and Linda Green.
+\newblock {Queues in Which Customers Receive Simultaneous Service from a Random
+  Number of Servers: A System Point Approach}.
+\newblock {\em Management Science}, 30(1):51--68, 1984.
+
+\bibitem{FILIPPOPOULOs_multiserver_2007}
+Dimitrios Filippopoulos and Helen Karatza.
+\newblock {An M/M/2 Parallel System Model with Pure Space Sharing among Rigid
+  Jobs}.
+\newblock {\em Mathematical and Computer Modelling}, 45(5):491--530, 2007.
+
+\bibitem{multiserver_asymptotic_opimality_2022}
+Isaac Grosof, Ziv Scully, Mor Harchol-Balter, et~al.
+\newblock {Optimal Scheduling in the Multiserver-Job Model under Heavy
+  Traffic}.
+\newblock {\em Proceedings of the ACM on Measurement and Analysis of Computing
+  Systems}, 6(3), 2022.
+
+\bibitem{GROSOF_Reset}
+Isaac Grosof, Yige Hong, Mor Harchol-Balter, et~al.
+\newblock {The RESET and MARC techniques, with application to multiserver-job
+  analysis}.
+\newblock {\em Performance Evaluation}, 162, 2023.
+
+\bibitem{Zero_wait_central-2021}
+Weina Wang, Qiaomin Xie, and Mor Harchol-Balter.
+\newblock {Zero Queueing for Multi-Server Jobs}.
+\newblock {\em SIGMETRICS Performance Evaluation Review}, 49(1):13–14, 2022.
+
+\bibitem{sharp_zer_central_2022}
+Yige Hong and Weina Wang.
+\newblock {Sharp Waiting-Time Bounds for Multiserver Jobs}.
+\newblock In {\em Proceedings of the Twenty-Third International Symposium on
+  Theory, Algorithmic Foundations, and Protocol Design for Mobile Networks and
+  Mobile Computing}, MobiHoc '22, New York, NY, USA, 2022.
+
+\bibitem{first_speed_up}
+Jeff Edmonds.
+\newblock {Scheduling in the Dark}.
+\newblock In {\em Proceedings of the thirty-first annual ACM symposium on
+  Theory of Computing}, pages 179--188, 1999.
+
+\bibitem{Berg_speedup_2018}
+Benjamin Berg, Jan-Pieter Dorsman, and Mor Harchol-Balter.
+\newblock {Towards Optimality in Parallel Job Scheduling}.
+\newblock {\em SIGMETRICS Performance Evaluation Review}, 46(1):116–118,
+  2018.
+
+\bibitem{Berg_speedup_2020}
+Benjamin Berg, Mor Harchol-Balter, Benjamin Moseley, et~al.
+\newblock {Optimal Resource Allocation for Elastic and Inelastic Jobs}.
+\newblock In {\em Proceedings of the 32nd ACM Symposium on Parallelism in
+  Algorithms and Architectures}, SPAA '20, New York, NY, USA, 2020.
+
+\bibitem{Berge_different_phase_2021}
+Benjamin Berg, Justin Whitehouse, Benjamin Moseley, et~al.
+\newblock {The Case for Phase-Aware Scheduling of Parallelizable Jobs}.
+\newblock {\em SIGMETRICS Performance Evaluation Review}, 49(3):65–66, 2022.
+
+\bibitem{WCFS_Grososf_2022}
+Isaac Grosof, Mor Harchol-Balter, and Alan Scheller-Wolf.
+\newblock {WCFS: A New Framework for Analyzing Multiserver Systems}.
+\newblock {\em Queueing Systems}, 102(1-2):143--174, 2022.
+
+\bibitem{kelly_loss}
+Frank~P Kelly.
+\newblock Loss networks.
+\newblock {\em The annals of applied probability}, pages 319--378, 1991.
+
+\bibitem{mazum_blocking}
+Pawel Gazdzicki, Ioannis Lambadaris, and Ravi~R Mazumdar.
+\newblock Blocking probabilities for large multirate erlang loss systems.
+\newblock {\em Advances in Applied Probability}, 25(4):997--1009, 1993.
+
+\bibitem{mao2016resource}
+Hongzi Mao, Mohammad Alizadeh, Ishai Menache, and Srikanth Kandula.
+\newblock Resource management with deep reinforcement learning.
+\newblock In {\em Proceedings of the 15th ACM workshop on hot topics in
+  networks}, pages 50--56, 2016.
+
+\end{thebibliography}

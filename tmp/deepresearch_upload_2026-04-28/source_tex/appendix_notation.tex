@@ -1,0 +1,41 @@
+\section{Notation Summary}
+\label{app:notation}
+
+\begin{table}[htbp]
+\centering
+\caption{Summary of notation}
+\label{tab:notation}
+\small
+\begin{tabular}{cl}
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+$m$ & Number of prompt types \\
+$j$ & Index of prompt type, $j \in \{1, \dots, m\}$ \\
+$\lambda_j$ & Arrival rate of type-$j$ prompts \\
+$l_j$ & Input length of type-$j$ prompts after prefill \\
+$l_j'$ & Output length of type-$j$ prompts in the decode phase \\
+$s$ & Stage index: $s=0$ for prefill and $s \in \{1, \dots, l_j'\}$ for decode \\
+$k$ & Segment index in Nested WAIT \\
+$b$ & Batch index \\
+$n_{js}^t$ & Number of type-$j$ prompts at stage $s$ at time $t$ \\
+$n_j$ & Per-stage threshold for type-$j$ prompts in WAIT \\
+$n_k$ & Threshold for segment $k$ in Nested WAIT \\
+\midrule
+$C$ & GPU memory capacity \\
+$\mathcal{G}^t$ & Set of prompts with KV cache on GPU at time $t$ \\
+$B^t$ & Batch of prompts processed at iteration $t$, with $B^t \subseteq \mathcal{G}^t$ \\
+$\tau$ & Iteration time to process a batch \\
+$d_0$ & Fixed overhead time per batch iteration \\
+$d_1$ & Time cost per unit of KV cache memory \\
+\midrule
+$M^*$ & Memory requirement needed to support the ideal-fluid equilibrium \\
+$n_j^*$ & Equilibrium per-stage inventory of type-$j$ prompts \\
+$\throughput^{(T,\pi)}$ & Effective throughput of policy $\pi$ over horizon $[0,T]$ \\
+$\Latency^{(T,\pi)}$ & Average latency of policy $\pi$ over horizon $[0,T]$ \\
+$\TTFT^{(T,\pi)}$ & Average time to first token of policy $\pi$ over horizon $[0,T]$ \\
+$\throughput^*$ & Equilibrium effective throughput, measured in completed decode tokens per unit time \\
+$\Pi$ & Class of admissible scheduling policies \\
+\bottomrule
+\end{tabular}
+\end{table}

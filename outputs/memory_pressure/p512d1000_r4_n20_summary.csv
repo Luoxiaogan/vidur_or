@@ -1,0 +1,2 @@
+policy,arrival_rate,nreq,completed_window,mean_latency_s,p99_latency_s,restarts,restart_rate_pct,resident_memory_mean_pct,resident_memory_p95_pct,resident_memory_max_pct,batch_kv_tokens_mean_pct,batch_kv_tokens_p95_pct,batch_kv_tokens_max_pct,cpu_queue_mean,cpu_queue_p95,cpu_queue_max
+sarathi,4.0,20,10,16.031834320142185,16.07674839831547,0,0.0,17.146706583063434,21.737588652482266,22.235355923299185,17.040156291042816,21.664860782768585,22.17871683740478,0.0,0.0,0.0

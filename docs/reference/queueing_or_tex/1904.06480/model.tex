@@ -1,0 +1,440 @@
+\section{System Description}
+\label{sec:model}
+
+%In this section, we describe our system model.
+We consider a single server queueing system with two job (a.k.a.
+customer) classes: eager customers (also denoted as
+$\epsilon$-customers) demand service immediately upon arrival, whereas
+tolerant customers (also denoted as $\tau$-customers) can wait in a
+queue (of infinite capacity) to be served.\footnote{\revision{We
+    discuss the generalization where eager customers have limited
+    patience and abandon/renege after a short wait time in
+    Section~\ref{sec:conclusion}; see also~\cite{ANOR}.}} The
+$\tau$-customers can be interrupted either partially (i.e., their
+service rate may be reduced) or completely by $\i$-customers, but not
+by other $\tau$-customers.  Without loss of generality, we assume {\it
+  a unit server speed.}
+%
+We assume that $\epsilon$-customers (respectively, $\t$-customers)
+arrive according to a Poisson process with rate $\lambda_{\i}$
+(respectively, $\lambda_\t$). The sequence of job sizes
+(a.k.a. service requirements) for both the classes is i.i.d., with
+$B_\i$ denoting a generic $\i$ job size, and $B_\t$ denoting a generic
+$\t$ job size. Throughout, {\it we assume that $B_\t$ is exponentially
+  distributed with mean $1/\mu_\t,$ and that $\Exp{B_\i^2} < \infty.$}
+Let $\mu_\i := 1/\Exp{B_\i}.$
+
+\subsection{Dynamic schedulers}
+
+We consider dynamic scheduling, wherein the scheduling policy for each
+class depends upon the state (occupancy) of both the classes.  An
+eager scheduling (sub)policy (a set of rules that assign fractions of
+server capacity to various eager customers, which may also include the
+admission control rules) is chosen depending upon the tolerant
+state. The overall dynamic scheduler is characterized by a sequence of
+such eager sub-policies, one corresponding to each value of tolerant
+occupancy---the tolerant queue in turn utilizes the service capacity
+left unused by the eager class in a work-conserving manner. Our
+dynamic schedulers can thus be viewed to be of nested type: a
+top-level policy chooses the sub-policy used for scheduling the
+$\i$-class based on the occupancy (state) of the
+$\t$-class. \revision{The sub-policy in turn determines, based on the
+  number of eager customers in the system, the admission rule for
+  subsequent arrivals, and the service rate to allocate to each
+  existing eager job. It is important to note that these nested
+  schedulers are not restrictive; rather this is simply a convenient
+  representation of dynamic schedulers; details and examples follow.}
+As a result, the service processes of the two classes are
+interdependent (unlike in the case of static scheduling as considered
+in \cite{ANOR,Value}).
+
+\revision{Specifically, let $(X_\t (t), X_\i (t))$ represent the
+  number of tolerant and eager customers in the system at time~$t$. We
+  consider stationary Markov scheduling policies that determine the
+  service plan for both classes (including, possibly, admission
+  control of eager customers), depending on the tuple
+  $(X_\t (t), X_\i (t)).$
+  % With new arrival/departure of $\t$ or $\i$ class, the
+  % scheduling policy changes the service plan of both the classes.
+  Such Markov policies are known to be sufficient for a wide range of
+  sequential decision problems (see \cite{Puter}); in the context of
+  our model, they are sufficient if one additionally assumes that
+  eager customers have exponentially distributed service requirements.
+  % We consider stationary Markov
+  % scheduling
+  % policies, as it is well known that these policies are sufficient
+  % for
+  % a wide range of sequential decision problems (\cite{Puter}); when
+  % one considers exponential service times for eager class also, then
+  % these policies are sufficient for the problems considered in
+  % section
+  % \ref{sec:pareto}.
+  % For example, if $X_\t (t) = j$ the $\i$-class is served according
+  % to a given sub-policy $j$ and the remaining server capacity (which
+  % depends upon the number $\i$-customers) is used to serve
+  % $\t$-class.
+  As an example, consider the following policy parameterized by
+  $(L, N) \in \mathbb{N}^2$: a) when $(X_\t(t), X_\i (t)) = (j, c)$
+  with $c \le N$, and $j \le L$ then each $\i$-customer is served with
+  rate (speed) $1/N$, while longest waiting $\t$-customer is served at
+  rate $(N-c)/N$; and b) if $j > L$, the longest waiting $\t$-customer
+  is served with the full service capacity (i.e., at rate 1), and no
+  further $\i$-customers are admitted. It is convenient to view such
+  policies as being \emph{nested}; for the above example, when
+  $X_\t (t) \le L$ the eager class is served according to one
+  sub-policy, while it is served according to a second sub-policy when
+  tolerant occupancy is more than $L$. Under the former sub-policy,
+  the eager class is served as an $M/G/N/N$ queue (with each `server'
+  taken to have speed~$1/N$), while under the latter sub-policy, no
+  eager customers are admitted. There is of course the issue of how to
+  deal with the existing eager customers in the system when there is
+  an arrival/departure in the $\t$ queue, leading to change in the
+  eager sub-policy. In the above example, this corresponds to the
+  handling of any eager customers that remain when the $\t$ occupancy
+  increases from $L$ to $L+1.$ This issue is addressed later in this
+  section (see Assumption {\bf A}.1 and the discussion in
+  Section~\ref{sec:example_models}).}
+
+Note that the eager sub-policy switches whenever there is an
+arrival/departure in the tolerant queue, though the further details of
+each sub-policy depend only on the eager occupancy.
+%the eager scheduling policy also depends upon eager occupancy;
+%the scheduling policy of the eager class is (possibly) changed only
+%when the tolerant state changes, i.e., eager class can be scheduled
+%using new rules, when the tolerant state changes.
+We typically refer to the $\i$-sub-policy implemented when there are
+$j$ tolerant jobs in the system as sub-policy~$j.$
+
+\noindent {\bf $\i$-schedulers:} Note that while the occupancy of the
+tolerant queue dictates the selection of the eager sub-policy, the
+sub-policies themselves are oblivious to the state of the tolerant
+queue.
+%Moreover, what we refer to as a sub-policy includes system
+%decisions (e.g., service capacity allocated to the $\i$-class,
+%admission control, amount of waiting space, etc.) as well as
+%behavioural aspects of the impatient eager customers (e.g., eager
+%customers may balk based on the system occupancy).
+%
+We make the following additional assumptions.  Some examples of
+schedulers that satisfy these are presented in
+Section~\ref{sec:example_models}:
+\begin{enumerate}[{\bf A}.1]
+\item To simplify the transition from one $\i$-sub-policy to the next,
+  we assume that all $\i$-customers are dropped when there is an
+  arrival/departure in the $\t$-queue.
+%  \footnote{Assumption {\bf A}.1
+%    is a technical condition required in our proofs. However, under
+%    the SFJ limit, this `flushing' of the $\i$-system is only
+%    performed at a bounded rate (since arrivals/departures in the
+%    $\t$-queue occur at a bounded rate), while the arrival rate of the
+%    $\i$ system scales to infinity. Thus, we expect that this
+%    assumption will not impact the blocking probability of the eager
+%    class (this is also evident from the Monte Carlo simulation based
+%    study presented in Section~\ref{sec:pareto}).}
+\item The scheduling of each sub-policy depends only on the number of
+  $\i$-jobs present in the system.
+\item On arrival, an eager job is either admitted into service or gets
+  dropped/blocked. If admitted, an eager job receives service at a
+  minimum rate/speed of $c_{\min} > 0$ until its departure \emph{under
+    any sub-policy.}
+  % \sout{There exists a uniform upper bound $\mathcal{K}$ on the
+  % number of $\i$-jobs in the system at any time across
+  % sub-policies.}  
+%\item Across sub-policies, the second moment of the $\i$-busy cycle,
+%  defined as the interval between the start of two successive $\i$
+%  busy periods, is uniformly bounded.
+\end{enumerate}
+%
+
+Assumption {\bf A}.1 is a technical condition required in our proofs.
+In Section~\ref{sec:pareto}, we show that this assumption has
+negligible influence on the performance of either class under our
+partial fluid limit.\footnote{ Under the SFJ limit, this `flushing' of
+  the $\i$-system is only performed at a bounded rate (since
+  arrivals/departures in the $\t$-queue occur at a bounded rate),
+  while the arrival rate of the $\i$ system scales to infinity. Thus,
+  we expect that this assumption will not impact the blocking
+  probability of the eager class (this is also evident from the Monte
+  Carlo simulation based study presented in
+  Section~\ref{sec:pareto}).} \revision{We are also able to relax
+  Assumption {\bf A}.1 for the special case of exponentially
+  distributed eager jobs (see Theorem~\ref{Thm_withou_A1}). As
+  discussed before, Assumption {\bf A}.2 is not restrictive; it allows
+  all (non-size based) Markov policies.
+  % This assumption allows
+  % a broad class of schedulers even for the general case,
+  We provide examples of such schedulers in
+  Section~\ref{sec:example_models}.}
+% 
+Assumption~{\bf A}.3 implies that the eager class operates as a
+\emph{loss system}. Indeed, the requirement of a minimum service
+rate/speed $c_{\min} > 0$ captures the `eagerness' of eager
+customers. This assumption also implies that there exists a uniform
+upper bound $\mathcal{K}$ on the number of $\i$-jobs in the system at
+any time \emph{across sub-policies} (since the server is assumed to
+have a unit speed).
+
+The above assumptions imply the following condition (proved as
+Lemma~\ref{lemma:bp_upper_bound} in Appendix~\ref{sec:busycycles});
+the same is stated as a (redundant) assumption to emphasize that the
+uniform convergence required in our analysis is predominantly due to
+the following uniform bound on the eager busy cycles:
+\begin{enumerate}[{\bf A}.4]
+\item Across sub-policies, the second moment of the $\i$-busy cycle,
+  defined as the interval between the start of two successive $\i$
+  busy periods, is uniformly bounded.
+\end{enumerate}
+%
+
+%Assumption~{\bf A}.4 may appear restrictive at first glance, but is
+%actually a consequence of Assumptions~{\bf A}.1--3.  (see
+%Lemma~\ref{lemma:bp_upper_bound} in
+%Appendix~\ref{sec:busycycles}). Despite its redundancy, we state it
+%here to highlight the key role it plays in our analysis.
+%
+
+
+ 
+
+% It is important to note that the above assumptions do not impose
+% that eager customers must begin service upon arrival. Instead,
+% Assumptions~{\bf A}.1--4 allow for a rich class of models for the
+% scheduling and behaviour of the eager class, including balking and
+% reneging (see Section~\ref{sec:example_models}). Indeed, the
+% `eagerness' of the eager class is captured by Assumptions~{\bf A}.3
+% and~{\bf A}.4, which impose uniform (across $\i$ sub-policies) upper
+% bounds on (i) the number of eager jobs in the system at any time,
+% and (ii) the second moment of eager busy cycles. Assumption~{\bf
+% A}.4 can usually be shown to hold so long as
+% $\Exp{B_\i^2} < \infty$ by upper bounding by the eager busy period
+% by the busy period of an associated $M/G/\infty$ queue, which is a
+% well understood object \cite{??}; see
+% Section~\ref{sec:example_models}.
+
+\noindent {\bf $\t$-schedulers:} Next, we state our assumptions on the
+scheduling policy of the tolerant class.
+\begin{enumerate}[{\bf B}.1]
+\item The $\tau$-scheduler is work conserving, i.e., it utilizes all
+  the service capacity left unused by $\epsilon$-jobs, so long as the
+  $\tau$-queue is non-empty.
+\item The $\tau$-jobs are served in a serial fashion, i.e.,
+  $\tau$-jobs cannot pre-empt one another.
+\item The $\tau$-scheduler is blind to the size of $\tau$-jobs.
+\end{enumerate}
+
+Assumption~{\bf B}.1 implies that the tolerant class experiences a
+time varying service process, which depends on both the $\tau$-state
+as well as the $\epsilon$-state. Assumptions~\textbf{B}.2-3 imply that
+we consider $\tau$-schedulers which are non-pre-emptive and
+non-anticipative, for instance, {\it first come first served} (FCFS),
+{\it last come first served} (LCFS), and {\it random order of service}
+(see
+\cite[Chapter~29]{Harchol-Balter}). %Some example models are described
+%at the end of this section.
+
+We require another assumption ({\bf B}.4) regarding the stability of
+the $\t$-queue under the SFJ limit, when $\i$-customers employ a
+single sub-policy (irrespective of the $\t$-state).
+% These are referred to as $\t$-static schedulers in \cite{ANOR}.
+We provide the required background on these schedulers, define
+formally the SFJ scaling, and state the resulting pseudo-conservation
+law (see \cite{ANOR} for more details), after which we state
+Assumption~{\bf B}.4.
+
+
+\subsection{$\t$-static schedulers and background }
+\label{sec:background}
+
+We now consider the special case of $\t$-static scheduling, where a
+single $\i$-sub-policy is used at all times (irrespective of
+$\t$-state); this case was analysed in~\cite{ANOR}. Let ${P_B}_j$
+represent the blocking probability \kt{(long run fraction of losses)}
+of the $\i$-class, if sub-policy-$ j$ is used in a $\t$-static manner
+(${P_B}_j$ was referred to as the standalone blocking probability of
+sub-policy~$j$ in Section~\ref{sec:intro}); we also refer to these as
+$\t$-static blocking probabilities.
+
+%
+\noindent {\bf Short-Frequent Jobs (SFJ) Scaling:} Under the SFJ
+scaling (as in \cite{ANOR}), we let $\lambda_\i \ra \infty$ and
+$\mu_\i \ra \infty,$ such that $\rho_\i := {\lambda_\i}/{\mu_\i}$
+remains constant. This corresponds to scaling the arrival as well as
+the service rate of the eager class to infinity proportionately, so
+that the offered load (the long term rate at which work arrives into
+the system) is held constant. We use $\mu_\i$ as the scale parameter
+for this partial scaling.
+%
+Specifically, we scale the job size distribution of the eager class
+as, $B^{\mu_\i}_\i \eqdist B^1_\i/\mu_{\i}$, where $B^{\mu_\i}_\i$
+denotes a generic eager job size at scale $\mu_\i$ and $\eqdist$ is
+equality in distribution. This scaling (plus Poisson arrivals) under
+{\bf A}.2 ensures that at scale $\mue,$ the occupancy process of the
+$\i$-class gets time-scaled (fast-forwarded) by~$\mue;$ the details
+can be found in Appendix~A. Note that the tolerant workload remains
+unscaled. Thus, the SFJ scaling may be viewed as a time-scale
+separation, with the eager class operating at a faster time-scale.
+
+%
+\noindent {\bf Static Pseudo Conservation:} Let
+$\Omega^{\mu_\epsilon}_{j}(t)$ represent the total amount of server
+capacity left unused by the $\epsilon$-customers in time interval
+$[0,t]$, under sub-policy $j$ operating in a $\t$-static manner. Note
+that $\Omega^{\mu_\epsilon}_{j}(t)$ is the (cumulative) service
+process seen by the $\t$-system. Then by \cite[Lemma 1]{ANOR}, for all
+$\mue,$ the asymptotic (in time) growth rate of
+$\Omega^{\mu_\epsilon}_{j}(t)$ satisfies:
+
+\vspace{-5mm}
+{\small \begin{align}
+    \label{Eqn_nujs}
+          \lim_{t \to \infty}  \frac{\Omega^{\mu_\epsilon}_{j}(t) }{t}
+          \ \to \   \nu_j  := 1 - \rho_\epsilon( 1 - {P_B}_j)
+          \text{ almost surely.}
+        \end{align}}
+      In other words, {\it the long run time average service rate seen by the
+      $\t$-queue equals $\nu_j,$ which depends only on the blocking
+      probability ${P_B}_j$ of the eager class, and not on the specific
+      $\i$-sub-policy that produced that blocking probability.} Further under
+      the SFJ limit, the service process seen by the $\t$-class becomes
+      uniform. Specifically it follows from \cite[Theorem~1]{ANOR} that, as
+      $\mue \to \infty$ in the SFJ limit,
+\begin{align}
+\nonumber
+& \sup_{t \le W}  \left | \Omega^{\mu_\epsilon}_{j}(t)   - \nu_j t \right |  \to   0 \ a.s. \mbox{ for any finite $W,$ and } \\
+& \Upsilon_j^{\mu_\epsilon}  \  \convas  \   \frac { B_\tau }{ \nu_j} \mbox{, both  for any  initial $\epsilon$-state, } \label{Eqn_Upsilon_conv}
+\end{align}
+  where $\Upsilon_j^{\mu_\epsilon}$ denotes the time required to
+  finish $B_\tau$ amount of work using the service process
+  $\Omega^{\mu_\epsilon}_{j}(\cdot)$.
+  %These results were instrumental in deriving the static
+  %Pseudo-conservation law.  
+  This uniformity of the service process under SFJ limit enables a
+  closed form characterization of the performance of the $\t$-class
+  (see \cite[Theorems~2,3]{ANOR}). A key feature of the above results
+  is a \emph{pseudo-conservation law} that expresses the performance
+  of the tolerant class purely in terms of the blocking probability of
+  the eager class, independent of the underlying $\i$-policy that
+  produced the blocking probability. {\it We show an analogous
+  pseudo-conservation for dynamic scheduling policies in this~paper.
+}
+
+%
+Finally, we state the following assumption, which ensures that the
+$\t$-queue remains stable under each
+ %of the $\g$ sub-policies
+ eager sub-policy, when
+they are applied in a $\t$-static manner.
+
+\begin{enumerate}[\textbf{B}.4] 
+\item   {There exists $\delta_\tau  > 0$
+  such that $\rho_{j} := \frac{ \lambda_\tau } { \mu_\tau \nu_j } < 1-\delta_\tau
+  \mbox{ for all } j.$}
+\end{enumerate}
+Assumption~\textbf{B}.4 guarantees that the $\t$-system is stable in
+the dynamic setting as well, as is shown by
+Lemma~\ref{lemma:TauStability}.
+
+\subsection{Some example models}
+\label{sec:example_models}
+
+We begin with the description of one example system that satisfies our
+assumptions, in which the system capacity is not completely
+transferred to one class at any time, but rather a fraction of it is
+used by each $\i$-customer, whilst the left is utilized by one
+$\t$-customer.
+ 
+\noindent {\bf Capacity Division (CD-$(p,K)$) policy:} Each
+$\i$-customer uses {\small $(1/K)$} part of the service capacity.  If
+there are {\small $0 \le \ell \le K$} number of $\i$-customers
+receiving service, then $\i$-customers are served at a net service
+rate of {\small $({\ell}/{K})$}, while the $\t$-customer in service
+(if any) is served at rate {\small $((K-\ell)/K)$}. This continues up
+to {\small $K$} $\i$-customers, and any further $\i$-arrival departs
+without service. Note that whenever an existing $\i$-customer departs,
+{\it the service rate of the $\t$-customer gets increased by {\small
+    $1/K$}}. Of course, $1/K \geq c_{\min}$ to satisfy Assumption
+\textbf{A}.3. Further there is a prior admission control on
+$\epsilon$-arrivals, they are admitted with probability $p$
+independent of all other events.  This is the description of the
+$\i$-sub-policy (as in \cite{Value,ANOR}). Now the top-level policy
+varies the probability of admission $p$ (and possibly the maximum $\i$
+occupancy $K$) based on the occupancy of the $\t$-queue.
+ 
+We refer to the above $\i$-sub-policy as Capacity Division or briefly
+as the CD-$(p,K)$ policy.  Note that the
+CD-$(p,K)$ policy captures a multi-server setting for the eager class.
+While the $\i$-scheduler need not be work conserving, the $\t$-class
+uses all the left over capacity. %One can have other $\i$-sub-policies
+% either designed by the system and/or influenced by the impatient
+% response of the $\i$-class.  We describe a few~here.
+Another example of an $\i$-sub-policy is the following.
+    
+\noindent {\bf Limited Processor Sharing (LPS-$(p,K)$) policy:} This
+sub-policy, denoted by LPS-$(p,K)$ (as in \cite{Value,ANOR}), admits
+an incoming eager job into the system with probability $p,$ so long as
+the number of eager jobs already in service is less than or equal to
+$K.$ The entire service capacity of the server is shared equally
+between the eager jobs in service (i.e., each eager job gets served at
+rate $1/\ell$ when there are $\ell$ jobs in service). As before,
+$1/K \geq c_{\min}.$ Note that under the LPS-$(p,K)$ policy, the
+tolerant class receives service only when there are no eager jobs in
+the system.
+
+
+\ignore{
+  \noindent {\bf Balking and Reneging:} \sout{As a part of a
+    particular $\i$-sub-policy, the system may allocate a certain
+    number of servers (recall that the system may be viewed as
+    multi-server from the standpoint of the eager class) and might
+    allocate a certain amount of waiting space for $\i$-class.  The
+    $\i$-customers might respond to the resources allocated based on
+    their patience levels: a) an $\i$-customer may not enter the
+    system depending upon the $\i$-number already in system according
+    to some probabilistic rule, as in {\it balking} models; or b) may
+    leave the system after waiting for an exponentially distributed
+    patience time of rate $\alpha^{\mue},$ as in {\it reneging}
+    models.  In the case of reneging, we will require that the
+    parameter $\alpha^{\mue}$ scales linearly with $\mue$, i.e.,
+    $\alpha^\mue = \alpha \mue$ for some $\alpha \in (0, \infty)$} (as
+  in \cite{ANOR}).
+}
+
+  \noindent {\bf Top-level policies:} The top-level policy can chose
+  any one of these sub-policies for any $\t$-state. For example, when
+  the $\t$-occupancy is greater than a certain threshold $L,$ one may
+  allocate fewer individual servers to $\i$-customers (using, for
+  example, the CD policy), while one may allocate the entire capacity
+  to the $\i$-class and may serve them in LPS mode when the
+  $\t$-occupancy is smaller.
+
+  \revision{ \noindent {\bf Switching between sub-policies:} Note that
+    under Assumption {\bf A}.1, the transition between sub-policies,
+    triggered by an arrival/departure in the $\t$ queue, is
+    simplified---any left over eager jobs at the time of the
+    transition are simply `flushed'. This simplifies our analysis, and
+    as argued before, would have a negligible impact on the
+    performance of both classes in the SFJ scaling regime. In
+    practice, a more natural implementation strategy would be to
+    simply let the new sub-policy dictate the scheduling of the
+    existing eager jobs in the system after the change of the $\t$
+    occupancy. This implies a possible re-assignment of the service
+    rates of eager customers at the time of the $\t$-transition.
+    % ongoing $\i$-busy period to complete under the same (previously
+    % operational) sub-policy when there is an arrival/departure in
+    % the
+    % tolerant queue, and only apply the next sub-policy once the
+    % eager
+    % queue becomes empty.
+    We prove formally that doing this does not affect our main results
+    under the SFJ limit, for the special case of exponentially
+    distributed eager job sizes (see Theorem~\ref{Thm_withou_A1}).}
+
+  
+  % \sout{Alternatively, one may allocate
+  % (say) only one server to the $\i$-class when the $\t$-occupancy is
+  % high (or low), which might lead to increased levels of
+  % balking/reneging by the $\i$-class.}
+
+
+  % In the following section, we characterize the performance of the
+  % tolerant and eager classes under the SFJ limit.

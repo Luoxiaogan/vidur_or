@@ -1,0 +1,104 @@
+\section*{Response to Referee 3}
+
+We are especially grateful for the detailed comments on the exogenous-arrival interpretation, latency evidence, and theoretical positioning. Because these concerns were also central to the paper's exposition and revision, we address them in detail below. The comments identified several issues that were central to the revision: the throughput interpretation under exogenous arrivals, the use of heavy-traffic terminology, the need for meaningful latency experiments, and the need to explain why the theory is not merely a routine positive-recurrence argument. Addressing these points led to the largest changes in the revision.
+
+\subsection*{D.1. Heavy-traffic terminology}
+
+\comment{Referee 3 notes that the original ``heavy traffic'' analysis was not a conventional heavy-traffic limit; it was a long-horizon limit under fixed arrival rates.}
+
+\response This comment helped us sharpen the asymptotic framing of the theory. The revised paper no longer presents the results as a classical heavy-traffic analysis in which the load approaches the boundary of the stability region. It now states the scaling directly: arrival rates are multiplied by \(\zeta\), processing times are divided by \(\zeta\), and the physical memory capacity \(C\) is kept fixed. This scaling averages out stochastic fluctuations while preserving the memory constraint, and the theorem reports throughput gaps and service-normalized delay metrics over the effective horizon \(\zeta T\). We have removed the heavy-traffic framing from the narrative and now describe the result as an asymptotic guarantee relative to the fluid benchmark, not as a conventional diffusion limit.
+
+\changes
+\begin{itemize}
+    \item Replaced the ``heavy traffic'' framing with the asymptotic scaling used in the theorems.
+    \item Revised the discussions after the WAIT and Nested WAIT theorems to state what the limit controls and how the delay metrics are normalized.
+\end{itemize}
+
+\subsection*{D.2. Throughput with exogenous arrivals}
+
+\comment{Referee 3 points out that, with exogenous arrivals, a stable system completes work at the arrival rate, so the relevant question is the stability region rather than throughput at a fixed arrival rate.}
+
+\response We revised the objective around the stable operating range and effective throughput under exogenous arrivals. The revised Section 2 objective discussion now explains that, within the stable region, a policy cannot complete more useful work than the offered load. The operational question is therefore which arrival rates a policy can sustain while avoiding idle capacity, memory overflow, and eviction-induced restarts. The nonclassical feature in this LLM inference system is endogenous KV-cache growth: a request's memory usage grows as it advances through decode, so the scheduler must control the batch composition across prefill and decode stages, not only the external arrival rate. Section 3 uses the fluid model to identify the batch composition and memory requirement needed to support the fluid equilibrium. We also added three illustrative examples to make this distinction concrete. Example 1, ``Dynamic Memory Growth and Eviction,'' shows how retained KV caches grow during decode and why memory overflow creates eviction/restart costs. Example 2, ``Eviction Cascade under FCFS,'' shows how poor admission control can move the system away from the fluid equilibrium batch composition, trigger evictions, and waste partially completed decode work. Example 3, ``Unknown Output Lengths,'' shows how partial output-length information makes the memory-growth dynamics more difficult to control, because the scheduler must regulate continuation across decode segments before each request's final output length is known. Section 6 reports mean latency and effective completion rate versus arrival rate, so the observed transition from near-overloaded to overloaded operation appears through latency growth and completion-rate saturation.
+
+\changes
+\begin{itemize}
+    \item Revised Section 2.4 to define the admissible policy class, scheduler information, effective throughput, latency, TTFT, and the objective under exogenous arrivals.
+    \item Revised Section 3 to connect the fluid stability region to the batch composition and memory requirement \(M^*\) needed to support the fluid equilibrium.
+    \item Added the real-data \(M^*(\lambda)\) versus \(C\) table in Section 6 to relate the empirical arrival-rate transition to the fluid stability region.
+    \item Revised Section 6 to report mean latency and effective completion rate versus arrival rate, so the stable, near-overloaded, and overloaded regimes are visible in the same diagnostics.
+\end{itemize}
+
+\vspace{0.25em}
+\noindent The revision also clarifies the interpretation of \(M^*\). It is the memory requirement needed to sustain the fluid equilibrium for the arrival vector under consideration, rather than a ``throughput-optimal memory'' level. For a fixed physical capacity \(C\), the condition \(M^*\le C\) determines whether that load lies inside the fluid stability region. This distinction matters under exogenous arrivals: increasing memory does not raise completed work above the offered load in a stable system, but insufficient memory or poor admission control can shrink the stable operating range and reduce effective throughput through eviction-induced restarts.
+
+\subsection*{D.3. Positive recurrence and theoretical significance}
+
+\comment{Referee 3 argues that bounded latency under a stable policy may follow from standard positive-recurrence arguments unless the paper explains the nontrivial part of the analysis.}
+
+\response This comment helped us sharpen the theoretical positioning. We have revised the theory sections to separate the familiar stability implication from the paper-specific control question. The difficult step is not that a stable queue has finite delays; it is designing a policy whose high-dimensional LLM-serving state can be controlled under endogenous KV-cache memory growth and eviction risk. The revised fluid section now makes the source of this difficulty explicit: for a single type, away from the critical denominator, the memory required to sustain the fluid equilibrium grows quadratically in the decode length, because both the number of active prefill/decode stages and the average KV-cache size across the batch composition increase. Thus even a small amount of long-decode traffic can dominate the memory condition defining the fluid stability region. The WAIT proof then connects the actual event-driven policy to an auxiliary embedded full-threshold process observed at deterministic review epochs. The sample-path coupling is the nonstandard step: it shows that controlling the threshold batch composition also controls the batch composition across prefill and decode stages, and that the embedded process tracks both entry starts and downstream stage advancement up to a negligible one-interval lag. Nested WAIT further handles unknown output lengths by using segment boundaries: prompts reveal their output length only when they complete at a boundary or survive to the next segment. The boundary-queue coupling exploits this structure to control memory overflow without tracking every prompt across every prefill/decode stage.
+
+\changes
+\begin{itemize}
+    \item Added Section 3 discussion showing why long-decode requests can dominate the memory requirement for the fluid stability region.
+    \item Rewrote Sections 4.2 and 5.2 to explain the threshold-queue and boundary-queue reductions created by WAIT and Nested WAIT.
+    \item Reorganized the proof appendix around theorem-specific arguments, with explicit batch/stage indices, coupled processes, and citations to established stochastic-process tools used in queueing analysis.
+    \item Revised the theorem interpretation paragraphs to connect the memory conditions to eviction prevention, dimensionality reduction, and service-normalized delay.
+\end{itemize}
+
+\vspace{0.25em}
+\noindent The revision therefore emphasizes that the policy is not merely a work-conserving batching rule. The threshold construction induces a lower-dimensional representation of the memory-coupled state. Without this structure, the primitive state includes the number of prompts at each decode stage, their retained KV caches, output-length uncertainty, and the possibility of eviction-induced restarts. The threshold design is what creates the lower-dimensional threshold and boundary queues analyzed in the proof.
+
+\subsection*{D.4. Latency experiments and overloaded regimes}
+
+\comment{Referee 3 notes that latency comparisons in overloaded regimes can be misleading and recommends plotting mean latency versus arrival rate.}
+
+\response We followed this recommendation by reworking the numerical section around arrival-rate curves. The main figures now plot mean end-to-end latency versus arrival rate and pair it with effective completion rate. Each latency point is computed over a central measurement window after the initial transient, using the same window across policies and replications. This presentation shows the underloaded, near-overloaded, and overloaded regimes in the same figure. In the stable region, where a policy can handle the offered load, latency is interpreted as the end-to-end delay comparison. Around the transition from near-overloaded to overloaded operation, latency growth indicates that the policy is operating close to its empirical capacity boundary over the simulated horizon. Above that range, effective completion rate and eviction-induced restarts show how much effective throughput each policy can still realize.
+
+\changes
+\begin{itemize}
+    \item Rebuilt the main numerical comparisons as arrival-rate experiments for the single-type, two-type, long-decode, and real-data workloads.
+    \item Reported latency together with effective completion rate, highlighting the near-overloaded regime where latency differences become most informative and separating it from overloaded completion-rate saturation and eviction-induced waste.
+    \item Added repeated-replication summaries, a long-horizon check near the two-type transition, and long-decode eviction diagnostics under severe memory pressure.
+\end{itemize}
+
+\vspace{0.25em}
+\noindent The revised numerical section now separates low-load behavior from the near-overloaded and overloaded regimes. At low load, the policies are often close. In the near-overloaded and overloaded regimes, WAIT/Nested WAIT performs better because the threshold controls keep the batch composition closer to balance and reduce eviction-induced waste. For both the synthetic and real-data experiments, we report mean latency together with effective completion rate. The effective completion rate matches the offered arrival rate in the stable region and falls below it once the policy can no longer sustain the load.
+
+\subsection*{D.5. Algorithmic contribution and latency}
+
+\comment{Referee 3 characterizes WAIT as a pipeline-filling idea and asks for a stronger explanation of latency effects and algorithmic contribution.}
+
+\response This comment was valuable because it identified a place where the original exposition could make WAIT look like a simple pipeline-filling rule. In the revision, we added problem-specific exposition and examples to explain the additional control problem. In this setting, KV-cache memory grows endogenously with decode progress, admitted requests can later create overflow, and evictions restart partially completed work. These features make the state-action space high-dimensional: the scheduler must account for the number of requests across prefill/decode stages, their retained KV-cache memory, and the future overflow risk created by current admission decisions. WAIT uses threshold control to regulate this batch composition so that arrivals, completions, and memory growth remain balanced. This threshold structure then performs a dimensionality reduction: instead of tracking every request at every decode stage, the analysis can track whether each per-type prefill/decode-stage queue has accumulated enough requests to form a threshold-sized service batch. Nested WAIT extends the same principle when individual output lengths are unknown at admission: the scheduler does not require final-length information, and each request's own decode trajectory reveals whether it continues to later segments. The resulting boundary queues track the residual requests carried across segment boundaries and play the same simplifying role for partial output-length information. The numerical section now reports latency versus arrival rate to show where these controls improve end-to-end performance.
+
+\changes
+\begin{itemize}
+    \item Added and revised examples in Sections 4 and 5 to show how WAIT and Nested WAIT control concrete prefill/decode trajectories.
+    \item Revised the algorithm discussions to emphasize endogenous memory growth, batch-composition control, and the resulting threshold/boundary-queue reductions.
+    \item Added threshold-without-waiting and real-GPU comparisons in the Additional Experiments appendix as complementary evidence for the scheduling mechanism.
+\end{itemize}
+
+\subsection*{D.6. Memory constraint and preempted jobs}
+
+\comment{Referee 3 asks whether the memory constraint applies only to requests in the current batch and whether paused requests continue to occupy GPU KV-cache memory.}
+
+\response This comment highlighted an important modeling ambiguity. We revised the model to make the GPU KV-cache memory mechanism explicit. The memory constraint applies to the KV caches of all admitted in-system requests retained on the GPU, not only to requests selected in the current iteration. Requests that are not selected remain in their current queues, and those already in decode retain their KV caches. We do not rely on moving GPU-resident KV caches to CPU memory or SSD at zero cost. If the retained GPU KV-cache memory exceeds capacity, the serving system must evict and restart an in-progress request, which can lead to significant effective-throughput loss because partially completed decode work is discarded. The revised model specifies the last-in-first-out eviction rule used in the simulations: the most recently admitted GPU-retained prompts are evicted first, and each evicted prompt restarts from prefill. This loss channel motivates the admission-control problem studied in the paper.
+
+\changes
+\begin{itemize}
+    \item Revised Section 2.3 to state that the memory constraint covers all GPU-retained KV caches of admitted in-system requests.
+    \item Revised the Algorithm 1 and Algorithm 2 explanations to state that unselected decode prompts retain their KV caches.
+    \item Added the last-in-first-out eviction rule, the restart-from-prefill convention, and the corresponding eviction-induced restart diagnostics.
+\end{itemize}
+
+\subsection*{D.7. Writing quality, definitions, and interpretation}
+
+\comment{Referee 3 notes that the original manuscript was unclear, with incomplete definitions, little interpretation of formulas, and notation inconsistencies.}
+
+\response We are grateful for this comment, which became a central guide for the revision. It led us to treat the exposition as a structural issue rather than a matter of local editing. The revised manuscript now develops the fluid model step by step, with the main formulas followed by their operational interpretations. The algorithms are introduced through concrete examples before pseudocode, so the reader sees the scheduling mechanism before the formal implementation. The theorem statements are followed by paragraphs explaining what the memory terms mean and how the proof reduces the original system to threshold and boundary queues.
+
+\changes
+\begin{itemize}
+    \item Rewrote Sections 2--5 to improve notation, flow, and interpretation of the model, fluid equilibrium, and algorithms.
+    \item Added a notation table and explanatory paragraphs after the fluid-model formulas, algorithms, and theorem statements.
+    \item Reorganized the appendix proofs so that the main reductions, memory terms, and stochastic bounds are easier to verify.
+\end{itemize}

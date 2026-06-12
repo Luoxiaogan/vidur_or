@@ -1,0 +1,146 @@
+\section{Extensions}\label{sec:extension}
+
+The WAIT and Nested WAIT algorithms assume constant arrival rates and a fixed number of segments matching the number of prompt types. In practice, however, LLM inference systems face two additional challenges: (i) \textbf{time-varying workloads}, where arrival rates fluctuate throughout the day (e.g., peak hours vs. off-hours); (ii) \textbf{numerous prompt types}, where maintaining separate thresholds for hundreds of output lengths becomes infeasible. We address these challenges through two extensions that preserve the core algorithmic principles—eviction prevention and approaching load balance—while adapting to realistic deployment scenarios.
+
+First, we extend Nested WAIT to handle time-varying arrival rates $\lambda_j^t$ by replacing constant-rate threshold conditions with accumulated arrival constraints over each iteration window. The coupling-based proof technique extends naturally, requiring only that threshold conditions hold at every time instant (Section~\ref{sec:time_varying}). Second, we introduce a \textbf{segment-wise design} that groups $m$ prompt types into $L \leq m$ segments, reducing algorithmic complexity while maintaining asymptotic optimality (Section~\ref{sec:segment_design}). Numerical validation confirms that a moderate segment count (e.g., $L=10$) suffices in practice, with memory overhead remaining logarithmic.
+
+\subsection{Time-Varying Arrival Rates}\label{sec:time_varying}
+
+Time-varying arrival rates capture daily patterns in real LLM services: morning traffic surges, afternoon lulls, evening peaks. The threshold mechanism remains valid as long as the accumulated arrivals during each iteration window stay below the completion capacity. Formally, we replace constant rates $\lambda_j$ with time-dependent rates $\lambda_j^t$, assumed continuous and uniformly bounded by $\lambda_{\max} < \infty$ to prevent unbounded bursts.
+
+We analyze the asymptotic optimality of the Nested WAIT algorithm under time-varying arrival rates, denoted $\lambda_j^t$ for prompt type $j \in [m]$ at time $t \in [0, T]$.
+
+We define the accumulated arrivals of type $j$ over the interval $[t_1, t_2]$ as $\lambda_j[t_1, t_2] := \int_{t_1}^{t_2} \lambda_j^t \, dt$. Recall from Equation \eqref{eq:wait_thresholds} that $\Delta T_{[1,2,\dots,m]}(n_1,\cdots,n_m)$ represents the per-iteration time cost when processing exactly $n_k$ prompts at each stage in segment $k$, for all $k \in [m]$, as in \eqref{eq:nested_wait_thresholds}, where $n_k$ is the threshold defined in Algorithm \ref{alg:nested_wait}.
+
+For the Nested WAIT policy defined by $\pi = [n_1, \dots, n_m]$, we consider the following conditions for all $t\in [0, T]$, $0<\Delta t\leq \Delta T_{[1,2,\cdots,m]}(n_1,\cdots,n_m)$ and $k = 1, 2, \dots, m-1$, analogous to \eqref{eq:nested_wait_thresholds}:
+\begin{equation}
+    \label{eq:nested_wait_thresholds_time_varying}
+\begin{aligned}
+        & \sum_{j=1}^m \lambda_j\big[t, t + \Delta t\big] \\&\leq \sum_{j=1}^m \lambda_j\big[t, t +\Delta T_{[1,2,\cdots,m]}(n_1,\cdots,n_m)\big]< n_1, \\
+        & n_k/n_{k-1} > p_k[t,t+\Delta t],\quad k=2,\dots,m,
+    % & n_{k+1} \sum_{j=k}^m \lambda_j\big[t, t + \Delta t \big]  > n_k \sum_{j=k+1}^m \lambda_j\big[t, t + \Delta t \big],.
+\end{aligned}
+\end{equation}
+where $p_k[t,t+\Delta t] = (\sum_{j=k}^m\lambda_j[t,t+\Delta t])/(\sum_{j=k-1}^m\lambda_j[t,t+\Delta t])$ for \(k\ge2\).
+
+% Analogous to Equation \eqref{eq:nested_wait_thresholds}, we consider thresholds satisfying:
+% \begin{equation}
+%     \label{eq:nested_wait_thresholds_time_varying_ineq}
+%     \Delta T_{[1,\dots,m]}(n_1,\dots,n_m) < \frac{n_1}{\sum_{j=1}^m \lambda_j(s)}, \quad 
+%     \frac{n_{i+1}}{\sum_{j=i+1}^m \lambda_j(s)} > \frac{n_i}{\sum_{j=i}^m \lambda_j(s)}, \quad \forall i = 1, 2, \dots, m-1, \; \forall s \in \mathbb{N}.
+% \end{equation}
+The following theorem extends Theorem~\ref{thm:nested_wait_heavy_traffic} to time-varying arrival rates.
+
+\begin{theorem}
+\label{thm:nested_wait_heavy_traffic_time_varying}
+Suppose the thresholds $\pi = [n_1, \dots, n_m]$ satisfy \eqref{eq:nested_wait_thresholds_time_varying}, and the memory $M^{(\zeta,\pi)}$ fulfills:
+\[
+\begin{aligned}
+M^{(\zeta,\pi)}
+&\geq M^{\pi} + \sum_{k=2}^m (l + l_{k-1}') \left(n_k + \theta_k^{-1} \ln\!\left( \tfrac{m \zeta T}{\delta(d_0+d_1M^\pi)} \right)\right) \\
+    &= O\!\left( 2M^\pi + \sum_{k=2}^m \theta_k^{-1}  (l + l_{k-1}') \ln\!\left( \tfrac{m \zeta T}{\delta(d_0+d_1M^\pi)} \right) \right),
+\end{aligned}
+\]
+where the memory usage $M^\pi$ is defined as \eqref{eq:nested_wait_memory} and $\theta_k$ is given in (\ref{eq::eq of theta, time varying}) with the lower bound in Equation (\ref{eq::theta lower bound}).
+The following asymptotic bounds hold:
+$$
+    \begin{aligned}
+        &\throughput^* - \mathbb{E}\left[ \throughput^{(\zeta, \pi)} \right] 
+   = O\left( (\zeta T)^{-1} \right), \\
+&\mathbb{E}\left[ \Latency^{(\zeta, \pi)} \right], \,\mathbb{E}\left[ \TTFT^{(\zeta, \pi)} \right] = O(1).
+    \end{aligned}
+$$
+Additionally, the memory usage remains below $M^{\zeta,\pi}$ with probability at least $1 - \delta$ over the time horizon $[0,T].$
+\end{theorem}
+
+The extension to time-varying rates preserves the dimensionality reduction structure from Theorem~\ref{thm:nested_wait_heavy_traffic}. The key adaptation is that threshold conditions~\eqref{eq:nested_wait_thresholds_time_varying} must hold at every time instant $t \in [0,T]$, replacing constant rates $\lambda_j$ with accumulated arrivals $\lambda_j[t, t+\Delta t]$ over each iteration window. Because arrival rates are continuous and bounded, the coupling construction remains valid: prompts transitioning from segment \(k-1\) to segment \(k\) are controlled by the corresponding time-varying thinning probability. The Lindley recursion and Doob's maximal inequality apply identically, bounding queue lengths with the same logarithmic overhead. Appendix~\ref{appendix:: proof of nested optimality, time varying.} provides the detailed proof.
+
+\subsection{Segment Design}\label{sec:segment_design}
+
+When LLM systems handle hundreds of distinct output lengths (e.g., $m=500$ in the LMSYS dataset~\cite{zheng2023lmsys}), maintaining individual thresholds for each type becomes impractical: the algorithm must track queue lengths separately for every output length, increasing memory overhead and implementation complexity. The \textbf{segment-wise design} addresses this by grouping similar output lengths into $L \leq m$ segments, where each segment $k$ aggregates types with comparable decode lengths. This reduces algorithmic complexity from $O(m)$ to $O(L)$ while preserving asymptotic optimality—prompts still classify themselves on-the-fly, but now at segment boundaries rather than individual type boundaries.
+
+We assume constant arrival rates for clarity, though the approach extends to time-varying rates as discussed in Section~\ref{sec:time_varying}. Consider $m$ prompt types with decode lengths $l_1' < \cdots < l_m'$ and arrival rates $\lambda_1, \lambda_2, \cdots, \lambda_m$. Our objective is to merge these into $L$ segments, where $L \leq m$. For notational convenience, let $\Delta L:= m/L$. We partition the $m$ types into $L$ segments as follows: types $1$ to $\Delta L$, types $\Delta L+ 1$ to $2\Delta L$, $\dots$, types $(L-1)\Delta L+ 1$ to $m$.
+
+For each segment $k \in \{1, \dots, L\}$, the total arrival rate is defined as $\lambda_k' = \sum_{(k-1)\Delta L+1\le j\le k\Delta L} \lambda_j$. Additionally, we define $\lambda'(k_1 \to k_2) := \sum_{r=k_1}^{k_2} \lambda_r'$ for $1 \leq k_1 \leq k_2 \leq L$.
+
+Given a policy $\pi=[n_1,\dots,n_L]$ with threshold $n_k$ for the $k$-th segment in Algorithm \ref{alg:nested_wait}, we formulate a linear system analogous to Equation \eqref{eq:nested_wait_thresholds}:
+\begin{equation}          \label{eq:nested_wait_thresholds_L}
+    \begin{aligned}
+    &\Delta T_{[1:L]}(n_{1:L}) \leq \frac{n_1}{\sum_{r=1}^L \lambda_r'},  \\
+    &\frac{n_k}{n_{k-1}} > p_k, \ \forall k=2,\dots,L,
+    \end{aligned}
+\end{equation}
+where $p_k =\frac{\lambda'(k \to L)}{\lambda'(k-1 \to L)}$ for \(k\ge2\). Let \(r_k=l_{k\Delta L}'\) be the decode boundary of segment \(k\), with \(r_0=0\). Define \(\delta_1=r_1+1\), \(\bar s_1=r_1/2\), and for \(k\ge2\), \(\delta_k=r_k-r_{k-1}\) and \(\bar s_k=(r_{k-1}+1+r_k)/2\). Then \(\Delta T_{[1,\dots,L]}(n_1,\dots,n_L) = d_0 + d_1 M^\pi(n_1, \dots, n_L)\), where the base memory used by threshold-sized segment batches is
+\[
+M^{\pi}(n_1, \dots, n_L) = \sum_{k=1}^L n_k (l+\bar s_k)\delta_k.
+\]
+For heterogeneous prefill lengths, the segment logic is unchanged because boundaries are determined by decode progress. A sufficient memory condition replaces the common \(l\) in each segment by a segment-wise upper bound \(\bar l_k=\max\{l_j: \text{type }j\text{ can enter segment }k\}\), or by the corresponding type-weighted term when the type mix within the segment is known.
+
+The segment-wise design achieves two practical goals: (i) \textbf{robustness} to varying or uncertain type distributions—if actual output lengths differ slightly from predictions, grouping into segments absorbs the variation; (ii) \textbf{simplicity} in deployment—maintaining $L=10$ segments is far easier than tracking $m=500$ individual types. The theoretical guarantee shows that this simplification incurs no asymptotic cost: throughput remains $O(1/(\zeta T))$ away from optimal, with the same logarithmic safety buffer.
+
+\begin{theorem}
+\label{thm:nested_wait_heavy_traffic, any segment}
+For any fixed number of segments $L$ and thresholds $\pi = [n_1, \dots, n_L]$ satisfying Equation \eqref{eq:nested_wait_thresholds_L}, if the memory capacity $M^{(\zeta, \pi)}$ satisfies:
+\begin{equation}
+    \label{eq:nested_wait_memory_L}
+    \begin{aligned}
+M^{(\zeta, \pi)}
+&\geq M^\pi
++ \sum_{k=2}^L (l + r_{k-1}) n_k \\
+&\quad
++ \sum_{k=2}^L (l + r_{k-1}) \theta_k^{-1}
+\ln\left( \frac{m \zeta T}{\delta(d_0+d_1M^\pi)} \right) \\
+&= O\biggl( 2M^\pi
++ \sum_{k=2}^L (l + r_{k-1}) \theta_k^{-1}
+\ln\left( \frac{m \zeta T}{\delta(d_0+d_1M^\pi)} \right) \biggr),
+    \end{aligned}
+\end{equation}
+where $\theta_k$ is given by Equation (\ref{eq::eq of theta}) with lower bound $8(n_k-n_{k-1}p_k)/n_{k-1}$ for \(k\ge2\).
+The performance of Nested WAIT satisfies:
+$$\throughput^* - \mathbb{E}\left[ \throughput^{(\zeta, \pi)} \right] = O\left( (\zeta T)^{-1} \right),$$
+$$\mathbb{E}\left[ \Latency^{(\zeta, \pi)} \right] = O(1),$$
+$$\mathbb{E}\left[ \TTFT^{(\zeta, \pi)} \right] = O(1).$$
+Moreover, memory is not exceeded with probability at least \( 1 - \delta \) over the time horizon \(t \in [0,T]\).
+% , where the total time horizon $T=\sum_{i=1}^S \Delta T_{i\text{-th Batch}}\geq S\cdot \min \Delta T_{\text{Batch}}$.
+\end{theorem}
+
+Clustering $m$ types into $L$ segments preserves the core threshold structure from Theorem~\ref{thm:nested_wait_heavy_traffic}. The key observation is that aggregation commutes with the coupling argument: individual arrival rates $(\lambda_1, \dots, \lambda_m)$ are replaced by aggregated rates $(\lambda_1', \dots, \lambda_L')$, where $\lambda_k' = \sum_{j \in \text{segment } k} \lambda_j$, and downstream arrivals are governed by the same binomial thinning argument at the segment boundaries. The Lindley recursion and Doob's maximal inequality apply identically at the segment level, yielding the same logarithmic overhead in Equation~\eqref{eq:nested_wait_memory_L}. The proof follows the structure of Theorem~\ref{thm:nested_wait_heavy_traffic} in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic}.
+
+We validate the segment-wise design numerically using the LMSYS dataset~\cite{zheng2023lmsys} (Section \ref{sec:experiments}) with $m = 500$ prompt types, decode lengths from 1 to 500, and fixed prefill length 62. The distribution of arrival rates, shown in Figure \ref{fig:lambda_list}, is proportional to normalized frequencies from real user traffic.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/lambda_list.pdf}
+    \caption{Arrival rate construction from real data, with rates proportional to normalized frequencies.}
+    \label{fig:lambda_list}
+\end{figure}
+
+We analyze the three components of the memory bound in Equation \eqref{eq:nested_wait_memory_L}: (1) the peak batch memory usage \(M^\pi=\sum_{k=1}^L n_k(l+\bar s_k)\delta_k\), (2) the deterministic boundary-queue term \(\sum_{k=2}^L n_k(l+r_{k-1})\), and (3) the high-probability boundary-queue term \(\sum_{k=2}^L \theta_k^{-1}(l+r_{k-1})\ln\!\left( \frac{(L - 1) (T + 1)}{\delta} \right)\).
+
+Figures \ref{fig:fixed_T_200_rate_50_delta_0.1_1e-5}, \ref{fig:fixed_T_200_rate_500_delta_0.1_1e-5}, and \ref{fig:fixed_delta_0.001_rate_50_T_20_2000} plot these three memory components (y-axis) as functions of the number of segments $L$ (x-axis), under varying arrival rates, time horizons $T$, and confidence levels $\delta$. Each panel shows: Term 1 (blue circles) representing the ideal-fluid memory requirement from batching, Term 2 (green squares) representing the deterministic queue bound, Term 3 (red triangles) representing the stochastic safety buffer with logarithmic dependence on $T$ and $\delta$, and their sum (black crosses) representing the total memory requirement $M^{(\zeta,\pi)}$. Three key observations emerge: (i) Term 1 (the ideal-fluid memory requirement) dominates Terms 2 and 3 across all parameter settings, confirming that the safety buffer remains modest relative to the base batching requirement. (ii) The total memory (black line) follows a \textbf{U-shaped curve} with respect to $L$: too few segments waste memory by over-provisioning for heterogeneous types (high Term 1 at small $L$), while too many segments increase overhead from maintaining separate queues. The minimum occurs around $L=5$-$10$, validating the choice of $L=10$ in Section~\ref{sec:experiments}. (iii) Term 3 exhibits smooth growth as $\delta$ decreases (comparing left vs. right panels in Figures \ref{fig:fixed_T_200_rate_50_delta_0.1_1e-5} and \ref{fig:fixed_T_200_rate_500_delta_0.1_1e-5}) and as $T$ increases (comparing Figure~\ref{fig:fixed_delta_0.001_rate_50_T_20_2000}), consistent with the logarithmic bound in the theoretical analysis.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=50,T=200.pdf}
+    \caption{Memory usage proportions under low arrival rate (total rate = 50, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
+    \label{fig:fixed_T_200_rate_50_delta_0.1_1e-5}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=500,T=200.pdf}
+    \caption{Memory usage proportions under high arrival rate (total rate = 500, $T = 200$). Left: $\delta = 0.1$; Right: $\delta = 10^{-5}$.}
+    \label{fig:fixed_T_200_rate_500_delta_0.1_1e-5}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.55\textwidth]{Experiments_pdf/total_rate=50,delta=0.001,T=20or2000.pdf}
+    \caption{Memory usage proportions with varying time horizons (total rate = 50, $\delta = 0.001$). Left: $T = 20$; Right: $T = 2000$.}
+    \label{fig:fixed_delta_0.001_rate_50_T_20_2000}
+\end{figure}
+
+These extensions demonstrate that the core threshold-based design, eviction prevention through controlled admission, remains robust to realistic deployment conditions. Time-varying arrival rates and segment-wise grouping introduce no fundamental barrier; the coupling-based analysis extends naturally with logarithmic overhead. Section~\ref{sec:experiments} validates these theoretical guarantees through experiments on real workloads, showing that Nested WAIT with $L=10$ segments matches the performance of the full $m$-type algorithm while significantly reducing implementation complexity.
+
+% \subsection{Optimality under arbitrary segments}
+% \gan{Maybe this subsection should be put later.}

@@ -1,0 +1,525 @@
+\section{Eager Performance}  
+\label{Appendix_eager}
+
+In this appendix we provide the proofs related to eager performance. These proofs depend extensively upon the coupling  details provided in Appendix \ref{Appendix_sample}.
+
+
+\noindent {\bf Proof of Theorem~ \ref{Thm_PB}}: Let $N_B^\mue (t)$ denote the total number of eager customers that are blocked, in the pre-limit, during the time interval $\left[ 0, t\right]$ and  $N_A^\mue (t)$ be  the total number of eager customers arrived in the same time interval. Moreover, let $N_{B_j}^\mue (t)$ and $N_{A_j}^\mue (t)$ respectively denote the total number of eager customers blocked and arrived respectively before time $t$, in the pre-limit, in the time period  during  which the sub-policy $j$ has been used. % within the time interval $\left[ 0, t\right]$. 
+Then the overall pre-limit blocking probability of the eager class is given by the following  (the time limits exist as shown by Theorem \ref{Thm_PB_for_one_subpolicy} and the arguments given below), which can be split as below:
+	$$
+P_B^\mue =	\lim\limits_{t \to \infty } \frac{N_B^\mue (t)}{N_A^\mue (t)}
+	%
+	= \lim\limits_{t \to \infty }  \sum_{j=0}^\infty \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)}
+	%
+	= \lim\limits_{t \to \infty }  \sum_{j=0}^{\bar{g}} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)}  + \lim\limits_{t \to \infty }  \sum_{j> \bar{g}}^\infty \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} , \mbox{ for any } {\bar g}. 
+	$$
+	%
+	Consider the following difference,
+	\begin{eqnarray}
+	\left| \lim\limits_{t \to \infty } \frac{N_B^\mue (t)}{N_A^\mue (t)} - \sum_{j = 0}^{\infty} P_{B_j} {\pi}_j \right| 
+	%
+%	&=& \left| \lim\limits_{t \to \infty }  \sum_{j=0}^{\bar{g}} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)}  + \lim\limits_{t \to \infty }  \sum_{j> \bar{g}} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j = 0}^{\infty} P_{B_j} {\pi}_j  \right| \nonumber \\
+	% 
+	&=& \left| \lim\limits_{t \to \infty }  \sum_{j=0}^{\bar{g}} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j = 0}^{{\bar{g}}} P_{B_j} {\pi}_j  + \lim\limits_{t \to \infty }  \sum_{j> \bar{g}}^\infty \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j > \bar{g}} P_{B_j} {\pi}_j  \right|  \nonumber  \\
+ && 	\hspace{-15mm} \leq
+		  \left| \lim\limits_{t \to \infty }  \sum_{j=0}^{\bar{g}} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j = 0}^{{\bar{g}}} P_{B_j} {\pi}_j \right| + \left| \lim\limits_{t \to \infty }  \sum_{j> \bar{g}}^\infty \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j > \bar{g}}^{\infty} P_{B_j} {\pi}_j  \right| , \label{Eqn_Final_Diff} \hspace{6mm}
+	\end{eqnarray}
+	and we are done if we can show that the above difference tends to zero as $\mu_\i \to \infty$. We first consider the second term (number of losses are upper bounded by number of arrivals, 
+	$N_{B_j}^\mue (t) \le N^\mue_{A_j}(t)$):
+	\begin{eqnarray}
+	 \left| \lim\limits_{t \to \infty }  \sum_{j> \bar{g}}^\infty \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j > \bar{g}}^{\infty} P_{B_j} {\pi}_j  \right|
+	 % & \leq &  \left| \lim\limits_{t \to \infty }  \sum_{j> \bar{g}}^\infty \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j > \bar{g}}^{\infty} P_{B_j} {\pi}_j  \right| \nonumber \\
+	%
+	&\leq&   \left| \lim\limits_{t \to \infty }  \sum_{j> \bar{g}}^\infty  \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)}  \right| + \left| \sum_{j > \bar{g}}^{\infty} P_{B_j} {\pi}_j  \right| \nonumber \\
+	%
+	&\leq&   \lim\limits_{t \to \infty }    \frac{\sum_{j> \bar{g}}^\infty N_{A_j}^\mue (t)}{N_A^\mue (t)}  + \sum_{j > \bar{g}}^{\infty} P_{B_j} {\pi}_j  \nonumber \\
+	%
+	&\stackrel{a}{\leq}&   P \left( Q_\t^\mue > \bar{g}\right) +  \sum_{j > \bar{g}}^{\infty} P_{B_j} {\pi}_j   \nonumber \nonumber\\
+	%
+	&\leq&    \sum_{j  > \bar{g} } \left( {\pi}^\mue_j -  {\pi}_j  \right) + 2 \sum_{j > \bar{g}}^{\infty}  {\pi}_j  \nonumber \\
+	%
+	&\leq&    \sum_{j  > \bar{g} } j \left( {\pi}^\mue_j -  {\pi}_j  \right) + 2 \sum_{j > \bar{g}}^{\infty}  {\pi}_j.  \label{Eqn_Final_difference_eager}
+	%
+	\end{eqnarray} In the above, the inequality `a'  follows from PASTA (Poisson Arrivals See Time Averages). Further, for the limit system
+	$$
+	\sum_{j > g}  {\pi}_j   \to 0 \mbox{ as } g \to \infty .
+	$$
+	Therefore, for every $\delta >0$, there exists $\bar{g}$, such that for all $j \geq \bar{g}$,
+	\begin{eqnarray}
+	\label{Eqn_Pi_Sum_Bound}
+	\sum_{j > g}  {\pi}_j   < \delta.
+	\end{eqnarray}
+	%
+	Fix this ${\bar g}$.  From Theorem \ref{Thm_PB_for_one_subpolicy}  we have, 
+	$$
+	\lim\limits_{t \to \infty }  \sum_{j=0}^{\bar{g}} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} \stackrel{\mue \to \infty}{\longrightarrow} \sum_{j = 0}^{{\bar{g}}} P_{B_j} {\pi}_j,
+	$$ 
+	and hence   there exists a $\bar{\mu_1}$, such that 
+	\begin{eqnarray}
+	\label{Eqn_Finite_Sum_Bound}
+	\left| \lim\limits_{t \to \infty }  \sum_{j=0}^{\bar{g}} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} - \sum_{j = 0}^{{\bar{g}}} P_{B_j} {\pi}_j \right| < \delta, \ \ \mbox{for all $\mue > \bar{\mu_1}$}.
+	\end{eqnarray}
+	%
+%	Now, for every $\delta$ there exists a $\bar{g}$ given by (\ref{Eqn_Pi_Sum_Bound}). For this $\bar{g}$ choose a $\bar{\mu_1}$, such that (\ref{Eqn_Finite_Sum_Bound}) holds.
+ 	% for all $\mue > \bar{\mu_2}$ first and last term is less than $\delta$.
+	%
+%	\textbf{Aim} is to show that, for $\bar{g}$ found above, there exists an $\bar{\mu_2}$, such that for all $\mue > \bar{\mu_2}$: 
+%	$$
+%	\sum_{j= 0} ^{\infty } j \left( \tilde{\pi}^\mue_j -  \tilde{\pi}_j  \right) < \delta
+%	$$
+%	Consider, the following limit,
+%	\begin{eqnarray}
+%	\nonumber
+%	\lim_{\mue \to \infty } \sum_{i = 0}^\infty i \tilde{\pi}_i^\mue = \lim_{\mue \to \infty } \sum_{i = 0}^\infty i \frac{p_0^\mue p_2^\mue \cdots p_{i-1}^\mue }{q_1^\mue q_2^\mue \cdots q_i^\mue} \tilde{\pi}_0^\mue.
+%	\end{eqnarray}
+	%
+%	As for all $i$ and $\mue > \bar{\mu_1}$ 
+%	$$
+%	\frac{p_i^\mue}{q_i^\mue} < \epsilon + \bar{\rho}.
+%	$$
+%	Thus, for all $\mue > \bar{\mu_1}$ and $i$,
+%	$$
+%	\bigg|  i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \pi_0^\mue \bigg| < i \left(2 + \epsilon \right) \left( \epsilon + \bar{\rho} \right) ^{i-1}.
+%	$$
+%	Consider the  summation on RHS of above,
+%	%
+%	\begin{eqnarray*}
+%		\sum_{i = 1}^{\infty} i \left(2 + \epsilon \right) \left( \epsilon + \bar{\rho} \right) ^{i-1} &=& \left(2 + \epsilon \right) \sum_{i = 1}^{\infty} i \left( \epsilon + \bar{\rho} \right) ^{i-1} = \frac{2 + \epsilon }{\left(  1 - \left(\epsilon + \bar{\rho}\right)   \right)^2} < \infty.
+%	\end{eqnarray*}
+ Further from Theorem~\ref{Thm_tau},  
+	$$
+	\lim_{\mue \to \infty } \sum_{i = 0}^\infty i {\pi}_i^\mue 
+	%=  \sum_{i = 0}^\infty i \lim_{\mue \to %\infty } \pi_i^\mue
+	 = \sum_{i = 0}^\infty i {\pi}_i,
+	$$ and thus   there exists a $\bar{\mu_2}$, such that for all $\mue \geq \bar{\mu_2}$,
+	\begin{eqnarray}
+	\label{Eqn_Sum_ipi}
+	\sum_{j = 0}^\infty i \left( {\pi}_j^\mue - {\pi}_j \right) < \delta.  
+	\end{eqnarray}
+	%
+	Choose, $\bar{\mu} = \max \left(\mu_1, \mu_2\right)$. First using, (\ref{Eqn_Pi_Sum_Bound}) and (\ref{Eqn_Sum_ipi}) in (\ref{Eqn_Final_difference_eager}) and then  (\ref{Eqn_Final_difference_eager}) and (\ref{Eqn_Finite_Sum_Bound}) in (\ref{Eqn_Final_Diff}), we get, for every $\delta > 0 $, there exists $\bar{\mu}$ such that,
+	\begin{eqnarray*}
+		\hspace{20mm}
+		\left| \lim\limits_{t \to \infty } \frac{N_B^\mue (t)}{N_A^\mue (t)} - \sum_{j = 0}^{\infty} P_{B_j} {\pi}_j \right| < \delta + \delta + 2 \delta = 4 \delta \ \ \mbox{for all} \ \ \mue \geq \bar{\mu}.
+		\hspace{20mm}  \mbox{ \eop}
+	\end{eqnarray*}
+%	The above is true for an arbitrary $\delta > 0$, thus
+%	$$
+%	\lim\limits_{t \to \infty } \frac{N_B^\mue (t)}{N_A^\mue (t)}  \stackrel{\mu_\i \to \infty}{ \to}   \sum_{j = 0}^{\infty} P_{B_j} {\pi}_j \mbox{ almost surely. }
+%	$$
+%	Hence, the proof of the theorem.
+%\eop
+%
+%
+%\section{Proof of Theorem~3}
+%\label{sec:appendix_without_mdp}
+%\onecolumn
+%\newpage
+
+
+%\input{new_proof}
+
+
+
+\begin{thm}
+	\label{Thm_PB_for_one_subpolicy}
+	Fix a sub-policy $j$, then the time  limit  $ \lim_{t \to \infty} \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} $  exists almost surely for all $\mu_\i \ge {\bar \mu}$, where    $ {\bar \mu}$ is given in Lemma \ref{lemma:TauStability}. Further we have
+	\begin{eqnarray*}
+	\lim\limits_{\mue \to \infty } \lim\limits_{t \to \infty }   \frac{N_{B_j}^\mue (t)}{N_A^\mue (t)} = P_{B_j} {\pi}_j \mbox{ almost surely. }
+	 \end{eqnarray*}
+\end{thm}
+\begin{proof}
+For the purpose of almost sure comparison we construct the
+$\i$-process influenced by dynamic decisions of the scheduling policy
+depending upon the $\t$-state in the following manner. This procedure
+is the natural extension of the procedure used in \cite{ANOR}, which is also summarized in Appendix \ref{sec:SFJ_scale_details}.  % For a fix $\t$ state, say $j$,
+
+
+\begin{itemize}
+\item For every  sub-policy $j$ construct one sample path of $\epsilon$-evolution (basically sequence of $\i$-inter-arrival times, and $\i$-service times)  that lasts  for complete time axis   for $\mu_\i  = 1$ and $\lambda_\i = \rho_\i$ and 
+define the process for any  general $\mu_\i < \infty$   and for the same sub-policy,  using the constructed sample path as explained  in  Appendix~\ref{sec:SFJ_scale_details}. 
+%This allows almost sure comparison. 
+	\item Say we begin with the system in $\t$-state equal  to $j$  and $\i$-state equal to 0 (by assumption {\bf A}.1, $\i$-state is reset to 0   at any  $\t$-transition  epoch).  Then start  $\i$-process of the system  with the initial part of $\i$-process corresponding to  sub-policy $j$. % scheme to be used initially based on the $\t$-state $j$;
+	
+	\item We refer the time duration from the start of an $\i$-idle period
+	and the end of the consecutive $\epsilon$-busy period as one
+	$\epsilon$-cycle (note that this $\i$-cycle is stochastically same as the $\i$-busy cycle defined in Appendix~\ref{sec:SFJ_scale_details}).  The $\i$-process of the system starts with first full $\i$-cycle corresponding to sub-policy $j$ and will use some initial number of full cycles (the number can be greater than or equal to zero) and  it may also  use partially  the  cycle  following those full cycles (till the instance of first $\t$-transition).  
+	
+%	All $\i$-process start with a full $\i$-cycle,
+%	which implies the initial $\i$-state is 0.
+	
+	\item  Once the sub-policy has to switch, due to $\t$-transitions (to state $j-1$ or $j+1$), start using a required part of the $\i$-process corresponding to the new sub-policy. Always start from the first new $\i$-cycle that is previously not used. This process is appropriate in view of assumption {\bf A.}1:  the existing $\i$-customers are dropped at every $\t$-transition and the $\i$-process starts afresh.  
+	
+	\item Note that   the end part of any interrupted $\i$-cycle  (a partial $\i$-cycle), interrupted by a  $\t$-transition,  is not used for any further construction.   
+	Thus this full $\i$-cycle can be used to upper bound the partial   $\i$-cycle just before the $\t$-transition,    when required. Further, this upper bound  (cycle) is independent of the other $\i$-cycles. 
+	
+	
+\end{itemize}  
+Recall 
+by the way of construction, when full $\i$-cycle is used (notations as in Appendix \ref{Appendix_sample} and as in Theorem \ref{Thm_PB}):
+\begin{eqnarray*} 
+N_A^\mue ({\mathcal B}_j^\mue  ) = N_A^1 ( {\mathcal B}_j^1 )   \   \mbox{and}   \    N_{B_j}^\mue ({\mathcal B}_j^\mue  ) = N_{B_j}^1 ( {\mathcal B}_j^1 )  \mbox{ etc., sample path wise. }
+\end{eqnarray*}
+%where $N_A^\mue (\cdot)$ represents the number of $\i$-arrivals in the specified time interval and  $N_{B_j}^\mue(\cdot)$   represents the number of  drops or the $\i$-customers that exit the system without service in the specified time interval when sub-policy $j$ is used. % in $\t$ static manner.  
+%Let   $N_{B_j}^{\mue}(t)$, $N_A^\mue(t)$   briefly  represent $N_{B_j}^{\mue}([0,t])$  and  $N_A^\mue([0, t])$ respectively. 
+%
+
+We consider positive recurrent systems, i.e., systems with  $\mu_\i \ge {\bar \mu}$, the threshold beyond which the system is stable as given by Lemma \ref{lemma:TauStability}. 
+For such systems,
+all the time limits mentioned in this proof exist   and  this existence is proved  along with the rest of the arguments, in the following. 
+
+Refer   
+the  time interval from start of state $j$ and  before the forward or backward transition (to state $j-1$ or $j+1$), by $\tau$-state process $X_\tau (\cdot)$,  as   
+a  $j$-cycle. 
+%We    refer the time duration from  the start of an $\i$-idle  period and the end of the consecutive  $\epsilon$-busy  period  as one  $\epsilon$-cycle.
+Let $\Lambda_{j}(t)$ represent the total time consisting of full $\epsilon$-cycles during time  period $[0, t]$, such that the $\tau$-state is $j$. 
+This is composed  of portions of all  $j$-cycles that intersect with $[0, t]$, and,  obtained after removing the partial $\epsilon$-cycles at the end of each $\t$-state transition (occurring in those $j$-cycles). Note  by assumption {\bf A}.1 a new $\i$-cycle starts at every $\t$-transition epoch.  
+For $ j \geq 1 $,  let 
+$$
+F_{j } (t): =  \int_0^t \indc_{\{ X_\tau (s) = j\}} ds \ \ \mbox{  }  
+$$represent the  portion of time spent in $j$-cycles before $t$ and   define $\Psi_{j} (t) := F_{j} (t) - \Lambda_{j}(t)$. 
+The portion $\Psi_{j} (t)$  is  basically made up of  the  residual   $\i$-cycles, that are ongoing  at  the end  of $\t$-state transitions in all $j$-cycles before $t$.
+Thus\footnote{All the limits mentioned below exist for all $\mu_\i \ge {\bar \mu}$  (the threshold of Lemma \ref{lemma:TauStability}), because  the process for any such  $\mu_\i \ge {\bar \mu}$  is positive recurrent.
+This is because all the time averages  can be written as the time averages in an appropriate renewal process and renewal reward theorem (RRT) can be applied, thanks to assumption {\bf A}.4. 
+For example time limit of  $N_{\partial_j} (t) / { t}  $  exists almost surely,   using  RRT with 
+ $j$-cycles as renewal periods and with the reward in a cycle as the expected number of $\i$-customers dropped  at $\t$-transition epochs with $\t$-state  equal to $j$. 
+%Or one can use Law of Large numbers and then the dominated convergence theorem. 
+%For example,   the time average of number of drops can be written as,
+%$$
+%\frac{  N_{\partial} (t)  }{ t}   =   \frac{\sum_{j'}  \sum_ {i=1}^{M_{j'} (t)} N^{j'}_i  }{ t }  = \sum_{j'} \frac { \sum_ {i=1}^{M_{j'} (t)} N^{j'}_i  }{ M^{j'} (t)  }  \frac{M^{j'} (t) }{t}  \left ( \mbox{and note this term }  \le K \frac{M(t)}{t} \right ),
+%$$where $N^{j'}_i$ is the number of drops at $i$-th transition epoch when $j'$-sub policy is used and  $M_{j'}(t)$ number of  $\t$-transitions while using  $j'$-sub policy etc. 
+%Now the term for each $j'$ converges (a.s.) to an appropriate limit; $ \frac { \sum_ {i=1}^{M_{j'} (t)} N^{j'}_i  }{ M^{j'} (t)  }  $  converges  by Law of large numbers and is upper bound pre-limit by $K$, and $ \frac{M^{j'} (t) }{t}$  converges because the process is recurrent and the final convergence is true because $\sum_{j'}  \frac{M^{j'} (t) }{t} = \frac{M(t) }{ t}$ the total number of transitions converges as $t \to \infty$ almost surely. 
+},
+\begin{eqnarray}
+\lim _{t \to \infty } \frac{N_{B_j}^{\mue}(t)}{N_A^{\mue}(t)}
+% 
+= \lim _{t \to \infty } \frac{  N_{B_j}^{\mue}(\Lambda_{j}(t)) + N_{B_j}^{\mue}( \Psi_{j} (t))  + N_{\partial_j} (t) }{N_A^{\mue}(t)} ,
+\label{Eqn_split_NB_By_NA}
+\end{eqnarray}where $N_{\partial_j} (t)$ is the number of $\i$-jobs dropped at  $\t$-transition epochs with $\t$-state equal to $j$ (see   assumption {\bf A}.1). 
+We evaluate each of these components one after the other.  
+{Note that we are considering the case: $j \geq 1$. The proof follows in exactly the similar way even for $j = 0$ state, but would need  obvious changes ($\t$-job sizes should not be considered).}
+ 
+{\bf First fraction   in  RHS  (right hand side) of  (\ref{Eqn_split_NB_By_NA})}. By memoryless property of Poisson process representing the $\epsilon$-arrival process, 
+\begin{eqnarray}
+\label{Eqn_split_1}
+\frac{ N_{B_j}^{\mue}(\Lambda_{j}(t))}{N_A^{\mue}(t)}  = \frac{ N_{B_j}^{\mue}(\Lambda_{j}(t))}{N_{A}^{\mue}(\Lambda_{j}(t))} \
+\frac{ N_{A}^{\mue}(\Lambda_{j}(t))}{ \Lambda_{j}(t)}  \   \frac{ \Lambda_{j}(t)}{t}  \frac{t}{N_A^{\mue}(t)}.
+\end{eqnarray}
+%By Lemma  \ref{Lemma_Ren} and memoryless property, $\Lambda_{j} (t) \convas \infty \ $ as $t \to \infty$.
+On keen observation, it is easy to realize that $\Lambda_{j}(t) $ is made up of i.i.d. $\epsilon$-cycles, and hence is a renewal process. Thus one can analyze it using Renewal Reward theorem (RRT). These $\i$-cycles are the special cycles,   in that these\footnote{By memoryless property of exponential service times and arrival processes.}  are the   
+cycles in which the $\tau$-state has not changed, i.e.,  the $\tau$-service is not completed and during which a $\tau$-arrival did not occur.  Let 
+$U$ represent      one such  special $\i$-cycle, i.e.:
+\begin{eqnarray}
+\label{Eqn_special_cycle}
+U :=  {\mathcal  B}_j^{\mu_\epsilon}  \Big |   
+{\mathcal  B}_j^{\mu_\epsilon}  <  A_\tau  \ \cap \ \S^{\mu_\epsilon}_j  <   B_\tau,  
+\end{eqnarray} 
+where 
+${\mathcal  B}_j^{\mu_\epsilon} = {\mathcal  B}_j^1 / \mu_\epsilon$ represents  (see (\ref{Eqn_Bmue})) 
+an $\i$-cycle,    
+$
+\S^{\mu_\epsilon}_j  =  \S^1_j / {\mu_\epsilon} 
+$ (see (\ref{Eqn_Smue})) represents the server time available to the $\tau$-customers during this period and  $A_\tau$, $ B_\tau $  respectively represent the inter-arrival time before next $\tau$-arrival and the service time of current $\tau$-job (the residual ones equal the actual ones by memoryless property).  Let ${\mathcal I}^{\mu_\epsilon}$ represent the following indicator random variable:
+\begin{eqnarray}
+\label{Eqn_indicators}
+%
+{\mathcal I}^{\mu_\epsilon}   =  \indc_{ \{ {\mathcal  B}_j^{\mu_\epsilon}  <  A_\tau  \ \cap \ \S^{\mu_\epsilon}_j  <   B_\tau \} }  = 
+%
+\indc_{ \{  {\mathcal  B}^1_j  <{\mu_\epsilon}    A_\tau  \ \cap \ \S^1_j   <  {\mu_\epsilon}   B_\tau  \} }  .
+%
+\end{eqnarray}
+It is clear that the expected length of the renewal cycle (by   conditioning  on $({\mathcal B}_j^\mue ,     \S^\mue_j )$ and using (\ref{Eqn_Compare_mu_epsilon_schemes}), (\ref{Eqn_Bmue})), 
+\beq
+E[U] = \frac { E[ {\mathcal  B}_j^{\mu_\epsilon}    {\mathcal I}^{\mu_\epsilon}   ]}{ E[ {\mathcal I}^{\mu_\epsilon}  ] } >   E[ {\mathcal  B}_j^{\mu_\epsilon}  {\mathcal I}^{\mu_\epsilon}   ] 
+&=& E \left [ {\mathcal  B}_j^{\mu_\epsilon}    (1- \exp(-\lambda_\t {\mathcal B}_j^\mue ) (1- \exp (- \mu_\tau  \S_j^\mue ) ) \right ] \\
+& = & \frac{1}{\mue}  E \left [ {\mathcal  B}_j^1      (1- \exp(-\lambda_\t {\mathcal B}_j^1 / \mue ) (1- \exp (- \mu_\tau  \S_j^1/ \mue ) ) \right ]  > 0
+\eeq  for any given $j$ and for any $\mue < \infty$. {\bf A}.4, we also have  $E[U]  < \infty.$
+Thus by resorting to RRT two times we have,  as $t \to \infty$,
+$$
+\frac{ N_{B_j}^{\mue}(\Lambda_{j}(t))}{N_{A}^{\mue}(\Lambda_{j}(t))}  
+= \frac{ N_{B_j}^{\mue}(\Lambda_{j}(t))}{ \Lambda_{j}(t))  }   \frac{  \Lambda_{j}(t))  }  {N_{A}^{\mue}(\Lambda_{j}(t))}  \to  
+\frac{ E[N_{B_j}^{\mu_\epsilon} (U) ] }{ E[  U  ] } \frac{ E[    U     ] }{ E[N_A^{\mu_\epsilon} (U) ] } \   a.s.
+$$ 
+Therefore,
+\beq
+\lim_{t \to \infty} \frac{ N_{B_j}^{\mue}(\Lambda_{j}(t))}{N_{A}^{\mue}(\Lambda_{j}(t))}  
+&=& \frac{ E \big [   N_{B_j}^{\mu_\epsilon} ({\mathcal  B}_j^{\mu_\epsilon}  ) \ \big |   {\mathcal I}^{\mu_\epsilon}  \big ]  }
+{  E \big [N_A^{\mu_\epsilon} ({\mathcal  B}_j^{\mu_\epsilon}  )  \  \big |  {\mathcal I}^{\mu_\epsilon}   \big ] }   \\
+%
+%
+&=& 
+\frac{ E \big [   N_{B_j}^{\mu_\epsilon} ({\mathcal  B}_j^{\mu_\epsilon}  )    \     {\mathcal I}^{\mu_\epsilon}   \big ]  }
+{  E \big [N_A^{\mu_\epsilon} ({\mathcal  B}_j^{\mu_\epsilon}  )    {\mathcal I}^{\mu_\epsilon} \big ] }   \\
+%
+&=& 
+\frac{ E \big [   N_{B_j}^1 ({\mathcal  B}_j^1 )    \     {\mathcal I}^{\mu_\epsilon}   \big ]  }
+{  E \big [N_A^1  ({\mathcal  B}_j^1   )    {\mathcal I}^{\mu_\epsilon} \big ] } \mbox { a.s. } 
+\eeq
+The last equality follows   by way of construction (details in  (\ref{Eqn_Compare_mu_epsilon_schemes}) and more details are in \cite{ANOR}). 
+It is clear from (\ref{Eqn_indicators}) that the indicators  ${\mathcal I}^{\mu_\epsilon} \to 1 $ almost surely as $\mu_\epsilon \to \infty$,   
+$$ N_{B_j}^1  ({\mathcal  B}_j^{1}  )    \     {\mathcal I}^{\mu_\epsilon}  \le N_{B_j}^1 ({\mathcal  B}_j^{1}  )  \  a.s.  \mbox{ for all }  \mu_\epsilon,
+$$   and $ N_{B_j}^1  ({\mathcal  B}_j^{1}  )$ is integrable (by {\bf A}.4).  Similar conclusions follow for number of arrivals $  N_A^1 $.  Thus by Dominated convergence theorem   as $\mu_\epsilon \to \infty$,
+\beq
+\lim_{t \to \infty} \frac{ N_{B_j}^{\mue}(\Lambda_{j}(t))}{N_{A}^{\mue}(\Lambda_{j}(t))}   \to  
+\frac{ E \big [   N_{B_j}^1 ({\mathcal  B}_j^1 )    \      \big ]  }
+{  E \big [N_A^1  ({\mathcal  B}_j^1   )     \big ] }   =  {P_B}_j  \mbox { a.s. }, \eeq
+the last equality follows by applying RRT to a system that implements $j$-th sub-policy for $\i$-class   in $\t$-static manner.   
+
+Now we consider the second and last/fourth term of the RHS of (\ref{Eqn_split_1}).  Using similar logic  (RRT, DCT) as before
+and by the way of construction as in equation (\ref{Eqn_Compare_mu_epsilon_schemes}):
+\beq
+\lim_{t \to \infty } \frac{ N_{A}^{\mue}(\Lambda_{j}(t))}{ \Lambda_{j}(t)}  \     \frac{t}{N_A^{\epsilon}(t)} 
+&=& 
+\frac{  \frac{ E\left[  N_{A}^{1}  ({\mathcal  B}_j^{1}  ) {\mathcal I}^{\mu_\epsilon} \right] } {E\left[ {\mathcal I}^{\mu_\epsilon}\right] }  }{ \frac{ E\left[    \frac {  { \mathcal  B}_j^{1}  } { \mu_\epsilon  }  {\mathcal I}^{\mu_\epsilon}     \right]  }  {E \left[ {\mathcal I}^{\mu_\epsilon}\right] }}  \frac{1}{\lambda_\epsilon} \\
+&=&
+\frac{1}{ \rho_\epsilon } \frac{ E[  N_{A}^{1}  ({\mathcal  B}_j^{1}  ) ] }{ E[     { \mathcal  B}_j^{1}       {\mathcal I}^{\mu_\epsilon}     ]  }  \\
+%
+&
+\to &  
+\frac{1}{ \rho_\epsilon } \frac{ E[  N_{A}^{1}  ({\mathcal  B}_j^{1}  ) ] } { E[       { \mathcal  B}_j^{1}         ]  }  \mbox{, as } \mu_\epsilon \to \infty \\
+&& =  \frac{1}{ \rho_\epsilon }  \rho_\epsilon = 1 \mbox { a.s. }
+\eeq
+%\eeq
+%}
+
+
+
+
+The last equality follows because the rate of arrivals in $\mu_\epsilon = 1$ system equals $\rho_\epsilon$. 
+
+Consider the remaining term (third term) of the RHS of (\ref{Eqn_split_1}). 
+The fraction of time spent by $\tau$-customer in $j$-cycle is $ F_j (t) = \Lambda_{j} (t) + \Psi
+_j(t)$, therefore
+\begin{eqnarray}
+\label{Eqn_Lamda_t_act}
+\lim_{t \to \infty} \frac{ \Lambda_j(t)}{t} = \frac{F_j (t) -  \Psi_j(t) }{t}.
+%= \frac{F_{<L}^{\tau}(t) }{t} - \frac{2\Theta * Number \hspace{0.2cm} of \hspace{0.2cm} times \hspace{0.2cm} rates\hspace{0.2cm} change\hspace{0.2cm} in\hspace{0.2cm} time\hspace{0.2cm} t}{t}  \nonumber
+\end{eqnarray}
+
+
+
+For all $\mu_\epsilon \ge {\bar \mu}$ we have:  
+\begin{eqnarray*}
+	\lim_{t \to \infty} \frac{F_j(t)}{t} =    \pi_{j}^{\mu_\epsilon}   \ \ \ \mbox{ a.s.}  ,  
+\end{eqnarray*}
+where $\pi_{j}^{\mu_\epsilon} $ is the stationary probability that $\t$-queue is in state $j$ with  $\mu_\epsilon$ system. 
+%
+
+%
+By Lemma \ref{Lemma_Psij},  as $\mue \to \infty$ 
+$$
+\lim_{t \to \infty}   \frac{\Psi_j(t) }{t}  \to 0. 
+$$
+Therefore, from Equation (\ref{Eqn_Lamda_t_act}),
+\begin{eqnarray*}
+	\lim_{\mu_\epsilon \to \infty} \lim_{t \to \infty} \frac{ \Lambda_j(t)}{t} = \lim_{\mu_\epsilon \to \infty} \pi_{j}^{\mu_\epsilon} = \pi_{j}.
+\end{eqnarray*}  
+
+
+
+%
+Overall, we get from Equation (\ref{Eqn_split_1}),
+\begin{eqnarray*}
+	\lim_{\mu_\epsilon \to \infty} \lim_{t \to \infty} \frac{ N_{B_j}^{\mue}(\Lambda_{j}(t))}{N_A^{\mue}(t)} = {P_B}_j \pi_{j}.
+\end{eqnarray*}
+
+{\bf Second fraction of Equation (\ref{Eqn_split_NB_By_NA}):}
+One can split the second fraction\footnote{The time limit of the LHS exists, because time limit of $\Psi_j(t)/t$ exists as discussed in the proof of Lemma \ref{Lemma_Psij}. } as below:
+\begin{eqnarray}
+\label{Eqn_split_2nd_fraction}
+\lim_{t \to \infty} \frac{N_{B_j}^{\mue}( \Psi_{j} (t))}{N_A^{\mue}(t)} \le 
+\lim_{t \to \infty} \frac{N_{B_j}^{\mue}( {\tilde \Psi}_{j} (t))}{N_A^{\mue}(t)} 
+= \lim_{t \to \infty} \frac{N_{B_j}^{\mue}( {\tilde \Psi}_{j} (t))}{{\tilde \Psi}_{j} (t)} \frac{{\tilde \Psi}_{j} (t)}{t} \frac{t}{N_A^{\mue}(t)}.
+\end{eqnarray} 
+%where ${\tilde \Psi}_{j} (t)$ is obtained by the upper bounding full cycles as in  Lemma \ref{Lemma_Psij}.
+%
+In the above  the end residual $\i$-cycles (which form $\Psi(t)$), belonging to the same $j$-group  are i.i.d., can by upper bounded by the corresponding full i.i.d. $\i$-cycles (which form  ${\tilde \Psi}_{j} (t)$ as explained  in  the proof of  Lemma \ref{Lemma_Psij}). 
+We refer any    typical (upper bounding)
+  full $\i$-cycle by ${\tilde \B}_j$.
+Then
+by  RRT, we  obtain the following for the first and last terms of the RHS of equation (\ref{Eqn_split_2nd_fraction}):  
+
+\vspace{-4mm}
+{\small\begin{eqnarray*}
+		\lim_{t \to \infty} \frac{N_{B_j}^{\mue}( {\tilde \Psi}_{j} (t))}{{\tilde \Psi}_{j} (t)} \frac{t}{N_A^{\mue}(t)} &\le &
+				\lim_{t \to \infty} \frac{N_{A}^{\mue}( {\tilde \Psi}_{j} (t))}{{\tilde \Psi}_{j} (t)} \frac{t}{N_A^{\mue}(t)}
+	\ =  \   \frac{E\big(  N^{\mue}_A(\tilde{\B_j})  \big)}{E\big(\tilde{\B_j} \big)} \frac{1}{\lambda_\epsilon} \\  &=&  
+		%
+		%
+		\frac{E \left[ N^{\mue}_A \big( \mathcal{ B}_j^{\mu_\epsilon} \big) \ ; \  \mathcal{ B}_j^{\mu_\epsilon} > A_\tau \cup \  \S_j^{\mu_\epsilon}  >   B_\tau  \right]}{E \left[ \mathcal{ B}_j^{\mu_\epsilon} ;  \mathcal{ B}_j^{\mu_\epsilon} > A_\tau \cup \  \S_j^{\mu_\epsilon}  >   B_\tau  \right] } \frac{1}{\lambda_\epsilon}\\
+		%
+		%
+		&\leq & \frac{E \left[ N^{\mue}_A \big( \mathcal{ B}_j^{\mu_\epsilon} \big) \ ; \  \mathcal{ B}_j^{\mu_\epsilon} > A_\tau \right] + E \left[  N^{\mue}_A \big( \mathcal{ B}_j^{\mu_\epsilon} \big) \ ; \  \S_j^{\mu_\epsilon}  >   B_\tau  \right]}{E \bigg(  \mathcal{ B}_j^{\mu_\epsilon} ;   \mathcal{ B}_j^{\mu_\epsilon} > A_\tau \bigg) \lambda_\epsilon } .
+\end{eqnarray*}}
+%
+
+
+
+
+%
+%
+By construction  we have:
+$
+N^{\mue}_A (   \mathcal{B}_j^{\mu_\epsilon} ) =  N^1_A ( {\mathcal B}_j^1)
+$ (see (\ref{Eqn_Compare_mu_epsilon_schemes}))
+and hence:
+\begin{eqnarray*}
+	\lim_{t \to \infty} \frac{N_{B_j}^{\mue}({\tilde  \Psi}_{j} (t))}{{\tilde \Psi}_{j} (t)} \frac{t}{N_A^{\mue}(t)}  \hspace{-2mm} &&
+	\\
+	&\leq&
+	% 
+	\frac{E \left[ N^1_A \big( \mathcal{B}_j^1\big) \ ; \  \mathcal B^{\mu_\epsilon}_j > A_\tau \right] + E \left[  N^1_A \big( \mathcal{B}_j^1\big) \ ; \  \S_j^{\mu_\epsilon}  >   B_\tau  \right]}{E \bigg(  \mathcal B_j^{\mu_\epsilon}; \mathcal B^{\mu_\epsilon}_j > A_\tau \bigg)}  \frac{1}{\lambda_\epsilon}\\
+	%
+	%
+	&=& \frac{E \left[ N^1_A \big(  \mathcal{B}_j^1\big) \ ; \  \mathcal{B}_j^{\mu_\epsilon} > A_\tau \right] + E \left[  N^1_A \big(  \mathcal{B}_j^1\big) \ ; \  \S_j^{\mu_\epsilon}  >   B_\tau  \right]}{ \rho_\epsilon \ E \bigg(  \mathcal{ B}_j^{1}  ;  \mathcal B_j^{\mu_\epsilon} > A_\tau \bigg)} \\
+	%
+	%
+	&=&  \frac{E \left[ N^1_A \big(  \mathcal{B}_j^1\big) \big( 1 - \exp( - \lambda_\tau  \frac{\mathcal B_j^1}{\mu_\epsilon}) \big) \right] + E \left[  N^1_A \big(  \mathcal{B}_j^1\big) \left ( 1 - \exp \left ( - \mu_\tau  \frac{\S_j^1}{\mu_\epsilon} \right ) \right )  \right]}{ \rho_\epsilon \ E \bigg[   \mathcal{ B}_j^{1}  \bigg( 1 - \exp \left ( - \lambda_\tau  \frac{\mathcal B_j^1}{\mu_\epsilon} \right ) \bigg ) \bigg] }.
+\end{eqnarray*}
+As $\mu_\epsilon \to \infty$, using the L'Hopitals rule
+\begin{eqnarray*}
+	\lim_{\mu_\epsilon \to \infty} \lim_{t \to \infty} \frac{N_{B_j}^{\mue}( {\tilde \Psi}_{j} (t))}{{\tilde \Psi}_{j} (t)} \frac{t}{N_A^{\mue}(t)} \hspace{-30mm} \\
+	&\leq& \lim_{\mu_\epsilon \to \infty} 
+	%
+	\frac{E \left[ N^1_A \big(  \mathcal{B}_j^1\big) \bigg(  \frac{\lambda_\tau \mathcal B_j^1}{\mu_\epsilon^2} \exp( - \lambda_\tau  \frac{\mathcal B_j^1}{\mu_\epsilon}) \bigg) \right] + E \left[  N^1_A \big( \mathcal{B}_j^1\big) \bigg( \frac{\mu_\tau \S_j^1}{\mu_\epsilon^2} \exp( - \mu_\tau  \frac{\S_j^1}{\mu_\epsilon}) \bigg)  \right]}{ \rho_\epsilon \ E  \left[   \frac{\lambda_\tau \left ( \mathcal B_j^1 \right )^2 }{\mu_\epsilon^2} \exp( - \lambda_\tau  \frac{\mathcal B_j^1}{\mu_\epsilon})  \right]}\\
+	%
+	%
+	&=&\lim_{\mu_\epsilon \to \infty}
+	\frac{E \left[ N^1_A \big(  \mathcal{B}_j^1\big) \bigg(  \lambda_\tau \mathcal B_j^1 \exp( - \lambda_\tau  \frac{\mathcal B_j^1}{\mu_\epsilon}) \bigg) \right] + E \left[  N^1_A \big( \mathcal{B}_j^1\big) \bigg( \mu_\tau \S_j^1 \exp( - \mu_\tau  \frac{\S_j^1}{\mu_\epsilon}) \bigg)  \right]}{ \rho_\epsilon \ E \left[ \lambda_\tau \left (\mathcal B_j^1 \right )^2 \exp( - \lambda_\tau  \frac{\mathcal B_j^1}{\mu_\epsilon}) \right]}\\
+	%
+	%
+	&< & \infty,  
+\end{eqnarray*}as the limit is  a finite constant, by {\bf A}.4 (note $\S_j^1 \le \mathcal{B}_j^1$ a.s., $ N^1_{B_j}  \le N^1_A$ etc).
+Using above and equation (\ref{Eqn_split_2nd_fraction}) and Lemma \ref{Lemma_Psij}, we get,
+\begin{eqnarray}
+\lim_{\mu_\epsilon \to \infty} \lim_{t \to \infty} \frac{N_{B_j}^{\mue}( \Psi_{j} (t))}{N_A^{\mue}(t)} =  0 \mbox{ a.s. }
+\end{eqnarray}
+\kcmnt{Need to mention that all these moments exist for the $(\mue = 1)$ case.}
+
+{\bf Third fraction of RHS of (\ref{Eqn_split_NB_By_NA}):} By assumption {\bf A}.3, one can serve (say) at maximum $\mathcal{ K}$
+%\textcolor{red}{\textit{(we didn't define} $c_{min}$, \textit{so it should be}$ K := 1/c_{min}$)}
+number of $\i$-customers at any time. Let $M(t)$ represent the total number of $\tau$-transitions during time $t$. Then one can upper bound the number of losses, $N_{\partial_j} (t)$, during $\t$-state transition  as: 
+$$
+N_{\partial_j} (t) \le  \sum^{M(t)}_{i=1} \mathcal{ K} = M(t) \mathcal{ K},
+$$since one serves at maximum $\mathcal{ K} $ $\i$-customers at any time and hence the maximum drops per transition equals $\mathcal{ K}$.  As in the proof of Lemma \ref{Lemma_Psij},  $\lim_{t \to \infty } M(t) / t  \le 2\lambda_\t $. 
+Thus 
+\beq
+\frac{N_{\partial_j} (t)}{N_A^{\mu_\epsilon} (t) }  &\le&   \mathcal{ K} \frac{M(t)}{ t }  \frac{t}{N_A^{\mu_\epsilon} (t)}  \mbox{ and thus } \\
+\lim_{t \to \infty} \frac{N_{\partial_j} (t)}{N_A^{\mu_\epsilon} (t) }  & \le &  \frac{ 2\lambda_\t \mathcal{ K}  }{\lambda_\epsilon }  \to 0, \  \mbox{ as } \mu_\epsilon \to \infty, \mbox{ under SFJ limit}. 
+\eeq
+Combining the three fractions of  RHS of (\ref{Eqn_split_NB_By_NA}) we have the result:  $$
+ \lim _{t \to \infty } \frac{N_{B_j}^{\mue}(t)}{N_A^{\mue}(t)} = \lim _{t \to \infty } \frac{ \left( N_{B_j}^{\mue}(\Lambda_{j}(t)) + N_{B_j}^{\mue}( \Psi_{j} (t)) \right) + N_{\partial_j} (t) }{N_A^{\mue}(t)}   \convas P_{B_j}  \pi_{j},  \mbox{ as } \mu_\epsilon \to \infty. 
+$$
+Hence the proof of the lemma.
+	
+\end{proof}
+
+
+
+
+
+\begin{lemma}
+	\label{Lemma_Psij}
+	Fix any $j$. Then 
+	$$
+	\lim_{t \to \infty}   \frac{\Psi_j(t) }{t}   \le  \frac{ 2 \lambda_\tau  }{\mue}   
+	%
+	\frac{E \left[ \mathcal B_j^1  \bigg(1 - \exp \big(-\lambda_\tau \frac{\mathcal B_j^1}{\mu_\epsilon} \big)\bigg) \ \right] + E \left[ \ \mathcal B_j^1  \bigg(1 - \exp \big( -\mu_\tau \frac{\S_j^1}{\mu_\epsilon} \big)\bigg) \ \right]}{E\left[ 1 - \exp \big(-\lambda\tau \frac{\mathcal B_j^1}{\mu_\epsilon} \big)\right]} .
+	%
+	\mbox {  a.s.  }
+	$$
+
+	Further, as  $\mu_\epsilon \to \infty,$
+	$$
+	\lim_{t \to \infty}   \frac{\Psi_j(t) }{t}  \to 0 \mbox {  a.s.  }
+	$$
+\end{lemma}
+{\bf Proof:} Let $M_j(t)$ represent the total number of transitions to the state $j$ during time $[0, t]$. Then,
+$$
+\frac{\Psi_j(t)}{t} =  \sum_{i=1}^ {M_j(t)}   \frac{  {\check \B}_{j,i} } {M_j(t)} \frac{M_j(t)}{t} ,
+$$
+ with ${\check \B}_{j,i}$ being  {\it the   residual $\epsilon$-cycle} before the end of the  $i$-th $\t$-transition,  occurred during $j$-cycles. By Lemma \ref{lemma:TauStability} there exists ${\bar \mu} < \infty$ and the process is stable for all $\mu_\i \ge {\bar \mu} $ and it is easy to see that limit $t \to \infty$ of the above term exists  ($\{{\check \B}_{j,i}\}_i$ are i.i.d. for any given $j$)  almost surely for all such $\mu_\i.$
+Further one can upper bound as below:
+\begin{eqnarray}
+\label{Eqn_Psi_Up}
+	0 \le \frac{\Psi_j(t)}{t} \le \sum_{i=1}^ {M_j(t)}   \frac{  \B_{j,i} } {M_j(t)} \frac{M_j(t)}{t} ,
+\end{eqnarray} with $\B_{j,i}$ being  {\it the full $\i$-cycle upper-bounding the residual $\epsilon$-cycle} before the end of the  $i$-th $\t$-transition (as discussed in the beginning of the
+proof of Theorem \ref{Thm_PB_for_one_subpolicy}),  occurred during $j$-cycles.  {\it Suffices to prove that the upper bound converges to zero, we rename $\Psi_j(t)$ to represent the upper bound itself.}
+Note that $\{\B_{j,i} \}_i$ belonging to a particular $j$-cycle are i.i.d..
+If $M_j(t)$ converges to  a finite constant as $t \to \infty$,  then clearly the proof of the  Lemma is done  for such sample paths. 
+
+Now consider the sample paths in which, as $t \to \infty$,
+$M_j(t) \to \infty$.  Then by 
+using LLN, as $t \to \infty$, we get,
+\begin{eqnarray}
+\label{Eqn_Psi_Split}
+\frac{\Psi_j(t)}{t}  \convas E^{\mu_\epsilon}  \left [ U \right]  \lim_{t \to \infty} \frac{M_j(t)}{t} \le E^{\mu_\epsilon}  \left [ \B_j \right]  \lim_{t \to \infty} \frac{M(t)}{t},
+\end{eqnarray}
+where  $M(t)$ represent the the total number of $\t$-transitions during time $t$, i.e., $M(t) = \sum_j M_j(t)$. 
+With $N_{A}^\tau (t)$  representing the number of $\t$-arrivals during interval $[0, t]$ and by noting that the number of $\t$-departures at maximum equal the number of arrivals, we clearly have:
+\begin{eqnarray}
+\label{Eqn_M(t)}
+\frac{M (t)}{t}  \le 2 \frac{N_{A}^\tau (t)}{t}  \stackrel{t \to \infty }{ \longrightarrow} 2 \lambda_\tau \mbox{ a.s. } 
+\end{eqnarray}
+
+
+Any $\B_{j,i}$ in equation~(\ref{Eqn_Psi_Up}) is a special $\i$-cycle,  which is interrupted by a $\t$-transition, either arrival or departure. Thus (with the rest of the notations
+as in (\ref{Eqn_special_cycle})): 
+\begin{eqnarray*}
+	E^{\mu_\epsilon} \left[  \B_j \right] &=& E \left[ \mathcal B_j^{\mu_\epsilon} \ \big | \  \mathcal B_j^{\mu_\epsilon}  > A_\tau \cup \  \S_j^{\mu_\epsilon}  >   B_\tau  \right] 
+	= \frac{E \left[\mathcal B_j^{\mu_\epsilon}  \ ; \  \mathcal B_j^{\mu_\epsilon}  > A_\tau \cup \  \S_j^{\mu_\epsilon}  >   B_\tau  \right]}{E \left[\mathcal B_j^{\mu_\epsilon} > A_\tau \cup \  \S_j^{\mu_\epsilon}  >   B_\tau  \right]}
+	\\
+	%
+	%
+	&\leq & \frac{E \left[ \mathcal{ B}_j^{\mu_\epsilon}  \  ; \  \mathcal{B}_j^{\mu_\epsilon}  > A_\tau \right] + E \left[   \mathcal{B}_j^{\mu_\epsilon}  \ ; \ \S_j^{\mu_\epsilon}  >   B_\tau  \right]}{E \left[ \mathcal{B}_j^{\mu_\epsilon} > A_\tau \right]}.
+\end{eqnarray*}Using the tower property of conditional expectation  (e.g., $E[X] = E[E[X|Y] ]$), by conditioning on $\B_j^{\mu_\epsilon}$ and $ \S_j^{\mu_\epsilon}$,  and because $A_\tau$, $B_\tau$
+are exponential random variables with respective parameters $\lambda_\tau$ and $\mu_\tau$:  
+%
+%
+\begin{eqnarray*} 
+	E^{\mu_\epsilon} \left[ \  \B_j \right] &\le &
+	\frac{E \left[ \mathcal B_j^{\mu_\epsilon} \bigg(1 - \exp \big(- \lambda_\tau \mathcal B_j^{\mu_\epsilon} \big) \bigg) \ \right] + E \left[ \ \mathcal B_j^{\mu_\epsilon}  \bigg(1 - \exp \big(- \mu_\tau \S_j^{\mu_\epsilon} \big) \bigg) \ \right]}{E\left[ 1 - \exp \big(- \lambda\tau  \mathcal B_j^{\mu_\epsilon} \big) \right]} \\
+	%
+	%
+	&=& \frac{E \left[ \frac{\mathcal B_j^1}{\mu_\epsilon} \bigg(1 - \exp \big(-\lambda_\tau \frac{\mathcal B_j^1}{\mu_\epsilon} \big)\bigg) \ \right] + E \left[ \ \frac{\mathcal B_j^1}{\mu_\epsilon}  \bigg(1 - \exp \big( -\mu_\tau \frac{\S_j^1}{\mu_\epsilon} \big)\bigg) \ \right]}{E\left[ 1 - \exp \big(-\lambda\tau \frac{\mathcal B_j^1}{\mu_\epsilon} \big)\right]} .
+\end{eqnarray*}
+By substituting the above inequality in (\ref{Eqn_Psi_Split}) and further referring to  (\ref{Eqn_M(t)}), we have the proof of the first inequality of Lemma.
+For the last equality,   recall $\mathcal B_j^{\mu_\epsilon}  = \mathcal B_j^1 / \mu_\epsilon$ and $\S_j^{\mu_\epsilon} = \S_j^1 / \mu_\epsilon$.
+
+%\textcolor{red}{Need to argue  limit exchange / use that MGF is analytical}.
+By L'Hopitals rule, and using the differentiability properties of the
+moment generating function, we get:
+\begin{eqnarray*} 
+	\lim_{{\mu_\epsilon} \to  \infty} \mu_\i E^{\mu_\epsilon} \left[ \  \B_j  \right] \hspace{-20mm} \\
+	& \le  &
+	\lim_{{\mu_\epsilon} \to  \infty}  \frac{E \left[  \mathcal B_j^1 \bigg(1 - \exp \big(-\lambda_\tau \frac{\mathcal{B}_j^1}{\mu_\epsilon} \big)\bigg) \ \right] + E \left[ \  {\mathcal B_j^1}   \bigg(1 - \exp \big(-\mu_\tau \frac{\S_j^1}{\mu_\epsilon} \big)\bigg) \ \right]}{E\left[ 1 - \exp \big(-\lambda\tau \frac{\mathcal{B}_j^1}{\mu_\epsilon} \big)\right]} \\
+	%
+	%
+	&=& \lim_{{\mu_\epsilon} \to  \infty}  \frac{E \left[ {  \mathcal  B_j^1}  \bigg( \frac{ \lambda_\tau \mathcal  B_j^1 }{\mu_\epsilon^2} \exp \big(-\lambda_\tau \frac{\mathcal B_j^1}{\mu_\epsilon} \big) \bigg) \ \right] + E \left[  { \mathcal B_j^1}  \bigg( \frac{\mu_\tau \S_j^1 }{\mu_\epsilon^2} \exp \big(-\mu_\tau \frac{\S_j^1}{\mu_\epsilon} \big) \bigg) \ \right]}{E\left[ \frac{ \lambda_\tau  \mathcal  B_j^1}{\mu_\epsilon^2} \exp \big(-\lambda_\tau \frac{ \mathcal  B_j^1}{\mu_\epsilon} \big)\right]} \\
+	%
+	%
+	&=& \lim_{{\mu_\epsilon} \to  \infty}  \frac{E \left[    \bigg(  \lambda_\tau ({\mathcal  B}_j^1)^2  \exp \big(-\lambda_\tau \frac{\mathcal B_j^1}{\mu_\epsilon} \big) \bigg) \ \right] + E \left[    \bigg(  \mu_\tau \S_j^1 { \mathcal B_j^1}  \exp \big(-\mu_\tau \frac{\S_j^1}{\mu_\epsilon} \big) \bigg) \ \right]}
+	{E\left[ \  \lambda_\tau  {\mathcal  B}_j^1  \exp \big(-\lambda_\tau \frac{ \mathcal  B_j^1}{\mu_\epsilon} \big)\right]} < \infty .
+	\eeq
+	Thus 
+	\beq
+	\lim_{\mue \to \infty}  E^\mue [U] \leq \lim_{\mue \to \infty}   \frac{1}{\mue}  \mu_\i E^{\mu_\epsilon} \left[ \  \B_j  \right] = 0.
+	\eeq
+	Thus, we get from Equation (\ref{Eqn_Psi_Split}),
+	\begin{eqnarray*}
+		\lim_{\mu_\epsilon \to \infty} \lim_{t \to \infty} \frac{\Psi_j(t)}{t}   = 0.
+	\end{eqnarray*} \eop
+	\\
+	%
+	%
+	%\begin{theorem}
+	%	\label{Thm_eager_Perf}
+	%Assume $\bm{A}$.1-4 and $\bm{B}$.1-4.\\
+	%	%
+	%	Let $\{ \pi_i^\infty \}_{i\geq 0}$ denotes the stationary distribution of  SDSR- M/M/1 limit tolerant system, given by Theorem (\ref{Thm_Tau_Perf}). Then the steady state blocking probability of eager jobs in SFJ limit  is given by:
+	%	%
+	%	\begin{eqnarray}
+	%	P_B^\mue \stackrel{\mue \to \infty}{\longrightarrow} \sum_{j=1}^{\infty} P_{B_j} \pi_j^\infty := P_B^\infty.
+	%	\end{eqnarray}
+	%\end{theorem}
+	%

@@ -1,0 +1,51 @@
+\section*{Response to the Area Editor}
+
+\comment{The paper requires a complete expositional overhaul; the original presentation had notation inconsistencies, insufficient intuition, and proof summaries that were too high level to be useful.}
+
+\response The Area Editor's guidance was very helpful in making clear that the revision had to improve the paper's exposition at the level of structure, not only wording. The main difficulty in the original presentation was that it introduced the mathematical abstraction before the reader had enough operational context for the serving mechanism. We have therefore reorganized the exposition so that the reader first sees the inference stages, batching decisions, KV-cache memory mechanism, and eviction/restart behavior, and then sees how these primitives lead to the model, policies, and analysis. Section 2 now introduces notation only as it enters the model, with a consolidated notation table moved to the Notation Summary appendix. Sections 4 and 5 now include step-by-step instances and mechanism-level explanations before the WAIT and Nested WAIT algorithms, so that the batching logic, memory-growth effect, and role of waiting are easier to see directly. The theorem discussions explain the memory conditions through batch composition, KV-cache growth, and threshold and boundary queues. We also reorganized the appendices so that the main proof steps are easier to follow and the text explains the verification path before deferring details.
+
+\changes
+\begin{itemize}
+    \item Rewrote Section 2 around prompts, inference stages, batching, memory, and the objective.
+    \item Added a notation summary in the Notation Summary appendix.
+    \item Added examples and explanatory figures for WAIT and Nested WAIT in Sections 4 and 5.
+    \item Reorganized the proof appendix into modular sections for Propositions and Theorems 1--3.
+    \item Added theorem-interpretation paragraphs that connect each guarantee to the primitive stochastic and memory mechanisms.
+\end{itemize}
+
+\comment{The model assumptions need either modification or better justification, especially the linear iteration-time model and the treatment of memory, OOM, and preemption.}
+
+\response The model-assumption comments were particularly important because the memory mechanism is the paper's main analytical difficulty. In the revision, we retained a tractable linear model but made its scope explicit. The iteration-time model separates the fixed per-iteration overhead from the marginal cost induced by aggregate KV-cache usage. Heterogeneous-prefill regimes may require richer calibrated service-time curves, whereas prefill-decode disaggregated deployments make aggregate decode-side KV-cache usage a natural state variable~\citep{patel2024splitwise,zhong2024distserve}. The revised text also explains why the scheduling insight extends beyond the linear specification: even under a richer service-time curve, the scheduler still has to regulate batch composition across prefill and decode stages, because that composition determines memory pressure and future batch service times. To avoid relying only on simulation, the Additional Experiments appendix compares Vidur predictions~\citep{agrawal2024vidur} with direct A100 measurements~\citep{nvidia-a100-specs} on a single-type calibration grid, and separately reports end-to-end experiments on an A100 GPU using SGLang~\citep{sglang-github}. The memory model has also been clarified: admitted requests that remain active keep their KV caches on the GPU and count against the memory constraint. If memory is exceeded, the server evicts and restarts an in-progress request, which is counted as lost useful work in the effective-throughput metric.
+
+\changes
+\begin{itemize}
+    \item Revised Section 2.2 to explain the linear iteration-time model and its KV-cache-driven scope.
+    \item Revised Section 2.3 to state that the memory constraint applies to all in-system KV caches retained on the GPU.
+    \item Added real-GPU validation in the Additional Experiments appendix, with A100 measurements and a fitted iteration-time model.
+    \item Added a prefill-decode-disaggregated experiment in the Additional Experiments appendix showing that the same threshold logic applies in a decode-only serving setting.
+    \item Revised Section 6 and the long-decode eviction table to report eviction-induced restart rates where relevant.
+\end{itemize}
+
+\comment{The theoretical novelty should be clarified. If the contribution is modeling and problem structuring rather than a new stochastic-process theorem, that should be stated clearly.}
+
+\response This guidance was very helpful in sharpening how we present the contribution. The revised manuscript no longer presents the contribution as a heavy-traffic theorem. Instead, it emphasizes the modeling and algorithm-design contribution: LLM inference creates a high-dimensional control problem because memory consumption grows rapidly with decode progress, output lengths may be unknown, and eviction can erase partially completed work. WAIT and Nested WAIT impose threshold structure that keeps the system close to the fluid equilibrium and reduces the analysis to threshold and boundary queues. The analysis then formalizes how this structure controls memory growth under the stated memory conditions and lets the stochastic policy approximate the fluid benchmark asymptotically.
+
+\changes
+\begin{itemize}
+    \item Reframed Section 3 as a fluid model and equilibrium analysis rather than a throughput-maximization problem at a fixed arrival rate.
+    \item Rewrote Sections 4.1--4.2 to explain why threshold-based admission reduces the state-action space.
+    \item Rewrote Section 5 to explain how Nested WAIT handles unknown output lengths through segment boundaries and binomial thinning.
+    \item Removed misleading ``heavy traffic'' language from the main narrative and replaced it with asymptotic language.
+\end{itemize}
+
+\comment{The paper should better connect the LLM-inference domain to existing stochastic-modeling and scheduling literature.}
+
+\response We appreciate the editor's suggestion to connect the LLM-inference domain more directly to existing stochastic-modeling and scheduling literature. Following this guidance, the revised Introduction now discusses concurrent theoretical work on online scheduling, competitive ratios, regret, robust prediction, and stochastic batch processing for LLM inference. We also sharpened the distinction between our setting and classical formulations with exogenous service requirements. In our model, admitted prompts move through prefill and decode stages, their KV-cache requirements grow rapidly with decode progress, and the system may restart work due to endogenous memory growth. The scheduler therefore controls not only which jobs enter service, but also the batch composition across prefill and decode stages. This control problem created by endogenous memory growth motivates the fluid-guided threshold structure developed in the paper. We also discuss prefill-decode disaggregated systems~\citep{patel2024splitwise,zhong2024distserve}, where aggregate decode-side KV-cache usage is a natural state variable for scheduling.
+
+\changes
+\begin{itemize}
+    \item Expanded the Other Related Work subsection in the Introduction.
+    \item Added discussion of concurrent LLM-inference scheduling theory and the distinction between their timing/information models and our memory-dependent batch model.
+    \item Added connections to Splitwise and DistServe-style prefill-decode disaggregation.
+\end{itemize}
+

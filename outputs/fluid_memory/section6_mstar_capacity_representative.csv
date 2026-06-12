@@ -1,0 +1,12 @@
+workload_label,rate,M_star_tokens_fmt,C_tokens,ratio_fmt,region
+p512d20,18.0,"2,121",137000.0,0.02,inside
+p512d20,24.0,"2,897",137000.0,0.02,inside
+0.7 p512d20 + 0.3 p512d50,20.0,"3,565",137000.0,0.03,inside
+0.7 p512d20 + 0.3 p512d50,24.0,"4,380",137000.0,0.03,inside
+p512d1000,2.0,"53,831",137000.0,0.39,inside
+p512d1000,2.5,"113,563",137000.0,0.83,inside
+p512d1000,3.0,"436,383",137000.0,3.19,outside
+p512d1000,4.0,$\infty$,137000.0,$\infty$,outside
+lmsys-chat-1m,50.0,"28,462",137000.0,0.21,inside
+lmsys-chat-1m,100.0,$\infty$,137000.0,$\infty$,outside
+lmsys-chat-1m,150.0,$\infty$,137000.0,$\infty$,outside

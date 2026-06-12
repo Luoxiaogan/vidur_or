@@ -1,0 +1,26 @@
+{
+  "model_name": "meta-llama/Llama-2-7b-hf",
+  "device": "a100",
+  "workload": "multi",
+  "prompt_types": [
+    {
+      "name": "p512d20",
+      "prefill": 512,
+      "decode": 20,
+      "fraction": 0.7
+    },
+    {
+      "name": "p512d50",
+      "prefill": 512,
+      "decode": 50,
+      "fraction": 0.3
+    }
+  ],
+  "d0_s": 0.010048557351777475,
+  "d1_s_per_token": 3.283344170347399e-07,
+  "r2": 0.9949611520426169,
+  "fit_batch_kind": "decode",
+  "kv_capacity_tokens": 137000.0,
+  "fit_sample_count": 24,
+  "total_sample_count": 28
+}

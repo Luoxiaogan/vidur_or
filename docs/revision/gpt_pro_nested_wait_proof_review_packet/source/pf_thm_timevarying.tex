@@ -1,0 +1,96 @@
+% ============================================
+% Proof of Theorem 3: Time-Varying Nested WAIT
+% ============================================
+
+\section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic_time_varying}}\label{appendix:: proof of nested optimality, time varying.}
+
+\paragraph{Proof Outline.}
+This proof extends Nested WAIT to time-varying arrival rates $\lambda_j(t)$. Time-varying rates make exact load balance impossible, since the optimal threshold depends on the instantaneous arrival pattern. The \emph{worst-case domination strategy} maintains load balance even at peak rates: by designing thresholds to handle worst-case arrivals, we ensure system stability across all scenarios. This conservative approach prevents eviction throughout the time horizon. The structure proceeds as follows:
+\begin{enumerate}
+    \item \textbf{First segment analysis}: Poisson arrivals with time-varying rates are dominated by a time-invariant process using worst-case aggregate rate $\mathbf{\Lambda}^{\pi} = \sup_b \{\sum_{j=1}^m \lambda_j[t(b), t(b)+\Delta T_{[1,\ldots,m]}]\}$. We couple with a Lindley process and apply Kingman's inequality.
+    \item \textbf{Subsequent segments analysis}: Binomial arrivals with time-varying thinning probabilities $p_k(b)$ are dominated by worst-case $p_k^* = \sup_b \{p_k(b)\}$. This ensures safety across all batch compositions. We apply Lindley coupling to each segment.
+    \item \textbf{Throughput and high-probability bounds}: Asymptotic optimality follows from the time-invariant dominated processes. High-probability memory bounds follow the same martingale construction, using worst-case parameters to prevent eviction.
+\end{enumerate}
+
+We use $b$ to denote the \emph{batch index} and $k \in \{1, \ldots, m\}$ to denote the \emph{segment index}. The total number of batches is denoted by $B$.
+
+\subsection{First Segment Analysis}
+
+For the first segment ($k=1$), the state transition rule is
+$$ W_{(1)}^{b+1} = W_{(1)}^{b} + Y_{(1)}^b  - n_1 \cdot \mathbf{1}\{ W_{(1)}^{b} + Y_{(1)}^b \geq n_1 \},  \quad Y_{(1)}^b \sim \text{Poisson}\Big( \sum_{j=1}^m \lambda_j[t(b), t(b)+ \Delta T_b] \Big),  $$
+where $t(b)$ denotes the start time of batch $b$ and $\Delta T_b$ denotes the processing time of batch $b$.
+
+\paragraph{Worst-case domination.} Time-varying arrival rates prevent exact load balance since optimal thresholds depend on instantaneous arrival patterns. To maintain stability across all scenarios, we use worst-case domination: design thresholds to handle peak arrival rates, ensuring eviction prevention even under worst-case conditions. Since $\Delta T_b\leq \Delta T_{[1,\dots,m]}$ (the time for a full batch containing all $m$ types), we construct a dominating process $\{\bar{W}_{(1)}^{b}\}$:
+$$ \bar{W}_{(1)}^{b+1} = \bar{W}_{(1)}^{b} + \bar{Y}_{(1)}^b  - n_1 \cdot \mathbf{1}\{ \bar{W}_{(1)}^{b} + \bar{Y}_{(1)}^b \geq n_1 \},  \quad \bar{Y}_{(1)}^b \sim \text{Poisson}\Big(  \sum_{j=1}^m \lambda_j[t(b), t(b)+\Delta T_{[1,\dots,m]}] \Big).  $$
+By~(\ref{eq:nested_wait_thresholds_time_varying}), the aggregate arrival rate during any batch is bounded by the worst-case aggregate rate:
+$$ \sum_{j=1}^m \lambda_j[t(b), t(b)+\Delta T_{[1,\dots,m]}] \leq \sup_{\forall b}\left\{\sum_{j=1}^m \lambda_j[t(b), t(b)+\Delta T_{[1,\dots,m]}] \right\} < n_1.$$
+Define $\mathbf{\Lambda}^{\pi} = \sup_{\forall b}\left\{\sum_{j=1}^m \lambda_j[t(b), t(b)+\Delta T_{[1,\dots,m]}] \right\} < n_1$ as the worst-case aggregate arrival rate. This enables a time-invariant dominating process that provides tractable bounds:
+$$ \tilde{W}_{(1)}^{b+1} = \tilde{W}_{(1)}^{b} + \tilde{Y}_{(1)}^b  - n_1 \cdot \mathbf{1}\{ \tilde{W}_{(1)}^{b} + \tilde{Y}_{(1)}^b \geq n_1 \},  \quad \tilde{Y}_{(1)}^b \sim \text{Poisson}(\mathbf{\Lambda}^{\pi}).  $$
+This time-invariant process enables classical queueing analysis. Define $X_{(1)}^b = \tilde{Y}_{(1)}^b - n_1$. The process $\{ \tilde{W}_{(1)}^{b}\}$ is dominated by a Lindley process:
+$$ \overline{W}_{(1)}^{0} = 2n_1,\quad  \overline{W}_{(1)}^{b+1} = \max \{  2n_1, \overline{W}_{(1)}^{b} + X_{(1)}^b \},\quad \forall b \in \mathbb{N}. $$
+Thus we have the dominance chain:
+$$ W_{(1)}^{b}\leq \bar{W}_{(1)}^{b} \leq \tilde{W}_{(1)}^{b} \leq \overline{W}_{(1)}^{b}, \quad \forall b \in \mathbb{N}.$$
+Since $n_1> \mathbf{\Lambda}^{\pi}$, the process $\{\overline{W}_{(1)}^{b} \}$ has negative drift. By Kingman's inequality \citep{kingman1962queues}, with
+$$\text{Var}(X_{(1)}^b ) = \mathbf{\Lambda}^{\pi},\quad \left|  \ex{}{X_{(1)}^b} \right| = n_1 - \mathbf{\Lambda}^{\pi},$$
+we obtain
+$$  \ex{}{W_{(1)}^b}\leq  2n_1 + \frac{\mathbf{\Lambda}^{\pi}}{2\left(n_1 -\mathbf{\Lambda}^{\pi}\right)}. $$
+\subsection{Subsequent Segments Analysis ($k \geq 2$)}
+
+For segment $k$ ($2\leq k\leq m$), arrivals come from prompts that completed segment $k-1$. The batch index $b$ for segment $k$ counts only batches containing segment $k-1$. These indices differ across segments but are bounded by the total batch count $B$.
+
+\paragraph{Time-varying thinning probabilities.} Consider the $b$-th arrival to segment $k$, which comes from the $b$-th batch containing segment $k-1$. The thinning probability $p_k(b)$ depends on the prompt composition in this batch and varies over time. Although exact arrival times are unknown, arrivals occur within some interval $[t, t+\Delta t]$ where $t+\Delta t \leq t(b,k-1)$, the starting time of the $b$-th batch containing segment $k-1$. To handle this time variation, we use the worst-case thinning probability. By~(\ref{eq:nested_wait_thresholds_time_varying}):
+$$p_k(b) = \frac{\sum_{j=k}^m \lambda_j[ t, t+\Delta t ]}{\sum_{j=k-1}^m \lambda_j[ t, t+\Delta t ]}\leq p_k^* < \frac{n_k}{n_{k-1}}, \quad \forall b \in \mathbb{N}.$$
+The arrival process is
+$$Y_{(k)}^b \sim \text{Binomial}(n_{k-1},p_k(b)),\quad \forall b\geq 0,$$
+and the state transition rule is
+$$W_{(k)}^{b+1} = W_{(k)}^{b} + Y_{(k)}^{b} - n_k \cdot\mathbf{1}\{ W_{(k)}^{b} + Y_{(k)}^{b}\geq n_k \}, $$
+where $b$ indexes batches containing segment $k-1$, since new arrivals to segment $k$ occur only when segment $k-1$ is processed.
+
+Define $X_{(k)}^b = Y_{(k)}^b - n_k$. Although the distribution $Y_{(k)}^b\sim \text{Binomial}(n_{k-1},p_k(b))$ is time-varying, the coupling construction follows the same induction as Appendix~\ref{appendix_lemma::proof of nested coupled process}:
+\begin{lemma}[Coupling for Time-Varying Case]\label{lemma: coupling, time varying}
+Define a coupled process $\{ \tilde{W}_{(k)}^b\}$ by:
+\begin{equation*}
+\begin{aligned}
+\tilde{W}_{(k)}^0 &= n_k, \\
+\tilde{W}_{(k)}^{b+1} &= \max\{ n_k, \, \tilde{W}_{(k)}^b+X_{(k)}^b\}, \\
+X_{(k)}^b &= Y_{(k)}^b - n_k.
+\end{aligned}
+\end{equation*}
+Then $\tilde{W}^b_{(k)}\geq W^b_{(k)}$ for all $b\in \mathbb{N}$.
+\end{lemma}
+To apply Kingman's inequality \citep{kingman1962queues}, we construct a time-invariant dominating process:
+\begin{equation*}
+\begin{aligned}
+\bar{W}_{(k)}^0 &= n_k, \\
+\bar{W}_{(k)}^{b+1} &= \max\{ n_k,\, \bar{W}_{(k)}^{b}+\bar{X}_{(k)}^b \}, \\
+\bar{X}_{(k)}^b &= \bar{Y}_{(k)}^b  -n_k, \\
+\bar{Y}_{(k)}^b &\sim \text{Binomial}(n_{k-1}, p_k^*), \quad \forall b\in \mathbb{N}.
+\end{aligned}
+\end{equation*}
+Then we have the dominance chain:
+$$\bar{W}^b_{(k)}\geq \tilde{W}^b_{(k)}\geq W^b_{(k)},\quad \forall b\in \mathbb{N}.$$
+The process $\bar{W}^b_{(k)}$ has the Lindley representation:
+\begin{equation*}
+\begin{aligned}
+\bar{W}_{(k)}^0 &= n_k, \\
+\bar{W}_{(k)}^{b+1} &= n_k + \max_{0\leq i\leq b}\{ \bar{S}_{(k)}^i \}, \\
+\text{where } \bar{S}_{(k)}^0 &= 0,\; \bar{S}_{(k)}^i = \sum_{r=1}^i \bar{X}_{(k)}^{r},\; 1\leq i\leq b.
+\end{aligned}
+\end{equation*}
+Since
+$$ \ex{}{\bar{X}_{(k)}^b} = n_{k-1}\cdot p_{k}^* - n_k <0,\quad \forall b\in \mathbb{N}, $$
+the coupled process $\{\bar{W}_{(k)}^b \}$ has negative drift. With
+$$\text{Var}(\bar{X}_{(k)}^b) = n_{k-1}p_k^*(1-p_k^*),\quad \left|\ex{}{\bar{X}_{(k)}^b}\right|=n_k - p_k^* n_{k-1},$$
+Kingman's inequality \citep{kingman1962queues} yields:
+$$\ex{}{\max_{0\leq i\leq b}\{ \bar{S}_{(k)}^i \}  }\leq  \frac{  n_{k-1}p_k^*(1-p_k^*) }{ 2(n_k - n_{k-1}p_k^*)}. $$
+Thus, the expected queue length is bounded:
+$$\ex{}{W_{(k)}^b}\leq \ex{}{\tilde{W}_{(k)}^b}\leq \ex{}{\bar{W}_{(k)}^b} \leq n_k + \frac{  n_{k-1}p_k^*(1-p_k^*) }{ 2(n_k - n_{k-1}p_k^*)}.$$
+\subsection{Throughput and High-Probability Bounds}
+
+The discussion of asymptotic optimal throughput under bounded latency and TTFT follows Appendix~\ref{appendix::proof of nested_wait_heavy_traffic}. For high-probability bounds, the analysis follows the same martingale construction applied to the time-invariant coupled process $\{ \bar{W}_{(k)}^b \}$ defined above. Each realized iteration has duration at least \(d_0/\zeta\), so the number of realized opportunities over \([0,T]\) is at most \(B_\zeta^{\max}=\lceil \zeta T/d_0\rceil\). By the same argument as in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic}, with $\bar{X}_{(k)}^{r} = \bar{Y}_{(k)}^r - n_k$, $\bar{Y}_{(k)}^r \sim \text{Binomial}(n_{k-1}, p_k^*)$, and $p_k^*<n_k/n_{k-1}<1$, the memory bound is:
+$$\mathbf{M}^{(\zeta,T)} = M^{\pi} + \sum_{k=2}^m n_k \cdot (l + l_{k-1}') + \sum_{k=2}^m \theta_k^{-1}\ln\left( \frac{m(1+\zeta T/d_0)}{\delta} \right) \cdot (l + l_{k-1}'),$$
+where $\theta_k$ ($2\leq k\leq m$) is the unique positive solution to:
+\begin{equation}
+e^{-\theta_k n_k} (1 - p_k^* + p_k^* e^{\theta_k})^{n_{k-1}} = 1.\label{eq::eq of theta, time varying}
+\end{equation}
+Since $p_k^* = \sup_b \{p_k(b)\}$ represents the worst-case thinning probability, the monotonicity of the martingale root in Appendix~\ref{appendix_lemma::proof of solution to martingale exists} yields the smallest $\theta_k$ and hence the largest memory bound term. The lower bound for $\theta_k$ follows from the same analysis in Appendix~\ref{appendix::proof of nested_wait_heavy_traffic}.

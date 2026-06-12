@@ -1,0 +1,161 @@
+\section*{Response to Referee 2}
+
+We sincerely thank Referee 2 for the detailed, constructive, and encouraging report. The report was especially helpful because it combined a supportive evaluation of the paper's modeling contribution with precise technical suggestions on the time model, the memory assumption, the proof structure, and experimental reproducibility. These suggestions led to several substantive improvements in both the main text and the appendix.
+
+\subsection*{R2.1. Scope of the linear iteration-time model}
+
+\comment{The referee suggests that Equation (1) may omit prefill attention, linear layers, and decode attention terms, and asks which asymptotic regime the paper targets.}
+
+\response This comment was very helpful in sharpening the scope of Equation (1). The revised manuscript now states that the linear iteration-time model is intended for regimes in which marginal iteration time is primarily driven by aggregate KV-cache usage. We also explain what the model abstracts from: mixed prefill-decode iterations, long or highly heterogeneous prefill lengths, and hardware-specific kernels may require additional prefill-attention, linear-layer, or calibrated service-time terms. Rather than claiming universality, we position Equation (1) as a transparent model of the admission-control trade-off central to the paper: admitting more prompts improves batching opportunities, but also increases iteration time and memory pressure through larger KV caches. For richer calibrated service-time curves, the same fluid-guided construction would start from the corresponding fluid equilibrium and memory-feasibility condition. Batch composition across prefill and decode stages would still be the key control variable linking admission decisions to current memory usage, future memory growth, iteration times, and eviction risk. We also added A100 validation~\citep{nvidia-a100-specs}.
+
+\changes
+\begin{itemize}
+    \item Revised Section 2.2 to state the operating regime of Equation (1), the timing terms it abstracts from, and how richer calibrated service-time curves would change the fluid equilibrium and memory-feasibility calculation.
+    \item Replaced the earlier L20 profiling plot with an A100 profiling figure for Llama-2-7B~\citep{nvidia-a100-specs,huggingface-llama2-docs}, and added an appendix validation comparing Vidur predictions with direct A100 measurements, including a separate extrapolation check to \(B=256\).
+    \item Added a prefill-decode-disaggregated experiment in the Additional Experiments appendix to illustrate how the same threshold insight extends to settings where decode-side KV-cache usage is isolated.
+\end{itemize}
+
+\subsection*{R2.2. Clarifications in Section 2}
+
+\comment{The referee provides several minor comments on notation, prefill throughput, the policy class, and whether preemption is permitted.}
+
+\response These detailed comments pointed to several places where Section 2 imposed unnecessary burden on the reader. In the revision, the stage notation is separated from prompt and output lengths, the roles of prefill and decode are described explicitly, and the objective discussion now clarifies the metrics studied in the paper. The revised model does not rely on costless swapping of inactive KV caches. Requests that are admitted and remain active retain their KV caches on the GPU and count toward memory consumption; if memory is exceeded, the server evicts and restarts in-progress work, which is treated as lost useful service. The revised text also states the last-in-first-out eviction rule used in the simulations: the most recently admitted GPU-retained prompts are evicted first, and each evicted prompt restarts from prefill.
+
+\changes
+\begin{itemize}
+    \item Rewrote Section 2.1--2.4 and added the Notation Summary appendix to separate prefill/decode stage notation from prompt and output lengths.
+    \item Clarified the admissible policy decisions, including admission, batch formation, preemption, eviction, and the partial information available to the scheduler.
+    \item Clarified that the memory constraint applies to retained KV caches of admitted in-system requests, including requests not selected in the current batch, and stated the last-in-first-out eviction and restart-from-prefill convention used when memory is exceeded.
+\end{itemize}
+
+\subsection*{R2.3. The assumption \(C \ge M^*\)}
+
+\comment{The referee notes that \(C \ge M^*\) may be a nontrivial requirement, especially for very long outputs, and asks whether the experiments satisfy or violate this condition.}
+
+\response The point about \(C \ge M^*\) is important, especially for long outputs. We now treat \(M^*\) as the memory requirement for the fluid equilibrium, not as a benign capacity assumption. The condition \(M^*\le C\) says that the workload is stabilizable in the fluid model. The policy question is whether an online scheduler can realize this stability in the stochastic system while memory grows rapidly with decode progress. To connect this condition to observed system behavior, the revised experiments examine underloaded, near-overloaded, and overloaded regimes across synthetic and heterogeneous workloads. We also added a real-data memory check: for the real dataset studied in Section 6, the manuscript reports representative values of \(M^*(\lambda)\) computed from the empirical prefill/decode length distribution and compares them with the memory capacity \(C\). Across these regimes, the empirical patterns are consistent with the theory's mechanism: threshold-based admission helps the system exploit available memory and server capacity while reducing eviction-induced restarts. As memory pressure increases, WAIT and Nested WAIT keep completed work closer to usable capacity by regulating when prompts enter and advance through decode, rather than relying on excess memory.
+
+\changes
+\begin{itemize}
+    \item Revised the discussion around \(M^*\) in Sections 3 and 4 to present it as the fluid-equilibrium memory requirement rather than a benign capacity assumption.
+    \item Added a real-data \(M^*(\lambda)\) versus \(C\) table in Section 6 for the real dataset.
+    \item Added long-decode experiments in Section 6, including \texttt{p512d1000}, to test near-overloaded and overloaded behavior under severe memory pressure.
+\end{itemize}
+
+\subsection*{R2.3a. Segment-wise design for unknown or long output lengths}
+
+\comment{The referee notes that maintaining a separate stage for every possible output length may be impractical in long-output settings.}
+
+\response This comment helped us separate the analytical construction from the implementation-oriented segment design. The main theorem presents the transparent case in which output lengths map to segment boundaries. The Extensions appendix then discusses general segment designs that group nearby output lengths into fewer segments. This is the form used in the real-data experiments: segment-level thresholds preserve the same continuation-probability logic while avoiding the need to maintain a separate threshold for every individual decode length.
+
+\changes
+\begin{itemize}
+    \item Revised Section 5 to explain segment boundaries as the points where output-length information is revealed.
+    \item Added Extensions appendix discussion of general segment design and coarser segmentations.
+    \item Revised Section 6.2 to describe how empirical continuation probabilities determine the segment thresholds in the real-data workload.
+\end{itemize}
+
+\subsection*{R2.4. Proof of Theorem 1 and decode-stage dynamics}
+
+\comment{The referee asks how the proof accounts for \(l'\) decode stages and whether completions occur only after enough batch executions.}
+
+\response The proof now gives a more explicit account of the decode-stage dynamics. WAIT is designed so that once a type is scheduled, threshold-sized batches advance through the decode stages under a controlled service-opportunity coupling. This threshold structure is what permits the proof to reduce the multi-stage process to a boundary queue for each type. The main text now explains this dimensionality reduction before the theorem discussion, and the appendix proof explicitly separates the batch index from the decode-stage index.
+
+\changes
+\begin{itemize}
+    \item Revised Section 4.2 to explain how threshold-sized batches move through decode stages.
+    \item Revised the proof appendix for Theorem 1 to define the batch index separately from the stage index.
+    \item Added explanatory text connecting queue accumulation to throughput loss in the proof of Theorem 1.
+\end{itemize}
+
+\subsection*{R2.5. Thresholds without waiting}
+
+\comment{The referee asks what happens if the algorithm uses thresholds but does not wait for enough prompts to accumulate.}
+
+\response To isolate the role of waiting, we added a targeted comparison in the Additional Experiments appendix. The threshold-only variant imposes an upper bound on in-system requests but does not wait to form threshold-sized batches. The comparison shows that the waiting component has a regime-dependent role. At low arrival rates, waiting can add modest delay because the server has sufficient capacity to process requests immediately. In near-overloaded regimes, waiting becomes useful because it regulates when work enters service and improves batch formation. Once the system is overloaded, the aggregate upper bound dominates and the two variants behave more similarly.
+
+\changes
+\begin{itemize}
+    \item Added the ``Threshold without waiting'' subsection in the Additional Experiments appendix.
+    \item Added the wait-versus-threshold-only figure reporting the latency comparison across arrival rates.
+\end{itemize}
+
+\subsection*{R2.6. Role of the asymptotic assumption}
+
+\comment{The referee asks what role the original heavy-traffic assumption plays and whether the theorem can be stated without it.}
+
+\response We appreciate the referee making this distinction explicit. The analysis does not take a classical heavy-traffic limit in which the load approaches the boundary of the stability region. The revised manuscript now states the scaling directly: arrival rates are multiplied by \(\zeta\), processing times are divided by \(\zeta\), and the physical memory capacity \(C\) is kept fixed. This scaling averages out stochastic fluctuations while preserving the memory constraint, and the theorem reports throughput gaps and service-normalized delay metrics over the effective horizon \(\zeta T\). We have removed the heavy-traffic framing from the narrative and now describe the result as an asymptotic guarantee relative to the fluid benchmark, not as a conventional diffusion limit.
+
+\changes
+\begin{itemize}
+    \item Replaced ``heavy traffic'' terminology in the main text with asymptotic terminology.
+    \item Revised the theorem discussion in Sections 4 and 5 to state the role of the limit more directly.
+\end{itemize}
+
+\subsection*{R2.7. Formula and proof-detail comments}
+
+\comment{The referee lists several formula checks and appendix proof clarifications, including \(d_0\) versus \(d_1\), \(M^\pi\) versus \(M^*\), undefined notation, and an alternative proof idea.}
+
+\response We treated these formula and proof comments as guidance for revising the appendix. The revised manuscript corrects the \(d_0/d_1\) inconsistencies, clarifies the distinction between \(M^*\) and \(M^\pi\), defines segment probabilities and safety-buffer terms before the Nested WAIT theorem, and reorganizes the proof appendix around the main theorem statements. We also followed the referee's suggested proof direction by making the coupling argument more direct and by separating the auxiliary embedded process from the original event-driven system.
+
+\changes
+\begin{itemize}
+    \item Corrected the \(d_0/d_1\) inconsistencies and clarified the distinction between \(M^*\), \(M^\pi\), and the safety-buffer terms.
+    \item Revised Section 5.2 to define \(p_k\), \(n_k\), \(M^\pi\), and the safety-buffer interpretation before Theorem 2.
+    \item Reorganized the proof appendix around theorem-specific arguments and added citations to established stochastic-process tools used in queueing analysis.
+\end{itemize}
+
+\vspace{0.25em}
+\noindent\textbf{Detailed correction checklist.} We also checked the detailed notation and proof points in the report. In particular, the revision (i) separates prompt type \(j(i)\), prefill/decode stage \(s_i^t\), prefill length \(l_j\), and decode length \(l_j'\); (ii) states that \(s_i^t=0\) denotes prefill; (iii) corrects the \(d_0/d_1\) inconsistencies in the fluid calculations; (iv) defines \(\Delta T(\cdot)\), \(M^*\), and \(M^\pi\) before they are used in the theorem statements; (v) states the advancement logic through prefill and decode used in Theorem 1; (vi) distinguishes the embedded review intervals used in the WAIT proof from actual event-driven batches; (vii) adds the memory-state and post-review boundary-queue conventions in the WAIT and Nested WAIT proofs; (viii) cites standard reflected-random-walk and Kingman-type tools rather than reproving those facts from first principles; and (ix) removes or corrects the undefined or ambiguous symbols flagged in the appendix.
+
+\subsection*{R2.7a. Appendix organization and use of standard stochastic results}
+
+\comment{The referee and the Area Editor suggest that the appendix should be easier to verify and should connect more directly to standard stochastic-process tools.}
+
+\response We reorganized the proof appendix so that its structure is easier to verify. It now separates proposition proofs, the WAIT theorem proof, the Nested WAIT theorem proof, the time-varying extension, and supporting lemmas. Within the theorem proofs, we use standard stochastic-process tools explicitly: a Lindley-type recursion for the threshold queue, random-walk maximum bounds for queue accumulation, and martingale bounds for the Nested WAIT safety buffer. The main text now explains why the policy creates the reduced process before the appendix analyzes it.
+
+\changes
+\begin{itemize}
+    \item Split the proof appendix into theorem-specific proof sections.
+    \item Added definitions of the batch index, stage index, and coupled process before using them in proofs.
+    \item Added citations to standard stochastic-process tools where they replace or streamline first-principles derivations.
+\end{itemize}
+
+\subsection*{R2.8. Experimental parameters and reproducibility}
+
+\comment{The referee asks for batch-size, memory, capacity, Sarathi configuration, and Nested WAIT parameter details in Section 6.}
+
+\response We substantially rewrote Section 6 and the Additional Experiments appendix so that the main settings are explicit rather than implicit. The main text now states the hardware, simulator, baseline configurations, WAIT/Nested WAIT threshold construction, arrival-rate grids used in the experiments, and number of replications. The baselines are described as greedy FCFS-based policies; Sarathi differs by using chunked prefill~\citep{agrawal2023sarathi}, and the memory-reservation rule used by both baselines is stated explicitly. We also added a memory-cap calculation for the A100~80\,GB / Llama-2-7B configuration~\citep{nvidia-a100-specs,huggingface-llama2-docs}: after the model weights and the baseline memory margin, the baseline-memory runs use a KV-cache cap of approximately \(1.37\times 10^5\) tokens. The token calculation follows the standard key/value-cache accounting for Transformer decoding~\citep{huggingface-kv-cache-basics}. The same paragraph now states that if retained GPU KV-cache usage exceeds this cap, the server evicts and restarts in-progress requests.
+
+We also introduced an additional batch-cap parameter \(\mathrm{tl}\) to make the experimental threshold construction explicit. In a single-type WAIT run, once \(\mathrm{tl}\) is chosen, the per-stage thresholds are computed by distributing this cap across the prefill and decode stages of the workload. In Nested WAIT, once \(\mathrm{tl}\), the segment count, and the margin parameter \(\eta\) are chosen, the segment-level caps and per-stage thresholds are computed from the segment lengths and empirical continuation probabilities. For example, in the two-type workload with decode segments \(1\)--\(20\) and \(21\)--\(50\), the second segment is reached by the long-decode \(30\%\) of requests. With \(\mathrm{tl}=30\), the construction solves \(20n_1+30n_2=\mathrm{tl}\) with \(n_2/n_1=0.3\), giving segment-level caps of approximately \(21\) and \(9\) before integer rounding. Thus \(\mathrm{tl}\) is not itself a memory capacity and does not mean that \(\mathrm{tl}\) longest-context requests can reside on the GPU simultaneously. Actual retained KV-cache usage depends on realized prompt lengths and decode stages and remains governed by the memory cap. The manuscript now reports the common \(\mathrm{tl}\in\{20,30,\ldots,300\}\) parameter grid; for the real-data experiment it additionally reports the segment-count grid \(L\in\{1,2,3,4,5,10,20\}\) and margin parameter \(\eta=0.05\) used in this calibration. We present this as a rate-aware calibration of a distribution-aware policy: the workload distribution and offered arrival rate set the parameters before online scheduling, while each scheduling decision does not use the realized final output length of the request being scheduled. The GPU appendix separately reports rate-specific parameter settings for the GPU experiments on the real-data workload.
+
+\changes
+\begin{itemize}
+    \item Added hardware, memory-cap, baseline-configuration, and WAIT/Nested WAIT parameter paragraphs at the start of Section 6.
+    \item Revised the real-data subsection to explain the dataset, sampling, segment construction, distribution-aware thresholds, and threshold allocation.
+    \item Added real-GPU implementation details in the appendix, including the rate-specific parameters used in the GPU experiments on the real-data workload.
+\end{itemize}
+
+\subsection*{R2.9. Simulation fidelity and real-GPU validation}
+
+\comment{The referee recommends validating Vidur against actual GPU measurements.}
+
+\response We added the requested validation in two complementary forms. The Additional Experiments appendix compares Vidur predictions with direct A100 measurements for Llama-2-7B on a single-type calibration grid. The raw Vidur profiling data for this Llama-2-7B/A100 setting cover batch sizes through \(B=128\); we report the profiled range and separately test extrapolation to batch size \(B=256\) against a direct A100 measurement. The fitted validation curve has small mean absolute percentage error and high \(R^2\), and the extrapolation to \(B=256\) remains close to the measured A100 runtime. We also added end-to-end real-GPU experiments using SGLang~0.5.7~\citep{sglang-github}, comparing WAIT with the baseline scheduler for a single-type workload and Nested WAIT for the real-data workload distribution. The main policy comparisons in Section 6 remain Vidur simulations configured for A100 hardware, while these real-GPU experiments provide direct timing calibration for the simulator and implementation evidence for the WAIT/Nested WAIT scheduling logic.
+
+\changes
+\begin{itemize}
+    \item Added the simulator-calibration figure in the real-GPU validation appendix.
+    \item Added end-to-end real-GPU comparisons on single-type and real-data workloads.
+    \item Added references to the validation from Section 6.
+\end{itemize}
+
+\subsection*{R2.10. Long outputs}
+
+\comment{The referee asks how the algorithm behaves when output length exceeds 1000 tokens.}
+
+\response This is a natural stress test for the proposed memory-control mechanism, and we added a long-decode workload to Section 6. The workload \texttt{p512d1000} keeps the prefill length fixed and increases the decode length to 1000. This setting stresses KV-cache growth and causes all policies to lose stability at much lower arrival rates. WAIT has the lowest latency near the boundary and avoids eviction-induced restarts in the near-overloaded diagnostic, illustrating that threshold-based admission remains useful when decode-side memory growth is pronounced.
+
+\changes
+\begin{itemize}
+    \item Added the long-decode regime in Section 6.1.
+    \item Added the long-decode figure and near-overloaded eviction table for latency, effective completion rate, and eviction-induced restart evidence.
+\end{itemize}

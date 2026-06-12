@@ -1,0 +1,12 @@
+{
+  "model_name": "meta-llama/Llama-2-7b-hf",
+  "device": "a100",
+  "prefill_len": 512,
+  "decode_len": 20,
+  "chunk_size": 256,
+  "block_size": 16,
+  "kv_capacity_tokens": 137000.0,
+  "prediction_max_batch_size": 128,
+  "output": "/Users/ruicheng/GitHub/vidur_or/outputs/fluid_memory/single_type_vidur_balanced_mstar.csv",
+  "grid_output": "/Users/ruicheng/GitHub/vidur_or/outputs/fluid_memory/single_type_vidur_balanced_mstar_grid.csv"
+}

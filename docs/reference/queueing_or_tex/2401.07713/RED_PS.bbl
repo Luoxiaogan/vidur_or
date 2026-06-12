@@ -1,0 +1,128 @@
+\begin{thebibliography}{10}
+
+\bibitem{dolly}
+{\sc Ananthanarayanan, G., Ghodsi, A., Shenker, S., and Stoica, I.}
+\newblock Effective straggler mitigation: Attack of the clones.
+\newblock In {\em 10th USENIX Symposium on Networked Systems Design and Implementation (NSDI 13)\/} (Lombard, IL, Apr. 2013), USENIX Association, pp.~185--198.
+
+\bibitem{anton2021stability}
+{\sc Anton, E., Ayesta, U., Jonckheere, M., and Verloop, I.~M.}
+\newblock On the stability of redundancy models.
+\newblock {\em Operations Research 69}, 5 (2021), 1540--1565.
+
+\bibitem{anton_survey}
+{\sc Anton, E., Ayesta, U., Jonckheere, M., and Verloop, I.~M.}
+\newblock A survey of stability results for redundancy systems.
+\newblock In {\em Modern Trends in Controlled Stochastic Processes:\/} (Cham, 2021), A.~Piunovskiy and Y.~Zhang, Eds., Springer International Publishing, pp.~266--283.
+
+\bibitem{antonMAMA2023}
+{\sc Anton, E., and Gardner, K.}
+\newblock The stationary distribution of the redundancy-d model with random order of service.
+\newblock {\em SIGMETRICS Perform. Eval. Rev. 51}, 2 (oct 2023), 9–11.
+
+\bibitem{ayesta_unifying}
+{\sc Ayesta, U., Bodas, T., and Verloop, I.}
+\newblock On a unifying product form framework for redundancy models.
+\newblock {\em Performance Evaluation 127-128\/} (2018), 93--119.
+
+\bibitem{BONALD201770}
+{\sc Bonald, T., and Comte, C.}
+\newblock Balanced fair resource sharing in computer clusters.
+\newblock {\em Performance Evaluation 116\/} (2017), 70--83.
+
+\bibitem{dean2013}
+{\sc Dean, J., and Barroso, L.~A.}
+\newblock The tail at scale.
+\newblock {\em Commun. ACM 56}, 2 (feb 2013), 74–80.
+
+\bibitem{gardner2017better}
+{\sc Gardner, K., Harchol-Balter, M., Scheller-Wolf, A., and Van~Houdt, B.}
+\newblock A better model for job redundancy: Decoupling server slowdown and job size.
+\newblock {\em IEEE/ACM transactions on networking 25}, 6 (2017), 3353--3367.
+
+\bibitem{gardner2017redundancy}
+{\sc Gardner, K., Harchol-Balter, M., Scheller-Wolf, A., Velednitsky, M., and Zbarsky, S.}
+\newblock Redundancy-d: The power of d choices for redundancy.
+\newblock {\em Operations Research 65}, 4 (2017), 1078--1094.
+
+\bibitem{gardner2015reducing}
+{\sc Gardner, K., Zbarsky, S., Doroudi, S., Harchol-Balter, M., and Hyytia, E.}
+\newblock Reducing latency via redundant requests: Exact analysis.
+\newblock {\em ACM SIGMETRICS Performance Evaluation Review 43}, 1 (2015), 347--360.
+
+\bibitem{Harte}
+{\sc Harte, J.}
+\newblock Token redundancy in distributed {JIQ}.
+\newblock Bachelor's thesis, Eindhoven University of Technology, 2021.
+
+\bibitem{Hellemans_workload}
+{\sc Hellemans, T., Bodas, T., and Van~Houdt, B.}
+\newblock Performance analysis of workload dependent load balancing policies.
+\newblock {\em Proc. ACM Meas. Anal. Comput. Syst. 3}, 2 (jun 2019).
+
+\bibitem{hellemansSIG18}
+{\sc Hellemans, T., and Van~Houdt, B.}
+\newblock On the power-of-d-choices with least loaded server selection.
+\newblock {\em Proc. ACM Meas. Anal. Comput. Syst.\/} (June 2018).
+
+\bibitem{Hellemans_indentical}
+{\sc Hellemans, T., and Van~Houdt, B.}
+\newblock Analysis of redundancy(d) with identical replicas.
+\newblock {\em SIGMETRICS Perform. Eval. Rev. 46}, 3 (jan 2019), 74–79.
+
+\bibitem{Krzesinski2011}
+{\sc Krzesinski, A.~E.}
+\newblock {\em Order Independent Queues}.
+\newblock Springer US, Boston, MA, 2011, pp.~85--120.
+
+\bibitem{lu1}
+{\sc Lu, Y., Xie, Q., Kliot, G., Geller, A., Larus, J.~R., and Greenberg, A.}
+\newblock Join-idle-queue: A novel load balancing algorithm for dynamically scalable web services.
+\newblock {\em Perform. Eval. 68\/} (2011), 1056--1071.
+
+\bibitem{mitzenmacherJIQ}
+{\sc Mitzenmacher, M.}
+\newblock Analyzing distributed join-idle-queue: A fluid limit approach.
+\newblock In {\em 2016 54th Annual Allerton Conference on Communication, Control, and Computing (Allerton)\/} (2016), IEEE, pp.~312--318.
+
+\bibitem{raaijmakers2020}
+{\sc Raaijmakers, Y., and Borst, S.}
+\newblock Achievable stability in redundancy systems.
+\newblock {\em Proc. ACM Meas. Anal. Comput. Syst. 4}, 3 (nov 2020).
+
+\bibitem{raaijmakers_PS}
+{\sc Raaijmakers, Y., Borst, S., and Boxma, O.}
+\newblock Stability of redundancy systems with processor sharing.
+\newblock In {\em Proceedings of the 13th EAI International Conference on Performance Evaluation Methodologies and Tools\/} (New York, NY, USA, 2020), VALUETOOLS '20, Association for Computing Machinery, p.~120–127.
+
+\bibitem{shneer2020large}
+{\sc Shneer, S., and Stolyar, A.~L.}
+\newblock {Large-scale parallel server system with multi-component jobs}.
+\newblock {\em Queueing Systems: Theory and Applications 98}, 1 (June 2021), 21--48.
+
+\bibitem{stolyar1}
+{\sc Stolyar, A.}
+\newblock Pull-based load distribution in large-scale heterogeneous service systems.
+\newblock {\em Queueing Systems 80}, 4 (2015), 341--361.
+
+\bibitem{myMASCOTSpaper}
+{\sc Van~Houdt, B.}
+\newblock On the performance evaluation of distributed join-idle-queue load balancing.
+\newblock In {\em Proceedings of MASCOTS 2023\/} (New York, NY, USA, 2023), IEEE.
+
+\bibitem{visschers2012product}
+{\sc Visschers, J., Adan, I., and Weiss, G.}
+\newblock A product form solution to a system with multi-type jobs and multi-type servers.
+\newblock {\em Queueing Systems 70}, 3 (2012), 269--298.
+
+\bibitem{vulimiri2013}
+{\sc Vulimiri, A., Godfrey, P.~B., Mittal, R., Sherry, J., Ratnasamy, S., and Shenker, S.}
+\newblock Low latency via redundancy.
+\newblock In {\em Proceedings of the ninth ACM conference on Emerging networking experiments and technologies\/} (2013), pp.~283--294.
+
+\bibitem{wangJIQ}
+{\sc Wang, C., Feng, C., and Cheng, J.}
+\newblock Distributed join-the-idle-queue for low latency cloud services.
+\newblock {\em IEEE/ACM Transactions on Networking 26}, 5 (2018), 2309--2319.
+
+\end{thebibliography}

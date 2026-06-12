@@ -1,0 +1,204 @@
+ %\documentclass[onecolumn]{IEEEtran}
+\documentclass{article}
+\usepackage[margin=1.3in]{geometry}
+
+%\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsthm}
+\usepackage{dsfont}
+%\usepackage{etex}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{enumerate}
+\usepackage{moresize}
+\usepackage{bm}
+\newcommand{\indicator}[1]{\boldsymbol{1}_{  \{  #1 \}  }    }
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\sfrac}[2]{#1/#2}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\norm}[1]{\|#1\|}
+\newcommand{\indc}{\mbox{\large {${\mathds 1}$}}}
+
+\newtheorem{thm}{{\bf Theorem}}
+\newtheorem{cor}{Corollary}
+\newtheorem{lemma}{{\bf Lemma}}
+\newtheorem{defn}{Definition}
+
+\newcommand{\kcmnts}[1] {\textcolor{red}{kav: #1}}
+\newcommand{\kcmnt}[1]{} % {\textcolor{red}{kav: #1}}
+
+\newcommand{\kt}[1]{{#1}}  %\color{green} #1}}
+
+
+\newcommand{\Kv}[1]{{\color{red}{\bf New addition:}#1}}
+
+\newcommand{\eop}{\hfill{$\blacksquare$}}
+
+\newcommand{\mue}{{\mu_\epsilon}}
+\newcommand{\lame}{{\lambda\epsilon}}
+
+\newcommand{\eqdist}{\stackrel{d}{=}}
+\newcommand{\leqsim}{\lesssim}
+\newcommand{\leqst}{\leq_{\mathrm{st}}}
+\newcommand{\leqas}{\leq_{\mathrm{a.s.}}}
+
+
+\newcommand{\ra}{\rightarrow} 
+\newcommand{\ua}{\uparrow}
+\newcommand{\da}{\downarrow}
+\newcommand{\prob}[1]{P\left(#1\right)} 
+\newcommand{\imp}{\Rightarrow}
+\newcommand{\re}{\mathbb{R}} 
+
+\newcommand{\extrabits}[1]{} %{#1}
+\newcommand{\ignore}[1]{}
+\renewcommand{\vspace}[1]{} %% Kills all vspace usages for the Tech Report
+\newcommand{\g}{ {\bf g}}
+
+\newcommand{\rmin }{{\underline \rho}}
+\newcommand{\rmax }{{\bar \rho}}
+
+\newcommand{\amin }{{\underline a}}
+\newcommand{\amax }{{\bar a}}
+
+\newcommand{\dmin }{{\underline d}}
+\newcommand{\dmax }{{\bar d}}
+
+\renewcommand{\i} {{ \epsilon }}
+\renewcommand{\t}{{\tau}}
+\usepackage[normalem]{ulem}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{xspace}
+
+\newcommand{\fullstp}{\hfill{\Large{$\diamond$}}}
+\newcommand{\ans}[1]{\textcolor{blue} {{\bf Answer:} #1}}
+\newcommand{\convas}{\stackrel{a.s.}{\to}}
+\newcommand{\convp}{\stackrel{p}{\to}}
+\newcommand{\convlp}{\stackrel{L^p}{\to}}
+\newcommand{\pf}[1]{\textcolor{blue}{{\bf Proof:} #1}}
+\newcommand{\convw}{\stackrel{w}{\to}}
+\newcommand{\ConvW}{\Rightarrow}
+\newcommand{\convd}{\stackrel{d}{\to}}
+\newcommand{\convl}{\stackrel{{\cal L}}{\to}}
+\newcommand{\x}{{\bf x}} 
+\newcommand{\X}{{\bf X}} 
+\newcommand{\co}{\delta_1}
+\newcommand{\ct}{\delta_2}
+\newcommand{\bb }{{\bar \gamma}}
+\newcommand{\bbb}{{\tilde \gamma}}
+
+\newcommand{\beq}{\begin{eqnarray*}}
+\newcommand{\eeq}{\end{eqnarray*}}
+
+
+
+\newtheorem{definition}{Definition} 
+\newtheorem{corr}{Corrolary}
+\newtheorem{theorem}{Theorem}
+\newtheorem{conjecture}{Conjecture}
+
+\newcommand{\Exp}[1]{E\left[#1\right]} %Expectation
+\newcommand{\std}{\leq_{\mathrm{s.t.}}}
+
+\renewcommand{\i} {{ \epsilon }}
+\renewcommand{\t}{{\tau}}
+\newcommand{\mut}{{\mu_\tau}}
+\newcommand{\B}{\mathcal{B}}
+\renewcommand{\S}{\mathcal{S}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\N}{\mathbb{N}}
+
+\newcommand{\PB}{{P_{B}}}
+
+%Expectation
+
+
+\newboolean{wiopt}
+\setboolean{wiopt}{false}
+\newcommand{\conftext}[1]{\ifthenelse{\boolean{wiopt}}{#1}{}}
+\newcommand{\TRtext}[1]{\ifthenelse{\boolean{wiopt}}{}{{\color{red}#1}}}
+%\newcommand{\revision}[1]{{\color{red}#1}}
+\newcommand{\revision}[1]{#1}
+
+\newboolean{showcomments}
+\setboolean{showcomments}{true}
+\newcommand{\jk}[1]{\ifthenelse{\boolean{showcomments}} {\textcolor{green}{(JK says: #1)}} {}}
+\newcommand{\kc}[1]{\ifthenelse{\boolean{showcomments}} {\textcolor{blue}{(KC says: #1)}} {}}
+\newcommand{\vk}[1]{\ifthenelse{\boolean{showcomments}} {\textcolor{blue}{(VK says: #1)}} {}}
+
+\newcommand{\h}{h}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Dynamic scheduling in a partially fluid, partially lossy
+  queueing system\thanks{A preliminary version of this work was
+    presented at the WiOpt conference, 2019 \cite{Chaudhary2019}.}}
+
+\author{Kiran Chaudhary\thanks{Kiran Chaudhary and Veeraruna Kavitha
+    are with the Industrial Engineering and Operations Research (IEOR)
+    Department at IIT Bombay.}  \and Veeraruna Kavitha\footnotemark[2]
+  \and Jayakrishnan~Nair\thanks{Jayakrishnan Nair is with the
+    Electrical Engineering Department at IIT Bombay; he acknowledges
+    support from DST and CEFIPRA.}}%
+
+
+\maketitle
+
+\begin{abstract}
+
+  We consider a single server queueing system with two classes of
+  jobs: {\it eager} jobs with small sizes that require service to
+  begin almost immediately upon arrival, and {\it tolerant} jobs with
+  larger sizes that can wait for service. While blocking probability
+  is the relevant performance metric for the eager class, the tolerant
+  class seeks to minimize its mean sojourn time. In this paper, we
+  analyse the performance of each class under dynamic scheduling
+  policies, where the scheduling of both classes depends on the
+  instantaneous state of the system. This analysis is carried out
+  under a certain fluid limit, where the arrival rate and service rate
+  of the eager class are scaled to infinity, holding the offered load
+  constant. Our performance characterizations reveal a {\it (dynamic)
+    pseudo-conservation law} that ties the performance of both the
+  classes to the standalone blocking probabilities associated with the
+  scheduling policies for the eager class.
+  % , when the eager class is subjected to the same scheduling policy
+  % oblivious of the tolerant queue.
+  Further, the performance is robust to other specifics of the
+  scheduling policies. We also characterize the Pareto frontier of the
+  achievable region of performance vectors under the same fluid limit,
+  and identify a (two-parameter) class of {\it Pareto-complete}
+  scheduling policies.
+\end{abstract}
+
+\input{paperbody}
+
+%\vspace{-4mm}
+%{\small
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+%}
+
+%\vspace{-2mm}
+
+%\input{appendix-wiopt}
+%\input{appendix-SFJ}
+\appendix
+\input{appendix_sample}
+\input{appendix-tolerant-perf}
+\input{appendix-eager-perf}
+\input{new_appendix_without_A1}
+%\input{appendix_proof_without_A1}
+\input{appendix-pareto}
+\end{document}

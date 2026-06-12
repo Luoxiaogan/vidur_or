@@ -1,0 +1,1063 @@
+
+\section{Introduction}
+\label{sec:intro}
+
+\ignore{Modern cellular systems handle two distinct classes of traffic
+  --- voice and data. Voice calls must be either admitted or dropped
+  upon arrival. Thus, the relevant performance metric for voice calls
+  is the probability of a call drop. On the other hand, data traffic
+  is elastic and can be queued. As a result, the performance of data
+  traffic is best captured by the delay statistics. Given that voice
+  and data calls share the same underlying service capacity (wireless
+  spectrum), the admission control and scheduling in a cellular system
+  has to be designed to optimally balance the performance experienced
+  by these two (heterogeneous) classes.}
+
+In this paper, we analyse a single server queueing system with two
+heterogeneous customer classes. One class of customers is {\it
+  eager}---they require service to commence (almost) immediately upon
+arrival.
+%Moreover, eager customers demand a certain minimum service rate
+%throughout their service duration. Thus, eager customers must be
+%either admitted or blocked upon arrival.
+The performance of the eager class is captured by the blocking
+probability, i.e., the long run fraction of eager customers that are
+blocked. The second class of customers is {\it tolerant}---these
+customers can tolerate delays and may be queued. The performance of
+this class is captured via the mean response time of the tolerant
+customers.
+
+Service systems of this kind are motivated by modern cellular
+networks, which handle voice calls (which must be either admitted or
+dropped upon arrival) as well as data traffic (which can be
+queued).  \revision{ Another motivation comes from  super-markets, where it is
+ common practice to provide  prioritized service to customers with fewer items via dedicated express
+counters; these customers have limited patience, and may balk/renege if service is not provided  almost  immediately.}  
+However, such part-loss, part-queueing multi-class service
+systems are analytically intractable even under the simplest
+scheduling disciplines (see \cite{Mahabhashyam05} and the references
+therein). In this paper, we derive tractable approximations of the
+performance experienced by each class using a certain fluid limit,
+referred to as the short-frequent-jobs (SFJ) limit.
+
+ 
+
+The SFJ limit corresponds to scaling the arrival rate as well as the
+service rate of the eager class to infinity, such that the offered
+load is held constant. This gives rise to a time-scale separation
+between the two classes, the eager class operating at a faster
+time-scale. Under the SFJ limit, we obtain a closed form
+characterization of the performance of both classes under a broad
+class of dynamic policies that allow the admission control of the
+eager class and the scheduling of both classes to be dependent on the
+current state of the system.\footnote{From here on, we follow the
+  convention that admission control (if used) is included in the eager
+  scheduling policy.\label{footnote:eps-scheduling}} Interestingly, a
+dynamic pseudo-conservation law follows from this characterization (in
+the SJF limit)---the performance of both classes depends only on the
+standalone blocking probabilities (resulting when a single eager
+scheduling policy is used oblivious to the tolerant state) associated
+with the eager scheduling schemes employed for each occupancy level of
+the tolerant queue. In particular, the performance does not depend on
+the specific scheduling policies that generate those blocking
+probabilities, as well as on the details of the tolerant scheduler
+(subject to work conservation and serial, non-anticipative
+processing). Conservation laws typically allow one to compute the
+performance of a complex system in terms of the performance of simpler
+ones. In our case, once the relevant standalone blocking probabilities
+are known (these can usually be computed easily as they result from
+the analysis of a single-class loss system), one can compute the
+performance of both the classes.
+
+%Specifically, the analysis in~\cite{ANOR} applies to a class of
+%(partially) static scheduling policies, wherein the eager class is
+%scheduled in a manner that is oblivious to the state of the tolerant
+%queue, with the tolerant queue utilizing the service capacity left
+%unused by the eager class. Remarkably, under this class of static
+%policies,~\cite{ANOR} established a pseudo-conservation law relating
+%the performance of the tolerant class to the blocking probability of
+%the eager class, robust to the specific admission control and
+%scheduling policy employed by the eager class.
+%
+%The goal of this paper is to extend the analysis of \cite{ANOR} to
+%{\it dynamic} policies, that allow the admission control and
+%scheduling of the eager class to be dependent on the size of the
+%tolerant queue.  , which continues to be served using the service
+%capacity left unused by the eager class.
+%
+\ignore{Under the dynamic policies considered in our paper, the
+  performance of both the classes are inter-dependent.  Consequently,
+  along with seeing the time varying service process, the tolerant
+  class experience the service process which depends on the number of
+  customers in the tolerant system.  As the tolerant customer receive
+  the time and state varying service process the analysis of the
+  tolerant class becomes more difficult than that of in the case with
+  static policy. However, we showed that under the partial fluid
+  regime, the analysis of both the classes is tractable. Considering
+  the dynamic policies clearly expands the achievable region of the
+  system (i.e., the set of achievable performance vectors across all
+  policies under consideration) relative to the restriction to static
+  policies.
+
+  This clearly expands the achievable region of the system (i.e., the
+  set of achievable performance vectors across all policies under
+  consideration) relative to the restriction to static policies.
+}
+ 
+We further analyse the Pareto frontier of performance vectors
+achievable under the class of dynamic schedulers, which defines the
+set of efficient operating points for the system. Remarkably, we are
+able to identify a {\it Pareto-complete} family of scheduling policies
+(we call a family of schedulers Pareto-complete if it spans the entire
+Pareto frontier over its parameter space). This family, parametrized
+by $(L,d),$ where $L \in \mathbb{N}$ and $d \in (0,1),$ blocks eager
+customers with the minimum blocking probability when the tolerant
+occupancy is less than~$L,$ with probability $d$ when the occupancy
+equals $L,$ and with the maximum blocking probability when it
+exceeds~$L.$
+
+Finally, via numerical experiments, we show that our performance
+characterizations under the SFJ limit are extremely accurate in the
+pre-limit (i.e., for moderate values of arrival and service rates of
+the eager class). This shows that our approximations, which are
+provably accurate under the SFJ fluid limit, are also applicable in
+practice.
+%Further, we demonstrate the expansion of the achievable region
+%corresponding to our class of dynamic schedulers, relative to the
+%static achievable region.
+
+The remainder of this paper is organised as follows. After a review of
+the related literature below, we describe our system model and state
+some preliminary results in Section~\ref{sec:model}. We also give some
+examples of dynamic schedulers in Section~\ref{sec:model}. Under the
+SFJ limit, we characterize the performance of the tolerant class and
+the eager class in Section~\ref{sec:tolerant}. We formally define the
+dynamic achievable region in Section~\ref{sec:Achievable Region}, and
+demonstrate the Pareto-complete family of dynamic schedulers in
+Section~\ref{sec:pareto}. We conclude the paper in
+Section~\ref{sec:conclusion}. A summary of our notation can be found
+in   Table~\ref{Table_notations} in Appendix~\ref{Appendix_sample}.
+
+
+
+\subsection*{Related Literature}
+
+% 
+\ignore{A study has been done for a similar model in \cite{ANOR} but
+  with static policies, in which the admission control of eager class
+  does not depend upon the number of customers in the tolerant
+  class. . In \cite{ANOR}, a pseudo-conservation law has been
+  established which relates the blocking the blocking probability of
+  the eager customers and the performance experienced by the tolerant
+  class. These conservation laws are derived under a partial fluid
+  scaling, in which the arrival and service rate of eager customers
+  are scaled to infinity, such that the offered load of this class
+  remains constant. This scaling regime is also characterised as the
+  SFJ scaling.  The conservation laws derived in \cite{ANOR} implies
+  that, under the partial scaling regime mentioned above, the
+  performance experienced by the tolerant class depends only on the
+  blocking probability of the eager class and not on the admission
+  control and scheduling policy that produce that blocking
+  probability.} 
+%
+The present paper is a follow-up of our prior work \cite{Value,ANOR},
+which analyses the same heterogeneous queueing system under the SFJ
+limit for a class of (partially) \emph{static} scheduling
+policies. Under this class of policies, the scheduling of the eager
+class is oblivious to the state of the tolerant queue, with the
+tolerant queue simply utilizing the service capacity left unused by
+the eager class. Clearly, this class of schedulers is restrictive. In
+the present paper, we consider general \emph{dynamic} policies, where
+eager scheduling depends on the occupancy of the tolerant queue. This
+generalization, which requires a non-trivial analysis, results is a
+substantial expansion of the achievable region of feasible performance
+vectors (as is shown in Sections~\ref{sec:Achievable Region} \&
+\ref{sec:pareto}). Moreover, the generalization to dynamic policies
+necessitates the identification of a Pareto-complete family of
+schedulers (which is the goal of Section~\ref{sec:pareto}); within the
+restricted class of static schedulers analysed in \cite{Value,ANOR},
+it turns out that all policies are efficient.
+
+Aside from \cite{ANOR,Value}, the only prior work we are aware of that
+analyses a part-queueing, part-loss service system is
+\cite{CD_close}. In this paper, the authors obtain the performance
+metrics for all classes in closed form, assuming exponential
+inter-arrival and service times for all classes, under a certain {\it
+  static} priority scheduling discipline. However, we note that
+\cite{CD_close} does not attempt to address the \emph{tradeoff}
+between the performance of the two classes, which is central to the
+present work.
+ 
+From an application standpoint, this paper is also related to the
+considerable literature on sharing the capacity of a cellular system
+between voice and data traffic; for example,
+see~\cite{Li04,Tang,Zhang}. In this line of work, both voice and data
+classes are treated as lossy, the focus being on characterizing the
+blocking probability of each class under different (static and
+dynamic) admission rules. However, to the best of our knowledge, these
+papers do not analyse the achievable region of performance vectors, or
+characterize its Pareto frontier.
+
+We also note that there is a well-developed literature on multiclass
+queueing systems with multiple tolerant classes on a single server
+(e.g., conservation laws, pioneered by \cite{Kleinrock1965}). The
+achievable region is well understood in such a `homogeneous'
+multi-class setting
+\cite{coffman,shanthikumar1992multiclass}. Interestingly, in this
+case, it is known that the static and dynamic achievable regions
+coincide (see \cite{Value}), in contrast with the `heterogeneous'
+multi-class setting considered here, where we see that the static
+achievable region is a strict subset of the dynamic achievable region.
+%In \cite{Value}, authors indicate that the dynamic achievable region,
+%with heterogeneous classes, is strictly bigger using one example
+%policy.
+Moreover, the achievable region in the homogeneous setting is its own
+Pareto frontier (i.e., all points of the achievable region are
+efficient) under work conserving policies, also in contrast with the
+heterogeneous setting considered here.
+
+This paper is an extended version of \cite{Chaudhary2019}, which
+analyses a restricted class of dynamic scheduling policies, wherein
+the number of distinct eager sub-policies is assumed to be finite. In
+this paper, we extend the analysis to general dynamic policies, and
+further provide complete proofs of all results.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{model}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{performance}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THE FOLLOWING MATERIAL HAS BEEN INCORPORATED INTO THE PREVIOUS
+% SECTION.
+\ignore{
+\section{Performance of Eager Class}
+\label{sec:eager}
+
+We now focus on the performance of eager class.  As already discussed
+the $\epsilon$ sub-policy changes dynamically 
+%among $\g$ sub-policies
+depending only upon the $\tau$-number in the system\conftext{~(we assume $\g < \infty$ in this section; the generalization to
+  arbitrary partitions  is in \cite{arxiv})}. To be more
+precise, if the number of $\t$-customers at $\t$-transition
+(arrival/departure) is $j$
+%in group $\mathcal{G}_j$ of states,
+sub-policy $j$ is used till the next $\t$-transition.
+
+The $\i$-class is a lossy system, and the blocking probability would
+be ${P_B}_j$ if $j$-th sub-policy is used in $\t$-static manner.  We
+now derive the `dynamic' blocking probability, when these sub-policies
+are selected based on $\t$-dynamics.  We show that, in SFJ limit, the
+overall blocking probability of the eager class is a convex
+combination of the $\t$-static blocking probabilities $\{ P_{B_j}\},$
+weighted by the long run fractions of time the $\t$-system spends in
+the groups~$\{\mathcal{G}_j\}.$ We begin with the definition, followed by the required result. 
+
+{\color{red}\noindent {\bf Blocking probability:} Let $N_B^\mue (t)$ denote the total number of eager customers that are blocked (i.e., returned without service),  before  time $t$ and  $N_A^\mue (t)$ be  the total number of eager customers arrived in the same time interval, for system with  the  given  $\mu_\i$ and  under any given dynamic policy.   
+Then the blocking probability of the eager class is defined as the long run fraction of customers blocked, i.e.,  
+	$$
+P_B^\mue :=	\lim\limits_{t \to \infty } \frac{N_B^\mue (t)}{N_A^\mue (t)}.
+$$The  $\t$-static blocking probability $P_{B_j}^\mue $ is defined in a similar way, when sub-policy $j$ is used for all $\t$-occupancies (i.e., in $\t$-static manner) and  $P^\infty_{B_j}$ represents the limit of this  $\t$-static blocking probability under SFJ limit.  One first needs to ensure that the above limits exist and then consider the limit of the same under SFJ limit, both these tasks are considered in the following theorem.
+}
+% (with proof in Appendix A):
+
+%We show that, in SFJ limit, the overall blocking probability of the
+%eager class can be written in terms of the `$\t$-static blocking
+%probabilities' $\{ P_{B_j} \}$ and the fraction of times the system
+%($\t$-state) spends in each of the groups $\{\mathcal{G}_j\}$ (with
+%proof in Appendix A):
+   
+
+
+%Eager customers are of higher priority, if admitted into the system,
+% and, require service immediately.  Also by assumption {\bf{A.}2}, at
+% most $K$ $\epsilon$-jobs can be served at any time. Depending upon
+% the admission and further scheduling rules (depicted by the $\g$
+% sub-policies), some $\epsilon$-jobs may be dropped leading to a lossy
+% system.  %One may have more drops, depending upon further rules of
+% the scheduling sub-policies.  As mentioned earlier, ${P_B}_j $ represents
+% the blocking probability of $\epsilon$-customers, if system used
+% sub-policy $j$ in $\t$-static manner and $\nu_{j}$ is the corresponding
+% asymptotic (as $\mue \to \infty$) effective service rate available
+% to $\t$-customers. % when their number in the system is one among
+% those in ${\mathcal G}_j$.  Also by Theorem \ref{Thm_Stable}, the
+% system is stable and stationary distribution ${\bm
+% \pi}^{\mu_\epsilon}_\tau $ exists for all $\mu_\epsilon \ge {\bar
+% \mu}$ for some ${\bar \mu} < \infty.$
+\begin{thm} \textbf{[Blocking probability of eager class]} 
+\label{Thm_PB}
+Assume {\bf A}.1-4, {\bf B}.1-4.\conftext{~Also assume $\g < \infty$.}
+Let ${{\bm \pi}} := \{{\pi}_{i} \}_{i \geq
+  0}$ denote the stationary distribution of SDSR-M/M/1 limit tolerant
+system, given by Theorem~\ref{Thm_tau}.
+%(\ref{Eqn_SDSR_Expected_Number}) and $\rho_j =
+%\frac{\lambda_\tau}{\mu_\tau \nu_j} = \frac{\rho_\tau}{\nu_j}$.  Let $
+%\pi_{\tau}^{\infty} (j) := \sum_{i \in {\mathcal G}_j}
+%\pi_{\tau,i}^{\infty } $ represent the stationary probability that
+%$\t$-system is in $j$-cycle, in the limit system.
+Then the steady state blocking probability of $\epsilon$-jobs in SFJ
+limit is given by:
+
+\vspace{-5mm}
+\conftext{
+{\small\begin{align*}
+\hspace{5mm} P_B^{\mu_\epsilon} \ \ \stackrel{\mu_\epsilon \to
+  \infty}{\to} \ \
+%\sum_{j=1}^{\g } \pi_{\tau}^{\infty} (j) P_{B_{j}}
+\sum_{j=1}^{\g } {P_B}_j \left(\sum_{i \in {\mathcal G}_j} \pi_{\t}^\infty (i) \right) =: P_B^{\infty}.
+\hspace{5mm}   \mbox{ \eop }
+\end{align*}}}
+\TRtext{
+{\small\begin{align*}
+\hspace{25mm} 
+\hspace{5mm} P_B^{\mu_\epsilon} \ \ \stackrel{\mu_\epsilon \to
+  \infty}{\longrightarrow} \ \
+\sum_{j=1}^{\infty } {P^\infty_B}_j {\pi}_j =: P_B^{\infty} \mbox{ almost surely. }
+\hspace{25mm}   \mbox{ \eop }
+\end{align*}}}
+\end{thm}
+\conftext{A sketch of the proof of Theorem~\ref{Thm_PB} can be found
+  in the appendix; the complete proof, which also generalizes to  countably many partitions, can be found in \cite{arxiv}.}\TRtext{The proof of
+  Theorem~\ref{Thm_PB} can be found in the Appendix~\ref{Appendix_eager}.}
+
+ 
+\subsubsection*{Dynamic Pseudo Conservation and its relevance}  
+  
+  The key challenge in the performance evaluation of our multi-class
+  system is the interdependence between the service processes of the
+  two classes. However, Theorems~\ref{Thm_tau}-\ref{Thm_PB} show that
+  one may approximate the performance of both classes (the
+  approximations being accurate under the SFJ limit) using only the
+  $\t$-static blocking probabilities \conftext{$\{ P_{B_j} \}_{j \leq
+      \g}$}\TRtext{$\{ P_{B_j} \}_{j \geq 0}$}. The probabilities
+  \conftext{$\{ P_{B_j} \}_{j \leq \g}$}\TRtext{$\{ P_{B_j} \}_{j \geq
+      0}$} themselves are typically easy to compute, since they
+  involve the analysis of a single-class (stationary) loss
+  system. Finally, we note that by virtue of
+  Theorems~\ref{Thm_tau}-\ref{Thm_PB}, we have a {\it`Dynamic Pseudo
+    Conservation'}: Under the SFJ limit, the performance of
+  \emph{both} classes depends only on the $\t$-static blocking
+  probabilities \conftext{$\{ P_{B_j} \}_{j \leq \g}$}\TRtext{$\{
+    P_{B_j} \}_{j \geq 0}$}\conftext{~and the partitions
+    $\{\mathcal{G}_j\}_{j \leq \g},$} and not on other specifics of
+  the\conftext{~$\g$} sub-policies.
+
+} %end ignore
+
+\section{Dynamic Achievable Region}
+\label{sec:Achievable Region}
+
+A queuing system can be analysed using several performance metrics;
+for example, number of customers in the system, sojourn time (the
+total time spent by the customer), waiting time (of the customer
+before the service starts), fraction of the customers blocked (in a
+loss system), etc. The achievable region of a multi-class system is
+defined as the region of all possible vectors (one component for one
+class) of the relevant performance metrics.\footnote{In this paper we consider the achievable region corresponding to schedulers which satisfy Assumptions {\bf A.}1-4 and {\bf B.}1-4.}  In our model,
+corresponding to the eager class we have a lossy system, thus we
+consider blocking probability as the performance metric. For the
+tolerant class, one can consider the steady state expected number of
+customers in the system as the performance metric.
+
+By Lemma \ref{lemma:TauStability}, the system is stable for all
+$\mu_\epsilon \geq \bar{\mu}$, for some $\bar{\mu} < \infty$.  Thus
+for all such $\mu_\epsilon$, by Little's Law, $E^{\mu_\epsilon} [S],$
+the stationary expected sojourn time of a typical $\tau$-customer, and
+$E^{\mu_\epsilon} [N],$ the stationary expected number of
+$\tau$-customers in the system are related as $ E^{\mu_\epsilon} [ N ]
+= \lambda_\tau E^{\mu_\epsilon} [S ].$ Thus it is sufficient to
+consider any one of these metrics.\\
+
+{\bf Stationary Markov top-level policies:} In any general sequential
+decision problem, a Stationary Markov (SM) policy is a sequence of
+decisions, in which one decision is chosen for each value of the state
+and the same decision is applicable in any time slot.  In our case we
+consider {\it the top-level policies among the Stationary Markov (SM)
+  family.}  This means, a top level policy $\phi$ is a sequence of
+$\i$-sub-policies, and that if the $\t$-state equals $j$ at any time
+slot, then the $j$-th sub-policy of~$\phi$ is used for scheduling the
+$\i$-class.
+
+
+\conftext{While the statements of Theorems \ref{Thm_tau}-\ref{Thm_PB}
+  in the present paper assume finitely many $\i$-sub-policies (one for
+  each of the subsets in $\{{\mathcal G}_j \}$), the study of SM
+  strategies requires us to move on to the general case of countably infinite
+  $\i$-sub-policies, one for each value of $\t$-occupancy. However, as
+  stated before, the statements of Theorems \ref{Thm_tau}-\ref{Thm_PB}
+  do extend to general SM top-level policies (see
+  \cite{arxiv}). {\it Accordingly, in the remainder of this paper, we
+  proceed with our analysis of the achievable region and its Pareto
+  frontier disregarding the restriction to finitely many
+  $\i$-sub-policies.}}
+
+As understood from Theorems~\ref{Thm_tau}-\ref{Thm_PB}, the {\it only
+  characteristic of the $\i$-sub-policies that influences the system
+  (dynamic) performance are the $\t$-static blocking probabilities $\{
+  {P_B}_j\}_j$}, obtained when respective sub-policies are used in
+$\t$-static manner. Thus to define an efficient dynamic system, one
+effectively needs to choose (based on the $\t$-state), one among these
+blocking probabilities (and no further details of the sub-policy are
+important).  This {\it is a consequence of the `dynamic
+  pseudo-conservation' mentioned in the previous section.}
+
+Any Stationary Markov (SM) top-level policy is generally given by a
+sequence of $\epsilon$-sub-policies, one for each
+$\tau$-state. However, in view of the above observation, a stationary
+Markov policy can be thought of as a sequence of $\epsilon$-blocking
+probabilities (derived when the corresponding sub-policies are applied
+in $\t$-static manner.  In other words, a SM top-level policy is
+defined by $\phi = (d_0, d_1, \cdots )$, where decision $d_j$
+specifies a `$\t$-static blocking probability' to be chosen when
+number of $\t$-customers equals $j$.  {\it Towards this we implicitly
+  require the existence of at least one sub-policy, that achieves the
+  given value of `$\t$-static blocking probability', which is any
+  value between the system specified limits $\dmin:={\underline
+    {P_B}}$ (minimum possible blocking probability) and $\dmax :=
+  {\overline {P_B}}$} (the maximum possible blocking probability).
+This for example, is achieved by CD-$(p, K)$/LPS-$(p,K)$ policies
+mentioned in Section \ref{sec:model}, when one considers all possible
+values of $\{(p, K)\}$ (see \cite{Value, ANOR} for more details). In
+the rest of the paper, we refer to the top-level policies simply as
+policies for brevity.\\
+
+
+\ignore{
+{\bf Achievable region:} For any $\mue > {\bar \mu}$ (given by Lemma
+\ref{lemma:TauStability}), the system is stable and one can define the
+achievable region under stationary policies.  The achievable region is
+the set of all possible pairs of blocking probability of the eager
+class and the stationary expected number of tolerant customers in the
+system, i.e., \kcmnts{we may not have common ${\bar \mu}$}
+\begin{align*}
+\mathcal{A}^{\mu_\epsilon} =\left  \{  \left (   P_{B, \phi}^{\mu_\epsilon} , \   \  E^{\mu_\epsilon}_\phi [N ]  \right ): \phi\ \ \mbox{ is an SM    policy }  \right \}.
+\end{align*}
+}
+
+ 
+{\bf Limit Achievable region} Our focus from here on will be the
+dynamic achievable region $\mathcal{A}^{\infty}$ of performance
+vectors under the SFJ limit. Recall that for tolerant class, the limit
+is an SDSR-M/M/1 queue. The $\epsilon$-limit can be seen as a mixture
+model made up of many lossy systems, each described by their
+$\t$-static blocking probabilities, and mixed independently according
+the stationary distribution of the limit SDSR-M/M/1 queue.  Thus, we
+define the limit achievable region as follows:
+ 
+ 
+{\small \begin{align*} \hspace{15mm}
+\mathcal{A}^{\infty} =\left  \{  \left  ( \ P_{B, \phi}^\infty, E_\phi^{\infty}[N ]  \right  )  : \phi \ \ \mbox{is an SM  policy} \right  \}.
+\end{align*}}
+Note that $\mathcal{A}^{\infty}$ is the set of limiting performance
+vectors under SM policies. In this sense, one may view
+$\mathcal{A}^{\infty}$ as the limit of achievable region of our
+multi-class system as $\mue \ra \infty.$
+
+For simplicity of notations {\it we avoid the super-script $\infty$}
+when the discussion is clearly about the limit system.  {\it At times
+  we also drop $\phi$, the SM policy, when there is no ambiguity.}
+\\ 
+
+  {\bf A Numerical Example:} To visualize the limit achievable region,
+  we consider a system with a top-level policy parametrized by
+  ($(p_1, p_2, L, K)$). In this system, the CD-$(p_1,K)$ policy is
+  employed when the $\t$-occupancy is less than $L,$ and the
+  CD-$(p_2,K)$ policy is employed when the $\t$-occupancy is greater
+  than or equal to $L.$
+    The tolerant customers are served serially with total capacity of
+  all the leftover servers.
+ Using the Erlang-B formula, the two $\t$-static blocking probabilities
+  of $\i$-customers equal   
+  \beq \hspace{15mm} {P_B}_i &=& (1-p_i) + p_i
+    \frac{\frac{ (K\rho_\epsilon p_i)^K} {K!}  }{\sum_{k=0}^K \frac{
+        (K \rho_\epsilon p_i)^k} {k!  }} , \mbox{ for } i = 1, 2,  
+ \eeq  where ${P_B}_1$ is the $\t$-static blocking probability when $\t$-occupancy is less than $L$, while  ${P_B}_2$ is the $\t$-static blocking probability  for the rest of the tolerant states. The performance of such a system at
+  limit can be obtained using the results of Theorems
+  \ref{Thm_tau}-\ref{Thm_PB}.  We set $ K = 5$, $\rho_\i = 0.4$,
+  $\lambda_\tau = 4 $ and $\mu_\tau = 8$, generate the three
+  parameters $(p_1, p_2, L)$ randomly. The scatter plot of the
+  corresponding values of $E^\infty [N]$ and $P^\infty_B$ is shown in
+  Figure \ref{Fig_SM_AR_PF}. The resulting figure is a part of the
+  limit achievable region. {\it As seen from the figure, the achievable
+  region is a non-zero measure set; thus we need the `efficient' Pareto frontier.} Further, the plot indicates that
+  the achievable region is bounded. We will now address the Pareto
+  frontier associated with this system. % in the following. % section. 
+  
+  
+  \begin{figure}[h]
+ 
+\vspace{-34mm}
+\begin{center}
+
+ \includegraphics[width=7cm, height=5.4cm]{SM_AR_withParetoFrontier-eps-converted-to.pdf} 
+ \vspace{-29mm}
+  \caption{Achievable region,   Pareto Frontier   $\rmax =  0.8134$, $\rmin = .5$ \label{Fig_SM_AR_PF} }
+ 
+\end{center}
+ 
+
+\end{figure}
+\vspace{-2mm}
+\section{Limit Pareto frontier}
+\label{sec:pareto}
+
+ 
+ The Pareto frontier is the efficient sub-region of an achievable
+ region which consists of dominating performance vectors.
+%
+{\it  A pair $(P_{B, \phi^*}, E_{\phi^*}[N])$ (produced by a  
+ policy~$\phi^*$) is on Pareto frontier of the limit system, if there
+ exists no other SM policy $\phi$ that achieves a better performance
+ pair $(P_{B, \phi}, E_\phi [N])$ (in the limit system),} i.e., $P_{B,
+   \phi} \le P_{B, \phi^*} \mbox{ and } E_{\phi}[N] \le
+ E_{\phi^*}[N],$ one of the inequalities being strict.
+ 
+%
+
+The Pareto frontier of the limit system is obtained by solving an
+appropriate set of parametrized optimization problems.  Prior to that,
+we discuss the limit performance, under any
+given SM policy. Invoking Theorems~\ref{Thm_tau}
+and~\ref{Thm_PB}\conftext{~(specifically, their generalizations in
+  \cite{arxiv})}, under any $\phi$, 
+\begin{eqnarray}
+\label{Eqn_EN}
+E^{\mu_\epsilon}_\phi[N]    \stackrel{\mu_\epsilon \to \infty }{ \longrightarrow}  E^{\infty}_\phi[N]  \hspace{-1mm}&  \hspace{-1mm} = \hspace{-1mm}&  \hspace{-1mm}\sum_{i = 1}^\infty   i \frac{ \h^\phi_i }{1 + \sum_{l\ge 1} \h^\phi_l},  \mbox{ and } \\
+\label{Eqn_PB_under_phi}
+P_{B, \phi}^{\mu_\epsilon}  \stackrel{\mu_\epsilon \to \infty }{ \longrightarrow}    P^\infty_{B, \phi}  \hspace{-1mm}&  \hspace{-1mm} = \hspace{-1mm}&  \hspace{-1mm} \frac{d_0}{1 + \sum_{i \ge 1}  \h^\phi_i } +  \sum_{i=1}^\infty d_i  
+\frac{ \h^\phi_i}{1  + \sum_{l \ge 1} \h_l^\phi}, \mbox{ where }
+%
+\\ 
+\label{Eqn_pi_under_phi}
+   \h^\phi_j  \hspace{-1mm}&  \hspace{-1mm} = \hspace{-1mm}&  \hspace{-1mm}  \indicator{j = 0} + \indicator{j >0} \prod_{i=1}^j \rho^\phi_i
+   , \ \mbox{with } \rho^\phi_i := \frac { \lambda_\tau }{\mu_\tau (1
+     - \rho_\epsilon (1-d_i) )}.
+\end{eqnarray}
+
+\ignore{We would like to iterate again here that Theorems
+  \ref{Thm_tau}-\ref{Thm_PB} are proved only for finite SM policies;
+  the above {\it is only a conjecture for infinite policies.}  However
+  we will notice that the {\it Pareto-optimal policies are of finite
+    nature and the theorems are true for them.}}
+%
+ 
+ \vspace{-4mm}
+\subsection{Pareto-complete family}
+%Both the classes aim to minimize their respective performance
+%metrics. Thus,
+We now derive a family of {\it Pareto-complete} policies, i.e., a
+parametrized family of policies that span the entire Pareto-frontier
+of our system.
+%
+One can obtain all the points on the Pareto frontier by considering
+the following parametrized (by $C$) constrained optimization problems
+(with $\h_i^\phi $ defined in (\ref{Eqn_pi_under_phi})). 
+l\begin{align}
+\label{Eqn_Pareto_optimal} 
+\hspace{10mm}
+\min_{\phi}    P_{B, \phi} \mbox{ such that }   E_\phi [N]  \le C \mbox{, i.e., equivalently } \hspace{1mm} \\
+\min_{\phi  }   \sum_{i=0}^\infty d_i  \frac{ \h_i^\phi }{1 + \sum_{l \ge 1} \h_l^\phi  }   \mbox{ such that }    \sum_{i=0}^\infty i \frac{ \h_i^\phi } {1 + \sum_{l \ge 1} \h_l^\phi  } \le C.
+\nonumber
+\end{align}
+%
+ \extrabits{
+ \begin{figure}
+ \vspace{-5mm}
+ \hspace{-16mm}
+ \includegraphics[width=8cm, height=5.2cm]{SM_AR_withParetoFrontier-eps-converted-to.pdf} 
+ \vspace{-3mm}
+  \caption{Achievable region,   Pareto Frontier   $\rmax =  0.83$, $\rmin = .5$ }
+   \includegraphics[width=9cm, height=5.2cm]{ParetoForTwoConfig-eps-converted-to.pdf}
+  \caption{  Pareto Frontier  via Pareto complete family }
+    
+ \end{figure}}
+ %
+ %
+Recall $\dmin$, $\dmax$ respectively represent the best and worst
+sub-policy (with respect to $\i$-customers), in that these represent
+the minimum and maximum possible blocking probabilities.  Define:
+ 
+ \vspace{-6mm}
+ {\small 
+ \begin{align}
+ \label{Eqn_rhomax_min}\hspace{5mm}
+ \rmax := \frac {\lambda_\tau }{ \mu_\tau  (1-\rho_\epsilon  (1- \dmin)) }, %\rho =\frac {\lambda_\tau }{ \mu_\tau  (1-\rho_\epsilon  (1- d)) },  
+  \mbox{  and }  \rmin = \frac { \lambda_\tau } { \mu_\tau  (1-\rho_\epsilon (1- \dmax))  }.
+ \end{align}}
+ The terms $(\rmax, \rmin)$ represent the (worst and best) load factor of the $\t$-customers in the limit system,  when $\i$-customers are scheduled respectively with the 
+best  (blocking probability $\dmin$) and  worst  (blocking probability $\dmax$)
+   sub-policies, in $\t$-static manner. 
+ 
+   
+Suppose that the constraint $C$ on the expected $\t$-number satisfies
+$C \ge \rmax / (1-\rmax)$ (observe $\rmax / (1-\rmax)$ is the expected number
+in M/M/1 queue with maximum load factor $\rmax$);
+%, the one derived by $\t$-customers in limit system with the maximum
+%possible load.
+then the problem (\ref{Eqn_Pareto_optimal}) becomes an unconstrained
+problem and the optimal policy clearly equals $\phi^*= (\dmin, \dmin,
+\cdots)$.  We show that the optimal policy for any given $C < \rmax /
+(1-\rmax)$, is monotone (but not strictly monotone) in $\tau$-state and further derive its closed
+form expression (proof in Appendix~\ref{Appendix_pareto}):
+\begin{thm}
+\label{Thm_Opt_Policy} 
+The  policy $\phi^* = \{d_0^*, d_1^* ,  \cdots\}$ that optimizes the   problem defined in (\ref{Eqn_Pareto_optimal})  is monotone and is given by:
+
+\kt{
+\begin{align}
+\label{Eqn_pareto_optimal_policy}
+d_i^* 
+=  \indicator{i < L^*} \dmin + \indicator{i = L^*} d^* + \indicator{i > L^*} \dmax
+%  \left \{ \begin{array}{llll}
+%\dmin   &\mbox{ if }  i < L^* \\
+%d^*          & \mbox{ if }   i = L^* \\
+%\dmax  & \mbox{ if }  i > L^*,
+%\end{array} \right .
+\end{align}}which is parametrized by two parameters $(L^*, d^*)$. The  expressions for $(L^*, d^*)$ are given by 
+%\conftext{in \cite{arxiv}.}
+~(see (\ref{Eqn_rhomax_min})):
+
+\vspace{-6mm}
+{\small \begin{align*}
+L^*  
+=&  \sup \left  \{ i :  \frac {  \sum_{j \le i}  \rmax^j j +    \rmax^i    \sum_{j > i} j \rmin^{j-i} }{
+\sum_{j \le i} \rmax^j  +    \rmax^i    \sum_{j > i}  \rmin^{j-i}
+} < C \right  \},   \\
+%
+ d^* =& \frac{1}{\mu_\tau \rho_\epsilon}\bigg[ \frac{- \lambda_\tau   \rmax^{L^*}    \left  (L^*+1 - C +   \sum_{j > L^*+1} (j -C )\rmin^{j-L^*-1}  \right )}{ \sum_{j \le L^*}  \rmax^j ( j - C) }  - \mu_\tau(1 - \rho_\epsilon) \bigg]  \indicator{L^* < \infty } + \ \     \underline{d} \indicator{L^* = \infty }.
+\end{align*}}In the above $L^* \ge 1$,  is set to  $\infty$ when the inequality defining the $\sup$ is satisfied for all $i$ (i.e., when $C \ge \rmax /
+(1-\rmax)$). 
+
+\end{thm}
+%
+%
+An immediate consequence of the above theorem is the following:
+\begin{cor}[{\bf Pareto-Complete family}]
+	The family of schedulers given by (\ref{Eqn_pareto_optimal_policy}), parametrized by $(L^*, d^*)$ with $1 \le L^* \le \infty $ and
+$\dmin \le d^* \le \dmax$, 
+is  Pareto-complete.  
+\end{cor}
+
+ 
+
+
+%
+\extrabits{
+\textcolor{red}{
+\beq
+\rho^* =   
+   \frac {  \sum_{j \le L^*}  \rmax^j ( j - C) \ \   \indc_{L^* < \infty }  }{
+   -  \rmax^{L^*}    \left  ( L^* +1 - C +   \sum_{j > L^*+1} (j -C )\rmin^{j-L^*-1}  \right )  }  + \rmax \indc_{L^* = \infty }
+\eeq 
+From  (\eqref{Eqn_pi_under_phi}) we get:
+\beq
+\rho^* &=&   
+   \frac {  \sum_{j \le L^*}  \rmax^j ( j - C) \ \   \indc_{L^* < \infty }  }{
+   -  \rmax^{L^*}    \left  (L^* +1 - C +   \sum_{j > L^* +1} (j -C )\rmin^{j-L^* -1}  \right )  } = \frac{\lambda_\tau}{\mu_\tau(1 - \rho_\epsilon(1 - d^*))}\\
+%
+ & \Rightarrow & \mu_\tau(1 - \rho_\epsilon(1 - d^*)) = \frac{- \lambda_\tau   \rmax^{L^*}    \left  (L^*+1 - C +   \sum_{j > L^* +1} (j -C )\rmin^{j-L^*-1}  \right )}{ \sum_{j \le L^*}  \rmax^j ( j - C) \ \   \indc_{L^* < \infty }} \\
+%
+& \Rightarrow & \mu_\tau(1 - \rho_\epsilon) + \mu_\tau \rho_\epsilon d^* = \frac{- \lambda_\tau   \rmax^{L^*}    \left  (L^* +1 - C +   \sum_{j > L^* +1} (j -C )\rmin^{j-L^*-1}  \right )}{ \sum_{j \le L^*}  \rmax^j ( j - C) \ \   \indc_{L^* < \infty }} \\
+%   
+& \Rightarrow &  \mu_\tau \rho_\epsilon d^* = \bigg[ \frac{- \lambda_\tau   \rmax^{L^*}   \left  (L^*+1 - C +   \sum_{j > L^*+1} (j -C )\rmin^{j-L^*-1}  \right )}{ \sum_{j \le L^*}  \rmax^j ( j - C) \ \   \indc_{L^* < \infty }} - \mu_\tau(1 - \rho_\epsilon) \bigg] \\
+%
+& \Rightarrow &   d^* = \frac{1}{\mu_\tau \rho_\epsilon}\bigg[ \frac{- \lambda_\tau   \rmax^{L^*}    \left  (L^*+1 - C +   \sum_{j > L^*+1} (j -C )\rmin^{j-L^*-1}  \right )}{ \sum_{j \le L^*}  \rmax^j ( j - C) \ \   \indc_{L^* < \infty }} - \mu_\tau(1 - \rho_\epsilon) \bigg].
+\eeq
+}
+}
+%
+%
+%
+\extrabits{
+\subsection*{Important sub family (One threshold policies)}
+Consider a sub-family of schedulers parametrized by $L$, that choose  $\epsilon$-scheduling sub-policy with maximum blocking (i.e., $d=1$) when the $\tau$-number is greater than  $L$ and choose the sub-policy with minimum blocking (i.e., $d = \dmin$) for the rest. Define:
+ $$
+ \rmax := \frac {\lambda_\tau }{ \mu_\tau  (1-\rho_\epsilon  (1- \dmin)) } \mbox{  and }  \rmin = \frac { \lambda_\tau } { \mu_\tau  (1-\rho_\epsilon)  }.$$
+ By Theorem \ref{Thm_Opt_Policy}, this sub-family is a Pareto-optimal family and one can easily compute the performance under these policies:  
+
+\vspace{-4mm}
+{\small\begin{align}
+EN &=& \frac { 1 }
+{
+\psi
+} \left ( \rmax  \frac{1-\rmax^L}{(1-\rmax)^2}   - \frac{ L \rmax^{L} }{ 1- \rmax } + \frac{ \rmin^2 \rmax^{L-1} }{ (1- \rmin)^2 } + \frac{ L \rmax^{L-1} \rmin }{ 1- \rmin }
+\right )
+  \nonumber \\
+&=& \frac { 1   }
+{
+\psi 
+} \left ( \rmax  \frac{1-\rmax^L}{(1-\rmax)^2}   + \frac{ L \rmax^{L-1} (\rmax-\rmin) }{ (1- \rmax) (1-\rmin) } + \frac{ \rmin^2 \rmax^{L-1} }{ (1- \rmin)^2 }  \right )
+\nonumber
+\\
+PB &=& \frac{1}
+{
+\psi
+} \left( \frac {
+ \rmax^{L-1} \rmin}{1 -\rmin} \dmax  + \frac{\rmax^{L}-1  }{\rmax- 1 }  \dmin  \right )  \mbox{ with }\\
+ \psi &:=&\frac{\rmax^L - 1}{\rmax- 1}  + \frac{\rmax^{L-1} \rmin}{1 -\rmin} .
+\end{align}}
+}
+
+
+
+ 
+
+
+
+
+The policies in this family choose the
+`worst' $\epsilon$-sub-policy (i.e., with $d=\dmax$) when the
+$\tau$-number is greater than or equal to $L+1$, choose a sub-policy
+with intermediate blocking $d$ when $\tau$-number equals $L$ and
+choose the `best' sub-policy (i.e., with $d = \dmin$) for the rest
+(see (\ref{Eqn_pareto_optimal_policy})).  One can easily compute the
+performance under these policies, as below (see \ref{Eqn_rhomax_min}):
+{\begin{eqnarray}
+\label{Eqn_pareto_perf}
+E_{(L,d)}[N] &=& \psi \bigg ( \rmax \frac{1-\rmax^L}{(1-\rmax)^2} -
+\frac{ L \rmax^{L - 1} }{ 1- \rmax } + \frac{\rho \rmax^{L-1} (\rmin +
+  L - L \rmin) }{ (1- \rmin)^2 } \bigg ) \nonumber \\
+%  && + \rho \frac{ \rmin^2 \rmax^{L-1} }{ (1- \rmin)^2 } 
+%+ \frac{\rho \rmax^{L-1} (\rmin + L) }{ 1- \rmin } \bigg  ) 
+% \\ &&
+%+\rho \frac{ (L+1) \rmax^{L-1} \rmin }{ 1- \rmin } + \rho L \rmax^{L-1} 
+%\bigg  )
+  \nonumber \\
+%&=& \psi \left ( \rmax  \frac{1-\rmax^L}{(1-\rmax)^2}   + \frac{ L \rmax^{L-1} (\rmax-\rmin) }{ (1- \rmax) (1-\rmin) } + \frac{ \rmin^2 \rmax^{L-1} }{ (1- \rmin)^2 }  \right )
+%\nonumber
+%\\
+P_{B,(L,d)} &=&  \psi \left( d \rho \rmax^{L-1} + \rho \dmax  \frac {
+ \rmax^{L-1} \rmin}{1 -\rmin}  + \frac{\rmax^{L}-1  }{\rmax- 1 }  \dmin    \right )   \mbox{ with  }  \nonumber  \\
+&& \hspace{-19mm}
+ \psi \ = \ \frac{1}
+{
+\frac{\rmax^L - 1}{\rmax- 1}+ \rho \rmax^{L-1}  + \rho  \frac{ \rmax^{L-1} \rmin  }{1 -\rmin}    
+},  \  \   \rho =  \frac { \lambda_\tau } { \mu_\tau  (1-\rho_\epsilon (1- d))  } \hspace{2mm}.
+\end{eqnarray}}
+Thus {\it we derived Pareto complete family as well as the performance under this family, which can readily be used for any relevant optimization problem. }
+\\
+
+
+{\bf Numerical example:} We continue with the numerical example of
+Figure \ref{Fig_SM_AR_PF}.  For this example, one can easily compute
+that $\rmax  =  0.8134$ (no admission control on eager class, i.e., with $p_i = 1$ for all $i$) and $\rmin = 0.5$ (eager class is completely blocked with $\dmax = 1$ 
+and hence $\rmin = \lambda_\tau/ \mu_\tau$), when the system can at maximum serve 5 eager customers in parallel.  By substituting these values
+into (\ref{Eqn_pareto_perf}), one can obtain the Pareto frontier. The
+circles in the figure represent this Pareto frontier, and are obtained
+by varying $(L, d)$ appropriately.  It is clear from the figure that
+the derived set of points are indeed dominating and are on the Pareto
+frontier.
+
+
+
+
+
+\extrabits{ 
+\subsection*{Dynamic  Pseudo Conservation law}
+ One can replace any pareto optimal  policy  (\ref{Eqn_pareto_optimal_policy})  with a mixed policy as below:
+\begin{align}
+\label{Eqn_pareto_alt_policy}
+d_i^* 
+= \left \{ \begin{array}{llll}
+\dmin   &\mbox{ if }  i < L \\
+(\dmin,  \dmax )  \mbox{ with probabilities } q \mbox{ and }      (1-q)         & \mbox{ if }   i = L \\
+\dmax  & \mbox{ if }  i > L,
+\end{array} \right .
+\end{align}
+where exact value of $q$  can be computed given $(L, d)$ or constraint $C.$ One can also derive the same Pareto frontier by considering a constraint on $P_B$ and then minimizing the  $E[N]$
+$$
+\min_{\phi}   E_\phi[N]  \mbox{ such   that  }  P_{B, \phi}  \le \eta \mbox{ for some }  0 <  \eta < \infty.
+$$
+ and  the same family of schedulers (given by (\ref{Eqn_pareto_alt_policy})) again optimize.  
+ 
+  A close look at (\ref{Eqn_pareto_alt_policy})  indicates that any Pareto optimal policy schedules using maximum $\t$-static blocking probability for all $\t$-states above a threshold, while during the rest  minimum $\t$-static blocking probability  is used.  
+  Thus we have the following\\
+   \underline{Dynamic (Pareto) Pseduo conservation},  at SFJ limit:
+{\it"  For any given system, specified by $(\rmax, \rmin, \rho_\i)$ the  maximum and minimum $\t$-load factors (derived  respectively  with the minimum  and the  maximum  $\t$-static blocking probabilities and the load factor of $\i$-class), 
+   the time asymptotic fraction of  $\epsilon$-customers to be  blocked $P_B$,  completely determines the best performance of the tolerant class."  
+The   best performance of the tolerant class equals that of the state dependent service rate M/M/1 system operating at either of the load factors,  $(\rmax, \rmin)$, and further such that best rate service is provided when the $\t$-strength is higher than a threshold.  The threshold is uniquely 
+determined by $P_B$. }
+
+ Thus $P_B$ alone determines the performance of the $\t$-class and no other details of the two scheduling policies have any influence on this relation. This is exactly as in  static Pseudo conservation law, but the difference between the two conservations is the placement of the fraction of $\i$-customers to be blocked: a) In static case, they are blocked independent of $\t$-state; and b) in dynamic case, they are blocked  only when the $\t$-queue is above a threshold.  Note here that the inherent blocking of $\i$-customers due to presence of fellow $\i$-customers, captured by the best blocking probability $\dmin$,  cannot be avoided. But the extra blocking to provide a controlled fair service to $\t$-customers can be placed towards the higher state values of $\t$-customers. 
+
+ Given $P_{B, \phi}$, $E_\phi[N]$ is unique fixed point of the following equation:
+ $$
+ \pi_{\t, \ge  L} = P_B \mbox { and  }  \pi_\t = s.d. ( SDSR (\lambda_\t, \mu_\t,  \{\dmin, \dmax\},  \{0, \cdots, L\}, \ \{L, \cdots, \} ) ).
+ $$
+}
+%
+
+
+
+
+ 
+\subsection{Monte Carlo  based  case study in pre-limit}
+
+We consider an example case-study with CD-$(p, K)$ sub-policies of
+Subsection~\ref{sec:example_models}. Specifically, for fixed $K,$ we
+consider top-level policies that perform CD-$(1,K)$ when the
+$\t$-occupancy is less than certain $L $ (with $L\ge 1$) and perform
+CD-$(0,K)$ (thus blocking all $\i$-jobs) when the $\t$-occupancy is
+greater than or equal to $L.$ In view of Theorem~\ref{Thm_Opt_Policy},
+by stepping over $L$ as above\footnote{ Here again, $\dmin$
+  (respectively $\dmax$) equals the blocking probability without eager
+  admission control (respectively if eager class is admitted only when
+  $\t$-queue is empty).}, we sample performance vectors from the limit
+Pareto-frontier of the system.
+ 
+
+%This scheduling policy is similar to the static version (same
+%admission control for all $\t$-states) CD schedulers considered in
+%\cite{Value,ANOR}.
+
+It is very complicated to obtain an exact analysis of this
+heterogeneous system. However by Theorems \ref{Thm_tau}-\ref{Thm_PB},
+one can obtain an approximate analysis for this system. \revision{In
+  this section, we validate these approximations against Monte Carlo
+  (MC) simulations of the actual system.} Importantly, {\it the Monte
+  Carlo simulations do not even drop $\i$-customers at
+  $\t$-transitions as required by {\bf A}.1}.
+
+\begin{figure}[h]
+
+
+\begin{minipage}{7cm}
+\vspace{-34mm}
+\begin{center}
+\includegraphics[width=5.7cm, height =6cm]{ESVs_mue_alt.pdf}
+\vspace{-76mm}
+%\caption{   Expected sojourn time versus    $\mu_\epsilon$.    \label{Fig_ES_mue}}
+\end{center}
+\end{minipage} \hspace{5mm}
+\begin{minipage}{7cm}
+\begin{center}
+
+\includegraphics[width=5.7cm, height = 6cm]{PBVs_mue_alt.pdf}
+\vspace{-76mm}
+
+ 
+%
+%
+\vspace{-10mm}
+
+\end{center}
+\end{minipage}
+\vspace{-10mm}
+\caption{  $E[S]$, $P_B$ versus   $\mu_\epsilon$ for light traffic.  \label{Fig_PB_mue_light}}
+
+
+
+\begin{minipage}{7cm}
+\vspace{-34mm}
+\begin{center}
+\includegraphics[width=5.7cm, height =6cm]{ESVs_mue_mut=pt6.pdf}
+\vspace{-76mm}
+%\caption{   Expected sojourn time versus    $\mu_\epsilon$.    \label{Fig_ES_mue}}
+\end{center}
+\end{minipage} \hspace{5mm}
+\begin{minipage}{7cm}
+\begin{center}
+
+\includegraphics[width=5.7cm, height = 6cm]{PBVs_mue_mut=pnt6.pdf}
+\vspace{-76mm}
+%\caption{  Blocking Probability versus   $\mu_\epsilon$.  \label{Fig_PB_mue}}
+ 
+%
+%
+\vspace{-10mm}
+
+\end{center}
+\end{minipage}
+\vspace{-10mm}
+\caption{  $E[S]$, $P_B$ versus   $\mu_\epsilon$ for moderate traffic.  \label{Fig_PB_mue}}
+\end{figure}
+
+\revision{
+In all the case studies presented in this section, we consider exponentially distributed job sizes  and Poisson arrivals for both the classes. The parameters used for a particular case study are described in the corresponding figure itself. 
+}
+
+\revision{
+Our first case studies are presented in
+Figures~\ref{Fig_PB_mue_light} and~\ref{Fig_PB_mue}.
+% with an aim to study the rate of convergence.
+We plot two performance measures, mean number of tolerant jobs, and
+blocking probability of eager jobs, versus $\mu_\epsilon$ for two
+different tolerant load factors; Figure~\ref{Fig_PB_mue_light}
+corresponds to a light tolerant load, while Figure~\ref{Fig_PB_mue}
+corresponds to a moderate tolerant load. (The system parameters used
+are mentioned in the figures directly.) Note that as expected, the
+simulated system performance metrics approach their SFJ approximations
+as $\mue$ increases. Interestingly, our approximations tend to
+\emph{under-estimate} both metrics (perhaps because the partial fluid
+limit we consider `washes away' the stochasticity of the eager
+workload). Moreover, note that in the case of moderate tolerant load,
+the approximation is quite accurate for all values of $\mue \geq 1$;
+the normalized difference between the theoretical approximation and
+the corresponding MC estimate is within $6\%$ for $\mue \ge 1$ with
+$L=17$ and for $\mue \ge 5$ with $L=1,$ and the error is negligible
+for higher values of $\mue$ (see Figure~\ref{Fig_PB_mue}).  On the
+other hand, with light tolerant traffic ($\rho_\tau = 0.0862$) as in
+Figure \ref{Fig_PB_mue_light}, the normalized difference is within
+$6\%$ only for $\mue \ge 5$ for $L=17$ and only for $\mue \ge 20$ for
+$L=1$. In general, we observe that the approximation error is smaller
+when the system operates closer to its stability limit. But even for
+the case with light traffic, the normalized difference is within
+$10\%$ in most cases once $\mue \ge 10.$}
+
+\revision{Next, we consider the Pareto frontier of performance
+  vectors, and compare our SFJ approximation with the frontier
+  obtained via MC simulations; see Figure~\ref{Fig_MC} .
+  %We plot both
+  %Monte-Carlo estimates as well as the corresponding theoretical
+  %limits for different values of $L.$
+  We observe that our analytical results corresponding to the SFJ
+  limit provide a very accurate approximation of the Pareto frontier,
+  even for $\mu_\i$ as small as 1, when $\mu_\t = 0.54$. We reiterate
+  that the theory approximates the system performance well even when
+  the system does not `flush' $\i$-customers at $\t$-transitions.}
+
+%The different schemes in this case study are differing only in
+%admission control and one can smoothly pass from one scheme to other
+%scheme at $\t$-transitions without having to drop some
+%$\i$-customers\footnote{Think of two sub-policies (with zero waiting
+%space), one of which supports $K_1$ customers at maximum and the
+%other supports $K_2$ at maximum. Then one needs to drop atleast the
+%extra customers (if any) when the scheme changes.}.
+ 
+ 
+ 
+\begin{figure}[h]
+
+\begin{minipage}{7cm}
+\vspace{-34mm}
+\begin{center}
+\includegraphics[width=6.8cm, height =5.7cm]{MCVsTheory_CDwithAdmitControl-eps-converted-to.pdf}
+\vspace{-44mm}
+\caption{  Comparison of Theory with Monte Carlo (MC) estimates.  Good  approximation  even for  small   $\mu_\epsilon$.    \label{Fig_MC}}
+\end{center}
+\end{minipage} \hspace{5mm}
+\begin{minipage}{7cm}
+\begin{center}
+
+\includegraphics[width=7.5cm, height = 5.6cm]{Static_Dyanmic_LoadFactorSmall-eps-converted-to.pdf}
+\vspace{-46mm}
+\caption{  Comparison of  static and dynamic policies. Better approximation for dynamic policies.  \label{Fig_static_dynamic}}
+ 
+%
+%
+\vspace{-10mm}
+
+\end{center}
+\end{minipage}
+\end{figure} 
+ 
+ Another example is plotted in Figure \ref{Fig_static_dynamic}, where
+ $\t$-static policies of \cite{ANOR} are considered along with dynamic
+ policies.  We again observe a good approximation between the theory
+ and MC estimates for dynamic policies. Interestingly, the
+ approximation error is bigger in the static case. One possible
+ explanation for this is the following. 
+% Note that in the static
+% setting, the approximation error between the system performance and
+% the SFJ approximation is the least for extreme values of $\t$-static
+% blocking probability. The superior approximation of the SFJ limit
+% under the Pareto-optimal dynamic policies considered here could be
+% because these policies toggle between the extreme $\t$-static
+% blocking probabilities depending on the $\t$-state. \jk{Is this OK?}
+ It is clear that the approximation error gets smaller as the
+ $\i$-load factor reduces, under $\t$-static policies.  Under Pareto
+ optimal family of schedulers, the $\i$-load equals 0 for all
+ $\t$-states greater than $L$.  Thus we see the approximation is
+ almost zero towards the right of the two figures (as $P_B$ gets
+ smaller, $L$ gets smaller).  We also observe that the dynamic
+ policies perform far superior than $\t$-static policies.
+ 
+ 
+
+
+
+
+
+
+
+
+\section{Concluding remarks}
+\label{sec:conclusion}
+
+In this paper, we analyse a multi-class, single server queueing system
+with an eager (lossy) class and a tolerant (queueing) class, under
+dynamic scheduling. While the inter-dependence between the service
+processes of the two classes makes an exact analysis of this system
+difficult, we obtain tractable performance approximations under a
+certain (partial) fluid scaling regime. A key feature of our
+approximations, proved to be accurate under the  fluid limit,  is a pseudo-conservation law:  the  approximate performance
+of both classes is expressed in terms of the standalone blocking
+probabilities of the eager schedulers, which are themselves easy to
+compute in several cases. 
+Further,  the accuracy of our approximations in the pre-limit is validated  via Monte Carlo
+simulations.
+
+Finally, we focus on the achievable region
+of the limiting performance vectors for our system.
+%Subject to a
+%conjecture on the applicability of our approximations to Stationary
+%Markov policies,
+Remarkably, we are able to obtain an explicit family of Pareto-optimal
+policies (these resemble  threshold  policies).
+
+There are natural extensions of our results to models where the eager
+class exhibits limited patience; for example, models with balking
+and/or reneging. For example, the system might include (limited)
+waiting room for eager customers.  Alternatively, eager customers
+might respond to the resources allocated based on their patience
+levels: a) an $\i$-customer may not enter the system depending upon
+the $\i$-number already in system according to some probabilistic
+rule, as in {\it balking} models; or b) may leave the system after
+waiting for a random `patience time', as in {\it reneging} models. At
+their core, our proofs require the property that the occupancy process
+of the eager class gets time-scaled (fast-forwarded) with increasing
+$\mue$ under the SFJ scaling. The analyses apply to the above
+mentioned generalizations so long as this scaling property holds. For
+example, in the case of reneging, we would require that the patience
+time distribution is scaled suitably with $\mue,$ (as is discussed in
+the context of static scheduling in \cite{ANOR}).
+
+This work also motivates extensions in other directions. One
+interesting extension would be to the multi-server setting, where the
+tolerant class is no longer work conserving. Another promising
+direction is to consider static/dynamic pricing for such heterogeneous
+service systems. Finally, specializing our models to particular
+application scenarios, including supermarkets, cognitive radio, and
+cloud computing environments, would be of independent interest.
+
+
+\ignore{
+ 
+  \noindent {\bf Balking and Reneging:}  As a part of a
+    particular $\i$-sub-policy, the system may allocate a certain
+    number of servers (recall that the system may be viewed as
+    multi-server from the standpoint of the eager class) and might
+    allocate a certain amount of waiting space for $\i$-class.  The
+    $\i$-customers might respond to the resources allocated based on
+    their patience levels: a) an $\i$-customer may not enter the
+    system depending upon the $\i$-number already in system according
+    to some probabilistic rule, as in {\it balking} models; or b) may
+    leave the system after waiting for an exponentially distributed
+    patience time of rate $\alpha^{\mue},$ as in {\it reneging}
+    models.  In the case of reneging, we will require that the
+    parameter $\alpha^{\mue}$ scales linearly with $\mue$, i.e.,
+    $\alpha^\mue = \alpha \mue$ for some $\alpha \in (0, \infty)$ (as
+  in \cite{ANOR}).  We believe that our results can easily be extended to include these cases;  one can model super market based systems more realistically using these extensions  and this would be another interesting future direction.  
+ }

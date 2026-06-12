@@ -1,0 +1,181 @@
+% ============================================
+% Proof of Theorem 2: Nested WAIT Algorithm Optimality
+% ============================================
+
+\section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic}}\label{appendix::proof of nested_wait_heavy_traffic}
+
+The proof analyzes the no-overflow Nested WAIT dynamics and then shows that the memory condition makes those dynamics feasible with high probability. The main difference from WAIT is that downstream arrivals are generated endogenously: a prompt reaches segment \(k\) only if it survives the boundary \(l_{k-1}'\). The proof therefore follows the queues at these segment boundaries. Segment 1 is a threshold-renewal queue with external Poisson arrivals. For \(k\ge2\), each upstream boundary-crossing opportunity produces a binomially thinned cohort. The threshold conditions give negative drift for these embedded queues. Standard reflected-random-walk and exponential-martingale bounds then control their expected size and high-probability excursions; the nonstandard part is the memory accounting that separates fresh boundary arrivals from carryover residual queues.
+
+Let
+\[
+    \Lambda_k=\sum_{j=k}^m\lambda_j,\qquad
+    p_k=\frac{\Lambda_k}{\Lambda_{k-1}},\quad k\ge2,
+\]
+and write
+\[
+    \Delta^\pi=\Delta T_{[1,\ldots,m]}(n_1,\ldots,n_m)=d_0+d_1M^\pi .
+\]
+The theorem assumes \(\Lambda_1\Delta^\pi<n_1\) and \(p_k<n_k/n_{k-1}<1\) for \(k\ge2\). In the \(\zeta\)-scaled system, every realized iteration has physical duration at least \(d_0/\zeta\), so the number of realized processing opportunities over \([0,T]\) is at most
+\[
+    B_\zeta^{\max}=\left\lceil \frac{\zeta T}{d_0}\right\rceil
+    \le 1+\frac{\zeta T}{d_0}.
+\]
+This is an upper bound on actual event opportunities, not a full-threshold comparison-slot count.
+
+\subsection{Segment-1 Entry Queue}
+
+Prompts waiting to enter segment 1 have not been prefilled, so they are outside the GPU-resident KV-cache state. The only subtlety is that the server may idle while waiting for the segment-1 threshold. We therefore index the segment-1 queue by threshold renewals rather than by realized processing iterations. Let \(R_q\) be the residual number of not-yet-prefilled prompts immediately after the \(q\)-th segment-1 service start, after \(n_1\) prompts have been removed for prefill. During the following service period, the number of external arrivals is stochastically dominated by
+\[
+    \bar Y^q_{(1)}\sim \mathrm{Poisson}(\Lambda_1\Delta^\pi),
+\]
+because the physical service period is at most \(\Delta^\pi/\zeta\) and arrivals occur at rate \(\zeta\Lambda_1\). If the residual plus these arrivals is below \(n_1\), the system idles until the next arrivals complete the threshold and then immediately starts the next segment-1 service. Thus
+\[
+    R_{q+1}\le (R_q+\bar Y^q_{(1)}-n_1)^+ .
+\]
+This recursion is dominated by the reflected random walk
+\[
+    \widetilde R^0_{(1)}=2n_1,\qquad
+    \widetilde R^{q+1}_{(1)}
+    =
+    \max\{2n_1,\widetilde R^q_{(1)}+\bar Y^q_{(1)}-n_1\}.
+\]
+Since \(\mathbb{E}[\bar Y^q_{(1)}]-n_1=\Lambda_1\Delta^\pi-n_1<0\), the standard Lindley-recursion bound for a random walk with negative drift \citep[see, e.g.,][]{kingman1962queues,asmussen2003applied} gives
+\[
+    \sup_{q\ge0}\mathbb{E}[R_q]
+    \le
+    2n_1+
+    \frac{\mathbb{E}[(\bar Y^q_{(1)}-n_1)^2]}{2(n_1-\Lambda_1\Delta^\pi)}
+    <\infty .
+\]
+The idle time before the next segment-1 service is the time needed to collect fewer than \(n_1\) arrivals, whose expected physical length is \(O(1/\zeta)\); in service-normalized time this contributes \(O(1)\).
+
+\subsection{Boundary Queues for Downstream Segments}
+
+For \(k\ge2\), consider an opportunity at which segment \(k-1\) advances prompts across boundary \(l_{k-1}'\). Let \(A^r_{k-1}\le n_{k-1}\) be the number of prompts that cross this boundary at the \(r\)-th such opportunity. Conditional on the filtration just before output-length revelation at the boundary, the indicators that these prompts continue to segment \(k\) are independent Bernoulli random variables with probability \(p_k=\Lambda_k/\Lambda_{k-1}\). This uses the i.i.d. type mix and the fact that service before the boundary is nonanticipating with respect to future output length. Therefore
+\[
+    Y^r_{(k)}\mid A^r_{k-1}\sim \mathrm{Binomial}(A^r_{k-1},p_k),
+    \qquad
+    Y^r_{(k)}\preceq \bar Y^r_{(k)},
+\]
+where the dominating variables \(\bar Y^r_{(k)}\sim\mathrm{Binomial}(n_{k-1},p_k)\) can be chosen independent across boundary opportunities.
+
+Let \(V^r_{(k)}\) be the carryover boundary queue at stage \(l_{k-1}'\) after the threshold review at the start of the \(r\)-th opportunity in which segment \(k-1\) is processed. This convention preserves the nested, prefix structure of the algorithm. Whenever segment \(k-1\) is active, all earlier segment thresholds have been met. If the boundary queue for segment \(k\) also contains at least \(n_k\) prompts at that review, Nested WAIT includes segment \(k\) in the same prefix batch and removes a threshold cohort from the boundary. During the batch, at most \(A^r_{k-1}\le n_{k-1}\) additional prompts may survive segment \(k-1\) and join the boundary. These fresh survivors are part of the just-processed upstream threshold cohort, so their KV-cache memory is charged to the threshold-sized batch term \(M^\pi\). Only the carryover residual remains as additional boundary memory. With the binomial domination above, this residual satisfies
+\[
+    V^{r+1}_{(k)}
+    \le
+    V^r_{(k)}+\bar Y^r_{(k)}
+    -
+    n_k{\bf 1}\{V^r_{(k)}+\bar Y^r_{(k)}\ge n_k\}.
+\]
+The residual queue is dominated by
+\[
+    \widetilde W^0_{(k)}=n_k,\qquad
+    \widetilde W^{r+1}_{(k)}
+    =
+    \max\{n_k,\widetilde W^r_{(k)}+\bar Y^r_{(k)}-n_k\}.
+\]
+This domination follows by induction over boundary-crossing opportunities. If \(V^r_{(k)}+\bar Y^r_{(k)}\ge n_k\), the post-review residual is at most \(V^r_{(k)}+\bar Y^r_{(k)}-n_k\), which is bounded by \(\widetilde W^r_{(k)}+\bar Y^r_{(k)}-n_k\). If \(V^r_{(k)}+\bar Y^r_{(k)}<n_k\), the residual is below \(n_k\), while the dominating recursion is always at least \(n_k\). Hence \(V^r_{(k)}\le\widetilde W^r_{(k)}\) for all \(r\).
+
+The increments \(\bar Y^r_{(k)}-n_k\) have strictly negative drift because
+\[
+    \mathbb{E}[\bar Y^r_{(k)}-n_k]=n_{k-1}p_k-n_k<0.
+\]
+Applying the same negative-drift reflected-random-walk bound yields, uniformly in \(r\),
+\[
+    \mathbb{E}[V^r_{(k)}]
+    \le
+    n_k+
+    \frac{\mathbb{E}[(\bar Y^r_{(k)}-n_k)^2]}{2(n_k-n_{k-1}p_k)}
+    <\infty,\qquad k=2,\ldots,m.
+\]
+Thus all external and downstream boundary queues have bounded expected size, uniformly over \(\zeta\) and \(T\).
+
+We also use the stage-cap invariant induced by the threshold rule. Starting from the empty system, every threshold-controlled interior stage of segment \(k\) contains at most \(n_k\) resident prompts. A batch that includes segment \(k\) advances at most \(n_k\) prompts from each preceding stage into the next stage; a batch that excludes segment \(k\) leaves its interior stages unchanged. The only resident populations not covered by this interior-stage cap are the downstream boundary queues \(V_{(k)}\), \(k\ge2\), which are controlled by the residual-queue bounds above.
+
+\subsection{Throughput and Delay}
+
+We first translate the queue bounds into the no-overflow performance estimates. Let \(W_{(1)}(T)\) denote the segment-1 entry residual at time \(T\), let \(V_{(k)}(T)\) be the downstream resident boundary queue for \(k\ge2\), and let \(I_k(T)\) be the number of prompts inside the threshold-controlled interior of segment \(k\). The threshold rule gives \(I_k(T)\le n_k\delta_k\), where \(\delta_k\) is the number of interior stages in segment \(k\). There are constants \(\alpha_k,\beta_k\), depending only on the fixed output lengths, such that terminal unfinished decode work is bounded by
+\[
+    \sum_{k=1}^m \alpha_k W_{(k)}(T)
+    +
+    \sum_{k=1}^m \beta_k I_k(T)
+    +
+    A_{\mathrm{tail}}(T),
+\]
+where \(W_{(k)}=V_{(k)}\) for \(k\ge2\), and \(A_{\mathrm{tail}}(T)\) accounts for arrivals in the final partial opportunity. The expected final-partial-opportunity arrivals are \(O(1)\) because that opportunity has physical length at most \(\Delta^\pi/\zeta\). Consequently,
+\[
+\begin{aligned}
+    \throughput^*-\mathbb{E}[\throughput^{(\zeta,\pi)}]
+    &\le
+    \frac{1}{\zeta T}
+    \mathbb{E}\!\left[
+    \sum_{k=1}^m \alpha_k W_{(k)}(T)
+    +
+    \sum_{k=1}^m \beta_k I_k(T)
+    +
+    A_{\mathrm{tail}}(T)
+    \right]  \\
+    &= O((\zeta T)^{-1}).
+\end{aligned}
+\]
+
+For delay, let \(Q(t)\) be the total number of prompts in the segment-1 entry queue, downstream boundary queues, and threshold-controlled segment interiors. The bounds above, together with the \(O(1/\zeta)\) expected idle period needed to collect fewer than a threshold cohort, imply
+\[
+    \mathbb{E}\!\left[\int_0^T Q(t)\,dt\right]=O(T).
+\]
+The expected number of completed prompts over \([0,T]\) is \(\Theta(\zeta T)\), because terminal unfinished work is \(O(1)\) in expectation. Hence the calendar-time average latency and TTFT are \(O(1/\zeta)\). The theorem reports service-normalized delays, \(\Latency^{(\zeta,\pi)}=\zeta\Latency_{\rm cal}^{(\zeta,\pi)}\) and \(\TTFT^{(\zeta,\pi)}=\zeta\TTFT_{\rm cal}^{(\zeta,\pi)}\), so
+\[
+    \mathbb{E}[\Latency^{(\zeta,\pi)}],
+    \mathbb{E}[\TTFT^{(\zeta,\pi)}]
+    =
+    O(1).
+\]
+
+\subsection{High-Probability Memory Bound}
+
+The base term
+\[
+    M^\pi=\sum_{k=1}^m n_k(l+\bar s_k)\delta_k
+\]
+accounts for threshold-sized segment batches. With the convention used in Theorem~\ref{thm:nested_wait_heavy_traffic}, segment 1 covers stages \(s=0,\ldots,l_1'\), while for \(k\ge2\), the resident boundary queue at \(s=l_{k-1}'\) is tracked separately and segment \(k\)'s interior covers \(s=l_{k-1}'+1,\ldots,l_k'\). The memory accounting separates two boundary populations. Fresh survivors that have just crossed from segment \(k-1\) are a subset of the upstream threshold cohort. They have the same KV-cache size as the prompts charged to the \(s=l_{k-1}'\) stage of segment \(k-1\) in \(M^\pi\), so charging them to the base term does not add memory. The only additional memory is the carryover residual left at downstream boundaries across opportunities. Therefore, if \(V^r_{(k)}\le c_k\) for all downstream boundaries, then total resident KV-cache memory is at most
+\[
+    M^\pi+\sum_{k=2}^m(l+l_{k-1}')c_k .
+\]
+The deterministic \(n_k\) component of \(c_k\) is on the same scale as the base term: since \(n_k<n_{k-1}\), \((l+l_{k-1}')n_k\) is bounded by the contribution of the terminal stage \(s=l_{k-1}'\) of segment \(k-1\) already included in \(M^\pi\).
+
+Fix \(k\ge2\). Since \(p_k<n_k/n_{k-1}<1\), Appendix~\ref{appendix_lemma::proof of solution to martingale exists} records the standard exponential-martingale construction for binomial increments and gives a unique \(\theta_k>0\) satisfying
+\[
+    e^{-\theta_k n_k}(1-p_k+p_ke^{\theta_k})^{n_{k-1}}=1.
+\]
+For \(S^i_{(k)}=\sum_{r=1}^i(\bar Y^r_{(k)}-n_k)\), the process \(e^{\theta_k S^i_{(k)}}\) is a martingale. Doob's maximal inequality \citep[see, e.g.,][]{durrett2019probability} gives
+\[
+    \mathbb{P}\!\left(\max_{0\le i\le r}S^i_{(k)}\ge x\right)\le e^{-\theta_k x}.
+\]
+Equivalently, the finite-horizon reflected-random-walk bound in Appendix~\ref{appendix_lemma::proof of solution to martingale exists} gives, for the dominating boundary queue,
+\[
+    \mathbb{P}\!\left(
+    \max_{0\le r\le B}\big(\widetilde W^r_{(k)}-n_k\big)\ge x
+    \right)
+    \le B e^{-\theta_k x},\qquad B\ge1.
+\]
+Since \(V^r_{(k)}\le \widetilde W^r_{(k)}\), set
+\[
+    c_k
+    =
+    n_k+\theta_k^{-1}
+    \ln\!\left(\frac{m(1+\zeta T/d_0)}{\delta}\right).
+\]
+Applying this finite-horizon bound with \(B=B_\zeta^{\max}\), and then unioning over \(k=2,\ldots,m\), gives
+\[
+    \mathbb{P}\!\left(
+    V^r_{(k)}\le c_k
+    \text{ for all } k=2,\ldots,m,\; r\le B_\zeta^{\max}
+    \right)\ge1-\delta.
+\]
+On this event, the no-overflow Nested WAIT dynamics are feasible on the physical GPU whenever the memory condition in Theorem~\ref{thm:nested_wait_heavy_traffic} holds. If a physical implementation instead evicts on the complement of this event, the unconditional throughput gap acquires an additional \(O(\delta)\) failure term; the theorem reports the no-overflow performance bounds and the separate high-probability feasibility guarantee.
+
+Finally, Appendix~\ref{appendix_lemma::proof of solution to martingale exists} also gives
+\[
+    \theta_k\ge \frac{8(n_k-n_{k-1}p_k)}{n_{k-1}},
+\]
+which is the stated drift-to-buffer scaling. This completes the proof.

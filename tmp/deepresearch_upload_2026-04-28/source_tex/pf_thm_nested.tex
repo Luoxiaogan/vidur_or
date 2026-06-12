@@ -1,0 +1,149 @@
+% ============================================
+% Proof of Theorem 2: Nested WAIT Algorithm Optimality
+% ============================================
+
+\section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic}}\label{appendix::proof of nested_wait_heavy_traffic}
+
+\paragraph{Proof Outline.}
+This proof establishes asymptotic optimality of Nested WAIT when output lengths are unknown. The algorithm achieves \emph{on-the-fly classification}: prompts classify themselves by their actual output lengths at segment boundaries, requiring no prediction. The structure proceeds as follows:
+\begin{enumerate}
+    \item \textbf{First segment analysis}: All prompts enter segment 1 with Poisson arrivals. We couple with a Lindley process and apply Kingman's inequality for bounded expectations.
+    \item \textbf{Subsequent segments analysis}: After completing segment $k-1$, prompts naturally reveal whether they continue to segment $k$. This type revelation follows Binomial thinning: a fraction $p_k$ of completions continue, while short prompts finish without being delayed by longer ones. We apply Lindley coupling to each segment.
+    \item \textbf{High-probability bounds prevent eviction}: Expected bounds ensure average stability, but stochastic fluctuations risk overflow. We construct an exponential martingale and apply Doob's inequality to obtain high-probability memory bounds, preventing eviction cascades.
+\end{enumerate}
+
+We adopt notation consistent with the main text (Section~\ref{sec:nested_wait}). All prompt types have common prefill length \(l\), and type-$j$ prompts have output length $l_j'$. Let \(\delta_1=l_1'+1\), \(\bar s_1=l_1'/2\), and for \(k\ge2\), let \(\delta_k=l_k'-l_{k-1}'\) and \(\bar s_k=(l_{k-1}'+1+l_k')/2\). We use $b$ to denote the \emph{batch index} (count of completed iterations) and $k \in \{1, \ldots, m\}$ to denote the \emph{segment index}, where segment $k$ contains prompts with output lengths in $(l_{k-1}', l_k']$. The threshold for segment $k$ is $n_k$ (from Equation~\eqref{eq:nested_wait_thresholds}). We denote by $W^b_{(k)}$ the queue length for segment $k$ after batch $b$, and by $B$ the total number of batches over the time horizon. The thinning probability $p_k = (\sum_{j=k}^m \lambda_j)/(\sum_{j=k-1}^m \lambda_j)$ represents the fraction of prompts completing segment $k-1$ that continue to segment $k$.
+
+\subsection{First Segment Analysis}
+
+All prompts initially enter segment 1 with Poisson arrivals at aggregate rate $\sum_{j=1}^m \lambda_j$. We construct a dominating process and apply Kingman's inequality to bound expected queue length.
+
+For the first segment ($k=1$), the state transition is:
+$$ W^{b+1}_{(1)} =  W^b_{(1)} + Y^b_{(1)} -n_1\cdot  \mathbf{1}\{ W^b_{(1)} + Y^b_{(1)}\geq n_1 \},\quad Y^b_{(1)}\sim \text{Poisson}(\Delta T_b \cdot \sum_{j=1}^m \lambda_j), $$
+where $\Delta T_b$ denotes the processing time of batch $b$. Since $\Delta T_b\leq \Delta T_{[1,\ldots,m]}$ (the time for a full batch), we construct a dominating process:
+$$ \bar{W}^{b+1}_{(1)} =  \bar{W}^b_{(1)} + \bar{Y}^b_{(1)} -n_1\cdot  \mathbf{1}\{ \bar{W}^b_{(1)} + \bar{Y}^b_{(1)}\geq n_1 \},\quad \bar{Y}^b_{(1)}\sim \text{Poisson}(\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j). $$
+This is further dominated by a Lindley process:
+$$\tilde{W}^0_{(1)}=2n_1, \quad \tilde{W}^{b+1}_{(1)}=\max\{2n_1, \tilde{W}^b_{(1)}+\bar{Y}^b_{(1)}-n_1\}.$$
+Since $\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j<n_1$ (negative drift), by Kingman's inequality \citep{kingman1962queues}:
+$$\ex{}{W^b_{(1)}}\leq 2n_1 + \frac{\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j}{2\left( n_1 - \Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j\right)}. $$
+
+\noindent\textbf{Remark.} Prompts waiting in the first segment are stored in CPU and do not consume GPU memory.
+
+\subsection{Subsequent Segments Analysis ($k \geq 2$)}
+
+For segment $k$ ($2\leq k\leq m$), the arrival process reflects on-the-fly classification: prompts that completed segment $k-1$ reveal whether their output lengths exceed $l_{k-1}'$. This type revelation follows binomial thinning with probability $p_k$.
+
+Arrivals come from prompts that completed segment $k-1$:
+$$Y^b_{(k)} \sim \text{Binomial}\left(  n_{k-1} ,\, p_k \right),\quad \text{where } p_k = \frac{\sum_{j=k}^m \lambda_j}{\sum_{j=k-1}^m \lambda_j}.$$
+
+\paragraph{On-the-fly Classification via Binomial Thinning.}
+The arrival process $Y^b_{(k)} \sim \text{Binomial}(n_{k-1}, p_k)$ reflects the \emph{on-the-fly classification mechanism}, not merely a modeling choice. After segment $k-1$ processing, exactly $n_{k-1}$ prompts complete that stage. Among these, a fraction $p_k = \frac{\sum_{j=k}^m \lambda_j}{\sum_{j=k-1}^m \lambda_j}$ have output lengths exceeding $l_{k-1}'$. These prompts naturally continue to segment $k$. Prompts classify themselves by their actual output lengths—no prediction needed. Short prompts complete quickly without being delayed by longer ones.
+
+The state transition is:
+$$W^{b+1}_{(k)}=W^{b}_{(k)}+Y^b_{(k)} - n_{k}\cdot \mathbf{1}\{ W^{b}_{(k)}+Y^b_{(k)}\geq n_{k}  \},$$
+where $b$ indexes the batches containing segment $k-1$. Note that each segment has its own batch index, but all are bounded by the total batch count $B$.
+
+Define $X^b_{(k)} = Y^b_{(k)} - n_{k}$. We construct a coupled dominating process:
+\begin{lemma}[Coupled Process for Segment $k$]\label{lemma::nested coupled process}
+Define $\{ \tilde{W}^b_{(k)} \}$ by:
+\begin{equation*}
+\begin{aligned}
+\tilde{W}^0_{(k)} &= n_{k}, \\
+\tilde{W}^{b+1}_{(k)} &= \max\{ n_{k},\tilde{W}^{b}_{(k)} + X^b_{(k)}\}.
+\end{aligned}
+\end{equation*}
+Then $\tilde{W}_{(k)}^b \geq W^b_{(k)}$ for all $b\in \mathbb{N}$.
+\end{lemma}
+\noindent The proof is in Appendix~\ref{appendix_lemma::proof of nested coupled process}. The process $\{\tilde{W}^b_{(k)}\}$ has the Lindley representation:
+\begin{equation*}
+\begin{aligned}
+\tilde{W}^{b+1}_{(k)} &=n_{k}+ \max_{0\leq i\leq b}\{ S^i_{(k)} \},\\
+\text{where } S^i_{(k)} &= \sum_{r=1}^i X^r_{(k)},\; S^0_{(k)}=0.
+\end{aligned}
+\end{equation*}
+
+\paragraph{Expected Queue Length.} Since $\ex{}{X^b_{(k)}} = n_{k-1} p_k - n_{k}<0$ (negative drift), by Kingman's inequality \citep{kingman1962queues}:
+$$\ex{}{W^b_{(k)}}\leq \ex{}{\tilde{W}^b_{(k)}}\leq n_k+\frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)}.$$
+Negative drift ensures queue stability, preventing unbounded growth that would lead to eviction. This bound ensures finite expected queue length for each segment $k \geq 2$, controlling expected GPU memory consumption. The segment structure ensures shorter prompts complete without waiting for longer ones to finish.
+
+\subsection{Throughput Gap Bound}
+
+Using $B$ as the total batch count (upper bound for each segment's batch index), the throughput gap is:
+$$\frac{1}{B}\sum_{k=1}^m \ex{}{W^B_{(k)}}\leq
+\frac{2n_1}{B} +\frac{\Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j}{2B\left( n_1 - \Delta T_{[1,\ldots,m]}\cdot \sum_{j=1}^m \lambda_j\right)} +\frac{1}{B}\sum_{k=2}^m n_k +\frac{1}{B}\sum_{k=2}^m\frac{n_{k-1}\cdot p_k(1-p_k)}{2\left(n_{k}-n_{k-1}\cdot p_k\right)}.$$
+
+\paragraph{Asymptotic Regime.} As $\zeta \to \infty$, the throughput gap is $O((\zeta B)^{-1})$. The expected latency and TTFT are $O(1)$.
+
+\subsection{High-Probability Memory Bound}
+
+\paragraph{High-Probability Bounds Prevent Eviction.}
+Expected queue length bounds ensure average stability. However, stochastic fluctuations may cause $W^b_{(k)}$ to exceed these limits, risking memory overflow and eviction. We derive high-probability bounds to quantify this overflow risk. By choosing capacity $C$ to ensure overflow probability $< \delta$ across all batches and segments, we prevent eviction cascades.
+
+\paragraph{Martingale Construction.}
+To obtain high-probability bounds on queue length, we need to control tail probabilities of the random walk maximum $\max_{0\leq i\leq s-1}\{S^i_{(k)}\}$. Expected bounds alone cannot prevent rare but catastrophic overflow events. We construct an exponential martingale that enables Doob's inequality, converting expected bounds into probabilistic guarantees.
+
+We need to estimate
+$$P\left( \max\{0,S^1_{(k)},\cdots,S^{s-1}_{(k)}\} \ge c\right)=P\left( \max_{0\leq i\leq s-1}\{S^i_{(k)}\} \ge c\right), \forall c>0 ,\,\text{where }S^0_{(k)}=0.$$
+Define the exponential martingale $M^i_{(k)} = e^{\theta S^i_{(k)}}$. For this to be a martingale, the moment generating function must equal 1, ensuring zero expected drift in log space:
+$$\phi_{(k)}(\theta) = \ex{}{e^{\theta X_{(k)}^i}}= e^{-\theta n_{k}}(1-p_k+p_ke^{\theta})^{n_{k-1}} = 1.$$
+The following lemma establishes existence and properties of the solution $\theta_k > 0$ that satisfies this martingale condition (proof in Appendix~\ref{appendix_lemma::proof of solution to martingale exists}).
+\begin{lemma}\label{lemma::solution to martingale exists}
+Suppose \(n_{k-1} > n_k > n_{k-1} p_k\) and \(p_k \in (0, 1)\). Then there exists a unique solution \(\theta_k > 0\) to the equation
+\begin{equation}
+    e^{-\theta_k n_k} (1 - p_k + p_k e^{\theta_k})^{n_{k-1}} = 1, \label{eq::eq of theta}
+\end{equation}
+where \(\theta_k\) is strictly increasing with respect to \(D = n_k - n_{k-1} p_k\) and satisfies the lower bound
+\[
+\theta_k \geq \frac{8 (n_k - n_{k-1} p_k)}{n_{k-1}}.
+\]
+\end{lemma}
+When $\theta_k>0$ satisfies $\phi(\theta_k)=1$, the process $M^i_{(k)}$ is a martingale starting at $M^0_{(k)}= e^{\theta_k \cdot 0}=1$. This zero-drift property in log space enables Doob's inequality to bound tail probabilities.
+
+By Doob's martingale inequality \citep{durrett2019probability}, we have that
+$$P(\max_{1\leq i
+\leq b-1}\{ e^{\theta_k S^i_{(k)}} \}\geq a)\leq \frac{\ex{}{M^i}}{a} = \frac{\ex{}{M^0}}{a}= \frac{1}{a}.$$
+Exponentiating both sides of the inequality event, we obtain:
+$$P(\max_{1\leq i
+\leq b-1}\{ e^{\theta S^i_{(k)}}\} \geq e^{\theta c})\leq \frac{1}{e^{\theta c}}  \Rightarrow P(\max_{1\leq i
+\leq b-1}\{  S^i_{(k)}\} \geq c)\leq e^{-\theta c}.$$
+Using the dominance $\tilde{W}^b_{(k)} = n_k + \max_{0\leq i\leq b-1}\{ S^i_{(k)}\} \geq W^b_{(k)}$, we have
+$$P\left(  W^b_{(k)}\geq c  \right) <P\left(  \tilde{W}^b_{(k)}\geq c  \right) = P(\max_{1\leq i
+\leq b-1}\{  S^i_{(k)}\} \geq c - n_k)\leq e^{-\theta_k (c - n_k)}$$
+
+For all $2\leq k\leq m$ and $1\leq b\leq B$:
+$$P\left(  W^b_{(k)}\geq c  \right)< e^{-\theta_k (c - n_k)},$$
+where $\theta_k>0$ is the solution to (\ref{eq::eq of theta}).
+
+\paragraph{Union bound for safety guarantee.}
+To ensure memory consumption does not exceed the bound at any batch $b \in \{1, \dots, B\}$ with probability at least \( 1 - \delta \), we apply a union bound across all segments and batches. For each segment \( k \in \{2, \dots, m\} \) and batch index \( b \in \{1, \dots, B\} \), we have:
+\[ P\left( W^b_{(k)} \geq c \right) < e^{-\theta_k (c - n_k)}, \]
+There are \( m - 1 \) segments (from \( k = 2 \) to \( m \)) and \( B \) batches (from \( b = 1 \) to \( B \)). We allocate the total failure probability \( \delta \) across all segments and batches. The total number of events is \( (m - 1) \cdot B \). Set the overflow probability for each segment and batch to:
+$$P\left( W^b_{(k)} \geq c_k \right) \leq \frac{\delta}{(m - 1) \cdot B}\Rightarrow e^{-\theta_k (c_k - n_k)} \leq \frac{\delta}{(m - 1) \cdot B}\Rightarrow c_k \geq n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k}$$
+If we choose
+\[ c_k = n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k}, \]
+then we have that
+\[ P\left( W^b_{(k)} \geq c_k \right) \leq \frac{\delta}{(m - 1) \cdot B}. \]
+
+Next, we compute the joint probability of overflow across all segments and batches using a union bound:
+$$P\left( \bigcup_{k=2}^m \bigcup_{b=1}^B \{ W^b_{(k)} \geq c_k \} \right) \leq \sum_{k=2}^m \sum_{b=1}^B P\left( W^b_{(k)} \geq c_k \right)\leq (m - 1) \cdot B \cdot \frac{\delta}{(m - 1) \cdot B} = \delta$$
+Thus:
+$$P\bigg( W^b_{(k)} \leq c_k \text{ for all }
+\begin{aligned}
+    &k \in \{2, \dots, m\}, \\
+    &b \in \{1, \dots, B\}
+\end{aligned} \bigg)
+\geq 1 - \delta.$$
+So the memory consumption is bounded:
+$$    \text{Memory Consumption}^b
+= M^{\pi} + \sum_{k=2}^m W^b_{(k)} \cdot (l + l_{k-1}')\leq M^{\pi} + \sum_{k=2}^m c_k \cdot (l + l_{k-1}')$$
+where $M^\pi$ is the peak batch memory usage as defined in Equation~\eqref{eq:nested_wait_memory}:
+$$M^\pi = \sum_{j=1}^m n_j(l+\bar s_j)\delta_j.$$
+Note that this differs from the $M^\pi$ formula for the WAIT algorithm (Theorem~\ref{thm:wait_heavy_traffic}), because Nested WAIT groups prompts into segments based on their unknown output lengths, leading to segment-wise memory accumulation.
+
+Substituting \(c_k = n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \), we have that
+$$    \text{Memory Consumption}^b \leq M^{\pi} + \sum_{k=2}^m \left( n_k + \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \right) \cdot (l + l_{k-1}').$$
+Define the memory bound \( \mathbf{M}^B \):
+$$\mathbf{M}^B = M^{\pi} + \sum_{k=2}^m n_k \cdot (l + l_{k-1}') + \sum_{k=2}^m \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \cdot (l + l_{k-1}').$$
+By the lower bound in Lemma~\ref{lemma::solution to martingale exists}, we can obtain the upper bound of the third term:
+$$\sum_{k=2}^m \frac{\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)}{\theta_k} \cdot (l + l_{k-1}') \leq \sum_{k=2}^m \frac{n_{k-1}}{8(n_k - n_{k-1}p_k)}\ln\left( \frac{(m - 1) \cdot B}{\delta} \right)\cdot (l + l_{k-1}')$$
+And this \( \mathbf{M}^B \) ensures that with probability at least \( 1 - \delta \), the memory consumption does not exceed \( \mathbf{M}^B \) at any batch index \( b \in \{1, \dots, B\} \).

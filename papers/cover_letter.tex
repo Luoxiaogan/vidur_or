@@ -1,0 +1,51 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+
+\setstretch{1.12}
+\setlength{\parskip}{0.7em}
+\setlength{\parindent}{0pt}
+
+\newcommand{\manuscript}{OPRE-2025-04-1885}
+\newcommand{\papertitle}{Optimizing LLM Inference: Fluid-Guided Online Scheduling with Memory Constraints}
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\noindent
+To the Area Editor, the Associate Editor, and the Referees\\
+\emph{Operations Research}
+
+\vspace{0.5em}
+
+\noindent Re: Resubmission of \manuscript, ``\papertitle''
+
+\vspace{1em}
+
+Dear Editors and Referees,
+
+Thank you so much for the opportunity to revise and resubmit our manuscript, and even more for the extraordinary care you devoted to it. We finished reading the reports with a genuine sense of gratitude: the comments were not only rigorous and generous, but unusually insightful. It is rare to receive feedback that simultaneously sharpens the theory, tightens the writing, and pushes the empirical evidence to be more honest---and yet that is exactly what this review process did for us. We are deeply indebted to all of you for the time, expertise, and intellectual generosity you invested.
+
+We are especially grateful to the Associate Editor for steering the review with such clarity and fairness, and for distilling the most consequential issues so that we could prioritize them. The guidance gave the revision a clear backbone, and we believe the paper is substantially stronger as a direct result.
+
+To the three referees: thank you for engaging so deeply with both the fluid model and the scheduling algorithms. Reviewer~1's careful reading of our assumptions and notation---the role of the linear iteration-time model, the unified treatment of symbols, and the early placement of the policy-class definitions---led us to rework the exposition from the ground up; the argument is now considerably cleaner and, we hope, a pleasure to read. Reviewer~2's probing questions about simulation fidelity at large batch sizes prompted us to run a dedicated real-GPU validation study on an A100, which both confirmed the regime where our calibration is trustworthy and made us far more precise about what we claim. Reviewer~3's incisive comments shaped the largest changes in this revision: they led us to drop the informal ``heavy-traffic'' framing in favor of the precise asymptotic scaling actually used in our theorems, to reposition the contribution around the stability region and effective throughput under exogenous arrivals, to articulate clearly why the analysis is not a routine positive-recurrence argument, and to rebuild the numerical section around mean-latency-versus-arrival-rate curves. Every one of these was exactly the right question to ask, and the paper is markedly stronger and more credible for them.
+
+In the revised manuscript we have addressed every comment in full. In brief, we have (i) strengthened the theoretical exposition by formalizing the policy class early, unifying notation, and clarifying the scope of the modeling assumptions; (ii) added a real-GPU validation study and made our fidelity claims precise about the batch-size range in which the calibrated predictor is accurate; (iii) expanded the numerical section with mean-latency-versus-rate comparisons, finite-horizon stability evidence, memory-constrained eviction experiments, and long-output workloads; and (iv) corrected all cross-references, terminology, and typographical issues that were kindly flagged. A detailed, point-by-point response accompanies this letter, with every change cross-referenced to the revised text.
+
+For your convenience, we have attached the revised manuscript together with a full, point-by-point response letter that addresses every comment in detail and cross-references each change to the revised text.
+
+We have done our very best to honor the spirit as well as the letter of your suggestions, and we sincerely hope the revision meets your expectations. We remain wholeheartedly grateful for your guidance and would be glad to make any further improvements you recommend.
+
+\vspace{1em}
+
+With sincere thanks and great respect,
+
+\vspace{0.5em}
+
+\noindent The Authors
+
+\end{document}

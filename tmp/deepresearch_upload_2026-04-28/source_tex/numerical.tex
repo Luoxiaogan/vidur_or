@@ -1,0 +1,123 @@
+\section{Numerical Experiments}
+\label{sec:experiments}
+
+We evaluate the WAIT and Nested WAIT algorithms on two classes of workloads: synthetic Poisson arrivals (Section~\ref{sec:exp_synthetic}) and a real prompt distribution sampled from lmsys-chat-1m (Section~\ref{sec:exp_real}). On every workload we benchmark our algorithms against two widely deployed inference schedulers, vLLM~\citep{kwon2023efficient} and Sarathi~\citep{agrawal2023sarathi}. Both are FCFS-based serving policies in our experiments; Sarathi differs by splitting prefill into chunks so that a long prefill does not monopolize an iteration that could also serve decode work. We use Vidur~\citep{agrawal2024vidur} as the discrete-event simulator, configured to model a single NVIDIA A100~80\,GB serving Llama-2-7B. Vidur's iteration-time predictions agree with direct SGLang measurements on a physical A100 within a mean absolute percentage error (MAPE) of $1.93\%$ over the batch-size range used in our experiments. Appendix~\ref{app:additional_experiments} reports supplemental simulator validation and end-to-end real-GPU runs of WAIT.
+
+In the stable region of an open system, completed requests match the offered rate $\lambda$ in steady state. Completion-rate differences therefore appear only when a policy approaches or crosses its stability boundary. For this reason, the main rate-sweep figures plot mean end-to-end latency against $\lambda$, averaging each point over $10$ independent simulation replications with different arrival draws. We identify a policy's \emph{stability boundary} $\lambda^*$ as the largest $\lambda$ at which the mean latency remains bounded, i.e., the point at which the latency curve diverges. The same $\lambda^*$ appears in the effective-completion-rate curve: the completed-request rate tracks $\lambda$ below $\lambda^*$, and saturates or declines above it when the policy suffers overload or eviction-induced restarts. This request-level comparison is the experimental counterpart of the token-level effective throughput used in the theory; for a fixed workload distribution, the two have the same stability-boundary interpretation.
+
+\textbf{Hardware.} All experiments use Vidur to simulate a single NVIDIA A100~80\,GB serving Llama-2-7B. The iteration-time model is Equation~\eqref{eq:time_consump}; its A100 calibration and GPU-side validation are reported in Appendix~\ref{app:gpu_validation}.
+
+\textbf{Baseline configurations (vLLM, Sarathi).} Both baselines use their default Vidur configurations and admit arrivals in FCFS order. They also use the same local capacity-reservation rule: before admitting a new request, the scheduler requires a small memory buffer ($1\%$ of KV-cache capacity) to remain unused. This rule protects against admitting a request when the server is already essentially full, but it is not a dynamic limit on the total number of jobs in service. Once admitted requests continue decoding, their KV caches can still grow beyond the available capacity, in which case the scheduler evicts and restarts an in-progress request. The difference between the baselines is in how prefill is batched. vLLM processes a newly admitted request's full prefill in one iteration. Sarathi bounds the prefill work per iteration to chunks of at most $512$ tokens, allowing partial prefills to be interleaved with decode iterations. This chunked-prefill rule reduces head-of-line blocking from long prefills, but it does not control the cumulative decode-side population. Thus neither baseline enforces the load-balancing threshold used by WAIT.
+
+\textbf{WAIT and Nested WAIT settings.} In the experiments below, we do not set the thresholds $n_j$ and $n_k$ directly. Under Nested WAIT, let $m$ denote the number of decode-stage segments. We use WAIT for the two single-type synthetic workloads, \texttt{p512d20} and \texttt{p512d1000}, and Nested WAIT for the two-type synthetic workload with arrival mix $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$, meaning that each arrival is \texttt{p512d20} with probability $0.7$ and \texttt{p512d50} with probability $0.3$, and for the real lmsys workload. For the synthetic workloads, we choose a single total in-flight limit $\mathrm{tl}$ from a finite tuning grid over $20,25,\ldots,50$ at each arrival rate and derive the threshold vector. Under WAIT, $\mathrm{tl}$ determines the overall scale of the per-type thresholds $n_j$, and Equation~\eqref{eq:wait_thresholds} determines their relative magnitudes across types. Under Nested WAIT, $\mathrm{tl}$ plays the same role for the per-segment thresholds $n_k$, and Equation~\eqref{eq:nested_wait_thresholds} determines their ratios across segments. A segment becomes active once its entry-stage inventory reaches the relevant threshold or once the segment is already full at its in-flight limit. For the two-type synthetic workload $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$, we use Nested WAIT with $m=2$, corresponding to decode-stage segments $1$--$20$ and $21$--$50$, so that $n_2/n_1 > 0.3$ and $20n_1 + 30n_2 \approx \mathrm{tl}$. For example, if $\mathrm{tl}=30$, one consistent choice is $(n_1,n_2)\approx(1,1/3)$, which integerizes to segment in-flight limits of about $20$ and $10$. On the real lmsys workload, Nested WAIT again uses a decode-stage partition and selects $\mathrm{tl}$ by arrival rate in the recorded tuning sweep; Section~\ref{sec:exp_real} describes how the segment thresholds are constructed from the empirical continuation probabilities. Thus, the single scalar $\mathrm{tl}$ determines both the scale of the threshold vector and the total in-flight limit. Under the baseline settings used for the rate-sweep figures, WAIT and Nested WAIT do not trigger eviction.
+
+
+\subsection{Synthetic Workloads}
+\label{sec:exp_synthetic}
+
+We consider three synthetic Poisson workloads. The single-type workload \texttt{p512d20} has prefill length $512$ and decode length $20$, isolating the effect of WAIT's threshold mechanism (Algorithm~\ref{alg:wait}). The two-type workload $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$, meaning that each arrival is \texttt{p512d20} with probability $0.7$ and \texttt{p512d50} with probability $0.3$, tests the segment design of Nested WAIT (Algorithm~\ref{alg:nested_wait}) on prompts that share the prefill profile but differ in decode length. The long-decode workload \texttt{p512d1000} keeps the same prefill length but increases the decode length to $1000$, allowing us to examine the same threshold mechanism when KV cache growth is much more pronounced.
+
+\paragraph{Single-type workload (WAIT).}
+Figure~\ref{fig:single_type_rate} shows mean end-to-end latency (left, on a stretched-symlog scale that expands the stable region) and effective completion rate (right), i.e., completed requests per second net of eviction-induced restarts, versus arrival rate $\lambda$. Because all requests are homogeneous, this workload highlights the effect of threshold-based admission without the additional segment structure used in Nested WAIT. WAIT sustains bounded latency up to $\lambda \approx 23$, whereas Sarathi and vLLM lose stability near $\lambda \approx 22$ and $\lambda \approx 19$, respectively. At low load the three policies are close, but the gap widens rapidly as $\lambda$ approaches the boundary: WAIT attains the smallest mean latency at every rate in the swept range $\lambda \in \{12, \dots, 24\}$, with the gap to Sarathi growing from ${\sim}2\%$ at $\lambda = 12$ to over $70\%$ at $\lambda = 23$. This pattern matches the paper's mechanism. Because there is only one request type, the gain does not come from type separation; it comes from threshold-based admission itself, which keeps the in-system population controlled and delays the onset of instability. The right panel shows the same insight in completion-rate terms: WAIT follows the ideal $\lambda$-line up to a higher arrival rate than Sarathi and vLLM.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{Experiments_pdf/figure_B_single_type.pdf}
+    \caption{Single-type workload (\texttt{p512d20}, Poisson arrivals): mean end-to-end latency (left) and effective completion rate (right) versus arrival rate $\lambda$. The arrows mark each policy's stability boundary $\lambda^*$; the dotted line in the right panel indicates the ideal completion rate equal to $\lambda$.}
+    \label{fig:single_type_rate}
+\end{figure}
+
+\paragraph{Two-type workload (Nested WAIT).}
+Figure~\ref{fig:multi_type_rate} shows the same comparison for the two-type workload $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$. The stability ordering is again vLLM first ($\lambda^* \approx 18$), Sarathi second ($\lambda^* \approx 21$), and Nested WAIT last ($\lambda^* \approx 22$). Nested WAIT attains the lowest mean latency at every rate, with the gap to Sarathi growing from ${\sim}6\%$ at low load to over $40\%$ near the boundary. The mechanism also differs from the single-type case. Here the two request classes have the same prefill length and differ only in decode length, so the main source of congestion is the accumulation of the long-decode minority in later decode stages. Nested WAIT's segment thresholds keep that downstream inventory from expanding too far, which prevents those delays from propagating to the short-decode majority. The resulting gain is therefore not only at entry: by controlling downstream buildup, Nested WAIT preserves low latency for the short jobs and enlarges the stable operating region beyond what a single global admission threshold can achieve.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{Experiments_pdf/figure_C_multi_type.pdf}
+    \caption{Two-type workload $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$ (Poisson arrivals): mean end-to-end latency (left) and effective completion rate (right) versus $\lambda$. The stability boundaries vLLM ($\lambda^* = 18$) $<$ Sarathi ($\lambda^* = 21$) $<$ Nested WAIT ($\lambda^* = 22$) are visible in both panels.}
+    \label{fig:multi_type_rate}
+\end{figure}
+
+\paragraph{Long-decode regime.}
+We also study the long-decode workload \texttt{p512d1000} with Poisson arrivals at $\lambda = 0.5, 1.0, \ldots, 5.0$. Relative to the single-type workload \texttt{p512d20}, each request now occupies about $30\times$ more KV cache, so all three policies lose stability at much smaller arrival rates. Figure~\ref{fig:long_decode} shows that at low rates $\lambda \leq 2.5$ the three policies are nearly indistinguishable, but near the boundary WAIT again has the lowest latency: at $\lambda = 4.5$ it attains $32.3$\,s versus $41.7$\,s for Sarathi and $53.8$\,s for vLLM. The intuition is that long-decode requests stay in the system for many more iterations, so excess admission persists longer and makes it harder to keep arrivals and completions in balance. WAIT performs better in this regime because it keeps the in-system inventory closer to that balance point. The same pattern is already visible at $\lambda = 4.0$, where the baseline-memory sweep gives $26.4$\,s for WAIT versus $30.2$\,s for Sarathi. Table~\ref{tab:eviction} reports the accompanying near-capacity eviction diagnostic at the same arrival rate: in the tightened-memory run, Sarathi incurs a $2.88\%$ eviction-induced restart rate, whereas WAIT still avoids eviction altogether. Under the server's last-in-first-out eviction rule, each evicted request loses its partial decode progress and begins again from prefill, so the restart gap is another manifestation of the same imbalance.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Experiments_pdf/figure_G_long_decode.pdf}
+    \caption{Long-decode workload (\texttt{p512d1000}, prefill $512$, decode $1000$): mean end-to-end latency (left) and effective completion rate (right) versus arrival rate $\lambda$. At low rates the three policies are largely comparable, with only small mixed latency differences; the main separation emerges from $\lambda \approx 3.0$ onward. Near the boundary, WAIT attains the lowest latency and sustains the highest completion rate.}
+    \label{fig:long_decode}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Metric & Sarathi & WAIT (ours) \\
+\midrule
+Mean end-to-end latency ($\lambda = 4.0$) & $30.2$\,s & $26.4$\,s \\
+Eviction-induced restart rate ($\lambda = 4.0$) & $2.88\%$ & $0\%$ \\
+\bottomrule
+\end{tabular}
+\caption{Near-capacity eviction diagnostic for the long-decode workload \texttt{p512d1000} at $\lambda = 4.0$. Under tightened memory, Sarathi incurs nonzero eviction-induced restart while WAIT avoids eviction altogether; the same comparison also shows lower latency under WAIT.}
+\label{tab:eviction}
+\end{table}
+
+\paragraph{Long-horizon validation of the stability boundary.}
+To validate the estimated boundary, we vary the simulation horizon at the two arrival rates nearest Nested WAIT's transition. Figure~\ref{fig:fin_horizon} plots mean latency on $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$ for $\lambda \in \{22, 23\}$ as $N$ increases from $2{,}000$ to $20{,}000$. At $\lambda = 22$, Nested WAIT approaches a finite latency plateau, whereas Sarathi's mean latency grows approximately linearly in $N$, consistent with instability. At $\lambda = 23$, both policies are unstable, but Nested WAIT remains $30\%$--$50\%$ below Sarathi at every horizon we consider. Taken together, these comparisons are consistent with Nested WAIT being stable at $\lambda=22$ and unstable at $\lambda=23$, so the transition seen in the main figures persists as the horizon lengthens.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{Experiments_pdf/figure_E_stability.pdf}
+    \caption{Long-horizon validation on the two-type workload $(0.7\,\texttt{p512d20},\,0.3\,\texttt{p512d50})$. \textbf{(a)} At $\lambda = 22$, Nested WAIT approaches a finite latency plateau, whereas Sarathi's mean latency grows roughly linearly in $N$. \textbf{(b)} At $\lambda = 23$, both policies are unstable, but Nested WAIT remains substantially below Sarathi at every horizon we consider.}
+    \label{fig:fin_horizon}
+\end{figure}
+
+\subsection{Application to the \texttt{lmsys-chat-1m} Dataset}
+\label{sec:exp_real}
+
+We next evaluate the policies on \texttt{lmsys-chat-1m}, a real dataset with heterogeneous prompt and response lengths, where decode lengths are unknown at admission. This empirical setting lets us assess the robustness of Nested WAIT's state-dependent admission rule under a heterogeneous workload distribution, and characterize how the induced capacity allocation varies across decode stages.
+
+\paragraph{Dataset.}
+The dataset contains approximately $1$ million human--LLM conversations; we treat each user message as the prompt (prefill) and the corresponding assistant response as the generated output (decode). Figure~\ref{fig:lmsys_distribution} shows the resulting prefill-length and decode-length distributions. For simulation, we sample $5{,}000$ requests from this dataset. In the sampled dataset, prefill lengths are concentrated near $35$ tokens (median $30$, $95$th percentile $120$), while decode lengths range from $1$ to $500$ tokens (median $95$, $95$th percentile $380$). Short responses remain common: about $22\%$ of prompts decode for at most $50$ tokens, whereas about $10\%$ exceed $300$. Arrivals follow a Poisson process with rate $\lambda$, measured in requests per second. All runs use the same simulator, hardware, and baseline settings as in Section~\ref{sec:exp_synthetic}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Experiments_pdf/question_answer_lengths_distribution.pdf}
+    \caption{Raw prompt-length distributions in \texttt{lmsys-chat-1m}: prefill lengths on the left and decode lengths on the right. The dashed lines mark the mean and median of each distribution.}
+    \label{fig:lmsys_distribution}
+\end{figure}
+
+\paragraph{Segment construction and threshold allocation for Nested WAIT.}
+Nested WAIT (Algorithm~\ref{alg:nested_wait}) regulates admission by partitioning the decode horizon into ordered segments, each with its own threshold. A request is counted against the threshold of its current segment: it first consumes capacity in the head segment and enters downstream segments only if it continues decoding. The policy therefore allocates admission capacity across realized continuation stages, rather than making admission decisions from predicted final response lengths.
+
+The policy is specified by an aggregate in-flight limit $\mathrm{tl}$ and a margin parameter $\eta$ (denoted \texttt{seg\_margin} in the implementation), rather than by choosing each threshold $n_1,\dots,n_L$ separately. Consistent with Section~\ref{sec:segment_design}, let $L$ denote the number of decode-stage segments, let $\Delta l_k'$ denote the number of decode stages in segment $k$, and let $\lambda_k'$ denote the aggregate arrival rate of requests whose decode length falls in segment $k$. In the ungrouped setting of Equation~\eqref{eq:nested_wait_thresholds}, $\lambda_k'$ reduces to the original type-level rate $\lambda_k$. The conditional continuation probability from segment $k$ to segment $k{+}1$ is therefore $p_k=(\sum_{r=k+1}^L\lambda_r')/(\sum_{r=k}^L\lambda_r')$. Given these continuation probabilities, we set $q_k=\min\{p_k+\eta,0.99\}$ and define the real-valued per-stage thresholds by $n_k=n_1\prod_{r<k}q_r$. The leading threshold is $n_1=\mathrm{tl}/\sum_{k=1}^L \Delta l_k'\prod_{r<k}q_r$, so that $\sum_{k=1}^L \Delta l_k' n_k=\mathrm{tl}$. Before scheduling, these real-valued budgets are integerized: for segment $k$, the implementation rounds $B_k=\Delta l_k' n_k$ to an integer segment budget, assigns $\lfloor B_k/\Delta l_k'\rfloor$ requests to each stage, and gives one extra request to the first $B_k \bmod \Delta l_k'$ stages. This parameterization separates scale from shape: $\mathrm{tl}$ determines the total in-flight work allowed across the decode horizon, while the continuation probabilities and margin determine how that allowance is distributed across segments. Early segments must accommodate every admitted request, whereas later segments serve only the smaller population of requests that continues decoding; accordingly, the segment limits are largest near the head and decline toward the tail.
+
+\begin{comment}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Number of segments $m$ & Latency at $\lambda = 60$ (s) & Latency at $\lambda = 90$ (s) & Stability boundary $\lambda^*$ \\
+\midrule
+$10$          & $12.6$ & ${>} 40$ (unstable) & $\approx 55$ \\
+$25$          & $9.2$  & $25.0$ & $\approx 62$ \\
+$50$          & $8.5$  & $23.6$ & $\approx 65$ \\
+$100$         & $9.0$  & $25.2$ & $\approx 62$ \\
+$200$         & $10.8$ & $29.5$ & $\approx 58$ \\
+\bottomrule
+\end{tabular}
+\caption{Effect of the segment count $m$ on Nested WAIT's mean latency and stability boundary on the lmsys workload (Poisson arrivals, fixed $\mathrm{tl}$). Too few segments blur meaningful decode-stage differences, whereas too many fragment the per-segment in-flight limits.}
+\label{tab:segments_ablation}
+\end{table}
+\end{comment}
+
+\paragraph{Results.}
+Figure~\ref{fig:lmsys_rate} sweeps the arrival rate $\lambda$ from $10$ to $150$ in steps of $10$. vLLM is the first policy to degrade, with mean latency increasing from $3.2$\,s at $\lambda = 30$ to $15.4$\,s at $\lambda = 40$. Sarathi and Nested WAIT remain close at lower load, but Nested WAIT has lower latency throughout the sweep. The improvement becomes more significant in near-overloaded and overloaded regimes: Nested WAIT attains $8.5$\,s versus $12.2$\,s at $\lambda = 60$ and $27.1$\,s versus $32.1$\,s at $\lambda = 100$. This pattern is consistent with the synthetic experiments: the dataset contains many short responses and a smaller set of long responses, and segment-specific thresholds prevent the long-response portion from consuming excessive downstream decode capacity as load increases.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Experiments_pdf/figure_D_lmsys_real.pdf}
+    \caption{Real-data experiment on \texttt{lmsys-chat-1m} ($5{,}000$ requests): mean end-to-end latency (left) and effective completion rate (right) as the arrival rate $\lambda$ varies. Nested WAIT has lower latency than Sarathi, with the gap becoming more significant in the near-overloaded and overloaded regimes.}
+    \label{fig:lmsys_rate}
+\end{figure}

@@ -1,0 +1,84 @@
+\section*{Response to Referee 1}
+
+We thank Referee 1 for the careful reading and for highlighting both the promise of the modeling direction and the aspects of the formulation that required clearer exposition. The comments on modeling clarity, notation consistency, and memory-overflow safeguards directly shaped the rewrite of Section 2 and the GPU KV-cache memory discussion throughout the paper.
+
+\subsection*{R1.1. Memory overflow and KV-cache capacity}
+
+\comment{The referee asks how the proposed algorithms ensure that KV-cache usage does not exceed capacity, especially under heavy workloads and uncertain output lengths.}
+
+\response This was a central modeling point for the revision. The original manuscript did not state the GPU KV-cache memory mechanism explicitly enough. In the revised manuscript, memory is the total KV cache retained by all admitted in-system prompts on the GPU, not only the requests selected in the current batch. If the system admits too much work, decode progress increases KV-cache usage and may force the server to evict and restart an in-progress request. The revised model states the eviction order used in the simulations: under the last-in-first-out rule, the most recently admitted GPU-retained prompts are evicted first, and each evicted prompt restarts from prefill. The proposed policies control this risk by regulating how many prompts enter and advance through decode. For known output lengths, WAIT uses type-specific thresholds derived from the fluid equilibrium and avoids eviction under the stated memory condition. For unknown output lengths, Nested WAIT adds segment-level thresholds and a moderate safety buffer so that prompts that survive to later decode segments remain within the memory budget with high probability.
+
+\changes
+\begin{itemize}
+    \item Added the memory-growth example and GPU KV-cache memory discussion in Section 2.3.
+    \item Added Example 2 in Section 4 to show how FCFS can trigger eviction cascades when KV-cache growth pushes the batch composition away from the fluid equilibrium, even when the nominal capacity is sufficient.
+    \item Added Example 3 and the Nested WAIT explanation in Section 5 to show how unknown output lengths are revealed through segment boundaries and how segment-level thresholds control downstream memory growth.
+    \item Revised Algorithms 1 and 2 and their explanations to state how threshold admission, segment boundaries, and retained KV caches interact with the memory constraint.
+    \item Added a long-decode near-overloaded eviction diagnostic in Section 6, where Sarathi incurs a positive eviction-induced restart rate while WAIT has no eviction-induced restarts in the reported run.
+\end{itemize}
+
+\subsection*{R1.2. Linearity of Equation (1)}
+
+\comment{The referee asks for additional justification of the linear iteration-time assumption and for discussion of possible nonlinear relationships across GPU architectures.}
+
+\response The referee's comment helped us clarify both the scope of Equation (1) and the reason it is useful for the scheduling problem. The linear form separates a fixed per-iteration overhead from the marginal cost induced by aggregate KV-cache usage. The revised manuscript now states that this is a calibrated approximation for the regimes studied in the paper, not a universal timing law across all hardware and workload mixes. Mixed prefill-decode iterations, especially with long or highly heterogeneous prefill lengths, may require additional prefill-attention or hardware-specific terms. We added two validation checks: Section 2 reports direct A100 profiling of batch inference time against total cached tokens~\citep{nvidia-a100-specs}, and the Additional Experiments appendix compares Vidur's iteration-time predictions~\citep{agrawal2024vidur} with direct A100 measurements. The revision also explains that the scheduling insight is not tied to treating the linear specification as universal: under richer calibrated service-time models, batch composition across prefill and decode stages remains the key control variable linking admission decisions to current memory usage, future memory growth, iteration times, and eviction risk.
+
+\changes
+\begin{itemize}
+    \item Revised Section 2.2 to explain the fixed-overhead and marginal KV-cache components of Equation (1).
+    \item Added A100 batch-inference-time profiling in Section 2 and Additional Experiments appendix validation comparing Vidur predictions with direct A100 measurements. The appendix distinguishes the Llama-2-7B profiling-supported batch-size range \(B\le128\) and reports a separate test of extrapolation to batch size \(B=256\).
+    \item Clarified where the linear timing model is intended to apply, and noted that mixed prefill-decode iterations and heterogeneous prefill lengths may require additional calibrated timing terms.
+    \item Added discussion that richer calibrated service-time curves can be incorporated conceptually, while the formal results in this paper focus on the linear multi-stage model with endogenous memory growth.
+\end{itemize}
+
+\subsection*{R1.3. Notation inconsistencies}
+
+\comment{The referee notes that the original manuscript used similar notation for decode stage, prompt length, output length, and current processing stage.}
+
+\response This comment identified a genuine source of confusion in the original manuscript. The revised manuscript separates the relevant concepts: the prefill/decode stage is denoted by the stage index \(s\), while prompt length, output length, and type-dependent lengths use separate notation. To reduce the burden on the reader, we moved the full notation table to the Notation Summary appendix and introduce symbols narratively as they first appear in the main text.
+
+\changes
+\begin{itemize}
+    \item Revised Section 2 to distinguish prefill/decode stage notation from prompt length and output length notation.
+    \item Added the Notation Summary appendix table collecting the main symbols used throughout the paper.
+    \item Updated the algorithms and theorem statements to use the same stage and threshold notation.
+\end{itemize}
+
+\subsection*{R1.4. Policy space and batching operations}
+
+\comment{The referee asks for a clearer mathematical characterization of the policy space \(\Pi\) and the batching operations implied by a policy.}
+
+\response This was a useful point because the original manuscript introduced \(\pi\) before the admissible decisions were fully specified. We revised this part so that the policy class is explicit before the algorithms are introduced. The revised manuscript now includes a dedicated objective and policy-space subsection. It states what the policy observes at a decision epoch, how it forms batches, how preemption and eviction are treated, and what information is unavailable when output lengths are unknown. This makes WAIT and Nested WAIT concrete elements of the admissible policy class, with their batching and memory decisions specified within the model.
+
+\changes
+\begin{itemize}
+    \item Revised Section 2.4 to define the objective, the policy class, the information available to the scheduler, and the main performance metrics.
+    \item Clarified the relation between policy decisions, batch formation, preemption, eviction, memory consumption, latency, TTFT, and effective throughput.
+\end{itemize}
+
+\subsection*{R1.5. Need for intuition after definitions and algorithms}
+
+\comment{The referee asks for more explanatory text after key definitions and Algorithm 1.}
+
+\response This suggestion was very helpful for making the algorithms easier to read before the formal analysis. Section 2 now explains each modeling component through the running LLM-inference example. Section 4 begins with a concrete FCFS failure example before introducing WAIT, showing why threshold admission is needed to control batch composition and KV-cache growth. Section 5 begins with an unknown-output-length example before introducing Nested WAIT, showing how segment boundaries reveal output-length information gradually. The algorithm descriptions now explain why thresholds regulate both admission and downstream batch composition across prefill and decode stages.
+
+\changes
+\begin{itemize}
+    \item Added explanatory text around the introductory inference figure and the batching example figure.
+    \item Added Example 2 before WAIT to show how FCFS can lose balance in batch composition and trigger eviction-induced restarts.
+    \item Added Example 3 before Nested WAIT to show how unknown output lengths are handled through segment-boundary revelation.
+    \item Added mechanism-level paragraphs after Algorithm 1 and Algorithm 2 explaining how the thresholds regulate admission and downstream decode-stage advancement.
+\end{itemize}
+
+\subsection*{R1.6. Typos}
+
+\comment{The referee notes several typos, including \(d\) versus \(d_1\) and ``Thoughput'' versus ``Throughput.''}
+
+\response We corrected these issues and appreciate the referee pointing them out. Because the notation issues affected more than isolated typos, we also conducted a broader consistency check for notation, terminology, cross-references, and repetitive phrasing.
+
+\changes
+\begin{itemize}
+    \item Corrected ``Thoughput''/``Throughput'' and related throughput notation.
+    \item Corrected \(d\), \(d_0\), and \(d_1\) inconsistencies in the model and fluid sections.
+    \item Removed duplicate or inconsistent notation flagged in the referee comments.
+\end{itemize}

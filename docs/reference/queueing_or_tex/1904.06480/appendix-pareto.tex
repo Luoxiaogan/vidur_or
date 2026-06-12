@@ -1,0 +1,366 @@
+%Kiran: Populate this file with the proofs of the performance of both
+%classes for general SM policies.
+%
+ 
+\section{Proofs of Limit Pareto Frontier}  
+\label{Appendix_pareto}
+%
+
+
+\noindent \textbf{Proof of Theorem \ref{Thm_Opt_Policy}:}  We prove this theorem by proving the following steps:
+ 
+(a)  The optimizing problem defined by  (\ref{Eqn_Pareto_optimal}) is equivalent to the following modified optimizing problem in terms of blocking probabilities $\{ d_i \}_{i \geq 0}$:
+
+\begin{eqnarray*}    
+\max_{ \phi = \{ d_i \} } f(\phi),  &\mbox{ with }&   f(\phi)  := \sum_i \Pi_{j = 0}^i  \ \rho^\phi_j ,\ \  \mbox{ such that } \\
+g(\phi)  \le 0 ,&\mbox{ with }&  g(\phi) :=
+\sum_i   (i - C) \ \ \ \Pi_{j = 0}^i \  \rho^\phi_j  \leq 0.  
+\end{eqnarray*}
+  
+%\begin{eqnarray*}
+%\max_{ \{\pi_j \} }    \sum_j \pi_j  \mbox{ such that } \\
+%  \sum_j   (j - C)  \pi_j  \leq 0  
+%\end{eqnarray*}
+
+(b) Let $\phi^*$ be an optimizing policy. Then, constraint is satisfied with equality at $\phi^*$. \\
+(c) Consider any policy $\phi = (d_0, d_1 \cdots)$.  For any $i$,   if $d_i > \dmin$ and $d_{i+1}  < \dmax$, then there exists a policy ${\tilde \phi}$ which strictly improves upon 
+$\phi$, i.e., 
+$$
+f({\tilde \phi} ) >  f(\phi)  \mbox{ and }   g({\tilde \phi} ) \le 0.
+$$
+d) From part (c), it is clear that the optimal policy $\phi^*$ is  monotone, i.e.,  $d_i^* \le  d_{i+1}^*$ for any $i$. In fact from part (c), optimal policy  $\phi^* = \{ d_1^*, d_2^* \cdots \}$ is of the type as given below: 
+\begin{eqnarray}
+\label{Eqn_pareto_optimal_policy_appendix}
+d_i^* 
+= \left \{ \begin{array}{llll}
+\dmin   &\mbox{ if }  i < L \\
+d          & \mbox{ if }   i = L \\
+\dmax  & \mbox{ if }  i > L,
+\end{array} \right .
+\end{eqnarray}for some   $1 \le L < \infty$ and $\dmin \le  d \le \dmax. $  We then identify $(L, d)$ for the given $C$ in the last step.  
+ 
+ We now provide the proof of all the steps, one after the other. 
+
+ 
+\textbf{Proof of Part (a):}
+Consider the SM policy $\phi = \left( d_0, d_1, \cdots, d_n, \cdots \right)$.  We rewrite the optimization problem  (\ref{Eqn_Pareto_optimal}), here,  for convenience: 
+\begin{eqnarray}
+\label{Eqn_optimal_h}
+\nonumber
+\min_{\phi} &   P_B  (\phi) &\mbox{ such that } \ \ \   E[N] (\phi) \le C \mbox{, i.e., } \\
+\min_{\phi  }  & \sum_{i=0}^\infty d_i \frac{\h_i^\phi}{ \sum_{l \geq 0} \h_l^\phi}  &  \mbox{ such that }  \\
+&  \sum_{i=0}^\infty i \frac{\h_i^\phi}{ \sum_{l \geq 0} \h_l^\phi}   \le C,
+\end{eqnarray}
+\begin{eqnarray}
+ \mbox{ with } \ \  \h_0^{\phi}  = 1, \ \mbox{ and for $i \geq 1$,  }\h_i^{\phi} = \prod_{1 \le j \le i}  \rho_j^{\phi} \ \mbox{,  } \ \ \rho_j^{\phi}  :=  \frac{\lambda_\tau }{ c + \mu_\tau \rho_\epsilon d_j} \ \mbox{and} \ \ c = \mu_\tau \left( 1 - \rho_\epsilon \right).
+\nonumber
+\end{eqnarray}
+
+
+In other words, we have to optimize: 
+\begin{eqnarray*}
+	\min_\phi    \sum_i d_i \frac {\h_i^{\phi} }{ \sum_k \h_k^{\phi} } \mbox{ such that }  
+	\sum_i   i \frac {\h_i^{\phi} }{ \sum_k \h_k^{\phi} }  \le C.
+\end{eqnarray*} 
+%
+As $\rho_\epsilon,$ $ \mut$ and $c$ are constants, optimizing above is equivalent to 
+\begin{eqnarray*}
+	\min_\phi   \sum_{i=0}^\infty (c + \mut \rho_\epsilon d_i)  \frac {\h_i^{\phi} }{ \sum_{k=0}^\infty \h_k^{\phi} }  \ \ \mbox{ such that } \\
+	%
+	\sum_{i=0}^\infty   i \frac {\h_i^{\phi} }{ \sum_{k=0}^\infty \h_k^{\phi}  }  \le C.
+\end{eqnarray*} 
+%
+For all $i \ge 1$, as $c + \mut \rho_\epsilon d_i = \lambda_\tau / \rho_i^\phi =  \lambda_\tau  \h_{i-1}^{\phi} / \h_i^{\phi} $ , minimizing  the above problem is equivalent to minimize the following problem (note that $\lambda_\tau$ is a constant and $\h_0^\phi = 1$), 
+\begin{eqnarray*}
+	\min_\phi    \left (   \frac{c + \mut \rho_\epsilon d_0}{ \sum_{k=0}^\infty \h_k^{\phi}  } +   \sum_{i=1}^\infty   \frac {\lambda_\tau \h_{i-1}^{\phi} }{ \sum_{k=0}^\infty \h_k^{\phi} } \right ) \mbox{ such that } \\
+	%
+	\sum_i   i \frac {\h_i^{\phi} }{ \sum_{k=0}^\infty \h_k^{\phi} }  \le C.
+\end{eqnarray*} 
+%
+It is immediate to show that $d_0^* = \dmin$ (only $P_B$ depends upon $d_0$ and $E[N]$ is independent of it) , thus equivalently we consider the following:
+\begin{eqnarray*}
+	\min_\phi    \left (   \frac{c + \mut \rho_\epsilon \dmin }{  \sum_{k=0}^\infty \h_k ^{\phi} } + \lambda_\tau \right ) \mbox{ such that } \\
+	\sum_i   i  \h_i^{\phi}   \le C  \sum_{k=0}^\infty \h_k^{\phi}.
+\end{eqnarray*} 
+%
+The above is equivalent to the following simplified version: 
+\begin{eqnarray}
+\max_\phi    f(\phi)  &\mbox{ with } f(\phi) := \sum_i \h_i^{\phi}  \mbox{ such that } \nonumber \\
+g(\phi) \le 0,  &\mbox{ with } g(\phi) :=  \sum_{i=0}^\infty    (i-C)  \h_i^{\phi}  .
+\label{Final_optimal}
+\end{eqnarray} 
+This proves the first part.\\
+%
+%
+%
+%
+%
+ \textbf{Proof of Part (b)}
+Consider any SM policy $\phi \coloneqq \left(\dmin, d_1, \cdots, d_i, \cdots \right )$ (note $d_0 = \dmin$ is fixed at $\dmin$ in view of Part(a)). Since there is one-one onto relation between $\rho_j^\phi$ and $d_j$ (as $\rho_j^\phi =  \lambda_{\tau} / (c + \mu_\tau \rho_\epsilon d_{j})$) for every $j$, we consider optimization with respect to $\rho_j$'s	 and  redefine the policy as, $\phi \coloneqq \left(\rmax, \rho_1^\phi, \cdots, \rho_i^\phi, \cdots \right )$, where $\rmax$ corresponds minimum blocking $\dmin$ (given by (\ref{Eqn_rhomax_min})). 
+This redefinition is only for this proof.   Thus one can re-write the optimization problem as (since $\rho_0 = \rmax$ is fixed):
+\begin{eqnarray*}    
+	\max_{ \phi = ( \rho_1^\phi, \rho_2^\phi, \cdots, \rho_i^\phi, \cdots  ) } f (\phi) \ \  \mbox{ such that }  
+	g(\phi) \leq 0   \mbox{,  where, } \\
+	f(\phi) :=    \sum_i  \prod_{j=1}^i \rho_j^\phi \ \ \mbox{ and }  \ \  g(\phi) :=\sum_i   (i - C)   \prod_{j=1}^i \rho_j^\phi    .  
+\end{eqnarray*}
+%
+Let $\phi^* = \left(\rho_1^*, \rho_2^*, \cdots, \rho_i^*, \cdots \right )$  represent the optimal policy of the optimizing problem defined above. We want to show that constraint of the optimization problem is satisfied at $\phi^*$.
+Let us assume on contrary that constraint is not satisfied at $\phi^*$, that means $g(\phi^*) < 0$. Then there exists an $i$ such that $\rho_i^* < \rmax$, as $C < \rmax / (1-\rmax)$.
+%
+
+First, consider the case when there exists one such $i$, and further  $i \geq C$. By Lemma (\ref{Lemma_epsilon}), we can get a policy $\phi^\epsilon$ in the feasible region which $f(\phi) < f(\phi^\epsilon)$. This contradicts the fact that $\phi^*$ is an optimal policy. The contradiction arises because of the wrong assumption that constraint is not satisfied at $\phi^*$. \\
+%
+Next, consider the case when $i <C$. Define $\bar{i}$ as
+$$
+\bar{i} = \min \{ i: \rho_j^* = \rmax \ \ \forall j \geq i \}.
+$$
+Clearly, $0 < \bar{i} \leq C$ and note $\rho_{\bar{i} - 1} < \rho_{\bar{i}}$. Using Lemma (\ref{Lemma_swap}), we can get an improved policy by swapping  $\rho_{\bar{i} - 1}$ and $\rho_{\bar{i}}$. This again leads to the contradiction that $\phi^*$ is an optimal policy and therefore, constraint is satisfied at the optimal policy.\\
+%
+%
+%  
+%Then we claim that there exists an alternate policy, say $\tilde{\phi}$, which is better than $\phi^*$, i.e., $f(\phi^*) <  f(\tilde{\phi})$, which provides the required contradiction to the optimality of such a policy.
+%
+%Since $C < C_{max} = \rmax /(1-\rmax)$, there exists at least one $i$ such that $\rho_i^* < \rmax. $
+%
+%If $\rho_i^* < \rmax$ for a $i > C$, define an alternate policy, say $\tilde{\phi}$, which is differ from the policy $\phi^*$ only in the $i$-th component, i.e., $\tilde{\rho_j} = \rho_j^* \ \ \forall j \neq i$ and $\tilde{\rho_i} = \rho_i^* + \epsilon$, where $\epsilon > 0$.
+%
+%Consider the difference in the objective function under the two policies: 
+%\begin{eqnarray}
+%   f(\tilde{\phi}) - f(\phi^*) &=&  \sum_j \tilde{\pi_j} - \sum_j \pi_j^* = \pi_{i - 1}^*   \left ( ( \tilde{\rho_i} - \rho_i^*) + \sum_{j \geq i+1}^{\infty} \left  (\prod_{k = i}^j \tilde{\rho_k^*} - \prod_{k = i}^j  \rho_k \right ) \right )  \nonumber\\ \nonumber
+%&=& \pi_{i - 1}^* (\tilde{\rho_i} - \rho_i^*) \bigg( 1  + \sum_{j \geq i+1}^{\infty} \prod_{k = i+1}^j  \rho_k^* . \bigg)
+%\end{eqnarray}
+%Objective function will improve, if the above difference between the objective function under the two policies is positive. Clearly, the first and last term in the above equation is positive. So, to make the difference positive we require the middle term positive, i.e., $(\tilde{\rho_i} - \rho_i^*) > 0$. This is obviously true as $(\tilde{\rho_i} - \rho_i^*) = \epsilon$, which is positive.
+%  
+%  
+%  \textbf{ONE WAY}
+%Consider the difference in the constraint:
+%\begin{eqnarray}
+% g(\tilde{\phi}) - g(\phi^*)  &=& \sum_j \tilde{\pi_j} (j - C) \  - \ \sum_j \pi_j^* (j - C)= \sum_j (\tilde{\pi_j} - \pi_j^*) (j - C)\nonumber \\ \nonumber
+% &=& \pi_{i-1}^* (\tilde{\rho_i} - \rho_i^*)\bigg( (i - C) + \sum_{j \geq i+1} (j - C) \prod_{k = i+1}^{j} \rho_k^*    \bigg) \\ \nonumber
+% &=& \pi_{i-1}^* \epsilon \bigg( (i - C) + \sum_{j \geq i+1} (j - C) \prod_{k = i+1}^{j} \rho_k^*    \bigg). 
+%\end{eqnarray}
+%In the case, $i \geq C$
+%
+%\textbf{Second Way}
+%Increase $\rho_i^*$ to the maximum value by adding a positive constant $\epsilon$, say till $\rho_{max}$, then the objective function $\sum_i \pi_i$ will improve. Also the constraint is satisfied with equality as long as $C< \sum_i \ i \rho_{min}^i$.\\
+%
+%Now, for all $i < i^*$, choose
+%$$
+%\rho_i = \rho_{max} = \frac{\lambda_\tau}{\lambda_\tau - \rho_\epsilon (1 - \underline{d})}
+%$$
+%when $i^*$ is such that 
+%\beq
+%\sum_{i \leq i^*} \rho_{max}^i (i - C) + \rho_{max}^{i^*} \sum_{i > i^*} \rho_{min}^{(i - i^*)} \ (i - C) \leq 0.
+%\eeq
+% choose $i^*$ such that 
+%
+%
+%\beq
+%i^* = \max_{\underline{i}} \{ \  \sum_{i \leq \underline{i}} \rho_{max}^i \ (i - C) + \rho_{max}^{\underline{i}} \sum _{i \geq \underline{i}} \rho_{min}^{i - \underline{i}} \ (i - C) < 0 \ \}
+%\eeq
+%
+%Then we get,
+%\begin{eqnarray*}
+%\rho_i = \left \{  \begin{array}{llll}
+%\rho_{max} \ \ \ \ \ \forall \ i \leq i^* \\
+%\rho^*  \ \ \ \ \ \ \ \ \ \ \ i = i^* + 1 \\
+%\rho_{min} \hspace{0.5cm}  \forall \ i > i^*.
+%\end{array} \right . 
+%\end{eqnarray*}
+%Also,
+%\beq
+%\sum_{i \leq i^*} \rho_{max}^i \ (i - C) + \rho_{max}^{i^*}\ \rho_{i^* + 1} \ \rho^* + \sum _{i \geq i^*+ 1} \rho_{min}^{i - i^* -1} \ (i - C) = 0 
+%\eeq
+%
+%Thus we get a better policy.
+%
+%
+%
+%
+%
+%
+
+{\bf Proof of Part (c) and (d):} 
+Consider the case  where  $\rmin < \rho^\phi_{i+1}$  and $\rho^\phi_i  < \rmax$ for some $i$.   Then we claim that, there exists an alternate policy, say $\tilde{\phi}$, which is better than $\phi$, i.e., such that $f(\phi) <  f(\tilde{\phi})$ and $g(\phi) \ge   g(\tilde{\phi})$.\\
+%
+The alternate policy, say  ${\tilde  \phi } := \{ \tilde{\rho_i}\}_{i \geq 0}$, would defer only in $i$ and $i+1$ components, i.e.,  such that $\tilde{\rho_j} = \rho^\phi_j, \ \ \forall j \neq i, i+1$ and $\tilde{\rho_i} = \rho^\phi_i + \epsilon, \tilde{\rho_{i+1}} = \rho^\phi_{i+1} - \tilde{\epsilon}$,  for some positive $\epsilon$ and $\tilde{\epsilon}$.    And we would need the following to make it a valid policy:
+\begin{eqnarray}
+\label{Eqn_conditions}
+0 < \epsilon <  \rmax - \rho^\phi_i   \mbox{ and }  0 < {\tilde \epsilon} <    \rho^\phi_{i+1} - \rmin.
+\end{eqnarray}
+%
+First, consider the difference in the objective functions under the two policies: 
+\begin{eqnarray}
+\label{Eqn_star}
+f(\tilde{\phi}) - f(\phi) &=&  \sum_j \tilde{\h_j}^\phi - \sum_j \h_j^\phi = \h_{i - 1}^\phi   \left ( ( \tilde{\rho_i} - \rho^\phi_i) + \sum_{j \geq i+1}^{\infty} \left  (\prod_{k = i}^j \tilde{\rho_k} - \prod_{k = i}^j  \rho^\phi_k \right ) \right )  \nonumber\\ \nonumber
+&=& \h_{i - 1}^\phi \bigg( (\tilde{\rho_i} - \rho^\phi_i) + (\tilde{\rho_i}\tilde{\rho_{i+1}} - \rho^\phi_i \rho^\phi_{i+1})   +  \sum_{j \geq i+2}^{\infty} (\tilde{\rho_i}\tilde{\rho_{i+1}} - \rho^\phi_i \rho^\phi_{i+1})  \prod_{k = i+2}^j  \rho^\phi_k \bigg) \nonumber \\
+&=& \h_{i - 1}^\phi \bigg( (\tilde{\rho_i} - \rho^\phi_i) +  (\tilde{\rho_i}\tilde{\rho_{i+1}} - \rho^\phi_i \rho^\phi_{i+1})\bigg(1 + \sum_{j \geq i+2}^{\infty} \prod_{k = i+2}^j  \rho^\phi_k \bigg) \bigg).
+\end{eqnarray}
+%
+In a similar way, the difference in the constraints is:
+\begin{eqnarray}
+\label{Eqn_diff_constraints}
+g(\tilde{\phi}) - g(\phi)  &=& \sum_j \tilde{\h_j}^\phi (j - C) \  - \ \sum_j \h_j^\phi (j - C)= \sum_j (\tilde{\h_j}^\phi - \h_j^\phi) (j - C)\nonumber  \\
+&& \hspace{-22mm} = \ \h_{i-1}^\phi \bigg( (\tilde{\rho_i} - \rho^\phi_i)(i - C) +    (\tilde{\rho_i}\tilde{\rho_{i+1}} - \rho^\phi_i \rho^\phi_{i+1}) \bigg( (i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k    \bigg) \bigg). \hspace{10mm}
+\end{eqnarray}
+%
+The above difference is equal to 0, i.e., the constraint function remains the same under  $\tilde{\phi}$,  if the following holds,
+\beq
+\tilde{\rho_i}\tilde{\rho_{i+1}} - \rho^\phi_i \rho^\phi_{i+1} = \frac{-(\tilde{\rho_i} - \rho^\phi_i)(i - C)}{(i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k}  .
+\eeq
+%
+With such a policy the difference in objective functions (see equation (\ref{Eqn_star})) equal: 
+\begin{eqnarray*}
+	f(\tilde{\phi}) - f(\phi)   
+	&=& \h_{i - 1}^\phi \bigg( (\tilde{\rho_i} - \rho^\phi_i) - \frac{(\tilde{\rho_i} - \rho^\phi_i)(i - C)\big(1 + \sum_{j \geq i+2}^{\infty} \prod_{k = i+2}^j  \rho^\phi_k \big)}{(i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k}  \bigg) \\ 
+	&& \hspace{-10mm} = \
+	\frac{\h_{i - 1}^\phi (\tilde{\rho_i} - \rho^\phi_i)}{(i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k}\bigg( (i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k \  \\
+	&& \hspace{60mm} - \  (i - C) \  - \ \sum_{j \geq i+2} (i - C) \prod_{k = i+2}^{j} \rho^\phi_k   \bigg)\\
+	&& \hspace{-10mm} = \ \frac{\h_{i - 1}^\phi (\tilde{\rho_i} - \rho^\phi_i)}{(i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k} \bigg( 1 + \sum_{j \geq i+2} (j - i) \prod_{k = i+2}^{j} \rho^\phi_k  \bigg ).
+\end{eqnarray*}
+%
+{\bf Case with $i > C$:}  From the above equation, it is clear that we need $\tilde{\rho_i} - \rho^\phi_i > 0$,   for improvement in the objective function. That is, we want $\epsilon > 0$ (this is obviously true). 
+Now, for  all $\epsilon > 0$, we get an $\tilde{\epsilon} $ strictly positive as, 
+\begin{eqnarray}
+\tilde{\rho_i}\tilde{\rho_{i+1}} - \rho^\phi_i \rho^\phi_{i+1} &=& \epsilon\rho^\phi_{i+1} - \tilde{\epsilon}\rho^\phi_i - \epsilon \tilde{\epsilon} =  \frac{-\epsilon(i - C)}{(i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k} \mbox{ and thus}  \nonumber  \\
+%
+\tilde{\epsilon}(\rho^\phi_i + \epsilon) &=& \epsilon\rho^\phi_{i+1}  + \frac{\epsilon(i - C)}{(i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k} \nonumber \\
+\Rightarrow \tilde{\epsilon}  &=& \frac{\epsilon }{\rho^\phi_i + \epsilon}  \left ( \rho^\phi_{i+1 } + \frac{ (i - C)}{  \left((i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k \right)} \right ) > 0. 
+\label{Eqn_Condition2}
+\end{eqnarray}
+If $i > C$ (more specifically if the last term in the RHS is positive), the above ${\tilde \phi}$ provides the required improvement policy as one can chose $\epsilon, {\tilde{\epsilon}} > 0$
+sufficiently small to satisfy (\ref{Eqn_conditions}). \\
+%
+{\bf Case with  $i < C$:}  Further, if $\rho^\phi_i < \rho^\phi_{i+1}$, then by Lemma \ref{Lemma_swap} we can get the required improved policy.
+%
+We are left with the case when $i < C$ and    $\rho^\phi_i = \rho^\phi_{i+1}$  with $\rmin < \rho^\phi_i < \rmax$.   
+If now   the numerator of (\ref{Eqn_Condition2}) is negative, i.e., if
+$$
+(i - C) +    \rho^\phi_{i+1}  \bigg( (i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k    \bigg) \le  0,
+$$
+one can improve $\phi$ by considering a ${\tilde \phi}$ that differs from $\phi$ only in $i$-th component,  and with  ${\tilde \rho}_i = \rmax$.  With such a ${\tilde \phi}$, \     a) the constraint remains satisfied, as  (by substituting ${\tilde \rho}_{i+1} = \rho^\phi_{i+1}$ in (\ref{Eqn_diff_constraints}))
+\begin{eqnarray}
+\label{Eqn_diff_constraints2}
+g(\tilde{\phi}) - g(\phi)   
+= \h_{i-1}^\phi (\tilde{\rho_i} - \rho^\phi_i)  \bigg( (i - C) +     \rho^\phi_{i+1} \bigg( (i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k    \bigg) \bigg)  \le  0 ;
+\end{eqnarray} and 
+b) the difference in the objective function becomes positive (by substituting ${\tilde \rho}_{i+1} = \rho^\phi_{i+1}$ in (\ref{Eqn_star})):
+\begin{eqnarray*}
+	f(\tilde{\phi}) - f(\phi)   
+	&=& \h_{i - 1}^\phi \bigg( (\tilde{\rho_i} - \rho^\phi_i) - \frac{(\tilde{\rho_i} - \rho^\phi_i)(i - C)\big(1 + \sum_{j \geq i+2}^{\infty} \prod_{k = i+2}^j  \rho^\phi_k \big)}{(i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k}  \bigg) \\
+	&=& \h_{i - 1}^\phi   (\tilde{\rho_i} - \rho^\phi_i)   \left (1 + \rho^\phi_{i+1} \big(1 + \sum_{j \geq i+2}^{\infty} \prod_{k = i+2}^j  \rho^\phi_k \big) \right ).
+\end{eqnarray*}  Thus, we get an improved policy.
+From (\ref{Eqn_Condition2}),  it further suffices to consider the case when,
+\begin{eqnarray}
+\label{Eqn_left}
+\left ( \rho^\phi_{i+1 } + \frac{ (i - C)}{  \left((i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k \right)} \right )  < 0 
+\mbox{ and }  \\ 
+ \bigg( (i - C) +     \rho^\phi_{i+1} \bigg( (i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k    \bigg) \bigg) > 0. 
+\end{eqnarray}
+Note that the second term in the above is the numerator of the first term and hence for the conditions to hold the denominator of the first term should be negative, i.e., 
+$$
+\bigg( (i+1-C) + \sum_{j \geq i+2} (j - C) \prod_{k = i+2}^{j} \rho^\phi_k    \bigg)   < 0.
+$$
+But with $i < C$, both the components of the second term of  (\ref{Eqn_left}) is negative implying the second term should be negative. Thus such a case does not exist.  
+%
+Thus in all cases, we have   an alternate   policy which strictly improves $\phi$. 
+%
+\subsection*{Optimal Policy}
+In view of the above result it is clear that the optimal policy is of the type (\ref{Eqn_pareto_optimal_policy}). 
+Further it is easy to solve the given optimization problem for any $C \le \rmax/(1-\rmax)$  as given below:
+%
+Define $L^* = L^* (C)$ in the following manner
+\begin{eqnarray}
+L^* &=& \max \left  \{ i :    g( \phi^{sp,i} )  < 0 \right  \},  \mbox{ with } \phi_j^{sp, i}  = \rmax \indc_{j \le i} + \rmin \indc_{j  > i}  \nonumber \\
+%
+&=&  \max \left  \{ i :  \frac {  \sum_{j \le i}  \rmax^j j +    \rmax^i    \sum_{j > i} j \rmin^{j-i} }{
+	\sum_{j \le i} \rmax^j  +    \rmax^i    \sum_{j > i}  \rmin^{j-i}
+} < C \right  \}, \mbox{ and then $\rho^*$  satisfies with }  i = L^* \nonumber  \\
+%
+0 &=&  C -   \frac {  \sum_{j \le i}  \rmax^j j +     \rmax^i  \rho^* \left  (i+1 +   \sum_{j > i+1} j \rmin^{j-i-1}  \right ) }{
+	\sum_{j \le i} \rmax^j  +  \rho^*\rmax^i   \left  (1+     \sum_{j > i+1}  \rmin^{j-i-1} \right ) } \mbox{ thus }  \nonumber \\
+\rho^* &=&   \frac {  \sum_{j \le i}  \rmax^j j - C \sum_{j \le i} \rmax^j   }{
+	C \rmax^i   \left  (1+     \sum_{j > i+1}  \rmin^{j-i-1} \right ) -  \rmax^i    \left  (i+1 +   \sum_{j > i+1} j \rmin^{j-i-1}  \right )  } \\
+&=& \frac {  \sum_{j \le i}  \rmax^j ( j - C)    }{
+	-  \rmax^i    \left  (i+1 - C +   \sum_{j > i+1} (j -C )\rmin^{j-i-1}  \right )  }. \nonumber
+\end{eqnarray}
+\eop
+%
+
+\begin{lemma} \label{Lemma_swap} \textbf{ Improvement  Through  Swapping }\\
+For $ i < C$, if $\rho_i^\phi < \rho_{i+1}^\phi$ in a SM policy $\phi$ for the optimization problem defined in part (a) of Theorem \ref{Thm_Opt_Policy}, then we can get an policy, say $\phi^{swap}$, by swapping the $i$ and $i+1$-th components in $\phi$, such that:
+\begin{eqnarray*}
+f(\phi^{swap}) > f(\phi) \ \ \mbox{and} \ \ g(\phi^{swap}) < g(\phi)
+\end{eqnarray*}
+
+That means, we can improve the solution of the optimization problem by defining~ $\phi^{swap} = \left( \rho^{swap}_1, \rho^{swap}_2, \cdots, \rho^{swap}_i, \cdots \right)$ as follows:
+\beq
+\rho^{swap}_j = \rho^\phi_j \ \ \forall j \neq i, i+1 \ \ and \ \ \rho^{swap}_i = \rho^\phi_{i+1}, \ \  \rho^{swap}_{i+1} = \rho^\phi_i.  
+\eeq
+\end{lemma}
+
+\begin{proof}
+The  term $\h^{\phi^{swap}}_j$ corresponding to the policy $\phi^{swap}$, will be given as:
+\begin{eqnarray*}
+\h^{\phi^{swap}}_j = \left \{  \begin{array}{llll}
+\Pi_{ 1 \le k \leq j} \ \rho^\phi_k  = \h_j^{\phi} \ \ \ \forall \ j \leq i-1 \\
+\h_{i-1}^{\phi} \rho^\phi_{i+1}   \ \ \ \ \ \ \ \ \ \ j = i \\\
+\h_j^{\phi}  \ \ \ \ \ \ \ \hspace{0.9cm} \forall \ j \geq i+1.
+\end{array} \right . 
+\end{eqnarray*}
+First, consider the difference between the objective function corresponding to these two policies is given by:
+\beq
+f(\phi^{swap}) - f(\phi) = \sum_j (\h^{\phi^{swap}}_j - \h^\phi_j) = \h^\phi_{i-1} (\rho^\phi_{i+1} - \rho^\phi_{i}).
+\eeq
+Since, $\rho^\phi_i < \rho^\phi_{i+1}$ it is clear from above equation that, $f(\phi^{swap}) > f(\phi)$. Therefore, the objective function improves.
+
+Next, consider the difference between the constraints,
+\beq
+g(\phi^{swap}) - g(\phi) = \sum_j (\h^{\phi^{swap}}_j - \h^\phi_j)(j-c) = \h_{i-1}^{\phi} (\rho^\phi_{i+1} - \rho^\phi_{i}) (i-C).
+\eeq
+From above equation, using $\rho^\phi_i < \rho^\phi_{i+1}$ and $i <C$, we conclude that $g(\phi^{swap}) - g(\phi) < 0 $. That means $g(\phi^{swap}) < g(\phi)$ and hence we get an improved solution.
+\end{proof}
+
+\begin{lemma} \label{Lemma_epsilon} \textbf{Improvement Through Adding $\epsilon$}\\
+Consider a SM policy $\phi$ for the optimization problem  defined in part (a) of Theorem \ref{Thm_Opt_Policy}. For $i \geq C$, if there exists an $\rho^\phi_i < \rmax$, then we can get a policy, say $\phi^\epsilon$, by adding $\epsilon > 0$ to the $i$-th component of policy $\phi$, such that:
+\beq
+f(\phi^\epsilon) > f(\phi) \ \ \mbox{and} \ \ g(\phi^\epsilon) \leq 0.
+\eeq
+\end{lemma}
+\begin{proof}
+Since $C < C_{max} = \frac{\rmax}{1 - \rmax}$, there exists at least one $i$ such that $\rho^\phi_i < \rmax$. Let $\rho^\phi_i < \rmax$. Define a policy $\phi^\epsilon = \left( \rho^{\phi^\epsilon}_1, \rho^{\phi^\epsilon}_2, \cdots, \rho^{\phi^\epsilon}_i, \cdots \right) $ as follows:
+\beq
+\rho_j^{\phi^\epsilon} = \rho^\phi_j \ \  \forall j \neq i \ \ \mbox{and} \ \ \rho_i^{\phi^\epsilon} = \rho^\phi_i + \epsilon.
+\eeq
+%Let $\{ \pi^{\epsilon}(j) \}_{j \geq 0} $ represent the stationary distribution corresponding to the policy $\phi^\epsilon$.
+Define, $\h_0^{\phi^\epsilon}  = 1,$ and for $i \geq 1$,  $\h_i^{\phi^\epsilon} = \prod_{1 \le j \le i}  \rho_j^{\phi^\epsilon}
+$ .
+First consider the difference in the objective function under the two policies: 
+%
+\begin{eqnarray}
+   f(\phi^\epsilon) - f(\phi) &=&  \sum_j \h_j^{\phi^\epsilon} - \sum_j \h_j^{\phi} = \h_{i - 1}^{\phi}   \left ( ( \rho_i^{\phi^\epsilon} - \rho^\phi_i) + \sum_{j \geq i+1}^{\infty} \left  (\prod_{k = i}^j \rho_k^{\phi^\epsilon} - \prod_{k = i}^j  \rho^\phi_k \right ) \right )  \nonumber\\ \nonumber
+&=& \h_{i - 1}^\phi (\rho_i^{\phi^\epsilon} - \rho^\phi_i) \bigg( 1  + \sum_{j \geq i+1}^{\infty} \prod_{k = i+1}^j  \rho^\phi_k  \bigg).
+\end{eqnarray}
+
+Objective function will improve, if the above difference between the objective function is positive. Clearly, the first and last term in the above equation is positive. So, to make the difference positive we require the middle term positive, i.e., $(\rho_i^{\phi^\epsilon} - \rho^\phi_i) > 0$. This is obviously true as $(\rho_i^{\phi^\epsilon} - \rho^\phi_i) = \epsilon$, which is positive.
+
+Now we claim that the policy $\phi^\epsilon$ is in feasible region, as
+\beq
+g(\phi^\epsilon)  &=& \sum_j \h_j^{\phi^\epsilon} (j - C) \\
+&=& g(\phi) + \h_{i-1}^{\phi}\epsilon \bigg( i-C + \sum_{j \geq i+1} (j-C)\ \Pi_{k = i+1}^j \rho^\phi_k \bigg).
+\eeq
+$g(\phi) \leq 0$ and we can choose $\epsilon >0$ small enough such that the overall term in the RHS of above equation will remain negative.
+
+Thus, we get that the policy $\phi^\epsilon$ in the feasible region which also improve the objective function.
+\end{proof}
+%
+%
+%
+%
+%
+%
+%
+%
+%
+
+

@@ -1,0 +1,183 @@
+
+
+\begin{table}[]
+	\begin{center}
+		\begin{tabular}{|l|}
+			\hline
+			\\
+			\centerline{\bf Basic Notations}
+            \\	\hline \hline
+			$\lame:$   Poisson arrival  rate of eager customer.
+			\\ \hline
+			$\lambda_\t :$ Poisson arrival rate of tolerant customer. 
+			\\ \hline
+			$B_\i :$  generic $\i$ job size. 
+			\\ \hline 
+			$B_\i^\mue \eqdist \frac{B_\i^1}{\mue} :$ $\i$ job-size at scale $\mue$.
+			\\ \hline
+			$\rho_{\i} :$  the load factor eager class.   
+			\\ \hline 
+			$A_\t :$ inter-arrival time of tolerant customers.
+			\\ \hline
+			$B_\t :$   Exponential  $\t$ job-size. 
+		    \\ \hline
+			$\nu_i :$ tolerant service rate when $i$-sup-policy used for eager. 
+%			\\ \hline
+%			\textcolor{red}{should we write $\dmin$  and $\dmax$ notations??}
+			\\ \hline
+			
+	
+			\\ 
+			\centerline{\bf Embedded chain}  \\
+			\hline \hline
+			$p_i^\mue$ : probability that tolerant arrival is before departure,  in  $\mue$-system at $\t$ occupancy $i$.
+			\\ \hline
+			 $q_i^\mue = 1- p_i^\mue$ : probability that $\t$-departure is before arrival.
+		    \\ \hline
+	     	$p_i^\infty$ : probability that $\t$-arrival is before departure, under limit system at $\t$ occupancy $i$.
+	     	\\ \hline
+			  $q_i^\infty = 1-  p_i^\infty$ :   probability that $\t$-departure is before arrival. in limit system. 
+			 \\ \hline  
+			  	$\tilde{\pi}^\mue_i: $ steady state probability  that embedded $\t$-chain is in state $i$, in $\mue$-system. 
+			 \\ \hline
+			  		$\tilde{\pi}_i : $ steady state probability  that embedded $\t$-chain is in state $i$, in limit system.
+			  \\  \hline
+%			  		 	$\pi^\phi_i :$ steady state probability that $\t$-process is in state $i$ in the limit system, when policy $\phi$ is used. \\ \hline  		 
+			  \hline 
+			  \\
+			 \centerline{ \bf Continuous time process  }
+			  \\
+			  \hline \hline 
+			$\pi^\mue_i  :$ steady state   probability  that  $\t$-process is in state $i$, in $\mue$ system. \\ \hline
+%			$\bbb_{l}^i \triangleq \gamma_l^i-  \rho \gamma_{l-1}^i {\indc}_{l>0}
+%			\mbox{ and }
+%			\varpi_k^i =   \left \{
+%			\begin{array}{llll}
+%			{\indc}_{i \geq k} \sum_{j=1}^{i-k+1}\gamma_{k-1}^{i-j+1} s^{(j)}
+%			\\- {\indc}_{i \geq k-1} \rho   \sum_{j=1}^{i-k+2}\gamma_{k-2}^{i-j+1}
+%			s^{(j)}      & \mbox{ if }   k \le  M \\ \\
+%			\rho \sum_{j=1}^{i-M+1} \gamma_{M-1}^{i-j+1}s^{(j)}   & \mbox{ if }   k =
+%			M+1 \\ \\
+%			0   & \mbox{ if }  k  > M+1.
+%			\end{array} \right .   $
+%			\\ \hline
+			$\pi_i : $ steady state   probability  that  $\t$-process is in state $i$, in limit system.
+		    \\ \hline
+			$\Omega_i^\mue (\cdot):$ unused service process by $\i$ class. 
+			\\ \hline
+			$\rho_{i}  =  \rho^\phi_i   := \frac{\lambda_{\t}}{\mut \nu_i} : $ tolerant load when $i$-sub -policy ($\phi$)  used for eager. 
+			\\ \hline 
+			$\Upsilon_i^\mue : $ time require to finish $B_\t$ amount of work using $\Omega_i^\mue (\cdot)$. 
+			\\ \hline
+			$P_{B_i} :$ standalone $\t$ blocking probability when $i$ sub-policy used for eager class. 
+			\\ \hline
+			$E^\mue[N] :$ stationary expected number of $\t$-customer at $\mue$ system.
+			\\ \hline
+		    $P_B^\mue :$ overall $\i$ blocking probability at $\mue$ system. 
+		    \\ \hline
+		    $P_B^\infty :$ overall $\i$ blocking probability in limit system.
+			\\ \hline
+			$\B^\mue_i :$ $\i$-busy cycle when sub-policy $i$ is used.
+			\\ \hline
+			$\S^\mue_i :$ total service available for $\t$-class during $\B^\mue_i$.
+			\\ \hline
+			$\B^\mue_{i,k} :$ $k$-th $\i$-busy cycle when sup-policy $i$ is used. 
+			\\ \hline
+			$\S^\mue_{i,k} :$ total service available for $\t$-class during $\B^\mue_{i,k}$.
+			\\ \hline
+		\end{tabular}
+		\caption{Summary of Notations   \label{Table_notations}}
+	\end{center}
+\end{table}
+
+
+\section{Sample path coupling   and  SFJ limit}
+\label{Appendix_sample}
+\label{sec:SFJ_scale_details}
+ 
+
+In this appendix, we detail the sample path coupling that results from
+the SFJ limit, which is central to our arguments.
+
+We consider a family of queuing systems,
+parametrized by $\mue \geq 1$ (the service rate of the $\i$-class).
+Under SFJ limit, the eager service rate $\mue \to \infty$, and the
+eager arrival rate $\lambda_\i \ra \infty,$ while maintaining the
+eager load $\rho_\i = \lambda_\i / \mu_\i$ to a constant value.
+% In the proofs given below, we derive the limits of different
+% quantities/performance measures under this limit.
+Specifically, we scale the job size distribution of the eager class
+as, $B^{\mu_\i}_\i \eqdist B^1_\i/\mu_{\i}$, where $B^{\mu_\i}_\i$
+denotes a generic eager job size at scale $\mu_\i$ and $\eqdist$ is
+equality in distribution.
+
+\revision{Consider now this family of queueing systems, immediately
+  following an arrival/departure from the tolerant
+  queue. Specifically, suppose that the arrival/departure resulted in
+  $j$ jobs remaining in the tolerant queue. We couple the sample paths
+  across different values of the scale parameter $\mue$ as
+  follows. Let $A_{\i, k}^{\mu_\i}$ and $B_{\i, k}^{\mu_\i}$ are
+  respectively the $k$th inter-arrival time and $k$th job size of the
+  eager class under sub-policy~$j$ (for notational convenience, the
+  dependence on $j$ is suppressed here). We relate these quantities
+  sample path wise to the $\mu_\i = 1$ system as below:
+\begin{equation}
+  \label{eq:sample_path_job_ia_coupling}
+  A_{\i, k}^{\mu_\i} = \frac { A_{\i, k}^{1} }{\mu_\i} \mbox{ and }
+  B_{\i, k}^{\mu_\i} = \frac{ B_{\i, k}^{1} }{\mu_\i}.  
+\end{equation}
+Note that this coupling is consistent with the SFJ scaling:
+$A_{\i, k}^{\mu_\i}$ is indeed exponentially distributed with mean
+$1/\rho_{\i} \mue$ given that $A_{\i, k}^{1}$ is exponentially
+distributed with mean $1/\rho_{\i}.$ Similarly, note that we have
+$B_{\i, k}^{\mu_\i} \eqdist B_{\i}^{\mu_\i} \eqdist \frac{ B_{\i}^{1}
+}{\mu_\i},$ as required.
+
+An immediate consequence of \eqref{eq:sample_path_job_ia_coupling} is
+that the occupancy process of the eager class at scale $\mue$ can be
+viewed as a $\mue$-time-scaled (or fast-forwarded) version of
+occupancy process at scale~1; see \cite{ANOR} for more details. In
+particular, let $\B_{j,k}^\mue$ and $\S_{j,k}^\mue$ denote the length
+of the $k$th $\i$-busy cycle (the interval between the start of two
+successive $\i$-busy periods), and total service available for the
+$\t$-class during the $k$th $\i$-busy cycle, respectively, when
+tolerant queue occupancy equals $j.$ It now follows that
+\begin{eqnarray}
+  \B^\mue_{j,k} = \B_{j,k}^1 /\mue  \label{Eqn_Bmue}, \\
+  \S^\mue_{j,k} = \S_{j,k}^1 / \mue  \label{Eqn_Smue}. 
+\end{eqnarray}
+}
+
+\ignore{Now, holding the occupancy of the tolerant queue frozen
+  at~$j,$ via sample path coupling, the occupancy process of the eager
+  class at scale $\mue$ can be viewed as a $\mue$-time-scaled (or
+  fast-forwarded) version of occupancy process at scale~1; see
+  \cite{ANOR} for more details.  This type of sample path-wise
+  coupling allows us to derive almost sure results. With this
+  construction, it is easy to see for any sub-policy $j$ (when both
+  processes are not interrupted by $\t$-transitions due to assumption
+  {\bf A}.3) that
+  $$
+  \B^\mue_j  =  \B_j^1 /\mue  \mbox { and }   \S^\mue_j  =  \S_j^1 / \mue   \mbox{ almost surely. }
+  $$ 
+  In the following, for simplicity, we also denote $\B_j^1$ and
+  $\S_j^1$ as $\B_j$ and $\S_j,$ respectively.}
+
+\revision{
+We conclude by describing another consequence of the sample path
+coupling \eqref{eq:sample_path_job_ia_coupling} described above. Let $N_A^\mue ([a,b])$ represent the number
+of $\i$-arrivals in time interval $[a,b]$ and let
+$N_{B_j}^\mue( [a,b])$ represent the number of drops (or the
+$\i$-customers that exit the system without service) in the interval
+$[a,b],$ when sub-policy $j$ is used in a $\t$-static manner, at
+scale~$\mu_\i$. More compactly, let $N_{B_j}^{\mue}(t)$, $N_A^\mue(t)$
+represent $N_{B_j}^{\mue}([0,t])$ and $N_A^\mue([0, t]),$
+respectively. Then, by the way of construction:
+\begin{eqnarray}
+\label{Eqn_Compare_mu_epsilon_schemes}
+  N_A^\mue ({\mathcal B}_{j,1}^\mue  ) = N_A^1 ( {\mathcal B}_{j,1}^1 )   \   \mbox{and}   \
+  N_{B_j}^\mue ({\mathcal B}_{j,1}^\mue  ) = N_{B_j}^1 ( {\mathcal B}_{j,1}^1 ),
+\end{eqnarray}
+and a similar equality holds for subsequent $\i$-busy cycles as well.
+These kind of consequences play a central role in deriving the results
+of the next two appendices.}

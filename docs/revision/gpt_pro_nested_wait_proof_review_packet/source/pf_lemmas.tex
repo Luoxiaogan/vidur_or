@@ -1,0 +1,101 @@
+\section{Proof of Lemmas}\label{sec:pf_lemmas}
+
+Throughout this section, we use $b$ for the batch index and $B$ for the total number of batches.
+
+\subsection{Proof of Lemma~\ref{lemma::throughput gap, single}}\label{appendix_lemma::proof of throughput gap, single}
+To prove this lemma, we take expectations on both sides of the state transition equation:
+$$\ex{}{W^{b+1}}=\ex{}{W^b}+\lambda - \lambda \mathbb{P}(W^b+X^b\geq \lambda).$$
+Summing from $b=0$ to $B-1$, and noting that $W^0=0$, we obtain:
+$$\ex{}{W^B}=\lambda B - \lambda \ex{}{B-B_{\text{stuck}}}=\lambda\cdot \ex{}{B_{\text{stuck}}}.$$
+
+\subsection{Proof of Lemma~\ref{lem:coupled_process, single}}\label{appendix_lemma::proof of coupled_process, single}
+We prove by induction on the batch index $b$. The coupled process $\{\tilde{W}^b\}$ starts with a safety buffer of $2\lambda$ (compared to the real process starting at 0), ensuring it remains above $W^b + \lambda$ throughout. For the inductive step, we consider two cases based on whether the system can process a batch or experiences a stuck iteration.
+
+\paragraph{Base case.} For $b = 0$: $\tilde{W}^0=2\lambda\geq \lambda=W^0+\lambda$.
+
+\paragraph{Inductive step.} Assume $\tilde{W}^b \geq W^b + \lambda$ for some $b \geq 0$. We show $\tilde{W}^{b+1} \geq W^{b+1} + \lambda$ by considering two cases:
+
+\textbf{Case 1 (Batch processed):} If $W^b + X^b \geq \lambda$, the queue has accumulated enough prompts to process a batch, so $W^{b+1} = W^b + X^b - \lambda$. Then
+$$\tilde{W}^{b+1}=\max\{ 2\lambda, \tilde{W}^b + X^b - \lambda \}\geq \tilde{W}^b + X^b - \lambda\geq( W^b+\lambda )+ X^b - \lambda=W^{b+1}+\lambda.$$
+
+\textbf{Case 2 (Stuck iteration):} If $W^b + X^b < \lambda$, insufficient prompts are available and the system cannot process a batch (stuck iteration). The queue simply accumulates arrivals: $W^{b+1} = W^b + X^b$. The safety buffer ensures dominance:
+$$\tilde{W}^{b+1}=\max\{ 2\lambda, \tilde{W}^b + X^b - \lambda \}\geq 2\lambda = \lambda+\lambda>W^{b+1}+\lambda.$$
+By induction, $\tilde{W}^b \geq W^b + \lambda$ for all $b \in \mathbb{N}$.
+
+\subsection{Proof of Lemma~\ref{lemma::multiple-type coupled dominace}}\label{appendix_lemma::proof of multiple-type coupled dominace}
+The lemma compares the type-\(j\) entry queue in the periodic comparison system with a reflected random walk that always subtracts \(n_j\) after adding one slot of arrivals, but never falls below the safety level \(2n_j\). Fix type \(j\) and write \(\bar W^b=\bar W^b_{(j)}\), \(\widetilde W^b=\widetilde W^b_{(j)}\), \(n=n_j\), and \(\bar X^b=\bar X^b_{(j)}\). We prove by induction that \(\widetilde W^b\ge \bar W^b\).
+
+The claim holds at \(b=0\), since \(\widetilde W^0=2n\) and \(\bar W^0=0\). Suppose \(\widetilde W^b\ge \bar W^b\). If \(\bar W^b+\bar X^b\ge n\), then the comparison queue serves \(n\) prompts and
+\[
+    \bar W^{b+1}=\bar W^b+\bar X^b-n.
+\]
+Using the induction hypothesis,
+\[
+    \widetilde W^{b+1}
+    =\max\{2n,\widetilde W^b+\bar X^b-n\}
+    \ge \widetilde W^b+\bar X^b-n
+    \ge \bar W^{b+1}.
+\]
+If \(\bar W^b+\bar X^b<n\), then no type-\(j\) service occurs in the comparison queue and \(\bar W^{b+1}=\bar W^b+\bar X^b<n\). In this case \(\widetilde W^{b+1}\ge2n>\bar W^{b+1}\). Thus the domination holds for all \(b\), and the argument applies independently to every type \(j\).
+
+\subsection{Nested WAIT Coupling Bound}\label{appendix_lemma::proof of nested coupled process}
+The proof follows the same induction structure as Lemma~\ref{lem:coupled_process, single}, adapted to the Nested WAIT setting where arrivals follow binomial thinning from segment $k-1$ completions.
+
+\paragraph{Base case.} For $b = 0$: $\tilde{W}_{(k)}^0 = n_{k}\geq 0=W_{(k)}^0$.
+
+\paragraph{Inductive step.} Assume $\tilde{W}^b_{(k)}\geq W^b_{(k)}$ for some $b\geq 0$. We show $\tilde{W}^{b+1}_{(k)}\geq W^{b+1}_{(k)}$ by case analysis:
+
+\textbf{Case 1 (Segment batch processed):} If $W^b_{(k)}+ Y^b_{(k)}\geq n_k$, then $W^{b+1}_{(k)}= W^{b}_{(k)}+Y^b_{(k)} - n_k$, so
+$$ \tilde{W}^{b+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{b}_{(k)} + X^b_{(k)}\} \geq \tilde{W}^{b}_{(k)} + X^b_{(k)}\geq {W}^{b}_{(k)} + Y^b_{(k)}-n_k=W^{b+1}_{(k)}.$$
+
+\textbf{Case 2 (Segment stuck):} If $W^b_{(k)}+ Y^b_{(k)}<n_k$, then $W^{b+1}_{(k)}= W^{b}_{(k)}+Y^b_{(k)}$, so
+$$\tilde{W}^{b+1}_{(k)}=  \max\{ n_{k},\tilde{W}^{b}_{(k)} + X^b_{(k)}\} \geq n_{k}> W^{b+1}_{(k)}.$$
+By induction, $\tilde{W}^b_{(k)}\geq W^b_{(k)}$ for all $b\in \mathbb{N}$.
+
+\subsection{Martingale Root Bound for Nested WAIT}\label{appendix_lemma::proof of solution to martingale exists}
+This argument establishes existence and properties of the parameter $\theta_k>0$ that makes the exponential process $e^{\theta_k S^i_{(k)}}$ a martingale. This enables Doob's inequality to convert expected queue length bounds into high-probability memory bounds.
+
+\paragraph{Existence and uniqueness.} For simplicity, we denote $\theta=\theta_k$. Define the function
+\[
+f(\theta) = e^{-\theta n_{k}} (1 - p_k + p_k e^{\theta})^{n_{k-1}}.
+\]
+We seek \(\theta > 0\) such that \(f(\theta) = 1\). First, evaluate \(f(\theta)\) at \(\theta = 0\):
+\[
+f(0) = e^{0} (1 - p_k + p_k \cdot 1)^{n_{k-1}} = 1.
+\]
+Thus, \(\theta = 0\) is a trivial solution, but we need \(\theta > 0\) to obtain useful high-probability bounds. To analyze $f(\theta)$ for $\theta>0$, we consider the logarithm
+$$g(\theta) = \ln f(\theta) = -\theta n_{k} + n_{k-1} \ln(1 - p_k + p_k e^{\theta}),$$
+$$ g^\prime(\theta) = -n_{k} + n_{k-1} \cdot \frac{p_k e^{\theta}}{1 - p_k + p_k e^{\theta}}.$$
+At \(\theta = 0\),
+\[
+g(0)=0,\,g^\prime(0) = -n_{k} + n_{k-1} p_k.
+\]
+Since \(\mathbb{E}[X^b_{(k)}] = n_{k-1} p_k - n_{k} < 0\), we have \(g'(0) < 0\), so \(f(\theta)\) is decreasing near \(\theta = 0\). Consider the second derivative:
+\[
+g''(\theta) = n_{k-1} \cdot \frac{p_k e^{\theta} (1 - p_k)}{(1 - p_k + p_k e^{\theta})^2} > 0 \quad \text{for} \quad \theta > 0,
+\]
+since \(p_k \in (0, 1)\) and \(n_{k-1} > 0\). Thus, \(g(\theta)\) is strictly convex. Convexity ensures that $g(\theta)$ can cross zero at most once for $\theta>0$, guaranteeing uniqueness. Now, consider the limit as \(\theta \to \infty\):
+\[
+f(\theta) \approx p_k^{n_{k-1}} e^{\theta (n_{k-1} - n_{k})}.
+\]
+By our settings, $n_{k-1}>n_k$, which ensures $f(\theta)\to \infty$ as $\theta\to \infty$. Thus, \(f(\theta)\) is continuous, convex, starts at \(f(0) = 1\), decreases below 1 for small \(\theta > 0\) (since $g'(0) = n_{k-1}p_k - n_k < 0$ by negative drift), and increases to infinity. By the intermediate value theorem and convexity, there exists a unique \(\theta > 0\) such that \(f(\theta) = 1\). 
+
+\paragraph{Monotonicity in drift.} Next, we prove that the solution $\theta>0$ is strictly increasing with respect to the drift \(D = n_k - n_{k-1} p_k\). This shows that tighter capacity (larger $D$, more negative drift) leads to larger $\theta$ and thus tighter high-probability bounds. Recall that \(g(0) = 0\), \(g'(0) = -D < 0\), and \(g''(\theta) > 0\) for \(\theta > 0\), so \(g(\theta)\) is strictly convex. The unique positive solution \(\theta > 0\) occurs where \(g(\theta)\) crosses zero after initially decreasing from \(g(0) = 0\).
+
+Consider two values \(D_1\) and \(D_2\) such that \(D_1 < D_2\), with corresponding functions \(g_1(\theta) = -\theta (n_{k-1} p_k + D_1) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\) and \(g_2(\theta) = -\theta (n_{k-1} p_k + D_2) + n_{k-1} \ln(1 - p_k + p_k e^{\theta})\), and solutions \(\theta_1\) and \(\theta_2\), respectively. At \(\theta = 0\), we have \(g_1'(0) = -D_1 > g_2'(0) = -D_2\), meaning \(g_2(\theta)\) decreases more steeply from zero than \(g_1(\theta)\).
+
+For a fixed \(\theta > 0\), the partial derivative \(\frac{\partial g}{\partial D} = -\theta < 0\), so increasing \(D\) decreases \(g(\theta)\) pointwise. Since \(g(\theta)\) is convex and approaches infinity as \(\theta \to \infty\), the zero crossing of \(g(\theta; D)\) shifts to a larger \(\theta\) when \(D\) increases. Hence, if \(D_2 > D_1\), then \(\theta_2 > \theta_1\). Operationally, this means larger safety margins yield tighter high-probability bounds.
+
+\paragraph{Drift-to-$\theta$ scaling.} Finally, we characterize how the solution \(\theta>0\) scales with drift \(D\), \(n_{k-1}\), and \(p_k\). When the drift \(D = n_k - n_{k-1} p_k\) is small (system near critical load), the solution \(\theta\) is also small. To derive an explicit approximation, we expand \(g(\theta)\) around \(\theta = 0\) using Taylor's theorem:
+$$g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(0) \theta^2 + O(\theta^3) = 0 - D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 + O(\theta^3).$$
+Setting \(g(\theta) = 0\) and neglecting higher-order terms, we obtain the quadratic approximation
+$$-D \theta + \frac{1}{2} n_{k-1} p_k (1 - p_k) \theta^2 \approx 0 \implies \theta \approx \frac{2D}{n_{k-1} p_k (1 - p_k)}.$$
+This shows that for small \(D\), the solution scales linearly: \(\theta = O(D)\). Specifically, $\theta \approx \frac{2 (n_k - n_{k-1} p_k)}{n_{k-1} p_k (1 - p_k)}$. This linear scaling implies that the high-probability memory bound grows logarithmically in $B/\delta$, with the coefficient inversely proportional to the drift $D$.
+
+\paragraph{General lower bound.} To obtain a uniform lower bound valid for all $D>0$ (not just small $D$), we apply Taylor's theorem with remainder:
+$$g(\theta) = g(0) + g'(0) \theta + \frac{1}{2} g''(c) \theta^2 = -D \theta + \frac{1}{2} g''(c) \theta^2 = 0\implies \theta = \frac{2D}{g''(c)}. \quad \text{for some } c \in (0, \theta)$$
+To find an upper bound for \(g''(c)\), we write $g^{\prime \prime}(x) = n_{k-1} \cdot \frac{p_k e^{x} (1 - p_k)}{(1 - p_k + p_k e^{x})^2}$ and define \(h(y) = \frac{p_k y (1 - p_k)}{(1 - p_k + p_k y)^2}\) where \(y = e^{x} \geq 1\). By differentiation, \(h(y)\) achieves a maximum of \(\frac{1}{4}\) over $y\geq 1$ and $0<p_k<1$ (attained when the numerator and denominator are balanced). Thus we have that $
+g''(x) \leq n_{k-1} \cdot \frac{1}{4} = \frac{n_{k-1}}{4} \implies \theta = \frac{2D}{g''(c)} \geq \frac{2D}{n_{k-1}/4} = \frac{8D}{n_{k-1}}$. So a general lower bound is:
+\begin{align}
+    \theta \geq \frac{8 (n_k - n_{k-1} p_k)}{n_{k-1}}.\label{eq::theta lower bound}
+\end{align}

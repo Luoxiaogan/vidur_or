@@ -1,0 +1,310 @@
+
+\section{\revision{Proof of Theorem \ref{Thm_withou_A1}}} 
+\label{app:withoutA1}
+
+\revision{
+In this appendix, we describe the changes required in the proofs of
+Theorems~\ref{Thm_Lim_SD_Conv}-\ref{Thm_PB} to establish
+Theorem~\ref{Thm_withou_A1}. Note that we no longer make Assumption
+{\bf A}.1, but simply assume that eager job sizes are exponentially
+distributed.
+
+Without Assumption {\bf A}.1, one can not describe the pre-limit
+system using a one-dimensional Markov process. However with
+exponential service times for both eager and tolerant customers, one
+can describe the system evolution via a two-dimensional Markov chain
+$(X_\tau (t), X_\i (t)),$ capturing the number of tolerant and eager
+customers in the system. Note that this Markov chain undergoes
+transitions due to $\i$ as well as $\t$ customers. As noted before,
+when the occupancy of the tolerant changes, a new eager sub-policy
+comes into effect immediately, potentially during an ongoing eager
+busy period. This new sub-policy might result in scheduling
+rearrangements, based on the number of eager customers in the system.
+
+The main difference without Assumption {\bf A}.1 is that once the
+$\tau$ occupancy changes, the first $\i$-busy cycle can start with
+(random) $c$ number of customers, where
+$0 \le c \le {\cal K} := \lfloor 1/c_{min} \rfloor < \infty. $ Let the
+duration of this partial first $\i$-busy cycle be represented by
+$\B_{j}^{\mue, c} $, when the system is operating under $j$-th
+sub-policy; basically, this is the time period that starts immediately
+after the $\t$-system changes to state $j$, and lasts till the
+$\i$-system becomes empty (or till the $\t$-state changes again,
+whichever happens first).\footnote{Recall that \emph{complete}
+  $\i$-busy cycles start when the $\i$-system becomes empty and last
+  till the end of the next $\i$-busy period.
+  % that started with a single $\i$-customer.
+} Aside from this first partial $\i$-busy-cycle, subsequent $\i$-busy
+cycles are referred to using the same notations as before.
+% For the quantities that correspond to the
+% case in which the first busy cycle starts with $0$
+% $\i$-customers\footnote{ Recall here that these $\i$-busy cycles start
+%   when the $\i$-system becomes empty and last till the end of the
+%   $\i$-busy period, that started with one $\i$-customer.  } (as with
+% assumption {\bf A}.1) will be referred by same notations as before.
+% We use special notations only for the case when the first
+% \textcolor{green}{$\i$-}busy cycle starts with $c$ $\i$-customers.
+
+While the two-dimensional Markovian description
+$(X_\tau (t), X_\i (t)),$ with a random number~$c$ of eager customers
+present at times of $\t$-transitions is more challenging to analyse,
+we show below that the first dimension of this process can be upper
+and lower bounded by one-dimensional Markov processes (as in
+\cite{ANOR}). These bounding processes are described next.
+% Thus, the main challenge in analysing the two dimensional process is
+% because of $c$, one can still analyze the original process by using
+% one dimensional processes that upper and lower bound the original
+% process as in \cite{ANOR}.
+
+
+% The stationary distribution exists and the time limit exists because
+% one can dominate it ... and then equivalent of Lemma 2 shows
+% stationry of dominant chain which in turn implies staitonary of
+% original chains ? Or we may have to go through Maximum theorem or
+% some other functional analysis tools.. Or do we have some queueing
+% results such that the staitonary distreibution occurs for general
+% queueing systems, need to use them.}
+
+{\bf Upper and Lower bounding systems:} Now we construct two systems
+for each $\mue$, which sandwich the actual $\t$-system pre-limit. In
+both the bounding systems we consider that the eager system,
+immediately after each tolerant change, starts with maximum possible
+(partial) eager busy cycle: generate one busy cycle $\B_{j}^{\mue, c}$
+starting with each $c$ and with coupled eager arrivals, job-sizes
+etc., for the given sub-policy (say sub-policy~$j$) and let
+$\B_{j}^{\mue, *}:= \max_{0 \le c \le {\cal K}} \B_{j}^{\mue, c}$ be
+duration for which the first (hypothetical) eager busy cycle lasts in
+the two systems. It is immediate that this max-busy cycle upper bounds
+those starting with any $c$-number (as in original system), when they
+are served with the same sub-policy.
+% , using certain coupling arguments; every such busy period
+% eventually hits $c$ number of eager customers and that residual busy
+% cycle can be coupled with the one starting with $c$-number and this
+% is possible due to exponential random quantities.  {\color{blue} We
+% may generate one busy cycle starting with each $c$ and with coupled
+% eager arrivals, job-sizes etc., and consider that both the bounding
+% systems start with maximum of these ${\cal K}$ number of busy
+% cycles.}
+
+In the upper bounding system, immediately after the $\t$-occupancy
+changes to~$j$, the tolerant queue receives zero service for duration
+$\B_{j}^{\mue, *}$. After this period, service of the tolerant queue
+in subsequent $\i$ busy cycles continues exactly as in the original
+system.
+% the $\i$-system starts with corresponding max-busy cycle, during
+% which the $\t$-customer(s) are not served; the service of the
+% $\t$-customer(s) starts with the second $\i$-busy cycle and
+% continues exactly as in the original system.
+The lower bounding system is almost similar to the upper bounding
+system, except that the tolerant queue is served at the maximum
+possible rate (1, given the unit server speed assumed) over the first
+hypothetical partial busy cycle $\B_{j}^{\mue, *}.$
+% , the $\t$-customers are served with maximum possible rate during
+% the first $\i$ max-busy cycle.
+We then use appropriate coupling rules as in \cite{ANOR}: \\
+
+\noindent $\bullet$ Tolerant inter-arrival times and job-sizes are
+always coupled in all three systems. However, the eager quantities are
+coupled in the original and any bounding system, only when the two
+systems are in the same $\t$-state, as explained below.\\
+
+\noindent $\bullet$ The original and the two bounding systems start
+with the same initial system state;\\
+
+\noindent $\bullet$ the number of $\t$-customers in the original
+system is less than or equal to that in upper system, and greater than
+or equal to that in the lower system, as time progresses (because of
+the service differences for the tolerant queue in the first partial
+eager busy-cycles across the three systems);\\
+
+  
+\noindent $\bullet$ if at any time point the upper system
+meets\footnote{The tolerant number in upper system can become strictly
+  bigger than that in original systems, but further increase may be
+  slower in upper system due to Markov policies, and then at some
+  tolerant departure the $\t$-number in upper system can equal that in
+  the original system.}  the original system, we couple the two
+systems by using eager random variables (inter-arrival times, service
+times, etc.) that define the original system in that $\t$-cycle to
+define the upper system $\t$-cycle;\\
+  
+\noindent $\bullet$ specifically, we start with the maximum partial
+busy cycle in upper system corresponding to the sub-policy dictated by
+the new tolerant state, after coupling (also) the eager inter-arrival
+times and job sizes; observe that under this construction, the first
+$\i$-busy cycle in the original system (in the $\t$-cycles in which
+upper system meets the original system) is smaller than or equal to
+the corresponding maximum partial busy cycle in upper system.\\
+
+These details are similar to those in \cite{ANOR}, where one can also
+find more details. Similar coupling ideas can be used to construct the
+lower bounding system.
+
+It is easy to observe that the tolerant queue evolution in the two
+bounding systems can be modeled as M/G/1 systems with state dependent
+birth-death transition probabilities, as the system considered in the
+paper with Assumption~{\bf A.}1.  That is, they can be represented by
+one-dimensional Markov processes.  All the results can be extended to
+the two bounding systems and we would have equivalents of Theorems
+\ref{Thm_Lim_SD_Conv}-\ref{Thm_tau} and Lemma~\ref{lemma:TauStability}
+for the two systems, if we can show that the impact of the first
+maximum partial busy cycle at the start of every tolerant change
+vanishes as $\mue \ra \infty$ under the SFJ limit. We show below that
+this is the case.
+
+{\bf Convergence of the bounding systems:} This proof goes through
+along similar lines as with {\bf A}.1, except for few important
+differences. We only mention the differences here.  We first show that
+the max busy cycles $\B_{j}^{\mue, *}$ converge to zero, as
+$\mu_\i \to \infty$, the moments are upper bounded by a common uniform
+bound, etc. For extending Lemmas
+\ref{lemma:bp_upper_bound}-\ref{lemma:mginftyBPbound}, we observe that
+the max busy cycles can be uniformly upper-bounded (uniformly over
+sub-policy $j$) by that in the M/G/$\infty$ queue of
+Lemma~\ref{lemma:mginftyBPbound}, which starts with ${\cal K}$
+customers.
+  
+For extending Lemma~\ref{lemma:uniform}, the transition probabilities
+also depend upon max busy cycles. Towards this, first define
+$q_j^{\mue, *}$ to represent the backward transition probability of
+tolerant birth-death process when one starts it with corresponding max
+busy cycle.  Then one can lower bound the probability $q_j^{\mue, *}$
+using
+$$\bar{q}^*_j := \prob{\S_{j,1}^{\mue,*} +\sum_{k = 2}^{N-1} \S_{j,k}^{\mue} > B_{\t}} = (1-r_*) {\bar q}_j + r_*, \  \    r_* := \prob { \S_{j,1}^{\mue,*}  > B_\tau},   $$  
+with ${\bar q}_j$ as defined previously and where $\S_{j,1}^{\mue,*} $
+equals the service available to the tolerant queue during the first
+$\i$ max busy cycle $\B_{j}^{\mue, *}$ (which exactly equals 0 for
+upper system and $\B_{j}^{\mue, *}$ in the lower system for any
+$\mue$). It is clear that $r_*$ converges to zero (uniformly in $j$)
+and the remaining proof goes through, as before.  The proof for the
+upper bound of Lemma~\ref{lemma:uniform} can be handled similarly.
+Observe here that Lemmas
+\ref{Lemma_Intermediate_result}-\ref{Lemma_Intermediate_result_1} are
+used by Lemma~\ref{lemma:uniform} only for the subsequent $\i$-busy
+cycles, which are same as that with Assumption~{\bf A}.1, and hence
+would not require any changes.  The proof of
+Lemma~\ref{Lemma_Intermediate_result_2} holds also for the two
+bounding systems, because the convergence in Lemma~\ref{lemma:uniform}
+is ensured and same is the case with Lemma~\ref{lemma:TauStability}.
+
+Thus, by the extended Lemma~\ref{lemma:TauStability} there exists
+${\bar \mu}$ such that the upper and lower bounding systems are stable
+for all $\mue \ge {\bar \mu}$.  Further the upper and lower stationary
+distributions converge to the same quantity as $\mue \to \infty$ (by
+extended versions of Theorems~\ref{Thm_Lim_SD_Conv}-\ref{Thm_tau}).
+
+{\bf Existence of stationary distribution of original system:} We
+derive the existence using embedded chains, the discrete time Markov
+chains obtained by considering values of the continuous time Markov
+process, immediately after the transition epochs.
+
+By extended Lemma~\ref{lemma:TauStability} there exists a ${\bar \mu}$
+such that the upper bounding system is stable for all
+$\mue \ge {\bar \mu}$. For all such $\mue$, the embedded tolerant
+chain in the upper system visits the~$0$ state infinitely often (with
+probability one) and within integrable number of epochs (by positive
+recurrence and existence of stationary distribution). This implies (by
+the bounding of the tolerant occupancy between the original and upper
+system) that the embedded tolerant chain in the original system also
+visits $0$ state infinitely often (with probability one) and within an
+integrable number of epochs. This in turn implies the original
+(two-dimensional) embedded Markov chain visits the set
+$ {\cal O}:= \{ (0, c), \mbox{ for some } c \le {\cal K} \}$
+infinitely often (w.p.1) and within integrable number of epochs.  By
+irreducibility, this implies the same for the $(0,0)$ state, as every
+time the chain visits any state of the form $(0,c),$ it has a positive
+probability of visiting state $(0, 0)$ (uniformly bounded away from 0
+across all $c$) and hence visits state $(0,0)$ after at most a
+geometric number of visits to the set~${\cal O}.$ This establishes the
+existence of a unique stationary distribution
+% (uniqueness by aperiodicity)
+for the original two-dimensional embedded Markov chain, which in turn
+implies the existence of stationary distribution for the two
+dimensional continuous time Markov process; observe that the
+transition rates between all the state pairs can be uniformly upper
+bounded by a finite value for any given $\mue.$
+ 
+By regular renewal arguments, this implies almost sure existence of
+the time limits:
+ \begin{eqnarray}
+\label{Eqn_SD_marginal}
+\lim_{T \to \infty}  \frac{1}{T} \int_0^T  \indc_{ \{X_\tau(t) = j \}}  =  \pi_j^\mue, \mbox{ for any } j, 
+\end{eqnarray}
+where $\pi_j^\mue$ is the marginal of the stationary distribution
+corresponding to tolerant queue in original (two-dimensional) system.
+
+{\bf Convergence of stationary distribution as $\mue\to \infty$:} The
+limit of the $\t$-performance of the two bounding systems, as
+$\mue \to \infty$ is exactly the same, because by extended
+Lemma~\ref{lemma:uniform} both the sets of transition probabilities
+converge to the same limit transition probabilities uniformly.
+Furthermore, time averages corresponding to the $\t$-occupancy in the
+original system can be bounded by the corresponding time averages in
+the upper system (occupancy denoted by $X_\t^U (\cdot)$) and the lower
+system (occupancy denoted by $X_\t^L (\cdot)$) as follows:
+%by bounding arguments
+%($X_\t^U (.)$, $X_\t^L(.)$ correspond respectively to upper and lower
+%systems),
+$$
+\lim_{T \to \infty} \frac{1}{T} \int_0^T \indc_{ \{X^{L}_\tau(t) \le j
+  \}} \le \lim_{T \to \infty} \frac{1}{T} \int_0^T \indc_{ \{X_\tau(t)
+  \le j \}} \le \lim_{T \to \infty} \frac{1}{T} \int_0^T \indc_{
+  \{X^U_\tau(t) \le j \}} \mbox{ for any } j,
+$$
+and hence the marginal stationary distribution (corresponding to
+tolerant occupancy) of the original system, converges to the common
+limit of the two bounding systems. This implies the statement related
+to the tolerant performance in Theorem \ref{Thm_Lim_SD_Conv}, because
+(for each $j$):
+\begin{eqnarray*}
+\sum_{i\le j} \pi_i  = \lim_{\mue \to \infty } \lim_{T \to \infty}  \frac{1}{T} \int_0^T  \indc_{ \{X^{L}_\tau(t) \le  j \}}  \le  \lim_{\mue \to \infty }    \lim_{T \to \infty}  \frac{1}{T} \int_0^T  \indc_{ \{X_\tau(t) \le  j \}}  \hspace{30mm}  \\
+ \le
+ \lim_{\mue \to \infty }   \lim_{T \to \infty}  \frac{1}{T} \int_0^T  \indc_{ \{X^U_\tau(t) \le  j \}} =  \sum_{i \le j} \pi_i, \  \    \mbox{ w.p.1. }
+\end{eqnarray*}
+Using similar bounding arguments, and common limit of the two bounding
+systems, the statement of Theorem \ref{Thm_tau} also gets extended.
+
+
+{\bf Changes required for results related to eager performance:} There
+are no changes in the main proof of Theorem \ref{Thm_PB}, we only need
+to discuss the changes required in the proof of
+Theorem~\ref{Thm_PB_for_one_subpolicy}.
+
+For extending the proof of Theorem \ref{Thm_PB_for_one_subpolicy}, one
+needs to construct additional sample paths for coupling arguments.
+One first needs to construct ${\cal K}+1$ additional sample paths of
+$\i$-busy cycles, with $\mue = 1$, one for each sub-policy~$j,$ and
+one for each $0 \le c \le {\cal K}$.  Using these ${\cal K}+1$ sample
+paths, we need to construct a $({\cal K}+2)$th sample path of max busy
+cycles, one for each $j$.  Note again that each such max busy cycle
+upper bounds the corresponding busy cycle starting with $c$ number of
+$\i$-customers, for any $0 \le c \le {\cal K}$. Whenever the
+$\t$-state changes, the first $\i$-busy cycle is coupled using one of
+the above ${\cal K}+1$ sample paths, depending upon the random $c$,
+that represents the number of eager customers at the time of the
+$\t$-transition. Each such first partial busy cycle is is upper
+bounded by the corresponding max busy cycle, irrespective of the
+random~$c$; this ensures the required coupling (and uniform upper bounding across various $c$) across various $\mue$,
+even without Assumption~{\bf A}.1.
+
+The process $\Psi_{j} (t)$ for each $j$-sub-policy now includes the
+starting as well as the ending partial busy cycles.  But all the
+starting partial $\i$-busy cycles can be upper bounded by the
+corresponding max busy cycles and one can show the influence of them
+to converge to zero, in the same manner as is done with the ending
+busy cycles; this is possible because we have already extended the
+proofs of the required uniform bounds (converging to zero or second moments bounded
+as required) on all the required moments of the max busy cycles, as
+already discussed in the initial parts of this section. All the bounds
+that were shown to converge to zero, should now be made up of the
+corresponding max busy cycles, to handle the part of $\Psi_{j} (t)$
+coming from the starting partial $\i$-busy cycles.  The same is true
+for the bounds and arguments considered in the proof of
+Lemma~\ref{Lemma_Psij}.
+
+If there any drops due to change in eager sub-policy at tolerant transition epochs, they can be upper bounded by  $N_{\partial_j} (t) $ and can be handled as in original proof. 
+%Finally, we will not have $N_{\partial_j} (t) $, the losses due to
+%drops at $\t$-transitions (without {\bf A}.1). 
+\eop
+
+}

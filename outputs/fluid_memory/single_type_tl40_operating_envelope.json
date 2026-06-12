@@ -1,0 +1,17 @@
+{
+  "tl": 40,
+  "pipeline_depth": 22,
+  "fluid_per_stage_P": 1.8181818181818181,
+  "C_op_worst_block_tokens": 21760,
+  "M_fluid_block_tokens": 21178.181818181816,
+  "M_fluid_continuous_tokens": 19465.454545454544,
+  "M_fluid_over_C_op_worst": 0.9732620320855614,
+  "C_op_worst_over_C_phys": 0.15883211678832118,
+  "cycle_time_s": 1.6792060421705803,
+  "cycle_completions": 40,
+  "cycle_completion_boundary_req_s": 23.82078136658863,
+  "service_boundary_min_req_s": 12.12937874398493,
+  "service_boundary_mean_req_s": 24.0701176418563,
+  "service_boundary_max_req_s": 42.756879748619056,
+  "output": "outputs/fluid_memory/single_type_tl40_operating_envelope.csv"
+}

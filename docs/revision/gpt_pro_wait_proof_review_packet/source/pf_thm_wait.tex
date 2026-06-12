@@ -1,0 +1,211 @@
+% ============================================
+% Proof of Theorem 1: WAIT Algorithm Optimality
+% ============================================
+
+\section{Proof of Theorem~\ref{thm:wait_heavy_traffic}}\label{appexidx::proof of wait_heavy_traffic}
+
+\paragraph{Proof Outline.}
+This proof establishes asymptotic optimality of the WAIT algorithm when output lengths are known. The structure proceeds in two parts:
+\begin{enumerate}
+    \item \textbf{Single-type case}: We construct a coupled dominating process using the Lindley recursion and apply Kingman's bound for queue length expectations.
+    \item \textbf{Multiple-type case}: We introduce a conservative periodic comparison policy whose slots have the full-threshold processing time. This separates the random batch composition of event-driven WAIT from the deterministic clock used in the drift argument.
+\end{enumerate}
+Key techniques include: Lindley recursion for queue length bounds \citep[Proposition 6.3]{asmussen2003applied}, coupling construction to dominate the original process, Kingman's bound for negative drift processes \citep{kingman1962queues}, and standard random walk results \citep{strait1974maximum}.
+
+Throughout this appendix, we use $b$ to denote the embedded comparison-slot index, which is distinct from the stage index $s \in \{0, 1, \ldots, l_j'\}$ used in the main text for decode stages. We use $t$ for continuous time and \(B\) for the number of comparison slots.
+
+We first consider the single-type case, then extend to multiple types.
+
+\subsubsection{Single-Type Case}
+
+Consider a single prompt type with threshold $n$. For general scheduling algorithms, analyzing this system in continuous time is challenging: KV cache grows dynamically during decode, arrivals are stochastic, and eviction risks complicate the dynamics.
+
+The WAIT policy's \emph{threshold mechanism achieves a dimensionality reduction}. By waiting until exactly $n$ prompts accumulate before initiating a batch, the algorithm enforces a fixed batch size, which ensures constant processing time $\Delta T$ per batch. This decouples the continuous-time memory-constrained dynamics into a tractable discrete-time process: a memory-constrained queueing system becomes a simple random walk. The reduction is enabled by the algorithm design and is what makes the subsequent drift analysis apply.
+
+Specifically, let $\tilde{\lambda}$ denote the continuous-time arrival rate. The WAIT policy's fixed batch size implies that arrivals during each batch follow $\text{Poisson}(\tilde{\lambda} \cdot \Delta T)$. Defining $\lambda = \tilde{\lambda} \cdot \Delta T$ (expected arrivals per batch), we can analyze the system as an \emph{embedded Markov chain} observed at batch completion times, indexed by $b \in \mathbb{N}$. Setting $n = \lambda$ corresponds to critical loading. The throughput loss arises from ``stuck'' iterations where insufficient prompts are available.
+
+\begin{lemma}[Queue Length and Stuck Time]\label{lemma::throughput gap, single}
+This lemma connects queue accumulation to throughput loss through stuck iterations. Let $X^b$ denote the number of arrivals during batch $b$, where $X^b \sim \text{Poisson}(\lambda)$. Let $W^b$ denote the queue length after batch $b$, with $W^0=0$. The state transition is:
+$$W^{b+1}=W^b+X^b-\lambda\cdot \mathbf{1}\{W^b+X^b\geq \lambda\}.$$
+Define $B_{\emph{stuck}}$ as the number of stuck iterations (where $W^b+X^b<\lambda$). Then:
+$$\mathbb{E}[W^B]= \lambda\cdot\mathbb{E}[B_{\emph{stuck}}].$$
+\end{lemma}
+\noindent The proof is in Appendix~\ref{appendix_lemma::proof of throughput gap, single}. This lemma connects queue accumulation to throughput loss: stuck iterations directly translate to waiting prompts. To bound $\mathbb{E}[W^B]$, we construct a coupled dominating process that admits tractable analysis via classical queueing techniques.
+
+\begin{lemma}[Coupled Dominating Process]\label{lem:coupled_process, single}
+The coupled process starts with a safety buffer ($2\lambda$ vs 0) and maintains dominance throughout. Define $\{\tilde{W}^b\}$ by:
+$$
+\tilde{W}^0 = 2\lambda, \quad \tilde{W}^{b+1} = \max\{ 2\lambda, \tilde{W}^b + X^b - \lambda \}.
+$$
+Then $\tilde{W}^b \geq W^b + \lambda$ for all $b\in \mathbb{N}$.
+\end{lemma}
+\noindent The proof is in Appendix~\ref{appendix_lemma::proof of coupled_process, single}.
+
+\paragraph{Lindley recursion.} To analyze the coupled process, we apply the Lindley recursion representation \citep[Proposition 6.3]{asmussen2003applied}:
+\begin{lemma}[Lindley Representation]\label{lem:lindley_rep}
+Let $S^k=\sum_{r=1}^k (X^r-\lambda)$ be the partial sum process. Then:
+$$\tilde{W}^B=2\lambda+\max(S^B, S^B-S^1,\ldots,S^B-S^{B-1},0).$$
+\end{lemma}
+\noindent This classical queueing representation is made applicable by the WAIT policy's threshold design. Define $\xi^k = X^k-\lambda$. We use time-reversal symmetry to simplify the maximum expression:
+$$\max(S^B, S^B-S^1,\ldots,S^B-S^{B-1},0)=\max_{1\leq k\leq B}\Big(\sum_{r=k}^{B}\xi^r\Big)^+\overset{d}{=}\max_{1\leq k\leq B}\Big(\sum_{r=1}^{k}\eta^r\Big)^+, \quad \eta^r\overset{d}{=}X^1-\lambda.$$
+Thus $\tilde{W}^B \overset{d}{=}2\lambda+\max_{1\leq k\leq B}(\sum_{r=1}^{k}\eta^r)^+$.
+
+Since $\tilde{W}^B \geq W^B + \lambda$, we have $\mathbb{E}[W^B]\leq \mathbb{E}[\tilde{W}^B]-\lambda$. Let $Y^B = \max_{1\leq k\leq B}(\sum_{r=1}^{k}\eta^r)^+$. By \cite[Lemma 2]{strait1974maximum}:
+\begin{lemma}[Random Walk Maximum]\label{lem:Y_T}
+$$\ex{}{Y^B}=\ex{}{\max_{1\leq k\leq B}(S^k)^+}=\sum_{k=1}^B \frac{1}{k}\ex{}{(S^k)^+}.$$
+\end{lemma}
+\noindent This standard result \citep{strait1974maximum} decomposes the maximum into a sum over batch indices. For $\mathbb{E}[(S^k)^+]$, by the Cauchy-Schwarz inequality and $\text{Var}(S^k) = \lambda k$, we have $\mathbb{E}[(S^k)^+] \leq \sqrt{\lambda k}$. Hence:
+$$\mathbb{E}[Y^B] \leq \sqrt{\lambda} \sum_{k=1}^B k^{-1/2} \sim \sqrt{\lambda B} \quad \text{as } B \to \infty.$$
+
+\begin{lemma}[Throughput Gap Bound]\label{lemma::throughput gap}
+$$\mathbb{E}[W^B]-\lambda\leq \mathbb{E}[Y^B]\leq  \sqrt{\lambda} \sum_{k=1}^B \frac{1}{\sqrt{k}} \sim\sqrt{\lambda B},\quad B\to \infty.$$
+\end{lemma}
+\noindent By Lemma~\ref{lemma::throughput gap, single}, the expected number of stuck iterations is $\mathbb{E}[B_{\emph{stuck}}]=\mathbb{E}[W^B]/\lambda=O(\sqrt{B})$, so the normalized throughput loss from stuck iterations is $O(B^{-1/2})$. The same bound applies to every prefix \(b\le B\), and therefore
+\[
+    \frac{1}{B}\sum_{b=1}^B \mathbb{E}[W^b] \leq \frac{1}{B}\sum_{b=1}^B O(\sqrt{b}) = O(\sqrt{B}).
+\]
+This time-averaged backlog bound is the quantity used for the latency and TTFT estimates.
+
+\paragraph{Scaling with the horizon.} Let \(\Delta^\pi\) denote the fixed processing time of a threshold-sized batch under policy \(\pi\). In the scaled system, the corresponding processing time is \(\Delta^\pi/\zeta\). Over a calendar horizon \(T\), set
+\[
+    B_\zeta=\left\lfloor \frac{\zeta T}{\Delta^\pi}\right\rfloor .
+\]
+Then \(B_\zeta=\zeta T/\Delta^\pi+O(1)\). The terminal backlog bound gives normalized throughput loss \(O(B_\zeta^{-1/2})=O((\zeta T)^{-1/2})\). For delay, the theorem reports service-normalized time, so one scaled comparison slot has length \(\Delta^\pi\); the time-averaged backlog bound therefore gives latency and TTFT contributions \(O(B_\zeta^{1/2})=O((\zeta T)^{1/2})\). The bounded number of service stages is lower order. This yields the single-type throughput, latency, and TTFT orders stated in the theorem.
+
+\subsubsection{Multiple-Type Case}
+
+We now extend to \(m\) known prompt types. The additional issue is that event-driven WAIT need not process the full type composition in every realized batch: if only a subset of type queues has reached its threshold, only that subset is batched. The proof therefore separates two objects. The actual policy is the event-driven WAIT policy from the main text. The comparison object is a periodic policy with deterministic full-threshold slots; it is slower than actual WAIT because it reviews less often and pads every selected batch to the full-slot length.
+
+For a threshold vector \(\pi=[n_1,\ldots,n_m]\), let
+\begin{equation}\label{eq:batch_time_def}
+\Delta^\pi \equiv \Delta T_{[1,\ldots,m]}
+    =  d_0 + d_1 M^\pi,\qquad
+M^\pi = \sum_{j=1}^m n_j(l_j^\prime+1)\left( l_j+\frac{l_j^\prime}{2} \right).
+\end{equation}
+This is the processing time of the full threshold composition, i.e., the batch that contains \(n_j\) prompts from every decode stage of every type \(j\). The load-balance and memory conditions are
+\begin{equation}\label{eq:policy_constraints}
+\begin{aligned}
+&\lambda_j\Delta^\pi \leq n_j \quad \text{for all } j \in [m], \\
+&M^{*}\leq M^{\pi}\leq C.
+\end{aligned}
+\end{equation}
+The first line says that, over one full-threshold iteration, the expected type-\(j\) arrivals do not exceed the \(n_j\) type-\(j\) prompts that can be advanced from each active stage. The second line is the corresponding feasibility condition: the threshold composition is at least on the scale of the ideal-fluid memory requirement but does not exceed the physical memory \(C\).
+
+For any realized event-driven WAIT batch \(r\), let \(a^{(r)}_{js}\le n_j\) be the number of selected type-\(j\) prompts at decode stage \(s\), and let \(J_r\) be the set of selected types. Its KV memory satisfies
+\[
+    M_r
+    =
+    \sum_{j\in J_r}\sum_{s=0}^{l_j^\prime} a^{(r)}_{js}(l_j+s)
+    \le
+    \sum_{j=1}^m n_j\sum_{s=0}^{l_j^\prime}(l_j+s)
+    =
+    M^\pi.
+\]
+Therefore the physical processing time of the realized batch in the \(\zeta\)-scaled system is
+\[
+    S_r^{(\zeta)}
+    =
+    \frac{d_0+d_1M_r}{\zeta}
+    \le
+    \frac{\Delta^\pi}{\zeta}.
+\]
+This is the only direction needed for the comparison argument: actual batches may contain fewer types and have shorter duration, but no realized WAIT batch is larger than the full-threshold composition.
+
+In the \(\zeta\)-scaled system, one full-threshold slot has physical length \(\Delta^\pi/\zeta\). Define deterministic review times
+\[
+    u_b=b\Delta^\pi/\zeta,\qquad b=0,1,2,\ldots .
+\]
+The comparison policy \(\bar\pi\) reviews the entry queues only at these times. We use an end-of-slot accounting convention: arrivals accumulate over \((u_b,u_{b+1}]\), and at \(u_{b+1}\) the comparison policy removes \(n_j\) type-\(j\) prompts from each active stage whenever the type-\(j\) entry queue has reached \(n_j\). Equivalently, one can view the selected work as occupying the following full slot; this one-slot shift changes only initial and terminal constants. Every selected batch is padded to length \(\Delta^\pi/\zeta\), and the construction is feasible because any selected type subset has memory at most the full threshold composition \(M^\pi\le C\).
+
+The periodic comparison policy is deliberately conservative. Couple it with the event-driven WAIT policy on the same arrival sample path. Actual WAIT reviews at every arrival and batch completion, starts a batch as soon as a type threshold is met, and uses the realized batch composition rather than padding it to the full-threshold duration. Thus the work removed by \(\bar\pi\) in any full comparison slot is work that actual WAIT could have started no later, unless actual WAIT was already processing earlier threshold work. Since every realized WAIT batch has processing time at most \(\Delta^\pi/\zeta\), a monotonicity induction over \(\{u_b\}\) gives that actual WAIT has no fewer completions and no larger entry waiting contribution than \(\bar\pi\), up to the bounded prompts in service and the final partial slot. It is therefore enough to bound the comparison policy; these bounded edge effects contribute \(O((\zeta T)^{-1})\) to normalized throughput and \(O(1)\) to the service-normalized delay metrics.
+
+For the comparison policy, let \(\bar W^b_{(j)}\) be the residual type-\(j\) entry queue after the \(b\)-th review, and let
+\[
+    \bar X^b_{(j)}
+    =A_j(u_b,u_{b+1}]
+    \sim \text{Poisson}\!\left(\zeta\lambda_j\frac{\Delta^\pi}{\zeta}\right)
+    =\text{Poisson}(\lambda_j\Delta^\pi).
+\]
+The arrivals \(\{\bar X^b_{(j)}\}\) are independent across comparison slots and do not depend on other type queues. With the end-of-slot accounting convention above, the residual entry queue evolves as
+\[
+    \bar W^{b+1}_{(j)}
+    =
+    \bar W^b_{(j)}+\bar X^b_{(j)}
+    -
+    n_j\,\mathbf{1}\{\bar W^b_{(j)}+\bar X^b_{(j)}\ge n_j\}.
+\]
+This is the point at which the batch-composition issue disappears: the only coupling across types is the deterministic feasibility condition \(M^\pi\le C\); under the comparison clock, each type has its own threshold queue.
+
+\begin{lemma}[Multiple-Type Comparison Queue Bound]\label{lemma::multiple-type coupled dominace}
+For each type \(j\), define
+\[
+\widetilde W_{(j)}^0=2n_j,\qquad
+\widetilde W_{(j)}^{b+1}
+=\max\{2n_j,\widetilde W_{(j)}^b+\bar X^b_{(j)}-n_j\}.
+\]
+Then \(\widetilde W^b_{(j)}\ge \bar W^b_{(j)}\) for all \(b\ge0\) and \(j\in[m]\).
+\end{lemma}
+\noindent The proof is in Appendix~\ref{appendix_lemma::proof of multiple-type coupled dominace}. Let \(\mu_j=\lambda_j\Delta^\pi\). The increment in the dominating process is \(\bar X^b_{(j)}-n_j\), whose mean is \(\mu_j-n_j\le0\) by~\eqref{eq:policy_constraints}. If \(\mu_j=n_j\), the same random-walk maximum argument used in the single-type proof gives
+\[
+    \mathbb{E}[\bar W^B_{(j)}]
+    \le \mathbb{E}[\widetilde W^B_{(j)}]
+    =O(B^{1/2}).
+\]
+The same bound holds for every prefix \(b\le B\), so
+\[
+    \frac{1}{B}\sum_{b=0}^{B-1}\mathbb{E}[\bar W^b_{(j)}]=O(B^{1/2}).
+\]
+If \(\mu_j<n_j\), the dominating process has strictly negative drift. Since
+\[
+\text{Var}(\bar X^b_{(j)}-n_j)=\mu_j,\qquad
+\left|\mathbb{E}[\bar X^b_{(j)}-n_j]\right|=n_j-\mu_j,
+\]
+by Kingman's bound \citep{kingman1962queues}:
+\[
+    \sup_{B\ge0}\mathbb{E}[\bar W^B_{(j)}]
+    \le
+    2n_j+\frac{\mu_j}{2(n_j-\mu_j)}
+    <\infty .
+\]
+Combining the zero-drift and negative-drift cases, under the nonpositive drift condition in~\eqref{eq:policy_constraints},
+\[
+    \sum_{j=1}^m \mathbb{E}[\bar W^B_{(j)}]=O(B^{1/2}),
+    \qquad
+    \frac{1}{B}\sum_{b=0}^{B-1}\sum_{j=1}^m \mathbb{E}[\bar W^b_{(j)}]=O(B^{1/2}).
+\]
+Under strict slack \(\mu_j<n_j\) for all \(j\), both quantities are \(O(1)\).
+
+It remains to translate these \(B\)-slot bounds into the theorem's finite-horizon metrics. The number of completed comparison slots in the physical horizon \([0,T]\) is exactly
+\[
+    B_\zeta(T)=\max\{b:u_b\le T\}
+    =\left\lfloor\frac{\zeta T}{\Delta^\pi}\right\rfloor,
+\]
+and the residual time is less than one comparison slot. Since \(B_\zeta=\zeta T/\Delta^\pi+O(1)\), \(B_\zeta^{-1/2}=O((\zeta T)^{-1/2})\) and \(B_\zeta^{-1}=O((\zeta T)^{-1})\).
+
+For throughput, terminal entry backlog controls the completion shortfall. More precisely, for the comparison policy,
+\[
+    \throughput^*-\mathbb{E}[\throughput^{(\zeta,\bar\pi)}]
+    \le
+    \frac{1}{\zeta T}\sum_{j=1}^m l_j^\prime\,
+    \mathbb{E}[\bar W^{B_\zeta}_{(j)}]
+    +O((\zeta T)^{-1}),
+\]
+where the \(O((\zeta T)^{-1})\) term accounts for the final partial slot and the bounded number of prompts already in the decode pipeline. This gives an \(O((\zeta T)^{-1/2})\) gap under nonpositive drift and an \(O((\zeta T)^{-1})\) gap under strict slack.
+
+For delay, terminal backlog is not the right object; the relevant quantity is the time average of the entry queues. Let \(\bar Q^b=\sum_{j=1}^m \bar W^b_{(j)}\). In physical time, each comparison slot has length \(\Delta^\pi/\zeta\). The theorem, however, reports service-normalized delay, multiplying elapsed physical time by \(\zeta\). Thus each comparison slot contributes a constant scaled time \(\Delta^\pi\), and the waiting contribution is bounded by
+\[
+    O\!\left(
+    \frac{1}{B_\zeta}\sum_{b=0}^{B_\zeta-1}
+    \mathbb{E}[\bar Q^b]
+    \right).
+\]
+The prefix bound therefore yields
+\[
+    \mathbb{E}[\Latency^{(\zeta,\bar\pi)}],
+    \mathbb{E}[\TTFT^{(\zeta,\bar\pi)}]
+    =
+    O(B_\zeta^{1/2})
+    =
+    O((\zeta T)^{1/2})
+\]
+under nonpositive drift. Under strict slack, the same expression is \(O(1)\). The fixed number of service stages adds only a constant in service-normalized time. The comparison monotonicity transfers these throughput, latency, and TTFT bounds from \(\bar\pi\) to the actual event-driven WAIT policy, completing the proof of Theorem~\ref{thm:wait_heavy_traffic}.

@@ -1,0 +1,887 @@
+
+\section{Tolerant Performance}  
+\label{Appendix_tolerant}
+
+In this appendix, we provide proofs of the results stated in
+Section~\ref{sec:tolerant}, corresponding to the performance
+evaluation of the tolerant class. 
+
+\ignore{
+We begin with some remarks on a
+sample path coupling that results from the SFJ limit, which is central
+to our arguments.
+
+Under the SFJ scaling, we consider a family of queuing systems,
+parameterized by $\mue \geq 1$ (the service rate of the $\i$-class).
+Under SFJ limit, the eager service rate $\mue \to \infty$, and the
+eager arrival rate $\lambda_\i \ra \infty,$ while maintaining the
+eager load $\rho_\i = \lambda_\i / \mu_\i$ to a constant value.
+% In the proofs given below, we derive the limits of different
+% quantities/performance measures under this limit.
+Specifically, we scale the job size distribution of the eager class
+as, $B^{\mu_\i}_\i \eqdist B^1_\i/\mu_{\i}$, where $B^{\mu_\i}_\i$
+denotes a generic eager job size at scale $\mu_\i$ and $\eqdist$ is
+equality in distribution. Now, holding the occupancy of the tolerant
+queue frozen at~$j,$ via sample path coupling, the occupancy process
+of the eager class at scale $\mue$ can be viewed as a
+$\mue$-time-scaled (or fast-forwarded) version of occupancy process at
+scale~1; see \cite{ANOR} for more details. Let $\B_j^\mue$ and
+$\S_j^\mue$ denote a generic $\i$-busy cycle (the interval between the
+start of two successive busy periods), and total service available for
+the $\t$-class during an $\i$-busy cycle, respectively, when the
+tolerant occupancy equals $j.$ It thus follows that
+\begin{eqnarray}
+  \B^\mue_j \eqdist \B_j^1 /\mue  \label{Eqn_Bmue}, \\
+  \S^\mue_j \eqdist \S_j^1 / \mue  \label{Eqn_Smue}. 
+\end{eqnarray}
+In the following, for simplicity, we also denote $\B_j^1$ and $\S_j^1$
+as $\B_j$ and $\S_j,$ respectively. }
+
+This appendix is organized as follows. In
+Section~\ref{sec:busycycles}, we prove a technical result that is used
+to prove Lemma~\ref{lemma:uniform}. The proofs of
+Lemmas~\ref{lemma:uniform} and~\ref{lemma:TauStability} are provided
+in Sections~\ref{sec:lemma:uniform} and~\ref{sec:lemma:TauStability},
+respectively. The proofs of
+Theorems~\ref{Thm_SD_Convergence},~\ref{Thm_Lim_SD_Conv}
+and~\ref{Thm_tau} are provided in
+Sections~\ref{sec:Thm_SD_Convergence},~\ref{sec:Thm_Lim_SD_Conv},
+and~\ref{sec:Thm_tau}, respectively.
+
+
+\subsection{Bounding the second moment of $\i$-busy cycles}
+\label{sec:busycycles}
+To prove Lemma~\ref{lemma:uniform}, we need the following technical
+lemma, which states that second moment of the the eager busy cycles
+$\B_j,$ corresponding to $\t$-occupancy $j$ and scale $\mue = 1,$ are
+uniformly bounded from above over sub-policies $j.$
+
+\begin{lemma}
+  \label{lemma:bp_upper_bound}
+  Under Assumptions {\bf A.}1-3,  Assumption {\bf A}.4 is true, i.e., there exists a constant $\mathcal{M}$
+  such that $\Exp{\B_j^2} \leq \mathcal{M}$ for any~$\i$
+  sub-policy~$j.$
+\end{lemma}
+\begin{proof}
+  Note that busy cycle $\B_j\eqdist O_j + I_j,$ where $O_j$ denotes the
+  \emph{busy period}, and $I_j$ the idle period between two successive
+  busy periods. Moreover, $I_j$ is exponentially distributed with mean
+  $1/\lambda_\i.$ Thus, to prove the statement of the lemma, it
+  suffices to prove that $\Exp{O_j^2}$ is bounded from above uniformly
+  over sub-policies~$j.$ This is proved as follows. The busy period
+  $O_j$ under any sub-policy~$j$ can be upper bounded by the busy
+  period of an $M/G/\infty$ system with arrival rate~$\lambda_\i$ and
+  job size $X :\eqdist B_\i/c_{\min}.$ Indeed, note that since any
+  admitted eager job of size $B_\i$ must be served at a minimum rate
+  of $c_{\min},$ $X = B_\i/c_{\min}$ is an upper bound on the
+  residence time of the job in the system. The statement of the lemma
+  now follows from Lemma~\ref{lemma:mginftyBPbound} below, which
+  provides an upper bound on the second moment of an $M/G/\infty$ busy
+  period.
+\end{proof}
+ 
+\begin{lemma}
+  \label{lemma:mginftyBPbound}
+  Consider an $M/G/\infty$ queue with arrival rate $\lambda,$ with a
+  generic job size denoted by $X$. Let $O$ denote a generic busy
+  period of this system. Then
+  $$\Exp{O^2} \leq e^{\theta} \Exp{X^2} \left(e^{\theta} - 1 + \frac{e^2-1}{2}
+  \right),$$ where $\theta := \lambda \Exp{X}.$
+\end{lemma}
+
+\begin{proof}
+  Given a non-negative random variable $Y$ having finite expectation,
+  let $Y^*$ denote its \emph{forward excess}, i.e., $Y^*$ is a
+  non-negative random variable satisfying
+  $$\prob{Y^* > x} = \frac{1}{\Exp{Y}} \int_x^{\infty} \prob{Y > t} dt
+  \qquad (x \geq 0).$$ Note that
+  $\Exp{Y^*} = \frac{\Exp{Y^2}}{2 \Exp{Y}}.$
+
+  Now, returning to the $M/G/\infty$ queue, let $K:= 1-e^{-\theta}.$
+Define a  non-negative random variable $U$, which is distributed as below:
+$$\prob{U > x} = \frac{1}{K} e^{-\theta}(e^{\theta \prob{X^* > x}} - 1)
+\qquad (x \geq 0).$$ Finally, let $M$ denote a geometric random
+variable such that $$\prob{M = n} = (1-K) K^{n-1} \qquad (n \in \N.)$$
+The following representation for the forward excess of the
+$M/G/\infty$ busy period was established by Makowski \cite{Makowski11}:
+\begin{equation}
+  \label{eq:Makowski_result}
+  O^* \eqdist \sum_{i = 1}^M U_i,
+\end{equation}
+where $\{U_i\}_{i \geq 1}$ is an i.i.d. sequence of random variables
+distributed as $U$ independent of $M.$
+
+From \eqref{eq:Makowski_result}, we have
+$$\Exp{O^*} = \frac{\Exp{O^2}}{2 \Exp{O}} = \Exp{M} \Exp{U},$$ which
+yields
+\begin{align}
+  \Exp{O^2} &= 2 \Exp{O} \Exp{M} \Exp{U} \nonumber \\
+             &= 2 \frac{K}{\lambda(1-K)} \frac{1}{(1-K)} \Exp{U}.
+               \label{eq:temp1}
+\end{align}
+Here, we have used $\Exp{O} = \frac{K}{\lambda(1-K)},$ which is also
+proved in \cite{Makowski11}.
+
+We upper bound $\Exp{U}$ as follows. Using the Markov inequality,
+$\prob{X^* > x} \leq \frac{\Exp{X^2}}{x \Exp{X}}.$ It then follows
+that $\theta \prob{X^* > x} \leq 2$ for
+$x \geq \beta := \frac{\lambda \Exp{X^2}}{2}.$
+% Moreover, there exists a constant $\gamma > 1$ such that
+% $e^y - 1 \leq \gamma y$ for %$y \in [0,2].$
+Now,
+\begin{align}
+  \Exp{U} &= \frac{e^{-\theta}}{K} \int_{0}^{\infty} (e^{\theta \prob{X^* > x}} - 1) dx \nonumber \\ 
+          &\leq \frac{e^{-\theta}}{K} \left[\beta (e^{\theta} - 1) + \int_{\beta}^{\infty} (e^{\theta \prob{X^* > x}} - 1) dx\right] \nonumber \\
+          &\stackrel{(a)}\leq \frac{e^{-\theta}}{K} \left[\beta (e^{\theta} - 1) + \int_{\beta}^{\infty} \gamma \theta \prob{X^* > x} dx\right] \nonumber \\
+          &\leq \frac{e^{-\theta}}{K} \left[\beta (e^{\theta} - 1) + \gamma \theta \frac{\Exp{X^2}}{2\Exp{X}} \right]\nonumber \\
+          &= \frac{e^{-\theta} \lambda \Exp{X^2}}{2K} \left[e^{\theta} - 1 + \gamma \right].
+            \label{eq:temp2}
+\end{align}
+The bounding in $(a)$ uses the inequality $e^{x} - 1 \leq \gamma x$
+for $x \in [0,2],$ with $\gamma := \frac{e^2-1}{2}$ (by convexity of $e^x$). Finally,
+combining \eqref{eq:temp1} and \eqref{eq:temp2} gives us the statement
+of the lemma.
+\end{proof}
+
+\subsection{\bf Proof of Lemma~\ref{lemma:uniform}}
+\label{sec:lemma:uniform}
+
+Recall that, when $\t$-occupancy equals $j$ (for any given $j$), the
+backward transition probability of the tolerant birth-death chain (at
+scale $\mue$) is given by $q_j^\mue$.  We aim to show the convergence
+of these transition probabilities, uniformly over $j$, under the SFJ
+limit.
+%
+The idea is to develop (for each $j$) a lower and an upper bound on
+$q_j^\mue$ which uniformly converge to the same constant given by
+Equation~\eqref{eq:q_conv}.
+%  Further these convergences are  uniform  over all  $j$, under SFJ limit.
+%Firstly, we will develop a lower bound on $q^{\mue}_j$ and show that it
+%converges to the limit in \eqref{eq:q_conv} uniformly over $j \in \g.$
+%We then repeat with an upper bound, completing the proof.
+
+\revision{Consider the evolution of the tolerant queue, starting from
+  an instant when the $\t$ occupancy changed, via an arrival or a
+  departure, to~$j.$ Let $A_\t$ denote the time until the next $\t$
+  arrival, let $\B_{j,k}^{\mue}$ denote the $k$th $\i$-busy cycle and
+  let $\S_{j,k}^{\mue}$ denote the total amount of service available
+  for the tolerant class during the $k$th $\i$-busy cycle, at scale
+  $\mue$% and $\t$-occupancy $j$.
+}
+
+\noindent {\bf Lower bound:} 
+Consider any eager sub-policy $j$. Define
+$N := \min\{n \geq 1\ |\ \sum_{k = 1}^n \B_{j,k}^{\mue} > A_\t\}.$
+\revision{Note that $N$ is the index of the $\i$-busy cycle in which
+  the next $\t$ arrival occurs. Since $A_\t$ is exponentially
+  distributed, $N$ is a geometric random variable with parameter
+  $\prob{\B_j^{\mue} > A_\t}.$} Further, define
+$\bar{q}_j := \prob{\sum_{k = 1}^{N-1} \S_{j,k}^{\mue} > B_{\t}}.$
+\revision{Note that $\sum_{k = 1}^{N-1} \S_{j,k}^{\mue},$ which is the
+  service received by the~$\t$~queue in the first $N-1$ $\i$-busy
+  cycles, is a lower bound on the total service received by the~$\t$
+  queue until the next~$\t$-arrival. Thus, the event
+  $\sum_{k = 1}^{N-1} \S_{j,k}^{\mue} > B_{\t}$ implies that a $\t$-
+  departure would precede the next $\t$-arrival; this yields the bound
+  $q^{\mue}_j \geq \bar{q}_j.$} Moreover, the lower bound $\bar{q}_j$,
+on $q_j^\mue$ can be represented as follows:\footnote{Let
+  ${\bar q}_j :=E({\cal E})$, with indicator of the event
+  ${\cal E} := 1_{ \sum_{k = 1}^{N-1} \S_{j,k}^{\mue} > B_{\t} }
+  $. Condition on the events of first $\i$-busy cycle:
+		\begin{itemize}
+		\item 	 if $\S_{j,1}^{\mue} > B_\t$ and $\ \B_{j,1}^{\mue} < A_\t$ then ${\cal E} = 1$; otherwise 
+		\item   if $\ \B_{j,1}^{\mue} > A_\t$  then ${\cal E} = 0$;  or  
+		\item if $\ \B_{j,1}^{\mue} < A_\t$ and
+                  $\S_{j,1}^{\mue} < B_\t$, \revision{then the
+                    conditional probability of ${\cal E}$ equals its
+                    unconditional probability by the memorylessness of
+                    $A_\t$ and $B_\t$.}
+\end{itemize}			
+		And thus, 
+		$$
+		\bar{q}_j = \prob{\S^{\mue}_{j,1} >
+			B_\t,\ \B^{\mue}_{j,1} < A_\t} + \bar{q}_j  P( \B_{j,1}^{\mue}  < A_\t ,  \  \S_{j,1}^{\mue} < B_\t ),
+		$$
+		which implies \eqref{eq:p_bar} given that
+		$$1 - P( \B_{j,1}^{\mue}  < A_\t ,  \  \S_{j,1}^{\mue} < B_\t )  = \prob{\S^{\mue}_{j,1} >
+		B_\t,\ \B^{\mue}_{j,1} < A_\t} + \prob{\B^{\mue}_{j,1} > A_\t}.$$}
+\begin{equation}
+\label{eq:p_bar}
+\bar{q}_j =
+\frac{\prob{\S^{\mue}_j > B_\t,\ \B^{\mue}_j < A_\t}}{\prob{\S^{\mue}_j >
+		B_\t,\ \B^{\mue}_j < A_\t} + \prob{\B^{\mue}_j > A_\t}}.    
+\end{equation}
+%We will show that, as $\mue \ra \infty$, $\bar{p}_j \ra \frac{\nu_j \mu_\t}{\lambda_\t + \nu_j \mu_\t}$ 
+% uniformly over all the sub-policies $j$.
+By Lemma \ref{Lemma_Intermediate_result} below, we have uniform
+convergence (here, $\varpi(\mue) \to 0$ as $\mue \to \infty$
+\textit{u.f.} in $j$):
+%  
+% \footnote{A sequence $a^\mue \sim f(\mue) $ implies $a^\mue =  f(\mue) + \varpi(1/\mue)$ \textcolor{red}{with $\varpi(1/ \mue) \to \  0 \  as \  \mue \to \infty$}. }
+% %
+%   
+\begin{eqnarray*}
+ \left|\prob{\B^{\mue}_j > A_\t} - \frac{\lambda_\t
+  \Exp{\B_j}}{\mue} \right| \leq \varpi(\mue), \ \ \mbox{and} \ \  \left|\prob{\S^{\mue}_j > B_\t,\ \B^{\mue}_j < A_\t} -
+  \frac{\mu_\t \Exp{\S_j}}{\mue} \right| \leq \varpi(\mue),
+\end{eqnarray*} 
+where $\B_j$ is a typical $\i$-busy cycle and $\S_j$ is the (typical)
+unused service left behind by the eager class in one $\i$-busy cycle,
+both with $\mue = 1$ and under sub-policy $j$.
+% Note that, in view of the assumption $E[\B_j^2] < \zeta$ for all $j$, the  bounds of the Lemma \ref{Lemma_Intermediate_result}  are independent of the $\t$-occupancy $j$.
+Using the above and because\footnote{When renewal reward theorem is
+  applied with renewal cycles as $\i$-busy cycles and with rewards
+  being the amount of service available to the $\t$-class in each busy
+  cycle. }  $\nu_j = \frac{\Exp{\S_j}}{\Exp{\B_j}}$, we get from
+equation \eqref{eq:p_bar} that the lower bound on $q_j^\mue$,
+%
+\begin{eqnarray*}
+\bar{q}_j \stackrel{\mue \to \infty}{\longrightarrow} \frac{\mu_\t \Exp{\S_j}}{\mu_\t \Exp{\S_j} + \lambda_\t
+	\Exp{\B_j} } = \frac{\mut \nu_j}{\mut \nu_j + \lambda_\t} \ \ u.f. \mbox{ over} \ \ j.
+\end{eqnarray*}
+%and hence its moments are constants and thus the  bounds of the Lemma are independent of $j$, the state of $\t$-customer .
+
+{\bf Upper bound:} Next, we will prove the \textit{u.f.} convergence
+of an upper bound on the transition probabilities $q^{\mue}_j$, to the
+same limit. Since $\B^\mue_j \ge \S^\mue_j$, one can upper bound
+$q_j^\mue$ as follows:
+% $$p^{\mue}_j \leq \bar{p} + \prob{\B^{\mue} > X_\t\ |\ \B^{\mue}
+%	> A_\t}.$$
+\begin{eqnarray*}
+ q^{\mue}_j \leq \bar{q}_j + \prob{\S^{\mue}_j > B_\t\ |\ \B^{\mue}_j
+	> A_\t} \leq \bar{q}_j + \prob{\B^{\mue}_j > B_\t\ |\ \B^{\mue}_j
+	> A_\t} .
+\end{eqnarray*}
+%{\color{red}
+% $$\bar{p} \leq  q^{\mue}_j \leq \bar{p} + \prob{\S^{\mue} > \B_\t\ |\ \B^{\mue}
+%	> A_\t} \leq \bar{p} + \prob{\B^{\mue} > \B_\t\ |\ \B^{\mue}
+%	> A_\t} .
+%$$}		
+%{\color{red} $X_\t $ to be replaced with $B_\t$??? Also, it should be $q_j^\mue$!!!}
+%It suffices now to show the following.
+In view of Lemma \ref{Lemma_Intermediate_result_1} below, we have  as $\mue \to \infty$,
+\begin{eqnarray*}
+\prob{\B^{\mue}_j > B_\t\ |\ \B^{\mue}_j> A_\t} \ra 0 \ \ u.f.  \mbox{ over } \  j.  
+\end{eqnarray*}
+Therefore the upper bound on $q_j^\mue$, 
+\begin{eqnarray*}
+  \bar{q}_j + \prob{\B^{\mue}_j > B_\t\ |\ \B^{\mue}_j
+	> A_\t} \stackrel{\mue \to \infty}{\longrightarrow} \frac{\mut \nu_j}{\mut \nu_j + \lambda_\t} \ \ u.f. \mbox{ over} \ \ j.  
+\end{eqnarray*} 
+This proves that the lower and upper bound converge to the same limit
+(for any given $j$), uniformly across all $j$. This proves the
+statement of the lemma. \qed
+
+%
+%
+
+\begin{lemma}
+	\label{Lemma_Intermediate_result}
+We have:  \\  
+i) $ |\mue \prob{\B^{\mue}_j > A_\t} - \lambda_\t
+\Exp{\B_j}| \leq \frac{\lambda_{\t}^2\Exp{\B^2_j}}{2\mue},$ and \\
+ii)   % $\prob{\S^{\mue} > B_\t,\ \B^{\mue} < A_\t} \sim
+%	\frac{\mu_\t \Exp{\S}}{\mue},$ and 
+$|\mue \prob{\S^{\mue}_j > B_\t,\ \B^{\mue}_j < A_\t} - \mu_\t
+\Exp{\S_j}| \leq \frac{(\lambda_\t+
+  \mu_\t)^2\Exp{\B^2_j}}{\mue}.$ \\
+That is, there exists a function $\varpi (\mue)$ (which is independent
+of $j,$ and  is finite  by  Lemma~\ref{lemma:bp_upper_bound}), such that
+$\varpi (\mue) \to 0$ as $\mue \to \infty$ and for each $j$,
+\begin{eqnarray*}
+  \left | \prob{\B_j^{\mue} > A_\t} - \frac{\lambda_\t \Exp{\B_j }}{\mue}  \right | 
+  &\le  &  \varpi (\mue),  
+          \mbox{  and  }  \\
+          % 
+  \left | 	  \prob{\S_j^{\mue} > B_\t,\
+  \B^{\mue}_j < A_\t}  - \frac{  \mu_\t \Exp{\S_j} } {\mue} \right | 
+% 
+% 
+  & \le&   \varpi (\mue) \mbox{ with }  \\ 
+  && \hspace{-40mm}
+     \varpi (\mue) \  :=  \  \max \left \{    \frac{\lambda_{\t}^2}{2\mue^2} ,    \  \       \frac{(\lambda_\t+
+     \mu_\t)^2}{\mue^2}     \right \}  \sup_i  \Exp{\B_i^2}  =  \frac{(\lambda_\t+
+     \mu_\t)^2}{\mue^2}      \sup_i  \Exp{\B_i^2}  .
+\end{eqnarray*}
+\end{lemma}
+
+
+\begin{proof} %{\bf Proof of Lemma \ref{Lemma_Intermediate_result}:}
+  Proof of $(i)$: Note that, for any random variable $Y,$ the moment
+  generating function (MGF) is given by: $M_Y(s) := \Exp{e^{sY}}.$ We
+  use the following bounds in our proof repeatedly. Suppose that the
+  random variable $X$ is exponentially distributed with mean
+  $1/\gamma,$ and the random $Y$ is non-negative and independent of
+  $X.$ Then
+  \begin{equation}
+    \label{eq:mgf_bounds}
+    \gamma \Exp{Y} - \frac{\gamma^2 \Exp{Y^2}}{2} \leq \prob{Y > X} = 1-M_Y(-\gamma) \leq \gamma \Exp{Y}.
+  \end{equation}
+  The equality above follows by conditioning on $Y,$ and the
+  inequalities are a consequence of the following bounds on the MGF:
+  for $s \geq 0,$
+  $$1-s \Exp{Y} \leq M_Y(-s) \leq 1-s \Exp{Y} + \frac{s^2
+    \Exp{Y^2}}{2}.$$
+
+  
+  Now, since $A_\t$ is exponentially distributed and because  
+  $\B_j^{\mu_\i} \eqdist \B_j^1/\mu_{\i} = \B_j /\mu_{\i}$  (see \eqref{Eqn_Bmue}), we
+  have, using~\eqref{eq:mgf_bounds},
+	\begin{align*}
+          \prob{\B^{\mue}_j > A_\t} \leq
+          \frac{\lambda_\t \Exp{\B_j}}{\mue}. 
+	\end{align*}
+	Using this inequality, and invoking \eqref{eq:mgf_bounds} again,   
+        {\small\begin{align*} \bigg|\mue
+            \prob{\B^{\mue}_j > A_\t} - \lambda_\t \Exp{\B_j}\bigg|
+            =
+	%
+	\lambda_\t \Exp{\B_j} - \mue \prob{\B^{\mue}_j > A_\t} 
+	%
+	& \leq \lambda_\t \Exp{\B_j} - \mue
+	\left[\frac{\lambda_\t \Exp{\B_j}}{\mue} -
+	\frac{\lambda_{\t}^2 \Exp{\B^2_j}}{2 (\mue)^2} \right] \\
+	%
+	&=\frac{\lambda_{\t}^2\Exp{\B^2_j}}{2\mue}.
+               \end{align*}}
+             This completes the proof of Part~$(i)$. \\
+	
+	\noindent
+	{\it Proof of (ii):}
+        %	The probability of interest
+        % $\prob{\S^{\mue} > B_\t,\ \B^{\mue} < A_\t}$ can be bounded
+        % as follows.  (Here we are assuming that $\tau-$job sizes are
+        % exponentially distributed)
+        Again, since $A_\t$ is exponentially distributed, using
+        \eqref{eq:mgf_bounds}, we have
+	\begin{align}
+	\label{eq:cl2_1}
+	\prob{\S^{\mue}_j > B_\t,\ \B^{\mue}_j < A_\t} & \leq \prob{\S^{\mue}_j
+		> B_\t} \le  \frac{\mu_\t \Exp{\S_j}}{\mue}. %+ \varpi(\mue).
+	\end{align}
+	 Since, $\B^\mue_j \ge  \S^\mue_j$, we will have
+%	The proof of the last step above follows along the lines of the
+%	proof of Claim~1. 
+	\begin{align}
+	\prob{\S^{\mue}_j > B_\t,\ \B^{\mue}_j < A_\t} & = \prob{\S^{\mue}_j >
+		B_\t} - \prob{ \S^{\mue}_j > B_\t,\ \B^{\mue}_j > A_\t} \nonumber \\
+	& \geq \prob{\S^{\mue}_j > B_\t} - \prob{\B^{\mue}_j > B_\t,\ \B^{\mue}_j > A_\t
+		}. \label{eq:cl2_2}
+	\end{align} Because  $A_\t$ and $B_\t$ are exponentially distributed, the second term of the above inequality becomes (using the lower and upper bounds on $M_{\B_j}$ as before):
+	\begin{align}
+	\prob{\B^{\mue}_j > A_\t,\ \B^{\mue}_j > B_\t} &=\int
+	(1-e^{-\lambda_\t x})(1-e^{-\mu_\t x}) dF_{\B^{\mue}_j}(x) \nonumber \\
+	&= 1 - M_{\B_j}\left(\frac{-\lambda_\t}{\mue}\right) -
+	M_{\B_j}\left(\frac{-\mu_\t}{\mue}\right) +
+	M_{\B_j}\left(\frac{-\lambda_\t - \mu_\t}{\mue}\right) \nonumber\\
+&\le   1-  \left(1-\frac{\lambda_\t\Exp{\B_j}}{\mue} \right) 
+	-  \left(1-\frac{\mu_\t\Exp{\B_j}}{\mue} \right )  \nonumber  \\
+	&\quad + \left(1-\frac{(\lambda_\t+ \mu_\t)\Exp{\B_j}}{\mue}  + \frac{(\lambda_\t+ \mu_\t)^2\Exp{\B^2_j}}{2 (\mue)^2}\right) \nonumber \\	
+	%
+	&=  \frac{(\lambda_\t+ \mu_\t)^2\Exp{\B^2_j}}{2 (\mue)^2} 
+	 \label{eq:cl2_3}.
+	\end{align}
+	The result follows from \eqref{eq:cl2_1}, \eqref{eq:cl2_2}, and
+	\eqref{eq:cl2_3}:
+	\begin{align*}
+	\bigg|\mue \prob{\S^{\mue}_j > B_\t,\ \B^{\mue}_j < A_\t} & - \mu_\t
+	\Exp{\S_j}\bigg|  
+	%
+	= \mu_\t \Exp{\S_j} - \mue \prob{\S^{\mue}_j > B_\t,\
+		\B^{\mue}_j < A_\t} \\
+	%
+	&\leq \mu_\t \Exp{\S_j} - \mue \prob{\S^{\mue}_j > B_\t} + \mue
+	\prob{ \B^{\mue}_j > B_\t,\ \B^{\mue}_j > A_\t} \\
+	%
+	&= \mu_\t \Exp{\S_j} - \mue   E\left [1-  e^{-\mu_\t \S_j  / \mue }  \right ]   + \mue
+	\prob{\B^{\mue}_j > A_\t,\ \B^{\mue}_j > B_\t} \\
+	%
+	&\leq \frac{\mu_\t^2 \Exp{\S^2_j}}{2 \mue} + \mue \prob{\B^{\mue}_j >
+		A_\t,\ \B^{\mue}_j > B_\t} \\
+%	&= \frac{\mu_\t^2 \Exp{\S^2_j}}{2 \mue} + \mue -
+%	\mue M_{\B_j}\left(\frac{-\lambda_\t}{\mue}\right) -
+%	\mue M_{\B_j}\left(\frac{-\mu_\t}{\mue}\right) +
+%	\mue M_{\B_j}\left(\frac{-\lambda_\t - \mu_\t}{\mue}\right) \\
+%	&\leq \frac{\mu_\t^2 \Exp{\S^2_j}}{2 \mue} + \mue - \mue \left(1-\frac{\lambda_\t\Exp{\B_j}}{\mue} \right) 
+%	- \mue \left(1-\frac{\mu_\t\Exp{\B_j}}{\mue} \right) \\
+%	&\quad + \mue \left(1-\frac{(\lambda_\t+ \mu_\t)\Exp{\B_j}}{\mue}  + \frac{(\lambda_\t+ \mu_\t)^2\Exp{\B^2_j}}{2 (\mue)^2}\right)\\
+	&\le \frac{\mu_\t^2 \Exp{\S^2_j}}{2 \mue} + \frac{(\lambda_\t+ \mu_\t)^2\Exp{\B^2_j}}{2 \mue} \\
+	&\leq \frac{(\lambda_\t+ \mu_\t)^2\Exp{\B^2_j}}{\mue}.
+	\end{align*}
+	This completes the proof of lemma.
+\end{proof}
+%
+%
+\begin{lemma}
+	\label{Lemma_Intermediate_result_1}
+The probability $\prob{\B^{\mue}_j > B_\t\ |\ \B^{\mue}_j > A_\t}$
+converges to 0 u.f. over $j$, under the SFJ limit.	
+\end{lemma}
+
+\begin{proof}  %Using the definition of conditional probability, it is easy to observe that,
+Using arguments similar to those in the proof of Lemma~\ref{Lemma_Intermediate_result} (see  equation (\ref{eq:mgf_bounds})), we can prove that $$\prob{\B^{\mue}_j > A_\t} \geq \frac{\lambda_\t \Exp{\B_j}}{\mue} -
+\frac{\lambda_\t^2 \Exp{\B^2_j}}{2 (\mue)^2}.$$ From this and \eqref{eq:cl2_3} we will have,
+	\begin{align*}
+	\prob{\B^{\mue}_j > B_\t\ |\ \B^{\mue}_j > A_\t} =
+	\frac{\prob{\B^{\mue}_j > A_\t,B_\t}}{\prob{\B^{\mue}_j > A_\t}} 
+	%
+	\displaystyle \leq \frac{\frac{(\lambda_\t + \mu_\t)^2
+			\Exp{\B^2_j}}{ 2 (\mue)^2}}{\frac{\lambda_\t \Exp{\B_j}}{\mue} -
+		\frac{\lambda_\t^2 \Exp{\B^2_j}}{2 (\mue)^2}} 
+	%
+	\displaystyle = \frac{(\lambda_\t + \mu_\t)^2
+		\Exp{\B^2_j}}{2 \mue \lambda_\t \Exp{\B_j} -
+		\lambda_\t^2 \Exp{\B^2_j}}.
+	\end{align*} The statement of the lemma now follows by the uniform bound on $\Exp{\B^2_j}$ (Lemma~\ref{lemma:bp_upper_bound}).
+\end{proof}
+
+%\begin{lemma}
+%		Consider $\g = \infty$.
+%		There exists $\bar{\mu} > 0$ such
+%		that for $\mue > \bar{\mu},$ the Markov chain $\{X_n\}$ is positive
+%		recurrent. \eop
+%	\end{lemma}
+
+\subsection{Proof of Lemma~\ref{lemma:TauStability}}
+\label{sec:lemma:TauStability}
+
+By Lemma \ref{Lemma_Intermediate_result_2} $(iii)$ below, for any
+$\varepsilon > 0$, there exists a $\bar{\mu} > 0$ such that for
+$\mue > \bar{\mu},$
+$$
+\sum_{k = 1}^{\infty} \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}}
+	\ \le 
+	\sum_{k = 1}^{\infty} \frac{p_0^{\infty} p_1^{\infty } \cdots p_{k-1}^{\infty }}{q_1^{\infty } q_2^{ \infty  } \cdots q_k^{\infty  }}  + \varepsilon  < \infty,
+	$$where the last inequality is shown in the proof of  Lemma \ref{Lemma_Intermediate_result_2} $(iv)$.  Thus by standard text book arguments (e.g., \cite{Hoel}) we have the result. \qed
+
+
+        \ignore{
+
+ it is shown that 
+By    uniform convergence of these transition probabilities  as  given by Lemma  \ref{Lem_TP_Convergence},   for any  $\varepsilon > 0$, there exists a  $\bar{\mu} > 0$ such that for $\mue >
+		\bar{\mu},$ 
+		$$ 
+		\sup_j \frac{ p_j^\mue}{q_j^\mue} \   \le \  \sup_j   \frac{\lambda_\t}{  \nu_j \mu_\tau}   + \varepsilon  \  \le   \   \frac{1}{2- \delta_\t}  + \varepsilon,
+		$$further using Assumption~{\bf
+			B}.4. 
+
+%\textbf{Proof:}
+		Pick any  $j \geq 1$. 
+		%such that $i \in \mathcal{G}_j.$
+		
+		
+		 Recall  $p^{\mue}_j :=
+		\prob{X_{n+1} = j +1 \ | \ X_n = j}$, the forward probability.  
+	By    uniform convergence of these transition probabilities  as  given by Lemma  \ref{Lem_TP_Convergence},   for any  $\varepsilon > 0$, there exists a  $\bar{\mu} > 0$ such that for $\mue >
+		\bar{\mu},$ 
+		$$ 
+		\sup_j p_j^\mue \   \le \  \sup_j   \frac{\lambda_\t}{\lambda_\tau + \nu_j \mu_\tau}   + \varepsilon  \  \le   \   \frac{1}{2- \delta_\t}  + \varepsilon,
+		$$further using Assumption~{\bf
+			B}.4. Thus  the birth-death chain $\{X_n\}$ is
+		positive recurrent for large enough $\mue$  using standard Lyaponov arguments, by choosing appropriate $\varepsilon$.  		\eop 
+		
+		{\small \begin{equation}
+			\label{eq:tau_stab1e}
+			\lim_{\mue \ra \infty} p^{\mue}_j = \frac{\lambda_\t}{\lambda_\t +
+				\mu_\t \nu_j} < 1 - \delta,
+			% \frac{1}{2} - \frac{\delta}{2},
+			\end{equation}}
+		where the final inequality is a consequence of Assumption~{\bf
+			B}.4. As from previous lemma, we have u.f. convergence over all the sub-policies, inequality \eqref{eq:tau_stab1e} implies that for a suitably small
+		$\delta > 0,$ there exists $\bar{\mu} > 0$ such that for $\mue >
+		\bar{\mu},$ $p^{\mue}_j < 1- \delta$
+		%1/2 - \delta$
+		 for all $j.$
+		%
+	 \eop
+	 \\
+}
+
+
+\begin{lemma}
+	\label{Lemma_Intermediate_result_2}
+	Assume the hypothesis of Lemma \ref{Lem_TP_Convergence}. Then we have following under SFJ limit:\\
+	(i) $\frac{1}{p_i^\mue} \stackrel{\mue \to \infty}{\longrightarrow} \frac{1}{p_i^\infty}$,   u.f.  over $i$,\\
+	(ii)  $\frac{p_i^\mue}{q_i^\mue} \stackrel{\mue \to \infty}{\longrightarrow} \frac{p_i^\infty}{q_i^\infty}$,   u.f.  over $i$, \\
+	(iii) $\sum_{k = 1}^{\infty} \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}}
+	\stackrel{\mue \to \infty}{\longrightarrow}
+	\sum_{k = 1}^{\infty} \frac{p_0^{\infty} p_1^{\infty } \cdots p_{k-1}^{\infty }}{q_1^{\infty } q_2^{ \infty  } \cdots q_k^{\infty  }}$.
+	\\
+	(iv) $\left ( \sum_{k = 1}^{\infty} \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}} \right )^{-1}
+	\stackrel{\mue \to \infty}{\longrightarrow}
+	\left (	\sum_{k = 1}^{\infty} \frac{p_0^{\infty} p_1^{\infty } \cdots p_{k-1}^{\infty }}{q_1^{\infty } q_2^{ \infty  } \cdots q_k^{\infty  }} \right )^{-1}$.
+\end{lemma}
+\begin{proof}
+	By Lemma  \ref{Lem_TP_Convergence}, 
+	$$p_i^{\mu_\epsilon} \stackrel{\mu_\epsilon \to \infty}{\longrightarrow}  \frac{\lambda_\tau}{\lambda_\tau + \nu_i \mu_\tau} = p_i^{\infty} \mbox{ and  } q_i^{\mu_\epsilon} \stackrel{\mu_\epsilon \to \infty}{\longrightarrow} \frac{\nu_i \mu_\tau}{\lambda_\tau + \nu_i \mu_\tau} = q_i^\infty,$$ uniformly $(u.f.)$ over all the sub-policies $i$. Also, note that $0 < p_i^{\mu_\epsilon}, q_i^{\mu_\epsilon} <1$.
+	
+	Therefore, for every $\varepsilon >0, \ \exists \ \bar{\mu}$ such that, for all sub-policies $i$, whenever $\mu_\epsilon > \bar{\mu}$, we have:
+	\begin{eqnarray}
+	\label{Eqn_q_bounds}
+	q_i^\infty - \varepsilon < q_i^\mue < q_i^\infty + \varepsilon \ \ \mbox{and} \ \ p_i^\infty - \varepsilon < p_i^\mue < p_i^\infty + \varepsilon.
+	\end{eqnarray}
+	
+	%	
+	%	\textbf{Claim 1:} As $\mu_\epsilon \to \infty$, $\frac{1}{q_i^{\mu_\epsilon}} \to \frac{1}{q_i^{\infty}} := \frac{\lambda_\tau + \nu_i \mu_\tau}{\nu_i \mu_\tau}$ uniformly over the sub-policies $i$.
+	
+	%\textbf{Proof of claim 1.} 
+	{\it  Proof of (i):} 
+	Using equation (\ref{Eqn_q_bounds}), for every $\varepsilon > 0$, there exists a $\bar{\mu}$ such that,
+	%For $\mu_\epsilon > \bar{\mu}$, 
+	\begin{eqnarray}
+	\label{Eqn_fraction}
+	\bigg| \frac{1}{q_i^{\mu_\epsilon}} - \frac{1}{q_i^\infty} \bigg| &= &\bigg| \frac{q_i^{\mu_\epsilon} - q_i^{\infty}}{q_i^{\mu_\epsilon} q_i^{\infty}}    \bigg|  \ \le \
+	%
+	\frac{\varepsilon}{ q_i^{\mu_\epsilon} q_i^{\infty} }, \hspace{0.3cm} \mbox{for all} \  \mu_\epsilon \geq \bar{\mu}. 
+	\end{eqnarray}
+	%Since, $0< q_i^{\mu_\epsilon}, q_i^{\infty} <1$
+	
+	
+	%	\newcommand{\beq}{\begin{eqnarray*}}
+	%		\newcommand{\eeq}{
+	%	\end{eqnarray*}}
+	Since, $\t$-system is stable for all $i$, i.e., $\frac{\lambda_\t}{\nu_i\mu_\t} < 1 -\delta_\t$   for all $i$ (Assumption {\bf B}.4), the following is true
+	\begin{eqnarray}
+	\label{Eqn_q_inf_lower}
+	\frac{1}{q_i^\infty} = \frac{\lambda_\tau + \nu_i \mu_\tau}{\nu_i \mu_\tau}
+	< 2, \ \ \forall \ \ i \  \mbox{ and } \    \frac{1}{q_i^\mue} < \frac{1}{q_i^\infty - \varepsilon} =   \frac{  \frac{1}{q_i^\infty} }{1- \varepsilon   \frac{1}{q_i^\infty}}  < \frac{2}{1 - 2 \varepsilon}.
+	\end{eqnarray}
+	Using equation (\ref{Eqn_q_inf_lower}) in   (\ref{Eqn_fraction}) we get, for every $\varepsilon > 0$, there exists a $\bar{\mu}$ such that:
+	\begin{eqnarray}
+	\sup_i	\bigg| \frac{1}{q_i^\mue} - \frac{1}{q_i^\infty} \bigg| < \frac{4\varepsilon}{1 - 2 \varepsilon},  \ \   \mbox{for all} \  \mu_\epsilon \geq \bar{\mu}. 
+	\end{eqnarray}
+	This implies, $\frac{1}{q_i^{\mu_\epsilon}} \stackrel{\mue \to \infty }{ \longrightarrow} \frac{1}{q_i^{\infty}}$ uniformly over sub-policies $i$.\\
+	
+	%	\textbf{Claim 2:} 
+	{\it  Proof of (ii):}
+	%	 $\frac{p_i^\mue}{q_i^\mue} \stackrel{\mue \to \infty}{\longrightarrow}  \frac{p_i^\infty}{q_i^\infty}$ uniformly over sub-policies $i$.
+	%	
+	%	\textbf{Proof of claim 2.}
+	Using equation (\ref{Eqn_q_bounds}), for every $\varepsilon > 0$, there exists a $\bar{\mu}$ such that, for all $\mue \geq \bar{\mu}$,
+	\beq
+	\bigg| \frac{p_i^\mue}{q_i^\mue} -   \frac{p_i^\infty}{q_i^\infty} \bigg| 
+	%
+	= \bigg| \frac{p_i^\mue q_i^\infty - p_i^\infty q_i^\mue}{q_i^\mue q_i^\infty}   \bigg| 
+	%
+	%
+	\leq \frac{ q_i^\infty  \big|p_i^\mue  -  p_i^\infty \big| +  p_i^\infty   \big| q_i^\mue  - q_i^\infty \big|}{q_i^\mue q_i^\infty}
+	%
+	<  \frac{\varepsilon ( q_i^\infty +  p_i^\infty)}{q_i^\mue q_i^\infty}
+	%
+	= \frac{\varepsilon}{q_i^\mue q_i^\infty} 
+	%<\frac{2 \epsilon}{q_i^\epsilon} 
+	<
+	\frac{4 \varepsilon}{1 - 2 \varepsilon}.
+	\eeq
+	In above, the last inequality followed from equation (\ref{Eqn_q_inf_lower}).
+	%	\beq
+	%	\bigg| \frac{p_i^\mue}{q_i^\mue} -   \frac{p_i^\infty}{q_i^\infty} \bigg| \leq
+	%	\frac{ q_i^\infty \epsilon +  p_i^\infty \epsilon}{q_i^\mue q_i^\infty} 
+	%	= \frac{\epsilon ( q_i^\infty +  p_i^\infty)}{q_i^\mue q_i^\infty}
+	%	= \frac{\epsilon}{q_i^\mue q_i^\infty} 
+	%	<\frac{2 \epsilon}{q_i^\epsilon} 
+	%	<
+	%	\frac{4 \epsilon}{1 - 2 \epsilon} < \bar{\epsilon}.
+	%	\eeq
+	This implies, $\frac{p_i^\mue}{q_i^\mue} \stackrel{\mue \to \infty}{\longrightarrow}  \frac{p_i^\infty}{q_i^\infty}$ $u.f.$ over $i$.
+	
+
+        \ignore{
+	One can easily show that, for finite $k \geq 1$,	
+	\begin{eqnarray}
+	\label{Eqn_Finite_Prod_conv}
+	\frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}} \stackrel{\mue \to \infty}{\longrightarrow} \frac{p_0^{\infty} p_1^{\infty} \cdots p_{k-1}^{\infty}}{q_1^{\infty} q_2^{\infty} \cdots q_k^{\infty}}. \hspace{0.3cm}  
+	\end{eqnarray}
+		} % end ignore
+	
+	%
+	%\textbf{Claim 3}
+	
+	%	Next, consider the summation in the denominator of $\pi_0^\mue$. 
+	%	\beq
+	%	\sum_{k = 1}^{\infty} \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}},
+	%	\eeq
+	
+	
+	%	\beq
+	%	\sum_{k = 1}^{\infty} \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}}
+	%	\stackrel{\mue \to \infty}{\longrightarrow}
+	%	\sum_{k = 1}^{\infty} \frac{p_0^{\infty} p_1^{\infty } \cdots p_{k-1}^{\infty }}{q_1^{\infty } q_2^{ \infty  } \cdots q_k^{\infty  }},
+	%	\eeq
+	
+	
+	%	Using Eqn (\ref{Eqn_Finite_Prod_conv}), for every $\epsilon>0$, there exists a $\bar{\mu}$, such that for each $\mue > \bar{\mu}$,
+	%	
+	%	We have seen previously that for each $k$ finite,  as $\mue \to \infty $
+	%	\beq
+	%	\frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}} \to   \frac{p_0^{\infty} p_1^{\infty } \cdots p_{k-1}^{\infty }}{q_1^{\infty } q_2^{ \infty  } \cdots q_k^{\infty  }}.
+	%	\eeq
+	{\it  Proof of (iii):} From part $(ii)$ and assumption {\bf B}.4, % we have,  %$\frac{p_i^\mue}{q_i^\mue} \stackrel{\mue \to \infty}{\longrightarrow} \frac{p_i^\infty}{q_i^\infty}$. Therefore, 
+	for every $\varepsilon > 0$, there exists a $\bar{\mu}$ such that, for each $\mue > \bar{\mu}$
+	\beq
+	\frac{p_i^\mue}{q_i^\mue} < \varepsilon + \frac{p_i^\infty}{q_i^\infty} 
+	%
+	= \varepsilon + \frac{\lambda_\t}{ \mut \nu_i}
+	%
+	= \varepsilon + \rho_i
+	%
+	< \varepsilon +  1-\delta_\t.
+	\eeq %where, $\bar{\rho}$ is the maximum tolerant load corresponding to all eager pilicies $i$.
+	By appropriate choice of  $\varepsilon >0$, such that $\varepsilon + 1-\delta_\t < 1$, we have
+	%	This implies, for all $k$ finite and $\mue > \bar{\mu}$ 
+	(note that $p_0^\mue = 1$),
+	\beq
+	\frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}}
+	%
+	< (\varepsilon +  1-\delta_\t )^{k-1} \left( \frac{1}{q_k^\infty} + \varepsilon \right)
+	%
+	%	&=& (\epsilon + \bar{\rho})^{k-1} \left(\frac{\lambda_\t + \nu_k \mut}{\nu_k \mu_\t} + \epsilon \right)\\
+	%	%
+	= (\varepsilon +  1-\delta_\t )^{k-1} \left(1 + \rho_k + \varepsilon \right)
+	%
+	%	< (\epsilon + \bar{\rho})^{k-1} \left(1 + \bar{\rho} + \epsilon \right)
+	%	%
+	< \left( 2 + \varepsilon \right) (\varepsilon + 1-\delta_\t )^{k-1}. 
+	\eeq
+	%
+	Consider the following summation,
+	\beq
+	\sum_{k = 1}^\infty \left( 2 + \varepsilon \right) (\varepsilon + 1-\delta_\t )^{k-1} = \frac{2 + \varepsilon}{1 - (\varepsilon +  1-\delta_\t) } < \infty.
+	\eeq
+	Therefore, by dominated convergence theorem (DCT) for series (note each of the terms inside the series converge by part $(ii)$), we have,
+	\beq
+	\sum_{k = 1}^\infty \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}} &\stackrel{\mue \to \infty}{\longrightarrow}& \sum_{k = 1}^\infty \frac{p_0^{\infty} p_1^{\infty} \cdots p_{k-1}^{\infty}}{q_1^{\infty} q_2^{\infty} \cdots q_k^{\infty}}. 
+	%
+	%	&=& \sum_{k = 1}^\infty \bigg(\frac{\lambda_\t}{\nu_1 \mut}\bigg) \bigg(\frac{\lambda_\t}{\nu_2 \mut}\bigg) \cdots \bigg(\frac{\lambda_\t}{\nu_{ k-1} \mut}\bigg)\bigg(1 + \frac{\lambda_\t}{\nu_k \mu_\t}\bigg)\\
+	%	%
+	%	&=& \sum_{k =1}^\infty \rho_1 \rho_2 \cdots \rho_{k-1} \big( 1 + \rho_k \big) \\
+	%	%
+	%	&<& 2 \sum_{ k = 1}^\infty \rho_1 \rho_2 \cdots \rho_{k-1} \hspace{0.5cm} (\mbox{since} \ \ \rho_k < 1 )\\
+	%	%
+	%	&<& 2 \sum_{ k = 1}^\infty \bar{\rho}^{k-1}
+	%	%
+	%	= \frac{2}{1 - \bar{\rho}}.
+	\eeq
+	%
+	%
+	
+	{\it  Proof of (iv):} It suffices to show that the limit in part $(iii)$ lies in $\left(0,\infty\right).$ The limit is clearly positive as it is the summation of strictly positive terms. The finiteness of the limit follows from the DCT as in the proof of part $(iii).$	
+%	
+%	Note that the limit in part (iii) is positive (because $p_0^\infty /q_1^\infty  > 1$ and  the rest are non-negative terms),  it is also a finite quantity as:  
+%	$$
+%	\sum_{k = 1}^\infty \frac{p_0^{\infty} p_1^{\infty} \cdots p_{k-1}^{\infty}}{q_1^{\infty} q_2^{\infty} \cdots q_k^{\infty}} = 	\sum_{k = 1}^\infty \rho_1 \rho_2 \cdots \rho_{k-1} \frac{\lambda_{\t} + \nu_k \mut}{\nu_k \mut} < 2 \sum_{k = 1}^\infty \bar{\rho}^{k-1} = \frac{2}{1 - \bar{\rho}} < \infty.
+%	$$
+%	hence the proof follows.  
+\end{proof}
+
+%
+%
+%\begin{lemma}$\left[\textbf{Uniform Convergence of SD}\right]$
+%	\label{Lem_SD_Convergence}
+%	Under SFJ limit ( as $\mue \to \infty$), the stationary distribution of the tolerant Markov process  given by equation (\ref{Eqn_SD_pre-limit}) and (\ref{Eqn_pi_0_pre-limit}) converges to that of the SDSR-M/M/1 queue with variable service rates. That is,
+%	$$
+%	\pi_i^\mue \stackrel{\mue \to \infty}{\longrightarrow} \pi_i^\infty \ \mbox{for all} \  i \geq 0 \mbox{ u.f.}
+%	$$ 
+%\end{lemma}
+%
+\subsection{Proof of Theorem~\ref{Thm_SD_Convergence}}
+\label{sec:Thm_SD_Convergence}
+
+%{\it  Proof of (i)} 
+%We are considering different queuing systems, one for each $\mue \ge 1$ (the service rate of $\i$-class),  and under SFJ limit, the service rate $\mue \to \infty$ while maintaining $\rho_\i$ constant. 
+%	As there is bijection between the stationary distributions of the Markov process and the embedded Markov chain (EMC) considered at the arrival/departure epochs, it is sufficient to consider the birth-death chain in the pre-limit.
+For any  $i \geq 0 $,  $p_i^{\mu_\epsilon} = P (A_\t \le \Upsilon_i^\mue (B_\t) )$  denotes the probability that  $\t$-arrival is before $\t$-departure in the corresponding $\mue$-system, when
+ $\t$ occupancy equals $i$.
+
+ 
+	From equation (\ref{Eqn_SD_pre-limit}), the stationary distribution of the tolerant embedded BD chain is given by,
+	\begin{eqnarray}
+	\label{Eqn_SD}
+	\tilde{\pi}_i^{\mu_\epsilon} = \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} p_2^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} q_3^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \tilde{\pi}_0^{\mu_\epsilon} ; \hspace{0.3cm} i \geq 1 \hspace{0.5cm}\mbox{with} \hspace{0.3cm} \tilde{\pi}_0^\mue = \frac{1}{1 + \sum_{k = 1}^{\infty} \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{k-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_k^{\mu_\epsilon}}}. 
+	\end{eqnarray} 
+	By Lemma \ref{Lemma_Intermediate_result_2},  
+	\begin{eqnarray}
+	\label{Eqn_pi_0_conv}
+	\lim \limits_{\mue \to \infty} \tilde{\pi}_0^\mue \to \tilde{\pi}_0^\infty \ \ \mbox{with} \ \ \tilde{\pi}_0^\infty  = 1 \big/ \bigg( 1 + \sum_{k = 1}^{\infty} \frac{p_0^{\infty} p_1^{\infty} \cdots p_{k-1}^{\infty}}{q_1^{\infty} q_2^{\infty} \cdots q_k^{\infty}} \bigg).  
+	\end{eqnarray}
+	and
+	\begin{eqnarray}
+	\label{Eqn_tilde_pi_conv}
+	\lim \limits_{\mue \to \infty} \tilde{\pi}_i^\mue = \tilde{\pi}_i^\infty,  \ \   \mbox{ with } \ 
+	\tilde{\pi}_i^\infty  = \frac{p_0^{\infty} p_1^{\infty} \cdots p_{k-1}^{\infty}}{q_1^{\infty} q_2^{\infty} \cdots q_k^{\infty}} \tilde{\pi}_0^\infty.
+	\end{eqnarray}
+	Thus as $\mue \to \infty$, the stationary distribution of the
+        embedded tolerant BD chain converges to the stationary
+        distribution of the embedded chain corresponding to the limit
+        SDSR-M/M/1 queue. Thus we have weak convergence of the
+        stationary distributions. \qed
+
+        \subsection{Proof of Theorem~\ref{Thm_Lim_SD_Conv}}
+        \label{sec:Thm_Lim_SD_Conv}
+        
+        The statement of Theorem~\ref{Thm_Lim_SD_Conv} follows
+        directly from Theorem~\ref{Thm_SD_Convergence} invoking the
+        following lemma, which relates the steady state distribution
+        of a continuous time queue with the stationary distribution of
+        the discrete-time embedded Markov chain obtained by sampling
+        the queue-occupancy at arrival and departure epochs.
+
+        \begin{lemma}
+          \label{lemma:EMC_dist}
+          Consider a stable queueing system with Poisson job arrivals
+          and no simultaneous departures (i.e., jobs depart one at a
+          time with probability 1), such that the time-average
+          distribution of queue occupancy $\pi = \{\pi_i\}_{i \geq 0}$
+          is well defined, i.e.,
+	$$ 
+	\pi_i  = \lim_{t \ra \infty} \frac{1}{t} \int_{0}^t
+	\indicator{X(s)=i} ds \quad \forall \ i \quad (a.s.),
+	$$ where $X(t)$ denote the queue occupancy at time $t.$ Let $\tilde{\pi} = \{\tilde{\pi}_i\}_{i \geq 1}$ denote the (discrete-time)
+	time-average distribution of the queue occupancy sampled just
+	following arrival/departure epochs. Then 
+	\begin{eqnarray*} 
+	\tilde{\pi}_0 = \frac{1}{2} \pi_0,  \mbox{ and }
+	\tilde{\pi}_i = \frac{1}{2} (\pi_{i-1} + \pi_i)  \quad (i \geq 1).  \end{eqnarray*}
+\end{lemma}
+%	%\begin{proof}
+	{\bf Proof:} 
+	Let $X_n$ denote the queue occupancy just following the $n$th
+	arrival/departure epoch. Let $X^A_n$ (respectively, $X^D_n$) denote
+	the queue occupancy just before the $n$th arrival (respectively, just following the $n$th departure).
+		By PASTA,
+		 $$
+		 \pi_i = \frac{1}{n} \sum_{j = 1}^n \indicator{X^A_j = i}.
+		 $$ Moreover, since the time-average seen by arrivals matches the
+	time average seen by departures (see, for
+	example, \cite[Chapter~26]{Harchol-Balter}),
+	 $$
+	 \pi_i = \frac{1}{n} \sum_{j = 1}^n \indicator{X^D_j = i}.
+	 $$
+	
+	Define, for $n \geq 1,$
+	\begin{align*}
+	a_n &= \indicator{X_{n} = X_{n-1} + 1} \\ %arrival indicator
+	A_n &= \sum_{i = 1}^n a_i \\%cumulative arrival indicator
+	d_n &= \indicator{X_{n} = X_{n-1} - 1} \\ %departure indicator
+	D_n &= \sum_{i = 1}^n d_i %cumulative departure indicator
+	\end{align*}
+	
+	For $i \geq 1,$
+	\begin{eqnarray*}
+	\tilde{\pi}_i &=& \lim_{n \ra \infty} \frac{1}{n} \sum_{k = 1}^n
+	\indicator{X_k = i}\\
+	&=& \lim_{n \ra \infty} \left[ \frac{1}{n} \sum_{k = 1}^n \indicator{X_k = i} a_k
+	+ \frac{1}{n} \sum_{k = 1}^n \indicator{X_k = i} d_k \right]\\
+	&=& \lim_{n \ra \infty} \left[ \frac{A_n}{n} \frac{1}{A_n}\sum_{j = 1}^{A_n} \indicator{X^A_k = i-1} 
+	+ \frac{D_n}{n} \frac{1}{D_n} \sum_{j = 1}^{D_n} \indicator{X^D_j = i} \right]\\
+	&=& \frac{1}{2} (\pi_{i-1} + \pi_i). 
+	\end{eqnarray*}
+Also,	
+	\begin{align*}
+	\tilde{\pi}_0 &= \lim_{n \ra \infty} \frac{1}{n} \sum_{k = 1}^n
+	\indicator{X_k = 0}\\
+	&= \frac{1}{n} \sum_{k = 1}^n \indicator{X_k = 0} d_k \\
+	&= \frac{D_n}{n} \frac{1}{D_n} \sum_{j = 1}^{D_n} \indicator{X^D_j = 0} \\
+	&= \frac{1}{2} \pi_0. 
+	\end{align*}
+	\qed
+	
+
+
+
+
+%
+%
+%{\bf Proof of Theorem~{\ref{Thm_tau}}}:
+
+%	$i)$ By Theorem $(\ref{Thm_SD_Convergence})$, the performance of tolerant B-D chain, corresponding to the eager service rate $\mue$, converges to that of the SDSR-M/M/1 queueing system. Hence the proof follows.% The proof follows directly from Theorem $(\ref{Thm_SD_Convergence})$.
+%	%
+%	
+%	$ii)$ 
+	%Tolerant customers sees the time varying service process as its state changes.
+%	We want to prove that the expected number of the tolerant Markov Process in the pre-limit converges to that of the SDSR-M/M/1 queue parametrized by $\left( \lambda_\t, \mut, \left( \nu_1,\nu_2,\cdots \right) \right)$. To be more precise, we want to show that
+%	\begin{eqnarray}
+%	E^\mue \left[ N  \right] \stackrel{\mue \to \infty}{\rightarrow}      E^\infty \left[ N  \right]
+%	\end{eqnarray}
+%	i.e., with $\{\pi_i^\mue   \}_i$ denotes the sationary distribution of the tolerant class in the pre-limit,
+%	\begin{eqnarray}
+%	\sum_{i = 0}^{\infty} i \pi_i^\mue \stackrel{\mue \to \infty}{\rightarrow} \sum_{i = 0}^{\infty} i \pi_i^\infty
+%	\end{eqnarray}
+%	Consider,
+%	\begin{eqnarray}
+%	\label{Eqn_Exp_Number_Conv}
+%	\lim\limits_{\mue \to \infty}  \sum_{i = 0}^{\infty} i \pi_i^\mue = \lim\limits_{\mue \to \infty} \sum_{i=0}^{\infty} i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \pi_0^\mue.
+%	\end{eqnarray}
+%	By claim 2 of theorem (\ref{Thm_SD_Convergence}), 
+%\textcolor{blue}{Note that, for every $\varepsilon >0$, there exists a $\bar{\mu}$ such that, for all sub-policies $i$ and $\mue > \bar{\mu}$,  {\color{red} Incorrect, $\bar{\rho}$ is upper bound on $\i$-load, while we need upper bound on ${\bar \rho}_\tau = \sup_i \lambda_\t / (\nu_i \mu_\t) $ from {\bf B}.4 this is less than $< 1$. Also  need to mention Lemma \ref{Lemma_Intermediate_result_2}.ii}
+%	$$
+%	\frac{p_i^\mue}{q_i^\mue} <  \varepsilon +  1-\delta_\t.
+%	$$
+%	This implies, for all $\mue > \bar{\mu}$ and $i$,
+%	$$
+%	\bigg|  i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \tilde{\pi}_0^\mue \bigg| < i \left(2 + \varepsilon \right) \left(  \varepsilon +  1-\delta_\t \right) ^{i-1}.
+%	$$
+%	Note that the following summation is finite, as:
+%	\begin{eqnarray}
+%	\sum_{i = 0}^{\infty} i \left(2 + \varepsilon \right) \left( \varepsilon + 1 + \delta_\t \right) ^{i-1} &=& \left(2 + \varepsilon \right) \sum_{i = 0}^{\infty} i \left( \varepsilon + 1 - \delta_\t \right) ^{i-1}
+%	% = \left(2 + \epsilon \right) \sum_{i = 0}^{\infty} \frac{d}{d(\epsilon + \bar{\rho})} \left( \epsilon + \bar{\rho}\right)^i = \left(2 + \epsilon \right)  \frac{d}{d(\epsilon + \bar{\rho})} \sum_{i = 0}^{\infty} \left( \epsilon + \bar{\rho}\right)^i \\
+%	%&=&  \left(2 + \epsilon \right)  \frac{d}{d(\epsilon + \bar{\rho})} \left( \frac{1}{1 - \left(\epsilon + \bar{\rho}\right)} \right)
+%	=  \frac{2 + \epsilon }{\left(  1 - \left(\epsilon + 1 - \delta_\t \right)   \right)^2} < \infty \label{Eqn_up}.
+%	\end{eqnarray}
+%	Thus, applying DCT for series, from equations (\ref{Eqn_Finite_Prod_conv}), (\ref{Eqn_pi_0_conv}) and (\ref{Eqn_up}), we have:
+%	% from (\ref{Eqn_Exp_Number_Conv})
+%	\begin{eqnarray}
+%	\lim\limits_{\mue \to \infty}  \sum_{i = 0}^{\infty} i \tilde{\pi}_i^\mue = \lim\limits_{\mue \to \infty} \sum_{i=0}^{\infty} i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \tilde{\pi}_0^\mue 
+%	%
+%	&=& \sum_{i=0}^{\infty}  \lim\limits_{\mue \to \infty} \left( i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \tilde{\pi}_0^\mue \right) \nonumber \\
+%	%
+%	&=& \sum_{i=0}^{\infty}  i \frac{p_0^{\infty} p_1^{\infty} \cdots p_{i-1}^{\infty}}{q_1^{\infty} q_2^{\infty} \cdots q_i^{\infty}} \tilde{\pi}_0 \nonumber \\
+%	&=& \sum_{i=0}^{\infty}  i \tilde{\pi}_i = E N \nonumber.
+%	\end{eqnarray}	
+%	Hence, the Theorem proof.
+%%	Hence,  under SFJ limit, expected number of tolerant customers equals to that of the SDSR- M/M/1 queuing system.
+%\eop}
+%
+%
+
+\subsection{Proof of Theorem~{\ref{Thm_tau}}}
+\label{sec:Thm_tau}
+
+Note that, by Lemma \ref{Lemma_Intermediate_result_2}, for every $\varepsilon >0$, there exists a $\bar{\mu}$ such that, for all sub-policies $i$ and $\mue > \bar{\mu}$,  
+		$$
+	\frac{p_i^\mue}{q_i^\mue} <  \varepsilon +  1-\delta_\t.
+	$$
+As, for all $i \geq 0$, $\pi_i^\mue \leq 2 \tilde{\pi}_i^\mue$, we will have, for all $\mue > \bar{\mu}$ and $i$,
+$$
+\big|i \pi_i^\mue \big|
+%
+\leq 	\big|2 i \tilde{\pi}_i^\mue \big|
+%
+= \bigg| 2  i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \tilde{\pi}_0^\mue \bigg|
+%
+< 2 i \left(2 + \varepsilon \right) \left(  \varepsilon +  1-\delta_\t \right) ^{i-1}.
+$$
+	Note that the following summation is finite, as:
+	\begin{equation}
+	\sum_{i = 0}^{\infty} 2 i \left(2 + \varepsilon \right) \left( \varepsilon + 1 + \delta_\t \right) ^{i-1} 
+	%
+	= 2 \left(2 + \varepsilon \right) \sum_{i = 0}^{\infty} i \left( \varepsilon + 1 - \delta_\t \right) ^{i-1}
+	% = \left(2 + \epsilon \right) \sum_{i = 0}^{\infty} \frac{d}{d(\epsilon + \bar{\rho})} \left( \epsilon + \bar{\rho}\right)^i = \left(2 + \epsilon \right)  \frac{d}{d(\epsilon + \bar{\rho})} \sum_{i = 0}^{\infty} \left( \epsilon + \bar{\rho}\right)^i \\
+	%&=&  \left(2 + \epsilon \right)  \frac{d}{d(\epsilon + \bar{\rho})} \left( \frac{1}{1 - \left(\epsilon + \bar{\rho}\right)} \right)
+	%
+	=  \frac{2 \left(2 + \epsilon \right) }{\left(  1 - \left(\epsilon + 1 - \delta_\t \right)   \right)^2} < \infty \label{Eqn_up}.
+	\end{equation}
+	By the  above upper bound, DCT   can be applied   (note by Theorem \ref{Thm_Lim_SD_Conv},  $\pi_i^{\mu_\i} \to \pi_i$ for all $i$),  and   we have:
+	% from (\ref{Eqn_Exp_Number_Conv})
+	\begin{eqnarray}
+	\lim\limits_{\mue \to \infty}  \sum_{i = 0}^{\infty} i {\pi}_i^\mue 
+%	= \lim\limits_{\mue \to \infty} \sum_{i=0}^{\infty} i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \tilde{\pi}_0^\mue 
+%	%
+%	&=& \sum_{i=0}^{\infty}  \lim\limits_{\mue \to \infty} \left( i \frac{p_0^{\mu_\epsilon} p_1^{\mu_\epsilon} \cdots p_{i-1}^{\mu_\epsilon}}{q_1^{\mu_\epsilon} q_2^{\mu_\epsilon} \cdots q_i^{\mu_\epsilon}} \tilde{\pi}_0^\mue \right) \nonumber \\
+% &=& \sum_{i=0}^{\infty}  i \frac{p_0^{\infty} p_1^{\infty} \cdots p_{i-1}^{\infty}}{q_1^{\infty} q_2^{\infty} \cdots q_i^{\infty}} \tilde{\pi}_0 \nonumber \\	%
+%
+=  \sum_{i = 0}^{\infty}  \lim\limits_{\mue \to \infty} i {\pi}_i^\mue
+% 
+= \sum_{i=0}^{\infty}  i {\pi}_i = \Exp{N} \nonumber.
+	\end{eqnarray}	
+This completes the proof.\qed

@@ -1,0 +1,155 @@
+% ============================================
+% Proof of Theorem 2: Nested WAIT Algorithm Optimality
+% ============================================
+
+\section{Proof of Theorem~\ref{thm:nested_wait_heavy_traffic}}\label{appendix::proof of nested_wait_heavy_traffic}
+
+\paragraph{Proof outline.}
+Nested WAIT differs from WAIT because type information is revealed only at decode boundaries. The proof follows those boundaries. Segment 1 receives the external Poisson arrivals. For \(k\ge2\), the input to segment \(k\) is the random subset of a threshold cohort from segment \(k-1\) that survives boundary \(l_{k-1}'\). This gives a binomial-thinning queue at each downstream boundary. The threshold conditions give negative drift for all these embedded queues. The memory condition then adds a logarithmic safety buffer for the resident boundary queues, which prevents memory overflow with probability at least \(1-\delta\).
+
+Let
+\[
+    \Lambda_k=\sum_{j=k}^m\lambda_j,\qquad
+    p_k=\frac{\Lambda_k}{\Lambda_{k-1}},\quad k\ge2,
+\]
+and write
+\[
+    \Delta^\pi=\Delta T_{[1,\ldots,m]}(n_1,\ldots,n_m)=d_0+d_1M^\pi.
+\]
+The theorem assumes \(\Lambda_1\Delta^\pi<n_1\) and \(p_k<n_k/n_{k-1}<1\) for \(k\ge2\). In the \(\zeta\)-scaled system, every realized iteration has physical duration at least \(d_0/\zeta\), so the number of realized iterations over \([0,T]\) is at most
+\[
+    B_\zeta^{\max}=\left\lceil \frac{\zeta T}{d_0}\right\rceil .
+\]
+This is only an upper bound on event opportunities. Actual Nested WAIT may use shorter iterations than the full-threshold composition, so \(B_\zeta^{\max}\) is the appropriate count for the high-probability memory union bound. The performance estimates below use only the fact that the embedded boundary queues have uniformly bounded expectations.
+
+\subsection{Entry Queue for Segment 1}
+
+Let \(W^r_{(1)}\) be the number of not-yet-prefilled prompts waiting to enter segment 1 after the \(r\)-th realized iteration. These prompts have not entered the GPU-resident KV-cache state and therefore do not contribute to GPU memory. During any realized iteration, the processing time is at most \(\Delta^\pi/\zeta\). Thus the number of external arrivals during that iteration is stochastically dominated by
+\[
+    \bar Y^r_{(1)}\sim \mathrm{Poisson}(\Lambda_1\Delta^\pi).
+\]
+The entry queue is dominated by
+\[
+    \bar W^{r+1}_{(1)}
+    =
+    \bar W^r_{(1)}+\bar Y^r_{(1)}
+    -
+    n_1{\bf 1}\{\bar W^r_{(1)}+\bar Y^r_{(1)}\ge n_1\}.
+\]
+As in the proof of Theorem~\ref{thm:wait_heavy_traffic}, this queue is further dominated by the reflected random walk
+\[
+    \widetilde W^0_{(1)}=2n_1,\qquad
+    \widetilde W^{r+1}_{(1)}
+    =
+    \max\{2n_1,\widetilde W^r_{(1)}+\bar Y^r_{(1)}-n_1\}.
+\]
+Because \(\mathbb{E}[\bar Y^r_{(1)}]-n_1=\Lambda_1\Delta^\pi-n_1<0\), Kingman's bound gives
+\[
+    \sup_{r\ge0}\mathbb{E}[W^r_{(1)}]
+    \le
+    2n_1+
+    \frac{\Lambda_1\Delta^\pi}{2(n_1-\Lambda_1\Delta^\pi)}
+    <\infty .
+\]
+
+\subsection{Boundary Queues for Downstream Segments}
+
+For \(k\ge2\), index the boundary queue of segment \(k\) by the number \(r\) of opportunities at which segment \(k-1\) advances a threshold cohort across boundary \(l_{k-1}'\). In each such opportunity, at most \(n_{k-1}\) prompts cross the last stage of segment \(k-1\). Conditional on having survived to segment \(k-1\), each prompt continues to segment \(k\) with probability \(p_k=\Lambda_k/\Lambda_{k-1}\). Hence the number of new resident prompts at the boundary of segment \(k\) is stochastically dominated by
+\[
+    Y^r_{(k)}\sim \mathrm{Binomial}(n_{k-1},p_k).
+\]
+Let \(W^r_{(k)}\) be the resident boundary queue for segment \(k\) after opportunity \(r\). It satisfies the domination
+\[
+    W^{r+1}_{(k)}
+    \le
+    W^r_{(k)}+Y^r_{(k)}
+    -
+    n_k{\bf 1}\{W^r_{(k)}+Y^r_{(k)}\ge n_k\}.
+\]
+Equivalently, with \(X^r_{(k)}=Y^r_{(k)}-n_k\), the process is dominated by the Lindley-type recursion proved in Appendix~\ref{appendix_lemma::proof of nested coupled process}:
+\[
+    \widetilde W^0_{(k)}=n_k,\qquad
+    \widetilde W^{r+1}_{(k)}
+    =
+    \max\{n_k,\widetilde W^r_{(k)}+X^r_{(k)}\}.
+\]
+The drift is strictly negative:
+\[
+    \mathbb{E}[X^r_{(k)}]=n_{k-1}p_k-n_k<0.
+\]
+Kingman's bound therefore yields, uniformly over \(r\),
+\[
+    \mathbb{E}[W^r_{(k)}]
+    \le
+    n_k+
+    \frac{n_{k-1}p_k(1-p_k)}{2(n_k-n_{k-1}p_k)}
+    <\infty,\qquad k=2,\ldots,m.
+\]
+Thus every boundary queue has a bounded expected size, independent of \(\zeta\) and \(T\).
+
+\subsection{Throughput and Delay}
+
+The preceding bounds imply that the expected number of prompts waiting at the external entry queue and at all downstream resident boundaries is \(O(1)\) uniformly over the horizon. The number of prompts already inside threshold-controlled segment interiors is also bounded by the threshold vector. Therefore the expected amount of decode work that has arrived but not completed at time \(T\) is \(O(1)\), up to constants depending on the fixed output lengths. Since throughput is normalized by \(\zeta T\),
+\[
+    \throughput^*-\mathbb{E}[\throughput^{(\zeta,\pi)}]
+    =
+    O((\zeta T)^{-1}).
+\]
+
+For delay, use the time-average form of Little's law. The embedded queues above have uniformly bounded expectations, so their time averages are \(O(1)\) in prompt count. Physical arrival rates scale as \(\zeta\), so the corresponding calendar-time waiting contribution is \(O(1/\zeta)\). The theorem reports service-normalized delay, \(\Latency^{(\zeta,\pi)}=\zeta\Latency_{\rm cal}^{(\zeta,\pi)}\) and \(\TTFT^{(\zeta,\pi)}=\zeta\TTFT_{\rm cal}^{(\zeta,\pi)}\). Hence
+\[
+    \mathbb{E}[\Latency^{(\zeta,\pi)}],
+    \mathbb{E}[\TTFT^{(\zeta,\pi)}]
+    =
+    O(1).
+\]
+The fixed number of decode stages contributes only a constant in the same service-normalized units.
+
+\subsection{High-Probability Memory Bound}
+
+The only queues that can create unbounded resident KV-cache memory are the downstream boundary queues \(W^r_{(k)}\), \(k\ge2\). Segment-1 entry prompts have not yet been admitted to prefill and do not occupy GPU KV-cache memory. The threshold-sized segment interiors use at most
+\[
+    M^\pi=\sum_{k=1}^m n_k(l+\bar s_k)\delta_k.
+\]
+It remains to bound the resident boundary queues.
+
+Fix \(k\ge2\). Since \(p_k<n_k/n_{k-1}<1\), the martingale-root argument in Appendix~\ref{appendix_lemma::proof of solution to martingale exists} gives a unique \(\theta_k>0\) satisfying
+\[
+    e^{-\theta_k n_k}(1-p_k+p_ke^{\theta_k})^{n_{k-1}}=1.
+\]
+For the random walk \(S^i_{(k)}=\sum_{r=1}^i(Y^r_{(k)}-n_k)\), the process \(e^{\theta_k S^i_{(k)}}\) is a martingale. Doob's maximal inequality gives, for any \(c>n_k\),
+\[
+    \mathbb{P}\!\left(\max_{0\le i\le r}S^i_{(k)}\ge c-n_k\right)
+    \le
+    e^{-\theta_k(c-n_k)}.
+\]
+Since \(W^r_{(k)}\le n_k+\max_{0\le i\le r}S^i_{(k)}\), we have
+\[
+    \mathbb{P}(W^r_{(k)}\ge c)
+    \le
+    e^{-\theta_k(c-n_k)}.
+\]
+Apply this bound to all \(k=2,\ldots,m\) and all realized opportunities \(r\le B_\zeta^{\max}\). Setting
+\[
+    c_k
+    =
+    n_k+\theta_k^{-1}\ln\!\left(\frac{(m-1)B_\zeta^{\max}}{\delta}\right)
+\]
+and taking a union bound yields
+\[
+    \mathbb{P}\!\left(
+    W^r_{(k)}\le c_k
+    \text{ for all } k=2,\ldots,m,\; r\le B_\zeta^{\max}
+    \right)\ge1-\delta.
+\]
+On this event, the total resident KV-cache memory is at most
+\[
+    M^\pi+\sum_{k=2}^m (l+l_{k-1}')c_k.
+\]
+Using \((m-1)B_\zeta^{\max}\le m(1+\zeta T/d_0)\), this is implied by the memory condition in Theorem~\ref{thm:nested_wait_heavy_traffic}. Therefore memory is not exceeded over \([0,T]\) with probability at least \(1-\delta\).
+
+Finally, the same martingale-root argument gives
+\[
+    \theta_k\ge \frac{8(n_k-n_{k-1}p_k)}{n_{k-1}},
+\]
+which is the stated drift-to-buffer scaling. This completes the proof.
