@@ -138,6 +138,7 @@ def record_reproduction_config(
         "segment_priority_orders": config.segment_priority_orders,
         "trim_head_frac": config.trim_head_frac,
         "trim_tail_frac": config.trim_tail_frac,
+        "extra_runner_args": list(config.extra_runner_args),
     }
     command = build_runner_command(config)
     with sqlite3.connect(config.db_path) as conn:
